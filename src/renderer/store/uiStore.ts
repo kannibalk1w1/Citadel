@@ -47,6 +47,13 @@ type UIState = {
   // Snap guide re-render signal
   _snapTick: number
   bumpSnap: () => void
+
+  // YOU SAVED banner
+  youSavedEnabled: boolean
+  youSavedVisible: boolean
+  showYouSaved: () => void
+  hideYouSaved: () => void
+  setYouSavedEnabled: (enabled: boolean) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -89,4 +96,14 @@ export const useUIStore = create<UIState>((set) => ({
 
   _snapTick: 0,
   bumpSnap: () => set((s) => ({ _snapTick: s._snapTick + 1 })),
+
+  youSavedEnabled: false,
+  youSavedVisible: false,
+  showYouSaved: () => set({ youSavedVisible: true }),
+  hideYouSaved: () => set({ youSavedVisible: false }),
+  setYouSavedEnabled: (enabled) => {
+    set({ youSavedEnabled: enabled })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.youSavedEnabled', value: enabled }).catch(console.error)
+  },
 }))

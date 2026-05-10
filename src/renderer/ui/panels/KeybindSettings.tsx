@@ -6,6 +6,8 @@ import { Actions } from '../../keybinds/actions'
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const [filter, setFilter] = useState('')
+  const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
+  const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
 
   if (!isOpen) return null
 
@@ -18,6 +20,29 @@ export function KeybindSettings(): React.ReactElement | null {
       <h2 style={{ margin: '0 0 12px', fontSize: 14, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
         Keybindings
       </h2>
+      <div style={{
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Fun Settings
+        </h3>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={youSavedEnabled}
+            onChange={(e) => setYouSavedEnabled(e.target.checked)}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            YOU SAVED banner on manual save
+          </span>
+          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            dark souls
+          </span>
+        </label>
+      </div>
       <input
         placeholder="Filter actions…"
         value={filter}

@@ -16,6 +16,7 @@ import { ItemProperties } from './ui/panels/ItemProperties'
 import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
 import { TextEditOverlay } from './canvas/TextEditOverlay'
+import { YouSavedBanner } from './ui/YouSavedBanner'
 import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
@@ -49,6 +50,11 @@ export default function App(): React.ReactElement {
     ipc.invoke('recovery:get').then((res) => {
       const { data } = res as { data: string | null }
       if (data) setRecoveryData(data)
+    }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'ui.youSavedEnabled' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value === true) useUIStore.getState().setYouSavedEnabled(true)
     }).catch(() => {})
   }, [])
 
@@ -262,8 +268,20 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.EXPORT_ZIP,   () => { exportToZip().catch(console.error) })
 
     // File
-    resolver.register(Actions.SAVE,        () => { saveCurrentOrAs().then((ok) => { if (ok) triggerEffect('rune-seal') }) })
-    resolver.register(Actions.SAVE_AS,     () => { saveProjectAs().then((p) => { if (p) triggerEffect('rune-seal') }) })
+    resolver.register(Actions.SAVE, () => {
+      saveCurrentOrAs().then((ok) => {
+        if (!ok) return
+        triggerEffect('rune-seal')
+        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+      })
+    })
+    resolver.register(Actions.SAVE_AS, () => {
+      saveProjectAs().then((p) => {
+        if (!p) return
+        triggerEffect('rune-seal')
+        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+      })
+    })
     resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) triggerEffect('lightning-in') }) })
     resolver.register(Actions.NEW_PROJECT, () => { newProject(); triggerEffect('rise-from-fog') })
 
@@ -501,6 +519,7 @@ export default function App(): React.ReactElement {
       <ConnectionProperties />
       <KeybindSettings />
       {editingItem && <TextEditOverlay key={editingItem.id} item={editingItem} />}
+      <YouSavedBanner />
     </div>
   )
 }
