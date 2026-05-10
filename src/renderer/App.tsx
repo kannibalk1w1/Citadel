@@ -17,6 +17,8 @@ import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
 import { TextEditOverlay } from './canvas/TextEditOverlay'
 import { YouSavedBanner } from './ui/YouSavedBanner'
+import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
+import { engine, lastMouse } from './arcade/HyperTypeEngine'
 import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
@@ -40,6 +42,14 @@ export default function App(): React.ReactElement {
   const editingItemId = useUIStore((s) => s.editingItemId)
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
   const [recoveryData, setRecoveryData] = React.useState<string | null>(null)
+  const canvasContainerRef = React.useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    return useUIStore.subscribe(
+      (s) => s.hyperTypeEnabled,
+      (enabled) => engine.setEnabled(enabled)
+    )
+  }, [])
 
   useEffect(() => {
     initBoard()
@@ -55,6 +65,14 @@ export default function App(): React.ReactElement {
     ipc.invoke('settings:get', { key: 'ui.youSavedEnabled' }).then((res) => {
       const { value } = res as { value: unknown }
       if (value === true) useUIStore.getState().setYouSavedEnabled(true)
+    }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'ui.hyperTypeEnabled' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value === true) {
+        useUIStore.getState().setHyperTypeEnabled(true)
+        engine.setEnabled(true)
+      }
     }).catch(() => {})
   }, [])
 
@@ -92,6 +110,7 @@ export default function App(): React.ReactElement {
         canvas.updateItem(event.boardId, patch.id, patch)
       }
       triggerEffect('rewind-swirl')
+      engine.burst('↩', lastMouse.x, lastMouse.y)
     })
 
     resolver.register(Actions.REDO, () => {
@@ -110,6 +129,7 @@ export default function App(): React.ReactElement {
         canvas.updateItem(event.boardId, patch.id, patch)
       }
       triggerEffect('forward-surge')
+      engine.burst('↪', lastMouse.x, lastMouse.y)
     })
 
     // Delete selected items
@@ -122,6 +142,7 @@ export default function App(): React.ReactElement {
       canvas.removeItems(activeBoardId, selectedIds)
       canvas.clearSelection()
       triggerEffect('crumble')
+      engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
     })
 
     // Duplicate selected items
@@ -395,9 +416,18 @@ export default function App(): React.ReactElement {
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
       resolver.resolve(e)
+      engine.keyStroke(e.key, lastMouse.x, lastMouse.y)
+    }
+    const onMouseMove = (e: MouseEvent) => {
+      lastMouse.x = e.clientX
+      lastMouse.y = e.clientY
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
   }, [])
 
   // ── Bridge native menu → keybind resolver ─────────────────────────────────
@@ -507,7 +537,7 @@ export default function App(): React.ReactElement {
       <BoardTabs />
       <Toolbar />
       {/* Canvas viewport — inset from the right sidebar */}
-      <div style={{ position: 'absolute', inset: 0, right: 'var(--sidebar-right-w)' }}>
+      <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: 'var(--sidebar-right-w)' }}>
         <CanvasStage />
       </div>
       <RightSidebar />
@@ -520,6 +550,7 @@ export default function App(): React.ReactElement {
       <KeybindSettings />
       {editingItem && <TextEditOverlay key={editingItem.id} item={editingItem} />}
       <YouSavedBanner />
+      <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
     </div>
   )
 }
