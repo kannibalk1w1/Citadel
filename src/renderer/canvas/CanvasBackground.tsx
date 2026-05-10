@@ -32,10 +32,13 @@ function buildPatternUrl(tileSize: number): string {
 export function CanvasBackground(): React.ReactElement {
   const viewport = useCanvasStore((s) => s.viewport())
   const gridSize = useUIStore((s) => s.gridSize)
+  const snapToGrid = useUIStore((s) => s.snapToGrid)
 
   const patternUrl = useMemo(() => buildPatternUrl(gridSize), [gridSize])
 
   const scaledTile = gridSize * viewport.scale
+
+  if (!snapToGrid) return null
 
   return (
     <div

@@ -125,6 +125,8 @@ export function Toolbar(): React.ReactElement {
   const clearEffect = useMascotStore((s) => s.clearEffect)
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
+  const snapToGrid = useUIStore((s) => s.snapToGrid)
+  const toggleSnapToGrid = useUIStore((s) => s.toggleSnapToGrid)
 
   const [youtubeOpen, setYoutubeOpen] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState('')
@@ -284,6 +286,31 @@ export function Toolbar(): React.ReactElement {
           </span>
         </div>
       )}
+
+      <button
+        title={`Snap to Grid (Ctrl+Shift+G) — ${snapToGrid ? 'On' : 'Off'}`}
+        onClick={toggleSnapToGrid}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          border: 'none',
+          cursor: 'pointer',
+          background: snapToGrid ? 'var(--accent)' : 'transparent',
+          color: snapToGrid ? 'var(--bg-ui)' : 'var(--text-secondary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition-fast)',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+          <line x1="5" y1="1" x2="5" y2="15" />
+          <line x1="11" y1="1" x2="11" y2="15" />
+          <line x1="1" y1="5" x2="15" y2="5" />
+          <line x1="1" y1="11" x2="15" y2="11" />
+        </svg>
+      </button>
 
       <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
