@@ -13,21 +13,11 @@ import { LassoOverlay } from './overlays/LassoOverlay'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
+import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
-
-const CURSOR: Record<string, string> = {
-  pan: 'grab',
-  connect: 'crosshair',
-  text: 'text',
-  sticky: 'cell',
-  swatch: 'cell',
-  comparison: 'cell',
-  lasso: 'crosshair',
-  default: 'default',
-}
 
 export function CanvasStage(): React.ReactElement {
   const stageRef = useRef<Konva.Stage>(null)
@@ -44,6 +34,33 @@ export function CanvasStage(): React.ReactElement {
   const connectFromId = useUIStore((s) => s.connectFromId)
   const setConnectFromId = useUIStore((s) => s.setConnectFromId)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
+
+  const CURSOR: Record<string, string> = dragonCursorEnabled
+    ? {
+        select:     DS_NORMAL,
+        pan:        'grab',
+        lasso:      DS_WHIP,
+        connect:    DS_CROSS,
+        text:       DS_NORMAL,
+        sticky:     DS_NORMAL,
+        link:       DS_HAND,
+        tag:        DS_NORMAL,
+        swatch:     DS_NORMAL,
+        comparison: DS_NORMAL,
+        record:     DS_NORMAL,
+        default:    DS_NORMAL,
+      }
+    : {
+        pan:        'grab',
+        connect:    'crosshair',
+        text:       'text',
+        sticky:     'cell',
+        swatch:     'cell',
+        comparison: 'cell',
+        lasso:      'crosshair',
+        default:    'default',
+      }
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 

@@ -10,6 +10,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
   const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
   const setHyperTypeEnabled = useUIStore((s) => s.setHyperTypeEnabled)
+  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
+  const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
 
   if (!isOpen) return null
 
@@ -56,6 +58,20 @@ export function KeybindSettings(): React.ReactElement | null {
           </span>
           <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
             by Thanh-Huy1104<br />MIT
+          </span>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 6 }}>
+          <input
+            type="checkbox"
+            checked={dragonCursorEnabled}
+            onChange={(e) => setDragonCursorEnabled(e.target.checked)}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            Dragon Scimitar cursor
+          </span>
+          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
+            rw-designer.com<br />CC Attribution / PD
           </span>
         </label>
       </div>

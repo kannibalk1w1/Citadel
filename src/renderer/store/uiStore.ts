@@ -58,6 +58,10 @@ type UIState = {
   // HyperType arcade mode
   hyperTypeEnabled: boolean
   setHyperTypeEnabled: (enabled: boolean) => void
+
+  // Dragon cursor
+  dragonCursorEnabled: boolean
+  setDragonCursorEnabled: (enabled: boolean) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -116,5 +120,12 @@ export const useUIStore = create<UIState>((set) => ({
     set({ hyperTypeEnabled: enabled })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'ui.hyperTypeEnabled', value: enabled }).catch(console.error)
+  },
+
+  dragonCursorEnabled: false,
+  setDragonCursorEnabled: (enabled) => {
+    set({ dragonCursorEnabled: enabled })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.dragonCursorEnabled', value: enabled }).catch(console.error)
   },
 }))

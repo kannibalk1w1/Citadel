@@ -74,6 +74,11 @@ export default function App(): React.ReactElement {
         engine.setEnabled(true)
       }
     }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'ui.dragonCursorEnabled' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value === true) useUIStore.getState().setDragonCursorEnabled(true)
+    }).catch(() => {})
   }, [])
 
   // ── Wire keybind actions once ───────────────────────────────────────────────
