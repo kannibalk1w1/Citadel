@@ -29,6 +29,8 @@ type CanvasState = {
   removeItems: (boardId: string, ids: string[]) => void
   moveItems: (boardId: string, moves: { id: string; x: number; y: number }[]) => void
   reorderItem: (boardId: string, id: string, direction: 'front' | 'back' | 'forward' | 'backward') => void
+  groupItems: (boardId: string, ids: string[]) => void
+  ungroupItems: (boardId: string, groupId: string) => void
 
   // Connection operations
   addConnection: (boardId: string, connection: Connection) => void
@@ -163,6 +165,29 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     })
   },
 
+  groupItems: (boardId, ids) => {
+    const gid = nanoid()
+    set((s) => ({
+      boards: s.boards.map((b) =>
+        b.id !== boardId ? b : {
+          ...b,
+          items: b.items.map((i) => ids.includes(i.id) ? { ...i, groupId: gid } : i),
+        }
+      ),
+    }))
+  },
+
+  ungroupItems: (boardId, groupId) => {
+    set((s) => ({
+      boards: s.boards.map((b) =>
+        b.id !== boardId ? b : {
+          ...b,
+          items: b.items.map((i) => i.groupId === groupId ? { ...i, groupId: undefined } : i),
+        }
+      ),
+    }))
+  },
+
   addConnection: (boardId, connection) => {
     set((s) => ({
       boards: s.boards.map((b) =>
@@ -189,7 +214,27 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     }))
   },
 
-  setSelection: (ids) => set({ selectedIds: ids }),
-  addToSelection: (id) => set((s) => ({ selectedIds: [...new Set([...s.selectedIds, id])] })),
+  setSelection: (ids) => {
+    const allItems = get().items()
+    const groupIds = new Set(
+      ids.flatMap((id) => {
+        const item = allItems.find((i) => i.id === id)
+        return item?.groupId ? [item.groupId] : []
+      })
+    )
+    const expanded = Array.from(new Set([
+      ...ids,
+      ...allItems.filter((i) => i.groupId && groupIds.has(i.groupId)).map((i) => i.id),
+    ]))
+    set({ selectedIds: expanded })
+  },
+  addToSelection: (id) => {
+    const allItems = get().items()
+    const item = allItems.find((i) => i.id === id)
+    const toAdd = item?.groupId
+      ? allItems.filter((i) => i.groupId === item.groupId).map((i) => i.id)
+      : [id]
+    set((s) => ({ selectedIds: Array.from(new Set([...s.selectedIds, ...toAdd])) }))
+  },
   clearSelection: () => set({ selectedIds: [] }),
 }))
