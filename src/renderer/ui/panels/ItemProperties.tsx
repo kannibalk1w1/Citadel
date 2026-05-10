@@ -3,6 +3,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { resolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
+import type { CanvasItem } from '../../../types'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -311,6 +312,125 @@ function ComparisonSlotRow({
   )
 }
 
+function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): React.ReactElement {
+  const [input, setInput] = React.useState('')
+  const [open, setOpen] = React.useState(false)
+  const allItems = useCanvasStore((s) => s.items())
+  const updateItem = useCanvasStore((s) => s.updateItem)
+  const pushHistory = useHistoryStore((s) => s.push)
+
+  const suggestions = React.useMemo(() => {
+    const q = input.toLowerCase()
+    if (!q) return []
+    return Array.from(new Set(allItems.flatMap((i) => i.tags)))
+      .filter((t) => !item.tags.includes(t) && t.startsWith(q))
+      .sort()
+      .slice(0, 6)
+  }, [input, allItems, item.tags])
+
+  const addTag = (tag: string) => {
+    const t = tag.trim().toLowerCase()
+    if (!t || item.tags.includes(t)) return
+    const newTags = [...item.tags, t]
+    pushHistory('ITEM_STYLE', boardId, { id: item.id, tags: item.tags }, { id: item.id, tags: newTags })
+    updateItem(boardId, item.id, { tags: newTags })
+    setInput('')
+    setOpen(false)
+  }
+
+  const removeTag = (tag: string) => {
+    const newTags = item.tags.filter((t) => t !== tag)
+    pushHistory('ITEM_STYLE', boardId, { id: item.id, tags: item.tags }, { id: item.id, tags: newTags })
+    updateItem(boardId, item.id, { tags: newTags })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {item.tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {item.tags.map((tag) => (
+            <span
+              key={tag}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                background: 'var(--bg-hover)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                padding: '1px 6px 1px 7px',
+                fontSize: 10,
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {tag}
+              <button
+                onClick={() => removeTag(tag)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  lineHeight: 1,
+                  padding: 0,
+                  marginLeft: 1,
+                }}
+              >×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div style={{ position: 'relative' }}>
+        <input
+          value={input}
+          onChange={(e) => { setInput(e.target.value); setOpen(true) }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { addTag(input); e.preventDefault() }
+            if (e.key === 'Escape') { setInput(''); setOpen(false) }
+          }}
+          onFocus={() => { if (input) setOpen(true) }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Add tag…"
+          style={{ ...inputStyle, width: '100%' }}
+        />
+        {open && suggestions.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            background: 'var(--bg-panel)',
+            border: '1px solid var(--border)',
+            borderRadius: 3,
+            marginTop: 2,
+          }}>
+            {suggestions.map((s) => (
+              <div
+                key={s}
+                onMouseDown={() => addTag(s)}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+              >
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 
 export function ItemProperties(): React.ReactElement | null {
@@ -520,18 +640,13 @@ export function ItemProperties(): React.ReactElement | null {
         </>
       )}
 
+      <Divider label="Tags" />
+      <TagsSection item={item} boardId={activeBoardId} />
+
       <Divider label="Meta" />
 
       <Field label="Locked">
         <input type="checkbox" checked={item.locked} onChange={(e) => update({ locked: e.target.checked })} />
-      </Field>
-      <Field label="Tags">
-        <input
-          value={item.tags.join(', ')}
-          onChange={(e) => update({ tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })}
-          style={inputStyle}
-          placeholder="tag1, tag2"
-        />
       </Field>
       <Field label="Link">
         <input
