@@ -499,6 +499,53 @@ export function ItemProperties(): React.ReactElement | null {
         />
       </Field>
 
+      {/* ── Tint ── */}
+      {!['video', 'youtube', 'audio', 'model3d'].includes(item.type) && (
+        <>
+          <Divider label="Tint" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <input
+              type="checkbox"
+              checked={!!item.tint}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  update({ tint: { color: '#c8a96e', opacity: 0.25 } })
+                } else {
+                  update({ tint: undefined })
+                }
+              }}
+              style={{ accentColor: 'var(--accent)' }}
+            />
+            Enable
+          </label>
+          {item.tint && (
+            <>
+              <Field label="Color">
+                <input
+                  type="color"
+                  value={item.tint.color}
+                  onChange={(e) => update({ tint: { ...item.tint!, color: e.target.value } })}
+                  style={{ ...inputStyle, padding: '2px', cursor: 'pointer', height: 24 }}
+                />
+              </Field>
+              <Field label="Opacity">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    type="range" min={0} max={1} step={0.01}
+                    value={item.tint.opacity}
+                    onChange={(e) => update({ tint: { ...item.tint!, opacity: parseFloat(e.target.value) } })}
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', width: 28, textAlign: 'right' }}>
+                    {Math.round(item.tint.opacity * 100)}%
+                  </span>
+                </div>
+              </Field>
+            </>
+          )}
+        </>
+      )}
+
       {/* ── Swatch-specific ── */}
       {item.type === 'swatch' && (
         <>
