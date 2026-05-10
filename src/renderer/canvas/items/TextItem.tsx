@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Text, Transformer } from 'react-konva'
+import { Text, Rect, Transformer } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
@@ -110,6 +110,20 @@ export function TextItem({ item }: Props): React.ReactElement {
 
   return (
     <>
+      {isSelected && (
+        <Rect
+          x={item.x - 4} y={item.y - 4}
+          width={item.width + 8} height={item.height + 8}
+          fill={undefined}
+          stroke="#c8a96e"
+          strokeWidth={1.5}
+          shadowEnabled
+          shadowColor="rgba(200,169,110,0.7)"
+          shadowBlur={16}
+          cornerRadius={2}
+          listening={false}
+        />
+      )}
       <Text
         ref={textRef}
         x={item.x}
@@ -143,10 +157,6 @@ export function TextItem({ item }: Props): React.ReactElement {
         onDragEnd={handleDragEnd}
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
-        shadowEnabled={isSelected}
-        shadowColor="rgba(200,169,110,0.7)"
-        shadowBlur={20}
-        shadowOpacity={0.8}
       />
       {isSelected && (
         <Transformer
