@@ -69,6 +69,10 @@ export const Actions = {
   ALIGN_TOP: 'align:top',
   ALIGN_CENTER_V: 'align:centerV',
   ALIGN_BOTTOM: 'align:bottom',
+
+  // ── Grouping ──────────────────────────────────────────────────────────────
+  GROUP:   'group:create',
+  UNGROUP: 'group:dissolve',
 } as const
 
 export type ActionName = (typeof Actions)[keyof typeof Actions]

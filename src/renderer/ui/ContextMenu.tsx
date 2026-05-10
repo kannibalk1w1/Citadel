@@ -12,6 +12,10 @@ export function ContextMenu(): React.ReactElement | null {
   const closeContextMenu = useUIStore((s) => s.closeContextMenu)
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const allItems = useCanvasStore((s) => s.items())
+  const selectedItems = allItems.filter((i) => selectedIds.includes(i.id))
+  const canGroup = selectedIds.length >= 2 && selectedItems.some((i) => !i.groupId)
+  const canUngroup = selectedItems.some((i) => !!i.groupId)
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -87,6 +91,26 @@ export function ContextMenu(): React.ReactElement | null {
           closeContextMenu()
         },
       },
+    ] : []),
+    ...(canGroup || canUngroup ? [
+      { divider: true, label: '', action: () => {} },
+      ...(canGroup ? [{
+        label: 'Group  (Ctrl+G)',
+        action: () => {
+          useCanvasStore.getState().groupItems(activeBoardId!, selectedIds)
+          closeContextMenu()
+        },
+      }] : []),
+      ...(canUngroup ? [{
+        label: 'Ungroup  (Ctrl+U)',
+        action: () => {
+          const groupIds = new Set(
+            selectedItems.filter((i) => i.groupId).map((i) => i.groupId!)
+          )
+          groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId!, gid))
+          closeContextMenu()
+        },
+      }] : []),
     ] : []),
   ]
 

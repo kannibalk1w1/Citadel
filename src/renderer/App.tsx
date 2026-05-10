@@ -245,6 +245,25 @@ export default function App(): React.ReactElement {
     // Snap toggle
     resolver.register(Actions.TOGGLE_SNAP, () => useUIStore.getState().toggleSnapToGrid())
 
+    resolver.register(Actions.GROUP, () => {
+      const { selectedIds, activeBoardId, items } = useCanvasStore.getState()
+      if (!activeBoardId || selectedIds.length < 2) return
+      const selectedItems = items().filter((i) => selectedIds.includes(i.id))
+      if (selectedItems.every((i) => i.groupId)) return
+      useCanvasStore.getState().groupItems(activeBoardId, selectedIds)
+    })
+
+    resolver.register(Actions.UNGROUP, () => {
+      const { selectedIds, activeBoardId, items } = useCanvasStore.getState()
+      if (!activeBoardId) return
+      const groupIds = new Set(
+        items()
+          .filter((i) => selectedIds.includes(i.id) && i.groupId)
+          .map((i) => i.groupId!)
+      )
+      groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId, gid))
+    })
+
     // Boards
     resolver.register(Actions.BOARD_NEW, () => {
       const canvas = useCanvasStore.getState()

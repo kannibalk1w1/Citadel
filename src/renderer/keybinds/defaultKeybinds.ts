@@ -71,4 +71,8 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.ALIGN_TOP]:      [],
   [Actions.ALIGN_CENTER_V]: [],
   [Actions.ALIGN_BOTTOM]:   [],
+
+  // Grouping
+  [Actions.GROUP]:   ['ctrl+g'],
+  [Actions.UNGROUP]: ['ctrl+u'],
 }

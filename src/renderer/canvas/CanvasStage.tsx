@@ -7,6 +7,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { ItemRenderer } from './ItemRenderer'
 import { ConnectionLayer } from './overlays/ConnectionLayer'
+import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
 import { SelectionBox } from './overlays/SelectionBox'
 import { LassoOverlay } from './overlays/LassoOverlay'
@@ -295,6 +296,7 @@ export function CanvasStage(): React.ReactElement {
       </Stage>
 
       <ConnectionLayer viewport={viewport} items={items} rubberBand={rubberBand} />
+      <GroupLayer viewport={viewport} />
     </div>
   )
 }
