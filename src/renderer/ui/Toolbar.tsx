@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { nanoid } from 'nanoid'
 import { useUIStore } from '../store/uiStore'
+import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useMascotStore } from '../store/mascotStore'
 import type { ToolMode } from '../../types'
@@ -124,6 +126,49 @@ export function Toolbar(): React.ReactElement {
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
 
+  const [youtubeOpen, setYoutubeOpen] = useState(false)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [youtubeShake, setYoutubeShake] = useState(false)
+
+  const isValidYouTubeUrl = (url: string): boolean =>
+    url.includes('youtube.com') || url.includes('youtu.be')
+
+  const closeYouTube = () => {
+    setYoutubeOpen(false)
+    setYoutubeUrl('')
+  }
+
+  const placeYouTube = () => {
+    const url = youtubeUrl.trim()
+    if (!url) return
+    if (!isValidYouTubeUrl(url)) {
+      setYoutubeShake(true)
+      setTimeout(() => { setYoutubeShake(false); setYoutubeUrl('') }, 350)
+      return
+    }
+    const vp = useCanvasStore.getState().viewport()
+    const sidebarW = 164
+    const canvasW = window.innerWidth - sidebarW
+    const cx = (canvasW / 2 - vp.x) / vp.scale
+    const cy = (window.innerHeight / 2 - vp.y) / vp.scale
+    const boardId = useCanvasStore.getState().activeBoardId
+    if (!boardId) return
+    const item = {
+      id: nanoid(),
+      type: 'youtube' as const,
+      x: cx - 240, y: cy - 135,
+      width: 480, height: 270,
+      rotation: 0, zIndex: Date.now(),
+      locked: false, visible: true, opacity: 1,
+      tags: [], src: url, meta: {},
+    }
+    useCanvasStore.getState().addItem(boardId, item)
+    useHistoryStore.getState().push('ITEM_ADD', boardId, null, item)
+    useCanvasStore.getState().setSelection([item.id])
+    useUIStore.getState().setToolMode('select')
+    closeYouTube()
+  }
+
   const handleRecord = () => {
     if (isRecording) {
       const session = stopRecording()
@@ -175,6 +220,70 @@ export function Toolbar(): React.ReactElement {
           {icon}
         </button>
       ))}
+
+      {/* ── YouTube ── */}
+      <style>{`
+        @keyframes ytShake {
+          0%,100% { transform: translateX(0); }
+          20%      { transform: translateX(-4px); }
+          40%      { transform: translateX(4px); }
+          60%      { transform: translateX(-3px); }
+          80%      { transform: translateX(3px); }
+        }
+      `}</style>
+
+      <button
+        title="YouTube Embed (paste URL)"
+        onClick={() => youtubeOpen ? closeYouTube() : setYoutubeOpen(true)}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          border: 'none',
+          cursor: 'pointer',
+          background: youtubeOpen ? 'var(--accent)' : 'transparent',
+          color: youtubeOpen ? 'var(--bg-ui)' : 'var(--text-secondary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition-fast)',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H2zm4.5 1.5 4 2.5-4 2.5V5.5z" />
+        </svg>
+      </button>
+
+      {youtubeOpen && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 2px 4px' }}>
+          <input
+            autoFocus
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') placeYouTube()
+              if (e.key === 'Escape') closeYouTube()
+            }}
+            placeholder="youtube.com/watch?v=…"
+            style={{
+              width: 148,
+              background: 'var(--bg-ui)',
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              padding: '4px 6px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              animation: youtubeShake ? 'ytShake 0.35s ease' : 'none',
+            }}
+          />
+          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+            Enter to place · Esc to cancel
+          </span>
+        </div>
+      )}
 
       <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
