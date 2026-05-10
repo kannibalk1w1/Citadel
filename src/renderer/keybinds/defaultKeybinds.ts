@@ -1,0 +1,74 @@
+import { Actions, ActionName } from './actions'
+
+// Each action maps to an array of key combos (any match triggers the action).
+// Format: modifier keys joined by '+', then the key. e.g. 'ctrl+shift+z', 'escape', 'delete'
+
+export const defaultKeybinds: Record<ActionName, string[]> = {
+  // Tool modes
+  [Actions.TOOL_SELECT]:    ['v', 'escape'],
+  [Actions.TOOL_PAN]:       ['h', 'space'],
+  [Actions.TOOL_CONNECT]:   ['c'],
+  [Actions.TOOL_LASSO]:     ['l'],
+  [Actions.TOOL_TEXT]:      ['t'],
+  [Actions.TOOL_STICKY]:    ['n'],
+  [Actions.TOOL_LINK]:      ['k'],
+  [Actions.TOOL_TAG]:       ['g'],
+  [Actions.TOOL_SWATCH]:    ['w'],
+
+  // Edit
+  [Actions.UNDO]:           ['ctrl+z', 'meta+z'],
+  [Actions.REDO]:           ['ctrl+shift+z', 'meta+shift+z', 'ctrl+y'],
+  [Actions.DELETE]:         ['delete', 'backspace'],
+  [Actions.DUPLICATE]:      ['ctrl+d', 'meta+d'],
+  [Actions.SELECT_ALL]:     ['ctrl+a', 'meta+a'],
+  [Actions.DESELECT]:       ['escape'],
+  [Actions.COPY]:           ['ctrl+c', 'meta+c'],
+  [Actions.PASTE]:          ['ctrl+v', 'meta+v'],
+  [Actions.CUT]:            ['ctrl+x', 'meta+x'],
+
+  // Item ordering
+  [Actions.BRING_FRONT]:    ['ctrl+shift+]', 'meta+shift+]'],
+  [Actions.BRING_FORWARD]:  ['ctrl+]', 'meta+]'],
+  [Actions.SEND_BACK]:      ['ctrl+shift+[', 'meta+shift+['],
+  [Actions.SEND_BACKWARD]:  ['ctrl+[', 'meta+['],
+
+  // Viewport
+  [Actions.ZOOM_IN]:        ['ctrl+=', 'meta+=', 'ctrl+shift+='],
+  [Actions.ZOOM_OUT]:       ['ctrl+-', 'meta+-'],
+  [Actions.ZOOM_FIT]:       ['ctrl+shift+h', 'meta+shift+h'],
+  [Actions.ZOOM_RESET]:     ['ctrl+0', 'meta+0'],
+
+  // File
+  [Actions.SAVE]:           ['ctrl+s', 'meta+s'],
+  [Actions.SAVE_AS]:        ['ctrl+shift+s', 'meta+shift+s'],
+  [Actions.OPEN]:           ['ctrl+o', 'meta+o'],
+  [Actions.NEW_PROJECT]:    ['ctrl+n', 'meta+n'],
+  [Actions.EXPORT_PDF]:     [],
+  [Actions.EXPORT_IMAGE]:   [],
+  [Actions.EXPORT_ZIP]:     [],
+
+  // Boards
+  [Actions.BOARD_NEW]:      ['ctrl+shift+n', 'meta+shift+n'],
+  [Actions.BOARD_NEXT]:     ['ctrl+pagedown', 'meta+pagedown'],
+  [Actions.BOARD_PREV]:     ['ctrl+pageup', 'meta+pageup'],
+  [Actions.BOARD_RENAME]:   ['f2'],
+  [Actions.BOARD_DELETE]:   [],
+
+  // Panels
+  [Actions.PANEL_PROPERTIES]: ['ctrl+p', 'meta+p'],
+  [Actions.PANEL_KEYBINDS]:   [],
+  [Actions.PANEL_SEARCH]:     ['ctrl+f', 'meta+f'],
+
+  // Recording
+  [Actions.RECORD_TOGGLE]:  ['ctrl+r', 'meta+r'],
+  [Actions.RECORD_PLAY]:    [],
+
+  // Snap / align
+  [Actions.TOGGLE_SNAP]:    ['ctrl+shift+g'],
+  [Actions.ALIGN_LEFT]:     [],
+  [Actions.ALIGN_CENTER_H]: [],
+  [Actions.ALIGN_RIGHT]:    [],
+  [Actions.ALIGN_TOP]:      [],
+  [Actions.ALIGN_CENTER_V]: [],
+  [Actions.ALIGN_BOTTOM]:   [],
+}

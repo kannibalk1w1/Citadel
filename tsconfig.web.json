@@ -1,0 +1,19 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": ["src/renderer/**/*", "src/types/**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "paths": {
+      "@/*": ["src/renderer/*"],
+      "@store/*": ["src/renderer/store/*"],
+      "@canvas/*": ["src/renderer/canvas/*"],
+      "@ui/*": ["src/renderer/ui/*"],
+      "@keybinds/*": ["src/renderer/keybinds/*"],
+      "@theme/*": ["src/renderer/theme/*"],
+      "@mascot/*": ["src/renderer/mascot/*"],
+      "@export/*": ["src/renderer/export/*"],
+      "@plugins/*": ["src/renderer/plugins/*"],
+      "@types/*": ["src/types/*"]
+    }
+  }
+}
