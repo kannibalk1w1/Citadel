@@ -5,6 +5,11 @@ declare module '*.mp3' {
   export default src
 }
 
+declare module '*.cur' {
+  const src: string
+  export default src
+}
+
 import type { IPC } from '../preload/index'
 
 declare global {

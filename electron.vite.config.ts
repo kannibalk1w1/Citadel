@@ -17,6 +17,7 @@ export default defineConfig({
   renderer: {
     root: 'src/renderer',
     plugins: [react()],
+    assetsInclude: ['**/*.cur'],
     resolve: {
       alias: {
         '@': resolve('src/renderer'),
