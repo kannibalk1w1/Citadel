@@ -23,6 +23,7 @@ const CURSOR: Record<string, string> = {
   text: 'text',
   sticky: 'cell',
   swatch: 'cell',
+  comparison: 'cell',
   lasso: 'crosshair',
   default: 'default',
 }
@@ -120,6 +121,20 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
+      useUIStore.getState().setToolMode('select')
+      return
+    }
+
+    if (toolMode === 'comparison') {
+      const newItem = {
+        id: nanoid(), type: 'comparison' as const,
+        x: cx - 200, y: cy - 150, width: 400, height: 300,
+        rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
+        tags: [], meta: { srcA: '', srcB: '', splitX: 0.5 },
+      }
+      useCanvasStore.getState().addItem(activeBoardId, newItem)
+      useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, newItem)
+      useCanvasStore.getState().setSelection([newItem.id])
       useUIStore.getState().setToolMode('select')
       return
     }

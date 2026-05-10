@@ -222,6 +222,95 @@ function AlignPanel(): React.ReactElement {
   )
 }
 
+type IpcApi = { invoke: (channel: string, args: unknown) => Promise<unknown> }
+
+function ComparisonSlotRow({
+  label,
+  src,
+  onSet,
+  onClear,
+}: {
+  label: string
+  src: string
+  onSet: (path: string) => void
+  onClear: () => void
+}): React.ReactElement {
+  const filename = src ? src.split(/[\\/]/).pop() ?? src : null
+
+  const pickFile = async () => {
+    try {
+      const ipc = (window as unknown as { ipc?: IpcApi }).ipc
+      if (!ipc) return
+      const result = await ipc.invoke('file:openDialog', {})
+      if (result && typeof result === 'object' && 'path' in result && typeof (result as Record<string, unknown>).path === 'string') {
+        onSet((result as Record<string, unknown>).path as string)
+      }
+    } catch {
+      // file picker dismissed or IPC unavailable
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <span style={{ width: 12, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+        {label}
+      </span>
+      {src ? (
+        <img
+          src={'local:///' + src.replace(/\\/g, '/')}
+          style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: 2, flexShrink: 0, border: '1px solid var(--border)' }}
+          alt=""
+        />
+      ) : (
+        <div style={{ width: 26, height: 26, borderRadius: 2, background: 'var(--bg-hover)', border: '1px solid var(--border)', flexShrink: 0 }} />
+      )}
+      <span style={{
+        flex: 1,
+        fontSize: 10,
+        color: filename ? 'var(--text-secondary)' : 'var(--text-muted)',
+        fontFamily: 'var(--font-mono)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}>
+        {filename ?? 'None'}
+      </span>
+      <button
+        onClick={pickFile}
+        style={{
+          background: 'var(--bg-ui)',
+          border: '1px solid var(--border)',
+          borderRadius: 3,
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          fontSize: 10,
+          padding: '2px 6px',
+          fontFamily: 'var(--font-mono)',
+          flexShrink: 0,
+        }}
+      >
+        Set…
+      </button>
+      {src && (
+        <button
+          onClick={onClear}
+          title="Clear"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--accent-danger)',
+            cursor: 'pointer',
+            fontSize: 14,
+            lineHeight: 1,
+            padding: '0 2px',
+            flexShrink: 0,
+          }}
+        >×</button>
+      )}
+    </div>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 
 export function ItemProperties(): React.ReactElement | null {
@@ -409,6 +498,25 @@ export function ItemProperties(): React.ReactElement | null {
               }}
             />
           </Field>
+        </>
+      )}
+
+      {/* ── Comparison-specific ── */}
+      {item.type === 'comparison' && (
+        <>
+          <Divider label="Comparison" />
+          <ComparisonSlotRow
+            label="A"
+            src={(item.meta?.srcA as string) ?? ''}
+            onSet={(path) => updateMeta({ srcA: path })}
+            onClear={() => updateMeta({ srcA: '' })}
+          />
+          <ComparisonSlotRow
+            label="B"
+            src={(item.meta?.srcB as string) ?? ''}
+            onSet={(path) => updateMeta({ srcB: path })}
+            onClear={() => updateMeta({ srcB: '' })}
+          />
         </>
       )}
 

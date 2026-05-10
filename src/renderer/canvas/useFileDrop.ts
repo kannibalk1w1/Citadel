@@ -89,6 +89,38 @@ export function useFileDrop() {
     const dropX = (e.clientX - viewport.x) / viewport.scale
     const dropY = (e.clientY - viewport.y) / viewport.scale
 
+    // ── Comparison drop intercept ─────────────────────────────────────────────
+    const allItems = useCanvasStore.getState().items()
+    const hitComparison = allItems.find(
+      (it) =>
+        it.type === 'comparison' &&
+        dropX >= it.x &&
+        dropX <= it.x + it.width &&
+        dropY >= it.y &&
+        dropY <= it.y + it.height
+    )
+
+    if (hitComparison) {
+      const firstFile = files[0]
+      if (!firstFile) return
+      const ext = firstFile?.name.split('.').pop()?.toLowerCase() ?? ''
+      const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'tiff', 'tif', 'svg'].includes(ext)
+      if (isImage) {
+        const slot = dropX < hitComparison.x + hitComparison.width / 2 ? 'srcA' : 'srcB'
+        const newMeta = { ...hitComparison.meta, [slot]: firstFile.path }
+        useCanvasStore.getState().updateItem(activeBoardId, hitComparison.id, { meta: newMeta })
+        pushEvent(
+          'ITEM_STYLE',
+          activeBoardId,
+          { id: hitComparison.id, meta: hitComparison.meta },
+          { id: hitComparison.id, meta: newMeta }
+        )
+        triggerEffect('lightning-in')
+        return
+      }
+    }
+    // ── End comparison intercept ──────────────────────────────────────────────
+
     // Offset successive items so they don't all stack exactly
     let offsetIndex = 0
     const added: CanvasItem[] = []

@@ -99,6 +99,17 @@ const TOOLS: ToolDef[] = [
       </svg>
     ),
   },
+  {
+    mode: 'comparison' as ToolMode, label: 'Comparison', key: 'P',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+        <rect x="2" y="4" width="14" height="10" rx="1" />
+        <line x1="9" y1="4" x2="9" y2="14" />
+        <line x1="6" y1="7" x2="6" y2="11" />
+        <line x1="12" y1="7" x2="12" y2="11" />
+      </svg>
+    ),
+  },
 ]
 
 export function Toolbar(): React.ReactElement {

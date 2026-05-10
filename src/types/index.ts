@@ -126,6 +126,7 @@ export type ToolMode =
   | 'tag'
   | 'swatch'
   | 'record'
+  | 'comparison'
 
 // ─── Keybinds ─────────────────────────────────────────────────────────────────
 
