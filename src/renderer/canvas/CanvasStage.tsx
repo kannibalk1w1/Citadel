@@ -12,6 +12,7 @@ import { SelectionBox } from './overlays/SelectionBox'
 import { LassoOverlay } from './overlays/LassoOverlay'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
+import { engine } from '../arcade/HyperTypeEngine'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
@@ -93,6 +94,7 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
+      engine.burst('📌', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -108,6 +110,7 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().setSelection([item.id])
       useUIStore.getState().setEditingItemId(item.id)
       useUIStore.getState().setToolMode('select')
+      engine.burst('T', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -122,6 +125,7 @@ export function CanvasStage(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
       useUIStore.getState().setToolMode('select')
+      engine.burst('★', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -136,6 +140,7 @@ export function CanvasStage(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, newItem)
       useCanvasStore.getState().setSelection([newItem.id])
       useUIStore.getState().setToolMode('select')
+      engine.burst('⟺', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 

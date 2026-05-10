@@ -8,6 +8,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const [filter, setFilter] = useState('')
   const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
+  const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
+  const setHyperTypeEnabled = useUIStore((s) => s.setHyperTypeEnabled)
 
   if (!isOpen) return null
 
@@ -40,6 +42,20 @@ export function KeybindSettings(): React.ReactElement | null {
           </span>
           <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
             dark souls
+          </span>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 6 }}>
+          <input
+            type="checkbox"
+            checked={hyperTypeEnabled}
+            onChange={(e) => setHyperTypeEnabled(e.target.checked)}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            HyperType mode
+          </span>
+          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
+            by Thanh-Huy1104<br />MIT
           </span>
         </label>
       </div>
