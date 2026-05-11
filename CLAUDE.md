@@ -300,6 +300,7 @@ Key tokens:
 | `shell:openURL` | r→m | `{ url }` |
 | `settings:get` | r→m | `{ key }` → `{ value }` |
 | `settings:set` | r→m | `{ key, value }` |
+| `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
 
 ---
 
