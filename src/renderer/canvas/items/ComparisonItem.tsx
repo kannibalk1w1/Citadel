@@ -203,6 +203,9 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
       >
+        {/* Full-area hit target — allows selection by clicking anywhere on the item */}
+        <Rect x={0} y={0} width={item.width} height={item.height} fill="rgba(0,0,0,0.001)" />
+
         {/* ── Slot B — right / background ── */}
         {imageB ? (
           <KonvaImage
@@ -237,15 +240,19 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
 
         {/* ── Slot A — left / clipped foreground ── */}
         {imageA ? (
-          <KonvaImage
-            image={imageA}
-            x={0} y={0}
-            width={item.width} height={item.height}
-            opacity={item.opacity}
+          <Group
             clipX={0} clipY={0}
             clipWidth={splitPx} clipHeight={item.height}
             listening={false}
-          />
+          >
+            <KonvaImage
+              image={imageA}
+              x={0} y={0}
+              width={item.width} height={item.height}
+              opacity={item.opacity}
+              listening={false}
+            />
+          </Group>
         ) : (
           <>
             <Rect
