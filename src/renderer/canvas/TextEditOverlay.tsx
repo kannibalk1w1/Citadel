@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
@@ -20,6 +20,13 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   // Shallow copy is safe: all current meta fields (content, color, fontSize, align, fontStyle) are primitives.
   // Revisit with a deep clone if nested-object meta fields are ever added.
   const beforeMeta = useRef<Record<string, unknown>>({ ...(item.meta ?? {}) })
+  const [pendingMeta, setPendingMeta] = useState<Record<string, unknown>>({ ...(item.meta ?? {}) })
+
+  const applyMeta = (patch: Record<string, unknown>) => {
+    const next = { ...pendingMeta, ...patch }
+    setPendingMeta(next)
+    updateItem(activeBoardId, item.id, { meta: { ...(item.meta ?? {}), ...next } })
+  }
 
   const sx = item.x * viewport.scale + viewport.x
   const sy = item.y * viewport.scale + viewport.y
@@ -41,7 +48,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
     if (committed.current) return
     committed.current = true
     const val = ref.current?.value ?? ''
-    const afterMeta = { ...(item.meta ?? {}), content: val }
+    const afterMeta = { ...pendingMeta, content: val }
     updateItem(activeBoardId, item.id, { meta: afterMeta })
     useHistoryStore.getState().push(
       'ITEM_STYLE',
@@ -52,6 +59,13 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
     close()
   }
 
+  const revert = () => {
+    if (committed.current) return
+    committed.current = true
+    updateItem(activeBoardId, item.id, { meta: beforeMeta.current })
+    close()
+  }
+
   return (
     <textarea
       ref={ref}
@@ -59,10 +73,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
       onBlur={commit}
       onKeyDown={(e) => {
         e.stopPropagation() // prevent canvas keybinds while typing
-        if (e.key === 'Escape') { close() }
+        if (e.key === 'Escape') { revert(); return }
         // Single-line text: Enter commits. Sticky: Shift+Enter = newline, Enter = commit
         if (e.key === 'Enter' && !isSticky) { e.preventDefault(); commit() }
-        if (e.key === 'Enter' && isSticky && !e.shiftKey) { /* allow newlines */ }
       }}
       style={{
         position: 'fixed',

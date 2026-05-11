@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, fireEvent, cleanup } from '@testing-library/react'
 import React from 'react'
 import { TextEditOverlay } from './TextEditOverlay'
 
@@ -44,6 +44,10 @@ beforeEach(() => {
   mockSetEditingItemId.mockClear()
 })
 
+afterEach(() => {
+  cleanup()
+})
+
 describe('TextEditOverlay — commit', () => {
   it('pushes ITEM_STYLE to historyStore on blur', () => {
     const { getByRole } = render(<TextEditOverlay item={item} />)
@@ -61,5 +65,16 @@ describe('TextEditOverlay — commit', () => {
         meta: expect.objectContaining({ content: 'world' }),
       }),
     )
+  })
+})
+
+describe('TextEditOverlay — escape', () => {
+  it('restores beforeMeta via updateItem and does not push history', () => {
+    const { getByRole } = render(<TextEditOverlay item={item} />)
+    const ta = getByRole('textbox')
+    fireEvent.keyDown(ta, { key: 'Escape' })
+    expect(mockUpdateItem).toHaveBeenCalledWith('board-1', 'item-1', { meta: item.meta })
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(mockSetEditingItemId).toHaveBeenCalledWith(null)
   })
 })
