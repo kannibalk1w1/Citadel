@@ -222,7 +222,6 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
           commit()
         }}
         onKeyDown={(e) => {
-          e.stopPropagation()
           if (e.key === 'Escape') { revert(); return }
           if (e.key === 'Enter' && !isSticky) { e.preventDefault(); commit() }
         }}

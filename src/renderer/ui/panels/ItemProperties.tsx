@@ -242,7 +242,9 @@ function ComparisonSlotRow({
     try {
       const ipc = (window as unknown as { ipc?: IpcApi }).ipc
       if (!ipc) return
-      const result = await ipc.invoke('file:openDialog', {})
+      const result = await ipc.invoke('file:openDialog', {
+        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] }],
+      })
       if (result && typeof result === 'object' && 'path' in result && typeof (result as Record<string, unknown>).path === 'string') {
         onSet((result as Record<string, unknown>).path as string)
       }

@@ -4,7 +4,7 @@ import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useMascotStore } from '../store/mascotStore'
-import type { ToolMode } from '../../types'
+import type { CanvasItem, ToolMode } from '../../types'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: React.ReactElement }
 
@@ -117,6 +117,8 @@ const TOOLS: ToolDef[] = [
 export function Toolbar(): React.ReactElement {
   const toolMode = useUIStore((s) => s.toolMode)
   const setToolMode = useUIStore((s) => s.setToolMode)
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const allItems = useCanvasStore((s) => s.items())
   const isRecording = useHistoryStore((s) => s.isRecording)
   const startRecording = useHistoryStore((s) => s.startRecording)
   const stopRecording = useHistoryStore((s) => s.stopRecording)
@@ -171,6 +173,36 @@ export function Toolbar(): React.ReactElement {
     closeYouTube()
   }
 
+  const SRC_TYPES = new Set(['image', 'gif', 'video'])
+  const mergeSelectedToCompare = () => {
+    const { activeBoardId, items, removeItems, addItem, setSelection } = useCanvasStore.getState()
+    if (!activeBoardId || selectedIds.length !== 2) return
+    const sel = items().filter((i) => selectedIds.includes(i.id))
+    if (sel.length !== 2 || sel.some((i) => !i.src)) return
+    const [a, b] = sel.sort((x, y) => x.x - y.x)
+    const minX = Math.min(a.x, b.x)
+    const minY = Math.min(a.y, b.y)
+    const maxX = Math.max(a.x + a.width, b.x + b.width)
+    const maxY = Math.max(a.y + a.height, b.y + b.height)
+    const compare: CanvasItem = {
+      id: nanoid(),
+      type: 'comparison',
+      x: minX, y: minY,
+      width: maxX - minX, height: maxY - minY,
+      rotation: 0, zIndex: Math.max(a.zIndex, b.zIndex),
+      locked: false, visible: true, opacity: 1, tags: [],
+      meta: { srcA: a.src, srcB: b.src, splitX: 0.5 },
+    }
+    useHistoryStore.getState().push('COMPARE_MERGE', activeBoardId, { items: [a, b] }, compare)
+    removeItems(activeBoardId, selectedIds)
+    addItem(activeBoardId, compare)
+    setSelection([compare.id])
+    setToolMode('select')
+  }
+
+  const canMergeToCompare = selectedIds.length === 2 &&
+    allItems.filter((i) => selectedIds.includes(i.id)).every((i) => SRC_TYPES.has(i.type) && !!i.src)
+
   const handleRecord = () => {
     if (isRecording) {
       const session = stopRecording()
@@ -200,19 +232,21 @@ export function Toolbar(): React.ReactElement {
         boxShadow: 'var(--shadow-md)',
       }}
     >
-      {TOOLS.map(({ mode, label, key, icon }) => (
+      {TOOLS.map(({ mode, label, key, icon }) => {
+        const isMergeMode = mode === 'comparison' && canMergeToCompare
+        return (
         <button
           key={mode}
-          title={`${label} (${key})`}
-          onClick={() => setToolMode(mode)}
+          title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+          onClick={() => isMergeMode ? mergeSelectedToCompare() : setToolMode(mode)}
           style={{
             width: 36,
             height: 36,
             borderRadius: 4,
-            border: 'none',
+            border: isMergeMode ? '1.5px solid var(--accent)' : 'none',
             cursor: 'pointer',
             background: toolMode === mode ? 'var(--accent)' : 'transparent',
-            color: toolMode === mode ? 'var(--bg-ui)' : 'var(--text-secondary)',
+            color: toolMode === mode ? 'var(--bg-ui)' : isMergeMode ? 'var(--accent)' : 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -221,7 +255,8 @@ export function Toolbar(): React.ReactElement {
         >
           {icon}
         </button>
-      ))}
+        )
+      })}
 
       {/* ── YouTube ── */}
       <style>{`

@@ -96,6 +96,7 @@ export type CanvasEventType =
   | 'BOARD_DELETE'
   | 'BOARD_RENAME'
   | 'SELECTION_CHANGE'
+  | 'COMPARE_MERGE'
 
 export type CanvasEvent = {
   id: string

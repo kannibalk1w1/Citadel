@@ -118,6 +118,11 @@ export default function App(): React.ReactElement {
       } else if (event.type === 'ITEM_MOVE' || event.type === 'ITEM_STYLE') {
         const patch = event.before as Partial<CanvasItem> & { id: string }
         canvas.updateItem(event.boardId, patch.id, patch)
+      } else if (event.type === 'COMPARE_MERGE') {
+        const { items: originals } = event.before as { items: CanvasItem[] }
+        const merged = event.after as CanvasItem
+        canvas.removeItems(event.boardId, [merged.id])
+        originals.forEach((i) => canvas.addItem(event.boardId, i))
       }
       triggerEffect('rewind-swirl')
       engine.burst('↩', lastMouse.x, lastMouse.y)
@@ -137,6 +142,11 @@ export default function App(): React.ReactElement {
       } else if (event.type === 'ITEM_MOVE' || event.type === 'ITEM_STYLE') {
         const patch = event.after as Partial<CanvasItem> & { id: string }
         canvas.updateItem(event.boardId, patch.id, patch)
+      } else if (event.type === 'COMPARE_MERGE') {
+        const { items: originals } = event.before as { items: CanvasItem[] }
+        const merged = event.after as CanvasItem
+        canvas.removeItems(event.boardId, originals.map((i) => i.id))
+        canvas.addItem(event.boardId, merged)
       }
       triggerEffect('forward-surge')
       engine.burst('↪', lastMouse.x, lastMouse.y)

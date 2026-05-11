@@ -40,9 +40,9 @@ export function registerIpcHandlers(): void {
   })
 
   // ── file:openDialog ────────────────────────────────────────────────────────
-  ipcMain.handle('file:openDialog', async () => {
+  ipcMain.handle('file:openDialog', async (_e, { filters }: { filters?: Electron.FileFilter[] } = {}) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
-      filters: [
+      filters: filters ?? [
         { name: 'Citadel Files', extensions: ['citadel', 'citadelz'] },
       ],
       properties: ['openFile'],
