@@ -436,11 +436,11 @@ export default function App(): React.ReactElement {
   // ── Global keydown listener ────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      engine.keyStroke(e.key, lastMouse.x, lastMouse.y)
       // Don't intercept when typing in an input/textarea
       const tag = (e.target as HTMLElement).tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
       resolver.resolve(e)
-      engine.keyStroke(e.key, lastMouse.x, lastMouse.y)
     }
     const onMouseMove = (e: MouseEvent) => {
       lastMouse.x = e.clientX
