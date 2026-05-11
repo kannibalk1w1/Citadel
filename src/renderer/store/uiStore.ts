@@ -62,6 +62,10 @@ type UIState = {
   // Dragon cursor
   dragonCursorEnabled: boolean
   setDragonCursorEnabled: (enabled: boolean) => void
+
+  // UI scale
+  uiScale: number
+  setUiScale: (v: number) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -127,5 +131,13 @@ export const useUIStore = create<UIState>((set) => ({
     set({ dragonCursorEnabled: enabled })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'ui.dragonCursorEnabled', value: enabled }).catch(console.error)
+  },
+
+  uiScale: 1.0,
+  setUiScale: (v) => {
+    const clamped = Math.min(1.5, Math.max(0.75, v))
+    set({ uiScale: clamped })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('zoom:set', { factor: clamped }).catch(console.error)
   },
 }))
