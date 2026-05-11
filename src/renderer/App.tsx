@@ -82,7 +82,7 @@ export default function App(): React.ReactElement {
 
     ipc.invoke('settings:get', { key: 'ui.zoomFactor' }).then((res) => {
       const { value } = res as { value: unknown }
-      if (typeof value === 'number') useUIStore.getState().setUiScale(value)
+      if (typeof value === 'number' && value !== 1.0) useUIStore.getState().setUiScale(value)
     }).catch(() => {})
   }, [])
 

@@ -3,6 +3,19 @@ import { useUIStore } from '../../store/uiStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { Actions } from '../../keybinds/actions'
 
+const btnStyle: React.CSSProperties = {
+  width: 22, height: 22,
+  background: 'var(--bg-canvas)',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border)',
+  borderRadius: 3,
+  cursor: 'pointer',
+  fontSize: 14,
+  fontFamily: 'var(--font-mono)',
+  padding: 0,
+  lineHeight: 1,
+}
+
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const togglePanel = useUIStore((s) => s.togglePanel)
@@ -18,19 +31,6 @@ export function KeybindSettings(): React.ReactElement | null {
 
   if (!isOpen) return null
 
-  const btnStyle: React.CSSProperties = {
-    width: 22, height: 22,
-    background: 'var(--bg-canvas)',
-    color: 'var(--text-primary)',
-    border: '1px solid var(--border)',
-    borderRadius: 3,
-    cursor: 'pointer',
-    fontSize: 14,
-    fontFamily: 'var(--font-mono)',
-    padding: 0,
-    lineHeight: 1,
-  }
-
   const entries = Object.entries(defaultKeybinds).filter(([action]) =>
     !filter || action.toLowerCase().includes(filter.toLowerCase())
   )
@@ -43,7 +43,7 @@ export function KeybindSettings(): React.ReactElement | null {
         </h2>
         <button
           onClick={() => togglePanel('keybindSettings')}
-          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '2px 4px' }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '2px 4px' }}
           title="Close"
         >
           ×
@@ -107,7 +107,8 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={() => setUiScale(uiScale - 0.25)}
             disabled={uiScale <= 0.75}
-            style={btnStyle}
+            aria-label="Decrease UI scale"
+            style={{ ...btnStyle, opacity: uiScale <= 0.75 ? 0.35 : 1, cursor: uiScale <= 0.75 ? 'not-allowed' : 'pointer' }}
           >−</button>
           <span style={{ width: 36, textAlign: 'center', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
             {Math.round(uiScale * 100)}%
@@ -116,7 +117,8 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={() => setUiScale(uiScale + 0.25)}
             disabled={uiScale >= 1.5}
-            style={btnStyle}
+            aria-label="Increase UI scale"
+            style={{ ...btnStyle, opacity: uiScale >= 1.5 ? 0.35 : 1, cursor: uiScale >= 1.5 ? 'not-allowed' : 'pointer' }}
           >+</button>
         </div>
       </div>
