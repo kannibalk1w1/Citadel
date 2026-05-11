@@ -37,9 +37,11 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const [pendingMeta, setPendingMeta] = useState<Record<string, unknown>>({ ...(item.meta ?? {}) })
 
   const applyMeta = (patch: Record<string, unknown>) => {
-    const next = { ...pendingMeta, ...patch }
-    setPendingMeta(next)
-    updateItem(activeBoardId, item.id, { meta: next })
+    setPendingMeta((prev) => {
+      const next = { ...prev, ...patch }
+      updateItem(activeBoardId, item.id, { meta: next })
+      return next
+    })
   }
 
   const sx = item.x * viewport.scale + viewport.x
@@ -92,7 +94,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
           ref={toolbarRef}
           style={{
             position: 'fixed',
-            left: sx,
+            left: Math.min(sx, window.innerWidth - 360),
             top: toolbarTop,
             height: TOOLBAR_H,
             background: 'var(--bg-panel)',
