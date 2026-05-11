@@ -77,4 +77,13 @@ describe('TextEditOverlay — escape', () => {
     expect(mockPush).not.toHaveBeenCalled()
     expect(mockSetEditingItemId).toHaveBeenCalledWith(null)
   })
+
+  it('blur after Escape does not double-commit', () => {
+    const { getByRole } = render(<TextEditOverlay item={item} />)
+    const ta = getByRole('textbox')
+    fireEvent.keyDown(ta, { key: 'Escape' })
+    fireEvent.blur(ta)
+    expect(mockUpdateItem).toHaveBeenCalledOnce()
+    expect(mockPush).not.toHaveBeenCalled()
+  })
 })

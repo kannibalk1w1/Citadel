@@ -25,7 +25,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const applyMeta = (patch: Record<string, unknown>) => {
     const next = { ...pendingMeta, ...patch }
     setPendingMeta(next)
-    updateItem(activeBoardId, item.id, { meta: { ...(item.meta ?? {}), ...next } })
+    updateItem(activeBoardId, item.id, { meta: next })
   }
 
   const sx = item.x * viewport.scale + viewport.x
