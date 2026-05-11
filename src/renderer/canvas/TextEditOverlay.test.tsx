@@ -54,7 +54,10 @@ describe('TextEditOverlay — commit', () => {
     const ta = getByRole('textbox') as HTMLTextAreaElement
     fireEvent.change(ta, { target: { value: 'world' } })
     fireEvent.blur(ta)
-    expect(mockUpdateItem).toHaveBeenCalledOnce()
+    expect(mockUpdateItem).toHaveBeenLastCalledWith(
+      'board-1', 'item-1',
+      expect.objectContaining({ meta: expect.objectContaining({ content: 'world' }) }),
+    )
     expect(mockPush).toHaveBeenCalledOnce()
     expect(mockPush).toHaveBeenCalledWith(
       'ITEM_STYLE',

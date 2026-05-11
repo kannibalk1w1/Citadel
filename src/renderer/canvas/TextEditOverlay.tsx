@@ -29,6 +29,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const setEditingItemId = useUIStore((s) => s.setEditingItemId)
   const ref = useRef<HTMLTextAreaElement>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
   const committed = useRef(false)
   // Shallow copy is safe: all current meta fields (content, color, fontSize, align, fontStyle) are primitives.
   // Revisit with a deep clone if nested-object meta fields are ever added.
@@ -47,7 +48,11 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const sh = item.height * viewport.scale
   const isSticky = item.type === 'sticky'
   const displayFontSize = ((pendingMeta.fontSize as number) ?? (isSticky ? 14 : 18)) * viewport.scale
-  const toolbarTop = sy < TOOLBAR_H + 8 ? sy + sh + 4 : sy - TOOLBAR_H - 4
+  const fitsAbove = sy >= TOOLBAR_H + 8
+  const fitsBelow = sy + sh + 4 + TOOLBAR_H <= window.innerHeight
+  const toolbarTop = fitsAbove ? sy - TOOLBAR_H - 4
+    : fitsBelow ? sy + sh + 4
+    : sy - TOOLBAR_H - 4
 
   useEffect(() => {
     const el = ref.current
@@ -84,6 +89,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
     <>
       {isSticky && (
         <div
+          ref={toolbarRef}
           style={{
             position: 'fixed',
             left: sx,
@@ -105,11 +111,12 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             {STICKY_COLORS.map((c) => (
               <button
                 key={c}
+                type="button"
                 onMouseDown={(e) => { e.preventDefault(); applyMeta({ color: c }) }}
                 style={{
                   width: 16, height: 16,
                   background: c,
-                  border: ((pendingMeta.color ?? '#2a2820') === c)
+                  border: pendingMeta.color === c
                     ? '1.5px solid var(--accent)'
                     : '1.5px solid var(--border)',
                   borderRadius: 3,
@@ -122,7 +129,6 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             <input
               type="color"
               value={(pendingMeta.color as string) ?? '#2a2820'}
-              onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => applyMeta({ color: e.target.value })}
               style={{
                 width: 16, height: 16,
@@ -138,6 +144,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
               return (
                 <button
                   key={value}
+                  type="button"
                   onMouseDown={(e) => { e.preventDefault(); applyMeta({ fontSize: value }) }}
                   style={{
                     width: 22, height: 22,
@@ -164,6 +171,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
               return (
                 <button
                   key={value}
+                  type="button"
                   onMouseDown={(e) => { e.preventDefault(); applyMeta({ align: value }) }}
                   style={{
                     width: 22, height: 22,
@@ -184,34 +192,33 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             })}
           </div>
           {/* Bold */}
-          {(() => {
-            const active = pendingMeta.fontStyle === 'bold'
-            return (
-              <button
-                onMouseDown={(e) => { e.preventDefault(); applyMeta({ fontStyle: active ? 'normal' : 'bold' }) }}
-                style={{
-                  width: 22, height: 22,
-                  background: active ? 'var(--accent)' : 'var(--bg-canvas)',
-                  color: active ? '#0f0d0b' : 'var(--text-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 3,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  padding: 0,
-                }}
-              >
-                B
-              </button>
-            )
-          })()}
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); applyMeta({ fontStyle: pendingMeta.fontStyle === 'bold' ? 'normal' : 'bold' }) }}
+            style={{
+              width: 22, height: 22,
+              background: pendingMeta.fontStyle === 'bold' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: pendingMeta.fontStyle === 'bold' ? '#0f0d0b' : 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              cursor: 'pointer',
+              fontSize: 12,
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              padding: 0,
+            }}
+          >
+            B
+          </button>
         </div>
       )}
       <textarea
         ref={ref}
         defaultValue={(item.meta?.content as string) ?? ''}
-        onBlur={commit}
+        onBlur={(e) => {
+          if (toolbarRef.current?.contains(e.relatedTarget as Node)) return
+          commit()
+        }}
         onKeyDown={(e) => {
           e.stopPropagation()
           if (e.key === 'Escape') { revert(); return }
