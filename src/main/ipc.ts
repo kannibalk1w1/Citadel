@@ -150,6 +150,7 @@ export function registerIpcHandlers(): void {
 
   // ── zoom:set ───────────────────────────────────────────────────────────────
   ipcMain.handle('zoom:set', async (e, { factor }: { factor: number }) => {
+    if (!Number.isFinite(factor)) return { ok: false }
     const clamped = Math.min(1.5, Math.max(0.75, factor))
     e.sender.setZoomFactor(clamped)
     const settings = readSettings()
