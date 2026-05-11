@@ -18,22 +18,25 @@
   "dependencies": {
     "electron-updater": "^6.1.7",
     "gifler": "^0.1.0",
-    "nanoid": "^5.0.7",
-    "use-image": "^1.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "jszip": "^3.10.1",
     "konva": "^9.3.3",
+    "nanoid": "^5.0.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-konva": "^18.2.10",
     "three": "^0.162.0",
+    "use-image": "^1.1.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@playwright/test": "^1.42.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jsdom": "^28.0.1",
     "@types/jszip": "^3.4.1",
     "@types/node": "^20.11.30",
     "@types/react": "^18.2.67",
@@ -44,6 +47,7 @@
     "electron": "^29.1.4",
     "electron-builder": "^24.13.2",
     "electron-vite": "^2.0.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.4.2",
@@ -58,8 +62,18 @@
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "resources/icon.ico"
     },
@@ -68,8 +82,16 @@
       "allowToChangeInstallationDirectory": true
     },
     "fileAssociations": [
-      { "ext": "citadel", "name": "Citadel Project", "description": "Citadel project file" },
-      { "ext": "citadelz", "name": "Citadel Archive", "description": "Citadel bundled archive" }
+      {
+        "ext": "citadel",
+        "name": "Citadel Project",
+        "description": "Citadel project file"
+      },
+      {
+        "ext": "citadelz",
+        "name": "Citadel Archive",
+        "description": "Citadel bundled archive"
+      }
     ]
   }
 }

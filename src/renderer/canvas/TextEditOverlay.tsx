@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
+import { useHistoryStore } from '../store/historyStore'
 
 type Props = { item: CanvasItem }
 
@@ -16,13 +17,16 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const setEditingItemId = useUIStore((s) => s.setEditingItemId)
   const ref = useRef<HTMLTextAreaElement>(null)
   const committed = useRef(false)
+  // Shallow copy is safe: all current meta fields (content, color, fontSize, align, fontStyle) are primitives.
+  // Revisit with a deep clone if nested-object meta fields are ever added.
+  const beforeMeta = useRef<Record<string, unknown>>({ ...(item.meta ?? {}) })
 
   const sx = item.x * viewport.scale + viewport.x
   const sy = item.y * viewport.scale + viewport.y
   const sw = item.width * viewport.scale
   const sh = item.height * viewport.scale
   const fontSize = ((item.meta?.fontSize as number) ?? (item.type === 'sticky' ? 14 : 18)) * viewport.scale
-  const isSicky = item.type === 'sticky'
+  const isSticky = item.type === 'sticky'
 
   useEffect(() => {
     const el = ref.current
@@ -37,7 +41,14 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
     if (committed.current) return
     committed.current = true
     const val = ref.current?.value ?? ''
-    updateItem(activeBoardId, item.id, { meta: { ...item.meta, content: val } })
+    const afterMeta = { ...(item.meta ?? {}), content: val }
+    updateItem(activeBoardId, item.id, { meta: afterMeta })
+    useHistoryStore.getState().push(
+      'ITEM_STYLE',
+      activeBoardId,
+      { id: item.id, meta: beforeMeta.current },
+      { id: item.id, meta: afterMeta },
+    )
     close()
   }
 
@@ -50,22 +61,22 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
         e.stopPropagation() // prevent canvas keybinds while typing
         if (e.key === 'Escape') { close() }
         // Single-line text: Enter commits. Sticky: Shift+Enter = newline, Enter = commit
-        if (e.key === 'Enter' && !isSicky) { e.preventDefault(); commit() }
-        if (e.key === 'Enter' && isSicky && !e.shiftKey) { /* allow newlines */ }
+        if (e.key === 'Enter' && !isSticky) { e.preventDefault(); commit() }
+        if (e.key === 'Enter' && isSticky && !e.shiftKey) { /* allow newlines */ }
       }}
       style={{
         position: 'fixed',
         left: sx,
         top: sy,
         width: sw,
-        height: isSicky ? sh : Math.max(sh, fontSize * 1.6),
+        height: isSticky ? sh : Math.max(sh, fontSize * 1.6),
         fontSize,
-        fontFamily: isSicky ? 'var(--font-body)' : (item.meta?.fontFamily as string ?? 'var(--font-body)'),
-        color: isSicky ? 'var(--text-primary)' : (item.meta?.color as string ?? 'var(--text-primary)'),
-        background: isSicky ? (item.meta?.color as string ?? '#2a2820') : 'rgba(15,13,11,0.85)',
+        fontFamily: isSticky ? 'var(--font-body)' : (item.meta?.fontFamily as string ?? 'var(--font-body)'),
+        color: isSticky ? 'var(--text-primary)' : (item.meta?.color as string ?? 'var(--text-primary)'),
+        background: isSticky ? (item.meta?.color as string ?? '#2a2820') : 'rgba(15,13,11,0.85)',
         border: '1.5px solid var(--accent)',
-        borderRadius: isSicky ? 4 : 2,
-        padding: isSicky ? 8 : '2px 4px',
+        borderRadius: isSticky ? 4 : 2,
+        padding: isSticky ? 8 : '2px 4px',
         resize: 'none',
         outline: 'none',
         overflow: 'hidden',
