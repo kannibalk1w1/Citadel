@@ -148,6 +148,16 @@ export function registerIpcHandlers(): void {
     return { ok: true }
   })
 
+  // ── zoom:set ───────────────────────────────────────────────────────────────
+  ipcMain.handle('zoom:set', async (e, { factor }: { factor: number }) => {
+    const clamped = Math.min(1.5, Math.max(0.75, factor))
+    e.sender.setZoomFactor(clamped)
+    const settings = readSettings()
+    settings['ui.zoomFactor'] = clamped
+    writeSettings(settings)
+    return { ok: true }
+  })
+
   // ── recovery:get ──────────────────────────────────────────────────────────
   ipcMain.handle('recovery:get', async () => {
     const recoveryPath = join(app.getPath('userData'), 'recovery.citadel')
