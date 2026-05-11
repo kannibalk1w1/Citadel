@@ -34,6 +34,9 @@ export function StickyItem({ item }: Props): React.ReactElement {
 
   const bg = (item.meta?.color as string) ?? '#2a2820'
   const content = (item.meta?.content as string) ?? ''
+  const fontSize = (item.meta?.fontSize as number) ?? 14
+  const align = (item.meta?.align as string) ?? 'left'
+  const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -154,8 +157,10 @@ export function StickyItem({ item }: Props): React.ReactElement {
           height={item.height - 16}
           text={content || 'Double-click to edit…'}
           fill={content ? 'var(--text-primary)' : '#5c5040'}
-          fontSize={14}
+          fontSize={fontSize}
+          fontStyle={fontStyle}
           fontFamily="var(--font-body)"
+          align={align}
           wrap="word"
         />
       </Group>
