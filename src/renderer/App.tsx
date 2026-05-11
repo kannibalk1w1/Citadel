@@ -19,6 +19,7 @@ import { TextEditOverlay } from './canvas/TextEditOverlay'
 import { YouSavedBanner } from './ui/YouSavedBanner'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
 import { engine, lastMouse } from './arcade/HyperTypeEngine'
+import { getCaretScreenPos } from './arcade/caretPos'
 import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
@@ -451,10 +452,17 @@ export default function App(): React.ReactElement {
   // ── Global keydown listener ────────────────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      engine.keyStroke(e.key, lastMouse.x, lastMouse.y)
-      // Don't intercept when typing in an input/textarea
-      const tag = (e.target as HTMLElement).tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      const target = e.target as HTMLElement
+      const tag = target.tagName
+      const inText = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable
+      let spawnX = lastMouse.x
+      let spawnY = lastMouse.y
+      if (inText) {
+        const pos = getCaretScreenPos(target)
+        if (pos) { spawnX = pos.x; spawnY = pos.y }
+      }
+      engine.keyStroke(e.key, spawnX, spawnY)
+      if (inText) return
       resolver.resolve(e)
     }
     const onMouseMove = (e: MouseEvent) => {
