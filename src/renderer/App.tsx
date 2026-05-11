@@ -79,6 +79,11 @@ export default function App(): React.ReactElement {
       const { value } = res as { value: unknown }
       if (value === true) useUIStore.getState().setDragonCursorEnabled(true)
     }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'ui.zoomFactor' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (typeof value === 'number') useUIStore.getState().setUiScale(value)
+    }).catch(() => {})
   }, [])
 
   // ── Wire keybind actions once ───────────────────────────────────────────────

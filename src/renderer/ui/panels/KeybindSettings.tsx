@@ -5,6 +5,7 @@ import { Actions } from '../../keybinds/actions'
 
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
+  const togglePanel = useUIStore((s) => s.togglePanel)
   const [filter, setFilter] = useState('')
   const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
@@ -12,8 +13,23 @@ export function KeybindSettings(): React.ReactElement | null {
   const setHyperTypeEnabled = useUIStore((s) => s.setHyperTypeEnabled)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
+  const uiScale = useUIStore((s) => s.uiScale)
+  const setUiScale = useUIStore((s) => s.setUiScale)
 
   if (!isOpen) return null
+
+  const btnStyle: React.CSSProperties = {
+    width: 22, height: 22,
+    background: 'var(--bg-canvas)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border)',
+    borderRadius: 3,
+    cursor: 'pointer',
+    fontSize: 14,
+    fontFamily: 'var(--font-mono)',
+    padding: 0,
+    lineHeight: 1,
+  }
 
   const entries = Object.entries(defaultKeybinds).filter(([action]) =>
     !filter || action.toLowerCase().includes(filter.toLowerCase())
@@ -21,9 +37,18 @@ export function KeybindSettings(): React.ReactElement | null {
 
   return (
     <div style={{ position: 'fixed', inset: '60px 20px 20px', background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, zIndex: 'var(--z-modal)', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-      <h2 style={{ margin: '0 0 12px', fontSize: 14, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-        Keybindings
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 14, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+          Keybindings
+        </h2>
+        <button
+          onClick={() => togglePanel('keybindSettings')}
+          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '2px 4px' }}
+          title="Close"
+        >
+          ×
+        </button>
+      </div>
       <div style={{
         marginBottom: 16,
         paddingBottom: 12,
@@ -74,6 +99,26 @@ export function KeybindSettings(): React.ReactElement | null {
             rw-designer.com<br />CC Attribution / PD
           </span>
         </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+            UI Scale
+          </span>
+          <button
+            type="button"
+            onClick={() => setUiScale(uiScale - 0.25)}
+            disabled={uiScale <= 0.75}
+            style={btnStyle}
+          >−</button>
+          <span style={{ width: 36, textAlign: 'center', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
+            {Math.round(uiScale * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => setUiScale(uiScale + 0.25)}
+            disabled={uiScale >= 1.5}
+            style={btnStyle}
+          >+</button>
+        </div>
       </div>
       <input
         placeholder="Filter actions…"
