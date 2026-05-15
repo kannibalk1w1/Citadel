@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '../../store/uiStore'
+import { useCanvasStore } from '../../store/canvasStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { Actions } from '../../keybinds/actions'
 
@@ -16,6 +17,22 @@ const btnStyle: React.CSSProperties = {
   lineHeight: 1,
 }
 
+type PdfCacheStats = {
+  count: number
+  bytes: number
+}
+
+const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`
+  const kb = bytes / 1024
+  if (kb < 1024) return `${kb.toFixed(1)} KB`
+  return `${(kb / 1024).toFixed(1)} MB`
+}
+
+const getIpc = (): { invoke: (ch: string, args?: unknown) => Promise<unknown> } => (
+  window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }
+).ipc
+
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const togglePanel = useUIStore((s) => s.togglePanel)
@@ -28,6 +45,48 @@ export function KeybindSettings(): React.ReactElement | null {
   const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
   const uiScale = useUIStore((s) => s.uiScale)
   const setUiScale = useUIStore((s) => s.setUiScale)
+  const boards = useCanvasStore((s) => s.boards)
+  const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
+  const [cacheBusy, setCacheBusy] = useState(false)
+  const [cacheMessage, setCacheMessage] = useState('')
+
+  const preservePaths = useMemo(() => (
+    boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
+  ), [boards])
+
+  const loadCacheStats = async (): Promise<void> => {
+    try {
+      const result = await getIpc().invoke('cache:pdfStats')
+      if (result && typeof result === 'object' && 'count' in result && 'bytes' in result) {
+        setCacheStats(result as PdfCacheStats)
+      }
+    } catch (error) {
+      console.error('Failed to read PDF cache stats:', error)
+      setCacheMessage('cache unavailable')
+    }
+  }
+
+  const clearUnusedCache = async (): Promise<void> => {
+    setCacheBusy(true)
+    setCacheMessage('')
+    try {
+      const result = await getIpc().invoke('cache:clearUnusedPdfPreviews', { preservePaths })
+      if (result && typeof result === 'object' && 'stats' in result) {
+        const payload = result as { deleted: number; bytes: number; stats: PdfCacheStats }
+        setCacheStats(payload.stats)
+        setCacheMessage(payload.deleted === 0 ? 'nothing unused' : `cleared ${payload.deleted} / ${formatBytes(payload.bytes)}`)
+      }
+    } catch (error) {
+      console.error('Failed to clear PDF cache:', error)
+      setCacheMessage('clear failed')
+    } finally {
+      setCacheBusy(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) loadCacheStats().catch(console.error)
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -120,6 +179,42 @@ export function KeybindSettings(): React.ReactElement | null {
             aria-label="Increase UI scale"
             style={{ ...btnStyle, opacity: uiScale >= 1.5 ? 0.35 : 1, cursor: uiScale >= 1.5 ? 'not-allowed' : 'pointer' }}
           >+</button>
+        </div>
+      </div>
+      <div style={{
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Maintenance
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              PDF preview cache
+            </div>
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
+              {cacheStats ? `${cacheStats.count} files / ${formatBytes(cacheStats.bytes)} / ${preservePaths.length} referenced` : 'not loaded'}
+              {cacheMessage ? ` - ${cacheMessage}` : ''}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => loadCacheStats().catch(console.error)}
+            disabled={cacheBusy}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: cacheBusy ? 0.45 : 1 }}
+          >
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={() => clearUnusedCache().catch(console.error)}
+            disabled={cacheBusy}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: cacheBusy ? 0.45 : 1 }}
+          >
+            Clear unused
+          </button>
         </div>
       </div>
       <input

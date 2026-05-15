@@ -1,16 +1,51 @@
 import { ipcMain, dialog, shell, app } from 'electron'
-import { readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 import JSZip from 'jszip'
-import { mkdirSync, existsSync, copyFileSync } from 'fs'
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
+const pdfCacheDir = (): string => join(app.getPath('userData'), 'pdf-cache')
 function readSettings(): Record<string, unknown> {
   try { return JSON.parse(readFileSync(settingsPath, 'utf-8')) } catch { return {} }
 }
 function writeSettings(data: Record<string, unknown>): void {
   writeFileSync(settingsPath, JSON.stringify(data, null, 2))
+}
+
+function getPdfCacheStats(): { count: number; bytes: number } {
+  const cacheDir = pdfCacheDir()
+  if (!existsSync(cacheDir)) return { count: 0, bytes: 0 }
+
+  return readdirSync(cacheDir).reduce((acc, filename) => {
+    const path = join(cacheDir, filename)
+    try {
+      const stat = statSync(path)
+      if (stat.isFile()) {
+        acc.count += 1
+        acc.bytes += stat.size
+      }
+    } catch { /* skip unreadable cache entries */ }
+    return acc
+  }, { count: 0, bytes: 0 })
+}
+
+function clearUnusedPdfPreviews(preservePaths: string[]): { deleted: number; bytes: number } {
+  const cacheDir = pdfCacheDir()
+  if (!existsSync(cacheDir)) return { deleted: 0, bytes: 0 }
+  const preserved = new Set(preservePaths.map((path) => path.toLowerCase()))
+
+  return readdirSync(cacheDir).reduce((acc, filename) => {
+    const path = join(cacheDir, filename)
+    try {
+      const stat = statSync(path)
+      if (!stat.isFile() || preserved.has(path.toLowerCase())) return acc
+      unlinkSync(path)
+      acc.deleted += 1
+      acc.bytes += stat.size
+    } catch { /* skip locked or unreadable cache entries */ }
+    return acc
+  }, { deleted: 0, bytes: 0 })
 }
 
 export function registerIpcHandlers(): void {
@@ -83,7 +118,7 @@ export function registerIpcHandlers(): void {
 
   // ── export:zip ─────────────────────────────────────────────────────────────
   ipcMain.handle('pdf:cachePageImage', async (_e, { pdfPath, page, imageData }: { pdfPath: string; page: number; imageData: string }) => {
-    const cacheDir = join(app.getPath('userData'), 'pdf-cache')
+    const cacheDir = pdfCacheDir()
     if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true })
     const safeBase = pdfPath
       .split(/[/\\]/)
@@ -96,6 +131,13 @@ export function registerIpcHandlers(): void {
     const base64 = imageData.replace(/^data:image\/png;base64,/, '')
     writeFileSync(outPath, Buffer.from(base64, 'base64'))
     return { path: outPath }
+  })
+
+  ipcMain.handle('cache:pdfStats', async () => getPdfCacheStats())
+
+  ipcMain.handle('cache:clearUnusedPdfPreviews', async (_e, { preservePaths }: { preservePaths: string[] }) => {
+    const result = clearUnusedPdfPreviews(Array.isArray(preservePaths) ? preservePaths : [])
+    return { ...result, stats: getPdfCacheStats() }
   })
 
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
