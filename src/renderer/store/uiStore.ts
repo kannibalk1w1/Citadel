@@ -26,6 +26,8 @@ type UIState = {
 
   searchQuery: string
   setSearchQuery: (q: string) => void
+  searchHighlightId: string | null
+  setSearchHighlight: (id: string | null) => void
 
   activeConnectionId: string | null
   setActiveConnectionId: (id: string | null) => void
@@ -91,6 +93,8 @@ export const useUIStore = create<UIState>((set) => ({
 
   searchQuery: '',
   setSearchQuery: (q) => set({ searchQuery: q }),
+  searchHighlightId: null,
+  setSearchHighlight: (id) => set({ searchHighlightId: id }),
 
   activeConnectionId: null,
   setActiveConnectionId: (id) => set({ activeConnectionId: id }),

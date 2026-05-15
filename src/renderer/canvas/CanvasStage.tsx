@@ -10,6 +10,7 @@ import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
 import { SelectionBox } from './overlays/SelectionBox'
+import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
@@ -289,6 +290,9 @@ export function CanvasStage(): React.ReactElement {
         </Layer>
         <Layer listening={false}>
           <SelectionBox />
+        </Layer>
+        <Layer listening={false}>
+          <SearchHighlight />
         </Layer>
         <Layer>
           <LassoOverlay />
