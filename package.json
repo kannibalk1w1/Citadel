@@ -23,6 +23,7 @@
     "jszip": "^3.10.1",
     "konva": "^9.3.3",
     "nanoid": "^5.0.7",
+    "pdfjs-dist": "^5.7.284",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-konva": "^18.2.10",

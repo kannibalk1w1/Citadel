@@ -82,6 +82,22 @@ export function registerIpcHandlers(): void {
   })
 
   // ── export:zip ─────────────────────────────────────────────────────────────
+  ipcMain.handle('pdf:cachePageImage', async (_e, { pdfPath, page, imageData }: { pdfPath: string; page: number; imageData: string }) => {
+    const cacheDir = join(app.getPath('userData'), 'pdf-cache')
+    if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true })
+    const safeBase = pdfPath
+      .split(/[/\\]/)
+      .pop()
+      ?.replace(/\.pdf$/i, '')
+      .replace(/[^a-z0-9_-]+/gi, '-')
+      .replace(/^-+|-+$/g, '') || 'document'
+    const filename = `${safeBase}-page-${page}-${Date.now()}.png`
+    const outPath = join(cacheDir, filename)
+    const base64 = imageData.replace(/^data:image\/png;base64,/, '')
+    writeFileSync(outPath, Buffer.from(base64, 'base64'))
+    return { path: outPath }
+  })
+
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: filename,

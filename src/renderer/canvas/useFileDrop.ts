@@ -5,6 +5,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useMascotStore } from '../store/mascotStore'
 import { pathToUrl } from '../utils/pathToUrl'
+import { renderPdfFirstPage } from '../utils/pdfPreview'
 
 // Electron exposes file.path on File objects dropped from the OS
 type ElectronFile = File & { path: string }
@@ -14,6 +15,8 @@ type FileTypeInfo = {
   defaultWidth: number
   defaultHeight: number
 }
+
+type IpcApi = { invoke: (channel: string, args: unknown) => Promise<unknown> }
 
 const EXT_MAP: Record<string, FileTypeInfo> = {
   // Images
@@ -127,6 +130,45 @@ export function useFileDrop() {
 
     for (const file of files) {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+      if (ext === 'pdf') {
+        try {
+          const preview = await renderPdfFirstPage(file.path)
+          const result = await ((window as unknown as { ipc: IpcApi }).ipc.invoke('pdf:cachePageImage', {
+            pdfPath: file.path,
+            page: 1,
+            imageData: preview.imageData,
+          }) as Promise<{ path?: unknown }>)
+          if (typeof result.path !== 'string') throw new Error('PDF cache did not return a path')
+          const clamped = clampDimensions(preview.width, preview.height)
+          const STACK_OFFSET = 20
+          const item: CanvasItem = {
+            id: nanoid(),
+            type: 'image',
+            x: dropX - clamped.w / 2 + offsetIndex * STACK_OFFSET,
+            y: dropY - clamped.h / 2 + offsetIndex * STACK_OFFSET,
+            width: clamped.w,
+            height: clamped.h,
+            rotation: 0,
+            zIndex: Date.now() + offsetIndex,
+            locked: false,
+            visible: true,
+            opacity: 1,
+            tags: [],
+            src: result.path,
+            meta: { sourcePdf: file.path, sourcePdfPage: 1 },
+          }
+
+          addItem(activeBoardId, item)
+          pushEvent('ITEM_ADD', activeBoardId, null, item)
+          added.push(item)
+          offsetIndex++
+        } catch (error) {
+          console.error('PDF drop failed:', error)
+          triggerEffect('fracture')
+        }
+        continue
+      }
+
       const typeInfo = EXT_MAP[ext]
       if (!typeInfo) continue
 
