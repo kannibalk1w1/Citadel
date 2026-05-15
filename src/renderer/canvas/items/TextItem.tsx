@@ -143,6 +143,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         onClick={handleClick}
         onDblClick={(e) => {
           e.cancelBubble = true
+          if (item.locked) return
           setSelection([item.id])
           setEditingItemId(item.id)
         }}
@@ -158,7 +159,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
       />
-      {isSelected && (
+      {isSelected && !item.locked && (
         <Transformer
           ref={trRef}
           keepRatio={false}

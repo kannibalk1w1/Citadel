@@ -166,7 +166,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
       />
-      {isSelected && (
+      {isSelected && !item.locked && (
         <Transformer ref={trRef} keepRatio={false} rotateEnabled />
       )}
     </>

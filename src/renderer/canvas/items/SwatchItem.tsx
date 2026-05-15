@@ -167,7 +167,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
           />
         )}
       </Group>
-      {isSelected && (
+      {isSelected && !item.locked && (
         <Transformer
           ref={trRef}
           rotateEnabled

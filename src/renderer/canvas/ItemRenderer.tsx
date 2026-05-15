@@ -1,6 +1,7 @@
 import React from 'react'
-import { Group, Rect } from 'react-konva'
+import { Group, Rect, Text } from 'react-konva'
 import type { CanvasItem } from '../../types'
+import { useCanvasStore } from '../store/canvasStore'
 import { ItemErrorBoundary } from './ItemErrorBoundary'
 import { ImageItem } from './items/ImageItem'
 import { GifItem } from './items/GifItem'
@@ -34,6 +35,7 @@ function Inner({ item }: Props): React.ReactElement | null {
 }
 
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
+  const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
   const tintRect = item.tint && !DOM_TYPES.has(item.type) ? (
@@ -46,11 +48,25 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       listening={false}
     />
   ) : null
+  const lockMarker = item.locked && !DOM_TYPES.has(item.type) ? (
+    <Text
+      x={item.x + item.width - 18 / viewport.scale}
+      y={item.y + 4 / viewport.scale}
+      text="🔒"
+      fontSize={14 / viewport.scale}
+      fill="#c8a96e"
+      shadowEnabled
+      shadowColor="rgba(0,0,0,0.85)"
+      shadowBlur={4 / viewport.scale}
+      listening={false}
+    />
+  ) : null
   return (
     <ItemErrorBoundary itemId={item.id} x={item.x} y={item.y} width={item.width} height={item.height}>
       <Group>
         <Inner item={item} />
         {tintRect}
+        {lockMarker}
       </Group>
     </ItemErrorBoundary>
   )

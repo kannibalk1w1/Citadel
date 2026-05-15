@@ -177,7 +177,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
       />
-      {isSelected && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
+      {isSelected && !item.locked && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
     </>
   )
 }

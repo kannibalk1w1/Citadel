@@ -23,6 +23,7 @@ export const Actions = {
   COPY: 'edit:copy',
   PASTE: 'edit:paste',
   CUT: 'edit:cut',
+  TOGGLE_LOCK: 'item:toggleLock',
 
   // ── Item ordering ─────────────────────────────────────────────────────────
   BRING_FRONT: 'order:bringFront',

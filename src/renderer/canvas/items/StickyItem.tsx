@@ -125,7 +125,11 @@ export function StickyItem({ item }: Props): React.ReactElement {
         rotation={item.rotation}
         draggable={toolMode === 'select' && !item.locked}
         onClick={handleClick}
-        onDblClick={(e) => { e.cancelBubble = true; setSelection([item.id]); setEditingItemId(item.id) }}
+        onDblClick={(e) => {
+          e.cancelBubble = true
+          setSelection([item.id])
+          if (!item.locked) setEditingItemId(item.id)
+        }}
         onContextMenu={(e) => {
           e.evt.preventDefault()
           e.cancelBubble = true
@@ -164,7 +168,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
           wrap="word"
         />
       </Group>
-      {isSelected && (
+      {isSelected && !item.locked && (
         <Transformer
           ref={trRef}
           rotateEnabled

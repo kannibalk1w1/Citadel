@@ -56,6 +56,22 @@ export function DOMItem({ item, children, style }: Props): React.ReactElement {
           mixBlendMode: 'multiply',
         }} />
       )}
+      {item.locked && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            color: '#c8a96e',
+            fontSize: 14,
+            lineHeight: 1,
+            textShadow: '0 1px 4px rgba(0,0,0,0.85)',
+            pointerEvents: 'none',
+          }}
+        >
+          🔒
+        </div>
+      )}
     </div>,
     domLayer!
   )

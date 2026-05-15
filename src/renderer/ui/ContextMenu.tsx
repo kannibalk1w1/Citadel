@@ -14,8 +14,12 @@ export function ContextMenu(): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const allItems = useCanvasStore((s) => s.items())
   const selectedItems = allItems.filter((i) => selectedIds.includes(i.id))
-  const canGroup = selectedIds.length >= 2 && selectedItems.some((i) => !i.groupId)
-  const canUngroup = selectedItems.some((i) => !!i.groupId)
+  const selectedUnlockedItems = selectedItems.filter((i) => !i.locked)
+  const selectedLockedItems = selectedItems.filter((i) => i.locked)
+  const canGroup = selectedUnlockedItems.length >= 2 && selectedUnlockedItems.some((i) => !i.groupId)
+  const canUngroup = selectedUnlockedItems.some((i) => !!i.groupId)
+  const canLock = selectedUnlockedItems.length > 0
+  const canUnlock = selectedLockedItems.length > 0
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -27,18 +31,19 @@ export function ContextMenu(): React.ReactElement | null {
 
   if (!contextMenu) return null
 
-  const hasSelection = selectedIds.length > 0
+  const hasUnlockedSelection = selectedUnlockedItems.length > 0
 
   const items: MenuItem[] = [
-    ...(hasSelection ? [
+    ...(hasUnlockedSelection ? [
       {
-        label: `Delete  (${selectedIds.length})`,
+        label: `Delete  (${selectedUnlockedItems.length})`,
         danger: true,
         action: () => {
           const canvas = useCanvasStore.getState()
-          const toDelete = canvas.items().filter((i) => selectedIds.includes(i.id))
+          const toDelete = canvas.items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+          if (toDelete.length === 0) return
           useHistoryStore.getState().push('ITEM_DELETE', activeBoardId!, toDelete, toDelete.map((i) => ({ id: i.id })))
-          canvas.removeItems(activeBoardId!, selectedIds)
+          canvas.removeItems(activeBoardId!, toDelete.map((i) => i.id))
           canvas.clearSelection()
           triggerEffect('crumble')
           closeContextMenu()
@@ -48,7 +53,8 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Duplicate',
         action: () => {
           const canvas = useCanvasStore.getState()
-          const originals = canvas.items().filter((i) => selectedIds.includes(i.id))
+          const originals = canvas.items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+          if (originals.length === 0) return
           const copies = originals.map((i) => ({ ...i, id: nanoid(), x: i.x + 20, y: i.y + 20 }))
           copies.forEach((c) => {
             canvas.addItem(activeBoardId!, c)
@@ -63,7 +69,7 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Bring to Front',
         action: () => {
           const canvas = useCanvasStore.getState()
-          selectedIds.forEach((id) => canvas.reorderItem(activeBoardId!, id, 'front'))
+          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'front'))
           closeContextMenu()
         },
       },
@@ -71,7 +77,7 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Bring Forward',
         action: () => {
           const canvas = useCanvasStore.getState()
-          selectedIds.forEach((id) => canvas.reorderItem(activeBoardId!, id, 'forward'))
+          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'forward'))
           closeContextMenu()
         },
       },
@@ -79,7 +85,7 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Send Backward',
         action: () => {
           const canvas = useCanvasStore.getState()
-          selectedIds.forEach((id) => canvas.reorderItem(activeBoardId!, id, 'backward'))
+          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'backward'))
           closeContextMenu()
         },
       },
@@ -87,7 +93,7 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Send to Back',
         action: () => {
           const canvas = useCanvasStore.getState()
-          selectedIds.forEach((id) => canvas.reorderItem(activeBoardId!, id, 'back'))
+          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'back'))
           closeContextMenu()
         },
       },
@@ -97,7 +103,7 @@ export function ContextMenu(): React.ReactElement | null {
       ...(canGroup ? [{
         label: 'Group  (Ctrl+G)',
         action: () => {
-          useCanvasStore.getState().groupItems(activeBoardId!, selectedIds)
+          useCanvasStore.getState().groupItems(activeBoardId!, selectedUnlockedItems.map((i) => i.id))
           closeContextMenu()
         },
       }] : []),
@@ -105,9 +111,44 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Ungroup  (Ctrl+U)',
         action: () => {
           const groupIds = new Set(
-            selectedItems.filter((i) => i.groupId).map((i) => i.groupId!)
+            selectedUnlockedItems.filter((i) => i.groupId).map((i) => i.groupId!)
           )
           groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId!, gid))
+          closeContextMenu()
+        },
+      }] : []),
+    ] : []),
+    ...(canLock || canUnlock ? [
+      { divider: true, label: '', action: () => {} },
+      ...(canLock ? [{
+        label: 'Lock  (Ctrl+L)',
+        action: () => {
+          const canvas = useCanvasStore.getState()
+          selectedUnlockedItems.forEach((item) => {
+            useHistoryStore.getState().push(
+              'ITEM_STYLE',
+              activeBoardId!,
+              { id: item.id, locked: item.locked },
+              { id: item.id, locked: true },
+            )
+            canvas.updateItem(activeBoardId!, item.id, { locked: true })
+          })
+          closeContextMenu()
+        },
+      }] : []),
+      ...(canUnlock ? [{
+        label: 'Unlock  (Ctrl+L)',
+        action: () => {
+          const canvas = useCanvasStore.getState()
+          selectedLockedItems.forEach((item) => {
+            useHistoryStore.getState().push(
+              'ITEM_STYLE',
+              activeBoardId!,
+              { id: item.id, locked: item.locked },
+              { id: item.id, locked: false },
+            )
+            canvas.updateItem(activeBoardId!, item.id, { locked: false })
+          })
           closeContextMenu()
         },
       }] : []),

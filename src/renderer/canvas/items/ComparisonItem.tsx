@@ -64,6 +64,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
 
   const startDividerDrag = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
+    if (item.locked) return
     dividerDragging.current = true
     const stage = e.target.getStage()
     const container = stage?.container()
@@ -338,7 +339,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         )}
       </Group>
 
-      {isSelected && (
+      {isSelected && !item.locked && (
         <Transformer
           ref={trRef}
           keepRatio={false}

@@ -158,9 +158,10 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      const toDelete = items().filter((i) => selectedIds.includes(i.id))
+      const toDelete = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (toDelete.length === 0) return
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
-      canvas.removeItems(activeBoardId, selectedIds)
+      canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
       triggerEffect('crumble')
       engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
@@ -171,7 +172,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      const originals = items().filter((i) => selectedIds.includes(i.id))
+      const originals = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (originals.length === 0) return
       const copies = originals.map((i) => ({ ...i, id: nanoid(), x: i.x + 20, y: i.y + 20 }))
       copies.forEach((c) => {
         canvas.addItem(activeBoardId, c)
@@ -190,6 +192,23 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.DESELECT, () => {
       useCanvasStore.getState().clearSelection()
       useUIStore.getState().setToolMode('select')
+    })
+
+    resolver.register(Actions.TOGGLE_LOCK, () => {
+      const canvas = useCanvasStore.getState()
+      const { selectedIds, activeBoardId, items, updateItem } = canvas
+      if (!activeBoardId || selectedIds.length === 0) return
+      const selectedItems = items().filter((i) => selectedIds.includes(i.id))
+      const nextLocked = selectedItems.some((i) => !i.locked)
+      selectedItems.forEach((item) => {
+        useHistoryStore.getState().push(
+          'ITEM_STYLE',
+          activeBoardId,
+          { id: item.id, locked: item.locked },
+          { id: item.id, locked: nextLocked },
+        )
+        updateItem(activeBoardId, item.id, { locked: nextLocked })
+      })
     })
 
     // Zoom
@@ -239,23 +258,23 @@ export default function App(): React.ReactElement {
     // Item ordering
     resolver.register(Actions.BRING_FRONT, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId } = canvas
-      if (activeBoardId) selectedIds.forEach((id) => canvas.reorderItem(activeBoardId, id, 'front'))
+      const { selectedIds, activeBoardId, items } = canvas
+      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'front'))
     })
     resolver.register(Actions.SEND_BACK, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId } = canvas
-      if (activeBoardId) selectedIds.forEach((id) => canvas.reorderItem(activeBoardId, id, 'back'))
+      const { selectedIds, activeBoardId, items } = canvas
+      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'back'))
     })
     resolver.register(Actions.BRING_FORWARD, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId } = canvas
-      if (activeBoardId) selectedIds.forEach((id) => canvas.reorderItem(activeBoardId, id, 'forward'))
+      const { selectedIds, activeBoardId, items } = canvas
+      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'forward'))
     })
     resolver.register(Actions.SEND_BACKWARD, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId } = canvas
-      if (activeBoardId) selectedIds.forEach((id) => canvas.reorderItem(activeBoardId, id, 'backward'))
+      const { selectedIds, activeBoardId, items } = canvas
+      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'backward'))
     })
 
     // Snap toggle
@@ -264,9 +283,10 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.GROUP, () => {
       const { selectedIds, activeBoardId, items } = useCanvasStore.getState()
       if (!activeBoardId || selectedIds.length < 2) return
-      const selectedItems = items().filter((i) => selectedIds.includes(i.id))
+      const selectedItems = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (selectedItems.length < 2) return
       if (selectedItems.every((i) => i.groupId)) return
-      useCanvasStore.getState().groupItems(activeBoardId, selectedIds)
+      useCanvasStore.getState().groupItems(activeBoardId, selectedItems.map((i) => i.id))
     })
 
     resolver.register(Actions.UNGROUP, () => {
@@ -274,7 +294,7 @@ export default function App(): React.ReactElement {
       if (!activeBoardId) return
       const groupIds = new Set(
         items()
-          .filter((i) => selectedIds.includes(i.id) && i.groupId)
+          .filter((i) => selectedIds.includes(i.id) && i.groupId && !i.locked)
           .map((i) => i.groupId!)
       )
       groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId, gid))
@@ -351,7 +371,7 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, items } = canvas
       if (selectedIds.length === 0) return
-      clipboard = items().filter((i) => selectedIds.includes(i.id))
+      clipboard = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
     })
 
     resolver.register(Actions.PASTE, () => {
@@ -372,10 +392,11 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      clipboard = items().filter((i) => selectedIds.includes(i.id))
+      clipboard = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
       pasteOffset = 0
+      if (clipboard.length === 0) return
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, clipboard, clipboard.map((i) => ({ id: i.id })))
-      canvas.removeItems(activeBoardId, selectedIds)
+      canvas.removeItems(activeBoardId, clipboard.map((i) => i.id))
       canvas.clearSelection()
     })
 
@@ -384,7 +405,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const minX = Math.min(...sel.map((i) => i.x))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { x: minX }))
     })
@@ -392,7 +414,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const maxX = Math.max(...sel.map((i) => i.x + i.width))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { x: maxX - i.width }))
     })
@@ -400,7 +423,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const minY = Math.min(...sel.map((i) => i.y))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { y: minY }))
     })
@@ -408,7 +432,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const maxY = Math.max(...sel.map((i) => i.y + i.height))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { y: maxY - i.height }))
     })
@@ -416,7 +441,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const minX = Math.min(...sel.map((i) => i.x))
       const maxX = Math.max(...sel.map((i) => i.x + i.width))
       const cx = (minX + maxX) / 2
@@ -426,7 +452,8 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const { selectedIds, activeBoardId, items } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id))
+      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      if (sel.length < 2) return
       const minY = Math.min(...sel.map((i) => i.y))
       const maxY = Math.max(...sel.map((i) => i.y + i.height))
       const cy = (minY + maxY) / 2
@@ -595,7 +622,7 @@ export default function App(): React.ReactElement {
       <ItemProperties />
       <ConnectionProperties />
       <KeybindSettings />
-      {editingItem && <TextEditOverlay key={editingItem.id} item={editingItem} />}
+      {editingItem && !editingItem.locked && <TextEditOverlay key={editingItem.id} item={editingItem} />}
       <YouSavedBanner />
       <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
     </div>
