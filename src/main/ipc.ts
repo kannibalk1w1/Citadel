@@ -1,6 +1,6 @@
 import { ipcMain, dialog, shell, app } from 'electron'
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
-import { join, dirname } from 'path'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
 
 // Settings store (simple JSON file in userData)
@@ -48,17 +48,163 @@ function clearUnusedPdfPreviews(preservePaths: string[]): { deleted: number; byt
   }, { deleted: 0, bytes: 0 })
 }
 
+type PortableItem = { src?: string; [key: string]: unknown }
+type PortableBoard = { items?: PortableItem[]; [key: string]: unknown }
+type PortableProject = { boards?: PortableBoard[]; [key: string]: unknown }
+type ZipAsset = { sourcePath: string; zipPath: string }
+
+const URL_SRC_RE = /^(https?|data:|blob:|local:|file:)/i
+
+function isUrlLikeSrc(src: string): boolean {
+  return URL_SRC_RE.test(src)
+}
+
+function toJsonPath(path: string): string {
+  return path.replace(/\\/g, '/')
+}
+
+function isInside(parent: string, child: string): boolean {
+  const rel = relative(resolve(parent), resolve(child))
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
+}
+
+function uniqueAssetPath(assetsDir: string, used: Set<string>, sourcePath: string, checkExisting = true): { filename: string; path: string } {
+  const parsedExt = extname(sourcePath)
+  const rawName = basename(sourcePath, parsedExt).replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'asset'
+  const ext = parsedExt || '.bin'
+  let filename = `${rawName}${ext}`
+  let index = 2
+  while (used.has(filename.toLowerCase()) || (checkExisting && assetsDir !== '' && existsSync(join(assetsDir, filename)))) {
+    filename = `${rawName}-${index}${ext}`
+    index += 1
+  }
+  used.add(filename.toLowerCase())
+  return { filename, path: join(assetsDir, filename) }
+}
+
+function walkProjectItems(project: PortableProject, visit: (item: PortableItem) => void): void {
+  project.boards?.forEach((board) => board.items?.forEach(visit))
+}
+
+function makeCitadelProjectPortable(data: string, projectPath: string): string {
+  const project = JSON.parse(data) as PortableProject
+  const projectDir = dirname(projectPath)
+  const assetsDir = join(projectDir, 'assets')
+  const used = new Set<string>()
+
+  walkProjectItems(project, (item) => {
+    const src = item.src
+    if (!src || isUrlLikeSrc(src)) return
+
+    const sourcePath = isAbsolute(src) ? src : resolve(projectDir, src)
+    if (!existsSync(sourcePath)) return
+
+    if (isInside(projectDir, sourcePath)) {
+      item.src = toJsonPath(relative(projectDir, sourcePath))
+      return
+    }
+
+    if (!existsSync(assetsDir)) mkdirSync(assetsDir, { recursive: true })
+    const asset = uniqueAssetPath(assetsDir, used, sourcePath, false)
+    copyFileSync(sourcePath, asset.path)
+    item.src = toJsonPath(relative(projectDir, asset.path))
+  })
+
+  return JSON.stringify(project, null, 2)
+}
+
+function resolveCitadelProjectAssets(data: string, projectPath: string): string {
+  const project = JSON.parse(data) as PortableProject
+  const projectDir = dirname(projectPath)
+
+  walkProjectItems(project, (item) => {
+    const src = item.src
+    if (!src || isUrlLikeSrc(src) || isAbsolute(src)) return
+    item.src = resolve(projectDir, src)
+  })
+
+  return JSON.stringify(project, null, 2)
+}
+
+function prepareZipProject(projectJson: string, assetPaths: string[]): { projectJson: string; assets: ZipAsset[] } {
+  const project = JSON.parse(projectJson) as PortableProject
+  const knownAssets = new Set(assetPaths)
+  const used = new Set<string>()
+  const assets: ZipAsset[] = []
+
+  walkProjectItems(project, (item) => {
+    const src = item.src
+    if (!src || isUrlLikeSrc(src)) return
+    const sourcePath = isAbsolute(src) ? src : resolve(src)
+    if (!knownAssets.has(src) && !knownAssets.has(sourcePath)) return
+    if (!existsSync(sourcePath)) return
+
+    const asset = uniqueAssetPath('', used, sourcePath)
+    const zipPath = toJsonPath(join('assets', asset.filename))
+    assets.push({ sourcePath, zipPath })
+    item.src = zipPath
+  })
+
+  return { projectJson: JSON.stringify(project, null, 2), assets }
+}
+
+async function writeZipProject(filePath: string, projectJson: string, assetPaths: string[]): Promise<void> {
+  const prepared = prepareZipProject(projectJson, assetPaths)
+  const zip = new JSZip()
+  zip.file('project.citadel', prepared.projectJson)
+  for (const asset of prepared.assets) {
+    try {
+      zip.file(asset.zipPath, readFileSync(asset.sourcePath))
+    } catch { /* skip missing */ }
+  }
+  const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+  writeFileSync(filePath, buf)
+}
+
+function collectProjectAssetPaths(projectJson: string): string[] {
+  const project = JSON.parse(projectJson) as PortableProject
+  const paths: string[] = []
+  walkProjectItems(project, (item) => {
+    const src = item.src
+    if (src && !isUrlLikeSrc(src)) paths.push(src)
+  })
+  return paths
+}
+
+function resolveImportedZipProject(projectJson: string, assetDir: string): string {
+  const project = JSON.parse(projectJson) as PortableProject
+
+  walkProjectItems(project, (item) => {
+    const src = item.src
+    if (!src || isUrlLikeSrc(src) || isAbsolute(src)) return
+    item.src = resolve(assetDir, src.replace(/^assets[\\/]/i, ''))
+  })
+
+  return JSON.stringify(project, null, 2)
+}
+
 export function registerIpcHandlers(): void {
 
   // ── file:save ──────────────────────────────────────────────────────────────
   ipcMain.handle('file:save', async (_e, { path, data }: { path: string; data: string }) => {
-    writeFileSync(path, data, 'utf-8')
+    if (path.toLowerCase().endsWith('.citadelz')) {
+      await writeZipProject(path, data, collectProjectAssetPaths(data))
+      return { ok: true }
+    }
+
+    const portableData = path.toLowerCase().endsWith('.citadel')
+      ? makeCitadelProjectPortable(data, path)
+      : data
+    writeFileSync(path, portableData, 'utf-8')
     return { ok: true }
   })
 
   // ── file:load ──────────────────────────────────────────────────────────────
   ipcMain.handle('file:load', async (_e, { path }: { path: string }) => {
-    const data = readFileSync(path, 'utf-8')
+    const raw = readFileSync(path, 'utf-8')
+    const data = path.toLowerCase().endsWith('.citadel')
+      ? resolveCitadelProjectAssets(raw, path)
+      : raw
     return { data }
   })
 
@@ -147,17 +293,7 @@ export function registerIpcHandlers(): void {
     })
     if (canceled || !filePath) return { ok: false }
 
-    const zip = new JSZip()
-    zip.file('project.citadel', projectJson)
-    const assets = zip.folder('assets')!
-    for (const assetPath of assetPaths) {
-      try {
-        const buf = readFileSync(assetPath)
-        assets.file(assetPath.split(/[/\\]/).pop()!, buf)
-      } catch { /* skip missing */ }
-    }
-    const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
-    writeFileSync(filePath, buf)
+    await writeZipProject(filePath, projectJson, assetPaths)
     return { ok: true, path: filePath }
   })
 
@@ -165,7 +301,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('import:zip', async (_e, { zipPath }: { zipPath: string }) => {
     const buf = readFileSync(zipPath)
     const zip = await JSZip.loadAsync(buf)
-    const projectJson = await zip.file('project.citadel')!.async('string')
+    const rawProjectJson = await zip.file('project.citadel')!.async('string')
 
     const assetDir = join(dirname(zipPath), '_citadel_assets')
     if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true })
@@ -174,16 +310,18 @@ export function registerIpcHandlers(): void {
     if (assets) {
       const writes: Promise<void>[] = []
       assets.forEach((relativePath, file) => {
+        const outPath = join(assetDir, relativePath)
         writes.push(
           file.async('nodebuffer').then((buf) => {
-            writeFileSync(join(assetDir, relativePath), buf)
+            mkdirSync(dirname(outPath), { recursive: true })
+            writeFileSync(outPath, buf)
           })
         )
       })
       await Promise.all(writes)
     }
 
-    return { projectJson, assetDir }
+    return { projectJson: resolveImportedZipProject(rawProjectJson, assetDir), assetDir }
   })
 
   // ── shell:openURL ──────────────────────────────────────────────────────────

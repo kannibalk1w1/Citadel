@@ -72,8 +72,10 @@ export async function openProject(): Promise<boolean> {
   const result = await ipc().invoke('file:openDialog') as { path: string | null }
   if (!result.path) return false
   try {
-    const loaded = await ipc().invoke('file:load', { path: result.path }) as { data: string }
-    const file = deserialize(loaded.data)
+    const loaded = result.path.toLowerCase().endsWith('.citadelz')
+      ? await ipc().invoke('import:zip', { zipPath: result.path }) as { projectJson: string }
+      : await ipc().invoke('file:load', { path: result.path }) as { data: string }
+    const file = deserialize('projectJson' in loaded ? loaded.projectJson : loaded.data)
     applyProject(file)
     currentFilePath = result.path
     return true
