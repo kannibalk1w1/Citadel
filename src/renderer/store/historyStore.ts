@@ -17,6 +17,7 @@ type HistoryState = {
   canRedo: () => boolean
   isDirty: () => boolean
   markSaved: () => void
+  markDirty: () => void
   resetHistory: () => void
 
   // Recording
@@ -81,6 +82,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   canRedo: () => get().cursor < get().events.length - 1,
   isDirty: () => get().cursor !== get().savedCursor,
   markSaved: () => set((s) => ({ savedCursor: s.cursor })),
+  markDirty: () => set((s) => ({ savedCursor: s.cursor === s.savedCursor ? s.cursor - 1 : s.savedCursor })),
   resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false }),
 
   startRecording: (name) => {

@@ -15,6 +15,7 @@ type CanvasState = {
   // Board operations
   initDefaultBoard: () => void
   addBoard: (name: string) => string
+  duplicateBoard: (id: string) => string | null
   removeBoard: (id: string) => void
   renameBoard: (id: string, name: string) => void
   setActiveBoard: (id: string) => void
@@ -74,6 +75,37 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       boards: [...s.boards, { id, name, items: [], connections: [], viewport: { x: 0, y: 0, scale: 1 } }],
     }))
     return id
+  },
+
+  duplicateBoard: (id) => {
+    const source = get().boards.find((b) => b.id === id)
+    if (!source) return null
+    const boardId = nanoid()
+    const itemIdMap = new Map(source.items.map((item) => [item.id, nanoid()]))
+    const items = source.items.map((item) => ({ ...item, id: itemIdMap.get(item.id)! }))
+    const connections = source.connections
+      .filter((connection) => itemIdMap.has(connection.fromId) && itemIdMap.has(connection.toId))
+      .map((connection) => ({
+        ...connection,
+        id: nanoid(),
+        fromId: itemIdMap.get(connection.fromId)!,
+        toId: itemIdMap.get(connection.toId)!,
+      }))
+    const clone = {
+      ...source,
+      id: boardId,
+      name: `${source.name} copy`,
+      items,
+      connections,
+      viewport: { ...source.viewport },
+    }
+    set((s) => {
+      const index = s.boards.findIndex((b) => b.id === id)
+      const boards = [...s.boards]
+      boards.splice(index + 1, 0, clone)
+      return { boards, activeBoardId: boardId, selectedIds: [] }
+    })
+    return boardId
   },
 
   removeBoard: (id) => {

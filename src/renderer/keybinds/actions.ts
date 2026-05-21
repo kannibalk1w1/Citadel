@@ -48,6 +48,7 @@ export const Actions = {
 
   // ── Boards ────────────────────────────────────────────────────────────────
   BOARD_NEW: 'board:new',
+  BOARD_DUPLICATE: 'board:duplicate',
   BOARD_NEXT: 'board:next',
   BOARD_PREV: 'board:prev',
   BOARD_RENAME: 'board:rename',

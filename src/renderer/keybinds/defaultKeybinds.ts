@@ -50,6 +50,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
 
   // Boards
   [Actions.BOARD_NEW]:      ['ctrl+shift+n', 'meta+shift+n'],
+  [Actions.BOARD_DUPLICATE]: ['ctrl+shift+d', 'meta+shift+d'],
   [Actions.BOARD_NEXT]:     ['ctrl+pagedown', 'meta+pagedown'],
   [Actions.BOARD_PREV]:     ['ctrl+pageup', 'meta+pageup'],
   [Actions.BOARD_RENAME]:   ['f2'],

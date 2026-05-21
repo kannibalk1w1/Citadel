@@ -37,6 +37,7 @@ export function buildMenu(): void {
       label: 'Board',
       submenu: [
         { label: 'New Board', accelerator: 'CmdOrCtrl+Shift+N', click: () => send('menu:boardNew') },
+        { label: 'Duplicate Board', accelerator: 'CmdOrCtrl+Shift+D', click: () => send('menu:boardDuplicate') },
         { label: 'Next Board', accelerator: 'CmdOrCtrl+PageDown', click: () => send('menu:boardNext') },
         { label: 'Previous Board', accelerator: 'CmdOrCtrl+PageUp', click: () => send('menu:boardPrev') },
       ],

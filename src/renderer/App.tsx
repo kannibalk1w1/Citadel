@@ -319,6 +319,13 @@ export default function App(): React.ReactElement {
       const canvas = useCanvasStore.getState()
       const id = canvas.addBoard(`Board ${canvas.boards.length + 1}`)
       canvas.setActiveBoard(id)
+      useHistoryStore.getState().markDirty()
+    })
+    resolver.register(Actions.BOARD_DUPLICATE, () => {
+      const canvas = useCanvasStore.getState()
+      if (!canvas.activeBoardId) return
+      const id = canvas.duplicateBoard(canvas.activeBoardId)
+      if (id) useHistoryStore.getState().markDirty()
     })
     resolver.register(Actions.BOARD_NEXT, () => {
       const { boards, activeBoardId, setActiveBoard } = useCanvasStore.getState()
@@ -337,7 +344,10 @@ export default function App(): React.ReactElement {
       const board = boards.find((b) => b.id === activeBoardId)
       if (!board || !activeBoardId) return
       const name = window.prompt('Rename board:', board.name)
-      if (name && name.trim()) renameBoard(activeBoardId, name.trim())
+      if (name && name.trim()) {
+        renameBoard(activeBoardId, name.trim())
+        useHistoryStore.getState().markDirty()
+      }
     })
     resolver.register(Actions.BOARD_DELETE, () => {
       const canvas = useCanvasStore.getState()
@@ -346,6 +356,7 @@ export default function App(): React.ReactElement {
       const idx = boards.findIndex((b) => b.id === activeBoardId)
       const next = boards.filter((b) => b.id !== activeBoardId)
       removeBoard(activeBoardId)
+      useHistoryStore.getState().markDirty()
       if (next.length > 0) setActiveBoard(next[Math.min(idx, next.length - 1)].id)
     })
     resolver.register(Actions.RECORD_PLAY, () => {
@@ -540,6 +551,7 @@ export default function App(): React.ReactElement {
       ipc.on('menu:paste',      () => resolver.dispatch(Actions.PASTE)),
       ipc.on('menu:cut',        () => resolver.dispatch(Actions.CUT)),
       ipc.on('menu:boardNew',     () => resolver.dispatch(Actions.BOARD_NEW)),
+      ipc.on('menu:boardDuplicate', () => resolver.dispatch(Actions.BOARD_DUPLICATE)),
       ipc.on('menu:boardNext',    () => resolver.dispatch(Actions.BOARD_NEXT)),
       ipc.on('menu:boardPrev',    () => resolver.dispatch(Actions.BOARD_PREV)),
       ipc.on('menu:recordToggle', () => resolver.dispatch(Actions.RECORD_TOGGLE)),

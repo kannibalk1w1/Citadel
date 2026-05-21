@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import type { CanvasBoard } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
+import { useHistoryStore } from '../store/historyStore'
 
 const THUMB_W = 52
 const THUMB_H = 28
@@ -96,6 +97,7 @@ export function BoardTabs(): React.ReactElement {
   const addBoard = useCanvasStore((s) => s.addBoard)
   const removeBoard = useCanvasStore((s) => s.removeBoard)
   const renameBoard = useCanvasStore((s) => s.renameBoard)
+  const markDirty = useHistoryStore((s) => s.markDirty)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -111,7 +113,10 @@ export function BoardTabs(): React.ReactElement {
   }
 
   function commitEdit() {
-    if (editingId && editValue.trim()) renameBoard(editingId, editValue.trim())
+    if (editingId && editValue.trim()) {
+      renameBoard(editingId, editValue.trim())
+      markDirty()
+    }
     setEditingId(null)
   }
 
@@ -185,7 +190,7 @@ export function BoardTabs(): React.ReactElement {
           )}
           {boards.length > 1 && editingId !== board.id && (
             <span
-              onClick={(e) => { e.stopPropagation(); removeBoard(board.id) }}
+              onClick={(e) => { e.stopPropagation(); removeBoard(board.id); markDirty() }}
               style={{ opacity: 0.35, fontSize: 14, lineHeight: 1, marginLeft: 2, paddingBottom: 1 }}
             >
               ×
@@ -197,6 +202,7 @@ export function BoardTabs(): React.ReactElement {
         onClick={() => {
           const id = addBoard(`Board ${boards.length + 1}`)
           setActiveBoard(id)
+          markDirty()
         }}
         style={{
           padding: '0 10px',
