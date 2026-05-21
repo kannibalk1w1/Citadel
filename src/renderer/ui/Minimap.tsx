@@ -1,37 +1,51 @@
 import React, { useRef, useEffect, useCallback } from 'react'
+import type { Viewport } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
+import {
+  buildMinimapModel,
+  containsRectPoint,
+  viewportForMinimapCenter,
+  viewportForMinimapDrag,
+  type MinimapModel,
+} from './minimapModel'
 
-const MAP_W = 160
-const MAP_H = 100
+const MAP_W = 176
+const MAP_H = 112
 const SIDEBAR_W = 164
 
-function itemColour(type: string, meta?: Record<string, unknown>): string {
+function itemColour(type: string, selected: boolean, meta?: Record<string, unknown>): string {
+  if (selected) return '#c8a96e'
   switch (type) {
     case 'image':
-    case 'gif':
+    case 'gif':        return '#4a5260'
     case 'video':
-    case 'youtube':   return '#2a3540'
-    case 'sticky':    return (meta?.color as string) ?? '#2a2820'
-    case 'text':      return '#1e2a1e'
-    case 'swatch':    return '#3a2a1a'
-    case 'comparison': return '#2e2420'
-    case 'audio':
-    case 'model3d':   return '#2a2035'
-    default:          return '#2e2820'
+    case 'youtube':    return '#35475a'
+    case 'sticky':     return (meta?.color as string) ?? '#3a3328'
+    case 'text':       return '#3d4938'
+    case 'swatch':     return '#6a5130'
+    case 'comparison': return '#584037'
+    case 'audio':      return '#4c3b5c'
+    case 'model3d':    return '#3d4b58'
+    default:           return '#3a332a'
   }
 }
 
 export function Minimap(): React.ReactElement | null {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const mapTransformRef = useRef({ scale: 1, ox: 0, oy: 0 })
-  const isDragging = useRef(false)
+  const modelRef = useRef<MinimapModel | null>(null)
+  const dragRef = useRef<{
+    mode: 'viewport' | 'center'
+    startX: number
+    startY: number
+    startViewport: Viewport
+  } | null>(null)
   const dragListenersRef = useRef<{ move: (e: MouseEvent) => void; up: (e: MouseEvent) => void } | null>(null)
 
   const items = useCanvasStore((s) => s.items())
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
   const viewport = useCanvasStore((s) => s.viewport())
   const updateViewport = useCanvasStore((s) => s.updateViewport)
 
-  // ── Render minimap ──────────────────────────────────────────────────────────
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
     if (!ctx) return
@@ -40,68 +54,54 @@ export function Minimap(): React.ReactElement | null {
     ctx.fillStyle = '#221d18'
     ctx.fillRect(0, 0, MAP_W, MAP_H)
 
+    const canvasW = window.innerWidth - SIDEBAR_W
+    const canvasH = window.innerHeight
+    const model = buildMinimapModel(items, viewport, selectedIds, MAP_W, MAP_H, canvasW, canvasH)
+    modelRef.current = model
+
     if (items.length === 0) {
       ctx.fillStyle = '#5c5040'
       ctx.font = '9px JetBrains Mono, monospace'
       ctx.textAlign = 'center'
       ctx.fillText('empty', MAP_W / 2, MAP_H / 2 + 3)
-      mapTransformRef.current = { scale: 1, ox: 0, oy: 0 }
       return
     }
 
-    const allX = items.flatMap((i) => [i.x, i.x + i.width])
-    const allY = items.flatMap((i) => [i.y, i.y + i.height])
-    const minX = Math.min(...allX), maxX = Math.max(...allX)
-    const minY = Math.min(...allY), maxY = Math.max(...allY)
-    const sceneW = maxX - minX || 1
-    const sceneH = maxY - minY || 1
-    const scale = Math.min(MAP_W / sceneW, MAP_H / sceneH) * 0.85
-    const ox = (MAP_W - sceneW * scale) / 2 - minX * scale
-    const oy = (MAP_H - sceneH * scale) / 2 - minY * scale
-
-    mapTransformRef.current = { scale, ox, oy }
-
-    for (const item of items) {
-      const fill = itemColour(item.type, item.meta)
-      ctx.fillStyle = fill
-      ctx.fillRect(
-        item.x * scale + ox,
-        item.y * scale + oy,
-        Math.max(1, item.width * scale),
-        Math.max(1, item.height * scale),
-      )
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-      ctx.lineWidth = 0.5
-      ctx.strokeRect(
-        item.x * scale + ox,
-        item.y * scale + oy,
-        Math.max(1, item.width * scale),
-        Math.max(1, item.height * scale),
-      )
+    for (const rect of model.items) {
+      const source = items.find((item) => item.id === rect.id)
+      ctx.fillStyle = itemColour(rect.type, rect.selected, source?.meta)
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
+      ctx.strokeStyle = rect.selected ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.08)'
+      ctx.lineWidth = rect.selected ? 1 : 0.5
+      ctx.strokeRect(rect.x, rect.y, rect.width, rect.height)
     }
 
-    const vx = (-viewport.x / viewport.scale) * scale + ox
-    const vy = (-viewport.y / viewport.scale) * scale + oy
-    const vw = ((window.innerWidth - SIDEBAR_W) / viewport.scale) * scale
-    const vh = (window.innerHeight / viewport.scale) * scale
-    ctx.strokeStyle = 'rgba(200,169,110,0.6)'
-    ctx.lineWidth = 1
-    ctx.strokeRect(vx, vy, vw, vh)
-  }, [items, viewport])
+    ctx.fillStyle = 'rgba(200,169,110,0.08)'
+    ctx.fillRect(model.viewport.x, model.viewport.y, model.viewport.width, model.viewport.height)
+    ctx.strokeStyle = 'rgba(200,169,110,0.85)'
+    ctx.lineWidth = 1.2
+    ctx.strokeRect(model.viewport.x, model.viewport.y, model.viewport.width, model.viewport.height)
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'
+    ctx.lineWidth = 0.5
+    ctx.strokeRect(
+      model.viewport.x + 2,
+      model.viewport.y + 2,
+      Math.max(0, model.viewport.width - 4),
+      Math.max(0, model.viewport.height - 4),
+    )
+  }, [items, selectedIds, viewport])
 
-  // ── Navigation helper ───────────────────────────────────────────────────────
   const navigateTo = useCallback((minimapX: number, minimapY: number) => {
-    const { scale, ox, oy } = mapTransformRef.current
-    const canvasX = (minimapX - ox) / scale
-    const canvasY = (minimapY - oy) / scale
-    const canvasW = window.innerWidth - SIDEBAR_W
-    updateViewport({
-      x: canvasW / 2 - canvasX * viewport.scale,
-      y: window.innerHeight / 2 - canvasY * viewport.scale,
-    })
+    updateViewport(viewportForMinimapCenter(
+      minimapX,
+      minimapY,
+      modelRef.current?.transform ?? { scale: 1, ox: 0, oy: 0 },
+      viewport.scale,
+      window.innerWidth - SIDEBAR_W,
+      window.innerHeight,
+    ))
   }, [updateViewport, viewport.scale])
 
-  // ── Drag-to-pan ─────────────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
       if (dragListenersRef.current) {
@@ -116,18 +116,38 @@ export function Minimap(): React.ReactElement | null {
     const rect = canvasRef.current!.getBoundingClientRect()
     const mx = e.clientX - rect.left
     const my = e.clientY - rect.top
-    navigateTo(mx, my)
-    isDragging.current = true
+    const model = modelRef.current
+    const inViewport = model ? containsRectPoint(model.viewport, mx, my) : false
+    dragRef.current = {
+      mode: inViewport ? 'viewport' : 'center',
+      startX: mx,
+      startY: my,
+      startViewport: viewport,
+    }
+    if (!inViewport) navigateTo(mx, my)
 
     const onMove = (ev: MouseEvent) => {
-      if (!isDragging.current) return
-      const r = canvasRef.current?.getBoundingClientRect()
-      if (!r) return
-      navigateTo(ev.clientX - r.left, ev.clientY - r.top)
+      const drag = dragRef.current
+      const bounds = canvasRef.current?.getBoundingClientRect()
+      const currentModel = modelRef.current
+      if (!drag || !bounds || !currentModel) return
+
+      const x = ev.clientX - bounds.left
+      const y = ev.clientY - bounds.top
+      if (drag.mode === 'viewport') {
+        updateViewport(viewportForMinimapDrag(
+          drag.startViewport,
+          x - drag.startX,
+          y - drag.startY,
+          currentModel.transform,
+        ))
+      } else {
+        navigateTo(x, y)
+      }
     }
 
     const onUp = () => {
-      isDragging.current = false
+      dragRef.current = null
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       dragListenersRef.current = null
@@ -136,7 +156,7 @@ export function Minimap(): React.ReactElement | null {
     dragListenersRef.current = { move: onMove, up: onUp }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [navigateTo])
+  }, [navigateTo, updateViewport, viewport])
 
   return (
     <div
@@ -159,7 +179,7 @@ export function Minimap(): React.ReactElement | null {
         width={MAP_W}
         height={MAP_H}
         onMouseDown={handleMouseDown}
-        style={{ cursor: 'crosshair', display: 'block' }}
+        style={{ cursor: 'grab', display: 'block' }}
       />
     </div>
   )
