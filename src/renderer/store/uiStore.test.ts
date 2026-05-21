@@ -9,7 +9,7 @@ beforeEach(() => {
     ipc: { invoke: mockInvoke },
   })
   mockInvoke.mockClear()
-  useUIStore.setState({ uiScale: 1.0 })
+  useUIStore.setState({ uiScale: 1.0, exportArea: 'viewport' })
 })
 
 describe('uiStore — uiScale', () => {
@@ -35,5 +35,17 @@ describe('uiStore — uiScale', () => {
   it('setUiScale calls zoom:set IPC with clamped factor', () => {
     useUIStore.getState().setUiScale(1.5)
     expect(mockInvoke).toHaveBeenCalledWith('zoom:set', { factor: 1.5 })
+  })
+})
+
+describe('uiStore — exportArea', () => {
+  it('defaults to viewport export', () => {
+    expect(useUIStore.getState().exportArea).toBe('viewport')
+  })
+
+  it('setExportArea persists the selected export area', () => {
+    useUIStore.getState().setExportArea('board')
+    expect(useUIStore.getState().exportArea).toBe('board')
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.area', value: 'board' })
   })
 })

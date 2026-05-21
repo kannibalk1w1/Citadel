@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '../../store/uiStore'
+import type { ExportArea } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
@@ -40,6 +41,11 @@ const getIpc = (): { invoke: (ch: string, args?: unknown) => Promise<unknown> } 
   window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }
 ).ipc
 
+const exportAreas: { area: ExportArea; label: string }[] = [
+  { area: 'viewport', label: 'Viewport' },
+  { area: 'board', label: 'Board' },
+]
+
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const togglePanel = useUIStore((s) => s.togglePanel)
@@ -54,6 +60,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setUiScale = useUIStore((s) => s.setUiScale)
   const exportScale = useUIStore((s) => s.exportScale)
   const setExportScale = useUIStore((s) => s.setExportScale)
+  const exportArea = useUIStore((s) => s.exportArea)
+  const setExportArea = useUIStore((s) => s.setExportArea)
   const boards = useCanvasStore((s) => s.boards)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const markDirty = useHistoryStore((s) => s.markDirty)
@@ -262,6 +270,30 @@ export function KeybindSettings(): React.ReactElement | null {
               }}
             >
               {scale}x
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+            Area
+          </span>
+          {exportAreas.map(({ area, label }) => (
+            <button
+              key={area}
+              type="button"
+              onClick={() => setExportArea(area)}
+              aria-pressed={exportArea === area}
+              title={area === 'board' ? 'Fit the active board before exporting' : 'Export the current visible canvas'}
+              style={{
+                ...btnStyle,
+                width: 'auto',
+                padding: '0 8px',
+                fontSize: 11,
+                background: exportArea === area ? 'var(--accent)' : 'var(--bg-canvas)',
+                color: exportArea === area ? 'var(--bg-ui)' : 'var(--text-primary)',
+              }}
+            >
+              {label}
             </button>
           ))}
         </div>

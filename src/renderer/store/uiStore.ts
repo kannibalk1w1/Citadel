@@ -8,6 +8,8 @@ type PanelState = {
   tagSearch: boolean
 }
 
+export type ExportArea = 'viewport' | 'board'
+
 type UIState = {
   toolMode: ToolMode
   setToolMode: (mode: ToolMode) => void
@@ -72,6 +74,8 @@ type UIState = {
   // Export
   exportScale: number
   setExportScale: (v: number) => void
+  exportArea: ExportArea
+  setExportArea: (area: ExportArea) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -155,5 +159,11 @@ export const useUIStore = create<UIState>((set) => ({
     set({ exportScale: clamped })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'export.scale', value: clamped }).catch(console.error)
+  },
+  exportArea: 'viewport',
+  setExportArea: (area) => {
+    set({ exportArea: area })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'export.area', value: area }).catch(console.error)
   },
 }))

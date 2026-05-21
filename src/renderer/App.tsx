@@ -90,6 +90,11 @@ export default function App(): React.ReactElement {
       const { value } = res as { value: unknown }
       if (typeof value === 'number') useUIStore.getState().setExportScale(value)
     }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'export.area' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value === 'viewport' || value === 'board') useUIStore.getState().setExportArea(value)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
