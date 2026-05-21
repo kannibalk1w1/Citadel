@@ -71,6 +71,7 @@ export const Actions = {
   ALIGN_TOP: 'align:top',
   ALIGN_CENTER_V: 'align:centerV',
   ALIGN_BOTTOM: 'align:bottom',
+  AUTO_ARRANGE: 'arrange:autoGrid',
 
   // ── Grouping ──────────────────────────────────────────────────────────────
   GROUP:   'group:create',

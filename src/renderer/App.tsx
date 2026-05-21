@@ -31,10 +31,17 @@ import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, load
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
+import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
+type MovePatch = { id: string; x: number; y: number }
+
+function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
+  const moves = Array.isArray(patch) ? patch : [patch]
+  useCanvasStore.getState().moveItems(boardId, moves)
+}
 
 export default function App(): React.ReactElement {
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
@@ -135,7 +142,9 @@ export default function App(): React.ReactElement {
       } else if (event.type === 'ITEM_DELETE') {
         const items = event.before as CanvasItem[]
         items.forEach((i) => canvas.addItem(event.boardId, i))
-      } else if (event.type === 'ITEM_MOVE' || event.type === 'ITEM_STYLE') {
+      } else if (event.type === 'ITEM_MOVE') {
+        applyMovePatch(event.boardId, event.before as MovePatch | MovePatch[])
+      } else if (event.type === 'ITEM_STYLE') {
         const patch = event.before as Partial<CanvasItem> & { id: string }
         canvas.updateItem(event.boardId, patch.id, patch)
       } else if (event.type === 'COMPARE_MERGE') {
@@ -159,7 +168,9 @@ export default function App(): React.ReactElement {
       } else if (event.type === 'ITEM_DELETE') {
         const items = event.after as { id: string }[]
         canvas.removeItems(event.boardId, items.map((i) => i.id))
-      } else if (event.type === 'ITEM_MOVE' || event.type === 'ITEM_STYLE') {
+      } else if (event.type === 'ITEM_MOVE') {
+        applyMovePatch(event.boardId, event.after as MovePatch | MovePatch[])
+      } else if (event.type === 'ITEM_STYLE') {
         const patch = event.after as Partial<CanvasItem> & { id: string }
         canvas.updateItem(event.boardId, patch.id, patch)
       } else if (event.type === 'COMPARE_MERGE') {
@@ -488,6 +499,17 @@ export default function App(): React.ReactElement {
       const maxY = Math.max(...sel.map((i) => i.y + i.height))
       const cy = (minY + maxY) / 2
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { y: cy - i.height / 2 }))
+    })
+    resolver.register(Actions.AUTO_ARRANGE, () => {
+      const canvas = useCanvasStore.getState()
+      const { selectedIds, activeBoardId, items } = canvas
+      if (!activeBoardId || selectedIds.length < 2) return
+      const selectedItems = items().filter((item) => selectedIds.includes(item.id) && !item.locked)
+      const moves = autoArrangeGrid(selectedItems)
+      if (moves.length === 0) return
+      const before = selectedItems.map((item) => ({ id: item.id, x: item.x, y: item.y }))
+      useHistoryStore.getState().push('ITEM_MOVE', activeBoardId, before, moves)
+      canvas.moveItems(activeBoardId, moves)
     })
 
     // Recording

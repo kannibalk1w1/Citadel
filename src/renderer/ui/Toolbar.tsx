@@ -5,6 +5,8 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useMascotStore } from '../store/mascotStore'
 import type { CanvasItem, ToolMode } from '../../types'
+import { Actions } from '../keybinds/actions'
+import { resolver } from '../keybinds/keybindResolver'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: React.ReactElement }
 
@@ -202,6 +204,7 @@ export function Toolbar(): React.ReactElement {
 
   const canMergeToCompare = selectedIds.length === 2 &&
     allItems.filter((i) => selectedIds.includes(i.id)).every((i) => SRC_TYPES.has(i.type) && !!i.src)
+  const canAutoArrange = allItems.filter((item) => selectedIds.includes(item.id) && !item.locked).length >= 2
 
   const handleRecord = () => {
     if (isRecording) {
@@ -344,6 +347,34 @@ export function Toolbar(): React.ReactElement {
           <line x1="11" y1="1" x2="11" y2="15" />
           <line x1="1" y1="5" x2="15" y2="5" />
           <line x1="1" y1="11" x2="15" y2="11" />
+        </svg>
+      </button>
+
+      <button
+        title="Auto-arrange selection (Ctrl+Shift+A)"
+        onClick={() => resolver.dispatch(Actions.AUTO_ARRANGE)}
+        disabled={!canAutoArrange}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          border: 'none',
+          cursor: canAutoArrange ? 'pointer' : 'not-allowed',
+          background: 'transparent',
+          color: canAutoArrange ? 'var(--text-secondary)' : 'var(--text-muted)',
+          opacity: canAutoArrange ? 1 : 0.35,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition-fast)',
+        }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.2">
+          <rect x="2" y="2" width="4" height="4" rx="0.8" />
+          <rect x="8" y="2" width="4" height="4" rx="0.8" />
+          <rect x="2" y="8" width="4" height="4" rx="0.8" />
+          <path d="M8 10H14" />
+          <path d="M11 7V13" />
         </svg>
       </button>
 

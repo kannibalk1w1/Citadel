@@ -4,6 +4,8 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useMascotStore } from '../store/mascotStore'
 import type { RecordingSession, CanvasItem } from '../../types'
 
+type MovePatch = { id: string; x: number; y: number }
+
 export function RecordingBar(): React.ReactElement | null {
   const isRecording = useHistoryStore((s) => s.isRecording)
   const startRecording = useHistoryStore((s) => s.startRecording)
@@ -52,7 +54,10 @@ export function RecordingBar(): React.ReactElement | null {
         // Apply event onto current canvas state
         if (event.type === 'ITEM_ADD') {
           canvas.addItem(event.boardId, event.after as CanvasItem)
-        } else if (event.type === 'ITEM_MOVE' || event.type === 'ITEM_STYLE') {
+        } else if (event.type === 'ITEM_MOVE') {
+          const moves = event.after as MovePatch | MovePatch[]
+          canvas.moveItems(event.boardId, Array.isArray(moves) ? moves : [moves])
+        } else if (event.type === 'ITEM_STYLE') {
           const patch = event.after as Partial<CanvasItem> & { id: string }
           canvas.updateItem(event.boardId, patch.id, patch)
         } else if (event.type === 'ITEM_DELETE') {
