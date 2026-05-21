@@ -4,6 +4,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useMascotStore } from '../store/mascotStore'
 import { useHistoryStore } from '../store/historyStore'
 import { nanoid } from 'nanoid'
+import { copyImageSrcToClipboard } from '../utils/clipboardImage'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
@@ -20,6 +21,7 @@ export function ContextMenu(): React.ReactElement | null {
   const canUngroup = selectedUnlockedItems.some((i) => !!i.groupId)
   const canLock = selectedUnlockedItems.length > 0
   const canUnlock = selectedLockedItems.length > 0
+  const copyableImage = selectedItems.length === 1 && ['image', 'gif'].includes(selectedItems[0].type) && selectedItems[0].src
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -64,6 +66,18 @@ export function ContextMenu(): React.ReactElement | null {
           closeContextMenu()
         },
       },
+      ...(copyableImage ? [{
+        label: 'Copy Image',
+        action: () => {
+          copyImageSrcToClipboard(copyableImage)
+            .then((ok) => triggerEffect(ok ? 'banner-raise' : 'fracture'))
+            .catch((error) => {
+              console.error('Failed to copy image:', error)
+              triggerEffect('fracture')
+            })
+          closeContextMenu()
+        },
+      }] : []),
       { divider: true, label: '', action: () => {} },
       {
         label: 'Bring to Front',

@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, app } from 'electron'
+import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
@@ -351,6 +351,14 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('assets:saveDataUrl', async (_e, { dataUrl, imageData, filename }: { dataUrl?: string; imageData?: string; filename: string }) => (
     writeDataUrlAsset(dataUrl ?? imageData ?? '', filename)
   ))
+
+  ipcMain.handle('clipboard:writeImageDataUrl', async (_e, { imageData }: { imageData: string }) => {
+    const base64 = imageData.replace(/^data:image\/[a-z0-9+.-]+;base64,/i, '')
+    const image = nativeImage.createFromBuffer(Buffer.from(base64, 'base64'))
+    if (image.isEmpty()) return { ok: false }
+    clipboard.writeImage(image)
+    return { ok: true }
+  })
 
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({

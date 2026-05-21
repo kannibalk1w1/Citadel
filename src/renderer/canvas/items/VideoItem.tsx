@@ -8,6 +8,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
+import { copyImageDataUrl } from '../../utils/clipboardImage'
 
 type Props = { item: CanvasItem }
 
@@ -15,6 +16,30 @@ export function VideoItem({ item }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
+
+  const videoFrameDataUrl = (): string => {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) throw new Error('Frame unavailable')
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas 2D context unavailable')
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    return canvas.toDataURL('image/png')
+  }
+
+  const copyFrame = async (e: React.MouseEvent): Promise<void> => {
+    e.stopPropagation()
+    try {
+      const ok = await copyImageDataUrl(videoFrameDataUrl())
+      setMessage(ok ? 'copied' : 'copy failed')
+      setTimeout(() => setMessage(''), 1200)
+    } catch (error) {
+      console.error('Failed to copy video frame:', error)
+      setMessage('copy failed')
+    }
+  }
 
   const captureFrame = async (e: React.MouseEvent): Promise<void> => {
     e.stopPropagation()
@@ -26,13 +51,7 @@ export function VideoItem({ item }: Props): React.ReactElement {
     }
 
     try {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas 2D context unavailable')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const imageData = canvas.toDataURL('image/png')
+      const imageData = videoFrameDataUrl()
       const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
       const result = await ipc.invoke('assets:saveDataUrl', {
         imageData,
@@ -109,6 +128,32 @@ export function VideoItem({ item }: Props): React.ReactElement {
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
             <path d="M2 5H4L5 3.5H10L11 5H13V12H2Z" />
             <circle cx="7.5" cy="8.5" r="2.2" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { copyFrame(e).catch(console.error) }}
+          title="Copy current frame"
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 38,
+            width: 26,
+            height: 24,
+            border: '1px solid var(--border)',
+            borderRadius: 3,
+            background: 'var(--bg-panel)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: 0.88,
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
+            <rect x="4" y="3" width="8" height="8" rx="1" />
+            <path d="M3 5H2V13H10V12" />
           </svg>
         </button>
         {message ? (
