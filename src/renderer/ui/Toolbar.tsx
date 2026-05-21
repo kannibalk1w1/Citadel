@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
@@ -135,6 +135,10 @@ export function Toolbar(): React.ReactElement {
   const [youtubeOpen, setYoutubeOpen] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [youtubeShake, setYoutubeShake] = useState(false)
+  const [voiceRecording, setVoiceRecording] = useState(false)
+  const voiceRecorderRef = useRef<MediaRecorder | null>(null)
+  const voiceStreamRef = useRef<MediaStream | null>(null)
+  const voiceChunksRef = useRef<Blob[]>([])
 
   const isValidYouTubeUrl = (url: string): boolean =>
     url.includes('youtube.com') || url.includes('youtu.be')
@@ -173,6 +177,83 @@ export function Toolbar(): React.ReactElement {
     useCanvasStore.getState().setSelection([item.id])
     useUIStore.getState().setToolMode('select')
     closeYouTube()
+  }
+
+  const blobToDataUrl = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+  })
+
+  const addVoiceMemo = async (blob: Blob): Promise<void> => {
+    const boardId = useCanvasStore.getState().activeBoardId
+    if (!boardId) return
+    const dataUrl = await blobToDataUrl(blob)
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    const result = await ipc.invoke('assets:saveDataUrl', {
+      dataUrl,
+      filename: `voice-memo-${Date.now()}.webm`,
+    }) as { path?: string }
+    if (!result.path) return
+
+    const vp = useCanvasStore.getState().viewport()
+    const sidebarW = 164
+    const canvasW = window.innerWidth - sidebarW
+    const cx = (canvasW / 2 - vp.x) / vp.scale
+    const cy = (window.innerHeight / 2 - vp.y) / vp.scale
+    const item: CanvasItem = {
+      id: nanoid(),
+      type: 'audio',
+      x: cx - 160,
+      y: cy - 40,
+      width: 320,
+      height: 80,
+      rotation: 0,
+      zIndex: Date.now(),
+      locked: false,
+      visible: true,
+      opacity: 1,
+      tags: ['voice'],
+      src: result.path,
+      meta: { memo: true, recordedAt: Date.now() },
+    }
+    useCanvasStore.getState().addItem(boardId, item)
+    useHistoryStore.getState().push('ITEM_ADD', boardId, null, item)
+    useCanvasStore.getState().setSelection([item.id])
+    triggerEffect('lightning-in')
+  }
+
+  const stopVoiceMemo = () => {
+    voiceRecorderRef.current?.stop()
+  }
+
+  const startVoiceMemo = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      voiceChunksRef.current = []
+      voiceStreamRef.current = stream
+      voiceRecorderRef.current = recorder
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) voiceChunksRef.current.push(event.data)
+      }
+      recorder.onstop = () => {
+        setVoiceRecording(false)
+        voiceStreamRef.current?.getTracks().forEach((track) => track.stop())
+        voiceStreamRef.current = null
+        voiceRecorderRef.current = null
+        const blob = new Blob(voiceChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        voiceChunksRef.current = []
+        if (blob.size > 0) addVoiceMemo(blob).catch(console.error)
+      }
+      recorder.start()
+      setVoiceRecording(true)
+      triggerEffect('eye-open')
+    } catch (error) {
+      console.error('Voice memo recording failed:', error)
+      triggerEffect('fracture')
+    }
   }
 
   const SRC_TYPES = new Set(['image', 'gif', 'video'])
@@ -400,6 +481,34 @@ export function Toolbar(): React.ReactElement {
         <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
           <circle cx="9" cy="9" r={isRecording ? 5 : 6} />
           {isRecording && <rect x="5.5" y="5.5" width="7" height="7" rx="1" fill="var(--bg-ui)" />}
+        </svg>
+      </button>
+
+      <button
+        title={voiceRecording ? 'Stop voice memo' : 'Record voice memo'}
+        onClick={() => {
+          if (voiceRecording) stopVoiceMemo()
+          else startVoiceMemo().catch(console.error)
+        }}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          border: 'none',
+          cursor: 'pointer',
+          background: voiceRecording ? 'rgba(139,32,32,0.25)' : 'transparent',
+          color: voiceRecording ? 'var(--accent-danger)' : 'var(--text-secondary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition-fast)',
+        }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+          <rect x="6" y="2" width="5" height="8" rx="2.5" />
+          <path d="M3.5 8.5C3.5 11.2 5.5 13 8.5 13S13.5 11.2 13.5 8.5" />
+          <path d="M8.5 13V15" />
+          <path d="M6 15H11" />
         </svg>
       </button>
 
