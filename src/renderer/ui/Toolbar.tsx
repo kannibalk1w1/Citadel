@@ -406,6 +406,33 @@ export function Toolbar(): React.ReactElement {
       <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
+        title="Presentation Mode (F5)"
+        onClick={() => resolver.dispatch(Actions.PRESENTATION_TOGGLE)}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          border: 'none',
+          cursor: 'pointer',
+          background: 'transparent',
+          color: 'var(--text-secondary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition-fast)',
+        }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.3">
+          <rect x="2" y="3" width="13" height="9" rx="1" />
+          <path d="M8.5 12V15" />
+          <path d="M6 15H11" />
+          <path d="M6 7.5L8 9.5L11.5 6" />
+        </svg>
+      </button>
+
+      <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+
+      <button
         title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         style={{

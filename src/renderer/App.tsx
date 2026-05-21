@@ -43,12 +43,42 @@ function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
   useCanvasStore.getState().moveItems(boardId, moves)
 }
 
+function fitActiveBoard(fullWidth = false): void {
+  const canvas = useCanvasStore.getState()
+  const allItems = canvas.items()
+  if (allItems.length === 0) {
+    canvas.updateViewport({ scale: 1, x: 0, y: 0 })
+    return
+  }
+  const minX = Math.min(...allItems.map((i) => i.x))
+  const minY = Math.min(...allItems.map((i) => i.y))
+  const maxX = Math.max(...allItems.map((i) => i.x + i.width))
+  const maxY = Math.max(...allItems.map((i) => i.y + i.height))
+  const sidebarW = fullWidth ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const canvasW = window.innerWidth - sidebarW
+  const pad = fullWidth ? 80 : 60
+  const scale = Math.min(
+    MAX_SCALE,
+    Math.max(MIN_SCALE, Math.min(
+      (canvasW - pad * 2) / Math.max(1, maxX - minX),
+      (window.innerHeight - pad * 2) / Math.max(1, maxY - minY),
+    ))
+  )
+  canvas.updateViewport({
+    scale,
+    x: canvasW / 2 - ((minX + maxX) / 2) * scale,
+    y: window.innerHeight / 2 - ((minY + maxY) / 2) * scale,
+  })
+}
+
 export default function App(): React.ReactElement {
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const initBoard = useCanvasStore((s) => s.initDefaultBoard)
   const resolverReady = useRef(false)
   const editingItemId = useUIStore((s) => s.editingItemId)
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
+  const presentationMode = useUIStore((s) => s.presentationMode)
+  const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
 
@@ -258,31 +288,20 @@ export default function App(): React.ReactElement {
       useCanvasStore.getState().updateViewport({ scale: 1, x: 0, y: 0 })
     })
     resolver.register(Actions.ZOOM_FIT, () => {
-      const canvas = useCanvasStore.getState()
-      const allItems = canvas.items()
-      if (allItems.length === 0) {
-        canvas.updateViewport({ scale: 1, x: 0, y: 0 })
-        return
+      fitActiveBoard(false)
+    })
+    resolver.register(Actions.PRESENTATION_TOGGLE, () => {
+      const ui = useUIStore.getState()
+      const next = !ui.presentationMode
+      ui.setPresentationMode(next)
+      if (next) {
+        ui.closeContextMenu()
+        ui.setToolMode('pan')
+        fitActiveBoard(true)
+        triggerEffect('lighthouse-beam')
+      } else {
+        ui.setToolMode('select')
       }
-      const minX = Math.min(...allItems.map((i) => i.x))
-      const minY = Math.min(...allItems.map((i) => i.y))
-      const maxX = Math.max(...allItems.map((i) => i.x + i.width))
-      const maxY = Math.max(...allItems.map((i) => i.y + i.height))
-      const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
-      const canvasW = window.innerWidth - sidebarW
-      const pad = 60
-      const scale = Math.min(
-        MAX_SCALE,
-        Math.max(MIN_SCALE, Math.min(
-          (canvasW - pad * 2) / (maxX - minX),
-          (window.innerHeight - pad * 2) / (maxY - minY),
-        ))
-      )
-      canvas.updateViewport({
-        scale,
-        x: canvasW / 2 - ((minX + maxX) / 2) * scale,
-        y: window.innerHeight / 2 - ((minY + maxY) / 2) * scale,
-      })
     })
 
     // Item ordering
@@ -541,6 +560,12 @@ export default function App(): React.ReactElement {
         if (pos) { spawnX = pos.x; spawnY = pos.y }
       }
       engine.keyStroke(e.key, spawnX, spawnY)
+      if (useUIStore.getState().presentationMode && e.key === 'Escape') {
+        e.preventDefault()
+        useUIStore.getState().setPresentationMode(false)
+        useUIStore.getState().setToolMode('select')
+        return
+      }
       if (inText) return
       resolver.resolve(e)
     }
@@ -667,21 +692,61 @@ export default function App(): React.ReactElement {
           }}>Discard</button>
         </div>
       )}
-      <BoardTabs />
-      <Toolbar />
+      {!presentationMode && <BoardTabs />}
+      {!presentationMode && <Toolbar />}
       {/* Canvas viewport — inset from the right sidebar */}
-      <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: 'var(--sidebar-right-w)' }}>
+      <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: presentationMode ? 0 : 'var(--sidebar-right-w)' }}>
         <CanvasStage />
       </div>
-      <RightSidebar />
-      <Minimap />
-      <RecordingBar />
-      <TagSearch />
-      <ContextMenu />
-      <ItemProperties />
-      <ConnectionProperties />
-      <KeybindSettings />
-      {editingItem && !editingItem.locked && <TextEditOverlay key={editingItem.id} item={editingItem} />}
+      {!presentationMode && <RightSidebar />}
+      {!presentationMode && <Minimap />}
+      {!presentationMode && <RecordingBar />}
+      {!presentationMode && <TagSearch />}
+      {!presentationMode && <ContextMenu />}
+      {!presentationMode && <ItemProperties />}
+      {!presentationMode && <ConnectionProperties />}
+      {!presentationMode && <KeybindSettings />}
+      {editingItem && !editingItem.locked && !presentationMode && <TextEditOverlay key={editingItem.id} item={editingItem} />}
+      {presentationMode && (
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '6px 8px',
+          borderRadius: 4,
+          border: '1px solid var(--border)',
+          background: 'var(--bg-panel)',
+          color: 'var(--text-secondary)',
+          boxShadow: 'var(--shadow-md)',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+        }}>
+          <span style={{ color: 'var(--text-accent)' }}>{activeBoard?.name ?? 'Presentation'}</span>
+          <button
+            type="button"
+            onClick={() => {
+              useUIStore.getState().setPresentationMode(false)
+              useUIStore.getState().setToolMode('select')
+            }}
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              background: 'var(--bg-canvas)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              padding: '2px 6px',
+            }}
+          >
+            Esc
+          </button>
+        </div>
+      )}
       <YouSavedBanner />
       <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
     </div>

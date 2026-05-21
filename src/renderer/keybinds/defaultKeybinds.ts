@@ -38,6 +38,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.ZOOM_OUT]:       ['ctrl+-', 'meta+-'],
   [Actions.ZOOM_FIT]:       ['ctrl+shift+h', 'meta+shift+h'],
   [Actions.ZOOM_RESET]:     ['ctrl+0', 'meta+0'],
+  [Actions.PRESENTATION_TOGGLE]: ['f5'],
 
   // File
   [Actions.SAVE]:           ['ctrl+s', 'meta+s'],

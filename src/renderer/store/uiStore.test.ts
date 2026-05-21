@@ -9,7 +9,7 @@ beforeEach(() => {
     ipc: { invoke: mockInvoke },
   })
   mockInvoke.mockClear()
-  useUIStore.setState({ uiScale: 1.0, exportArea: 'viewport' })
+  useUIStore.setState({ uiScale: 1.0, exportArea: 'viewport', presentationMode: false })
 })
 
 describe('uiStore — uiScale', () => {
@@ -47,5 +47,18 @@ describe('uiStore — exportArea', () => {
     useUIStore.getState().setExportArea('board')
     expect(useUIStore.getState().exportArea).toBe('board')
     expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.area', value: 'board' })
+  })
+})
+
+describe('uiStore — presentationMode', () => {
+  it('defaults to off', () => {
+    expect(useUIStore.getState().presentationMode).toBe(false)
+  })
+
+  it('toggles presentation mode', () => {
+    useUIStore.getState().togglePresentationMode()
+    expect(useUIStore.getState().presentationMode).toBe(true)
+    useUIStore.getState().togglePresentationMode()
+    expect(useUIStore.getState().presentationMode).toBe(false)
   })
 })

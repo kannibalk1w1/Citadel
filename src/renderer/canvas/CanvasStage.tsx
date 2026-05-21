@@ -37,6 +37,7 @@ export function CanvasStage(): React.ReactElement {
   const setConnectFromId = useUIStore((s) => s.setConnectFromId)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
+  const presentationMode = useUIStore((s) => s.presentationMode)
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -228,7 +229,7 @@ export function CanvasStage(): React.ReactElement {
   const SIDEBAR_W = parseInt(
     getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164'
   )
-  const width = window.innerWidth - SIDEBAR_W
+  const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
 
   // Compute rubber-band endpoints in screen space

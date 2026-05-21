@@ -36,6 +36,7 @@ export const Actions = {
   ZOOM_OUT: 'viewport:zoomOut',
   ZOOM_FIT: 'viewport:zoomFit',
   ZOOM_RESET: 'viewport:zoomReset',
+  PRESENTATION_TOGGLE: 'viewport:presentationToggle',
 
   // ── File ──────────────────────────────────────────────────────────────────
   SAVE: 'file:save',

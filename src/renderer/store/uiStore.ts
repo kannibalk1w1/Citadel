@@ -71,6 +71,11 @@ type UIState = {
   uiScale: number
   setUiScale: (v: number) => void
 
+  // Presentation
+  presentationMode: boolean
+  setPresentationMode: (enabled: boolean) => void
+  togglePresentationMode: () => void
+
   // Export
   exportScale: number
   setExportScale: (v: number) => void
@@ -152,6 +157,10 @@ export const useUIStore = create<UIState>((set) => ({
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('zoom:set', { factor: clamped }).catch(console.error)
   },
+
+  presentationMode: false,
+  setPresentationMode: (enabled) => set({ presentationMode: enabled }),
+  togglePresentationMode: () => set((s) => ({ presentationMode: !s.presentationMode })),
 
   exportScale: 1,
   setExportScale: (v) => {
