@@ -205,6 +205,22 @@ function resolveImportedZipProject(projectJson: string, assetDir: string): strin
   return JSON.stringify(project, null, 2)
 }
 
+function writeDataUrlAsset(imageData: string, filename: string): { path: string } {
+  const match = imageData.match(/^data:image\/([a-z0-9+.-]+);base64,(.+)$/i)
+  if (!match) throw new Error('Unsupported image data')
+  const ext = match[1].toLowerCase().replace('jpeg', 'jpg')
+  const assetDir = join(app.getPath('userData'), 'captured-assets')
+  if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true })
+  const safeBase = filename
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[^a-z0-9_-]+/gi, '-')
+    .replace(/^-+|-+$/g, '') || 'capture'
+  const used = new Set(readdirSync(assetDir).map((entry) => entry.toLowerCase()))
+  const asset = uniqueAssetPath(assetDir, used, `${safeBase}.${ext}`)
+  writeFileSync(asset.path, Buffer.from(match[2], 'base64'))
+  return { path: asset.path }
+}
+
 export function registerIpcHandlers(): void {
 
   // ── file:save ──────────────────────────────────────────────────────────────
@@ -331,6 +347,10 @@ export function registerIpcHandlers(): void {
     }, {})
     return { replacements, scanned }
   })
+
+  ipcMain.handle('assets:saveDataUrl', async (_e, { imageData, filename }: { imageData: string; filename: string }) => (
+    writeDataUrlAsset(imageData, filename)
+  ))
 
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
