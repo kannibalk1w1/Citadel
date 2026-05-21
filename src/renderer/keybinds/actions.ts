@@ -37,6 +37,8 @@ export const Actions = {
   ZOOM_FIT: 'viewport:zoomFit',
   ZOOM_RESET: 'viewport:zoomReset',
   PRESENTATION_TOGGLE: 'viewport:presentationToggle',
+  PRESENTATION_NEXT: 'presentation:next',
+  PRESENTATION_PREV: 'presentation:prev',
 
   // ── File ──────────────────────────────────────────────────────────────────
   SAVE: 'file:save',

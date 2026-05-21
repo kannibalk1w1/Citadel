@@ -32,6 +32,7 @@ import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
+import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
@@ -69,6 +70,58 @@ function fitActiveBoard(fullWidth = false): void {
     x: canvasW / 2 - ((minX + maxX) / 2) * scale,
     y: window.innerHeight / 2 - ((minY + maxY) / 2) * scale,
   })
+}
+
+function focusPresentationItem(item: CanvasItem): void {
+  const canvasW = window.innerWidth
+  const canvasH = window.innerHeight
+  const pad = 160
+  const scale = Math.min(
+    MAX_SCALE,
+    Math.max(MIN_SCALE, Math.min(
+      (canvasW - pad) / Math.max(1, item.width),
+      (canvasH - pad) / Math.max(1, item.height),
+      2.5,
+    ))
+  )
+  useCanvasStore.getState().updateViewport({
+    scale,
+    x: canvasW / 2 - (item.x + item.width / 2) * scale,
+    y: canvasH / 2 - (item.y + item.height / 2) * scale,
+  })
+}
+
+function stepPresentation(direction: 1 | -1): void {
+  const ui = useUIStore.getState()
+  if (!ui.presentationMode) return
+
+  const canvas = useCanvasStore.getState()
+  const { boards, activeBoardId, selectedIds } = canvas
+  const boardIndex = boards.findIndex((board) => board.id === activeBoardId)
+  if (boardIndex === -1) return
+
+  const activeItems = orderedPresentationItems(canvas.items())
+  const currentId = selectedIds.find((id) => activeItems.some((item) => item.id === id)) ?? null
+  const nextIndex = nextPresentationIndex(activeItems, currentId, direction)
+  const nextItem = activeItems[nextIndex]
+  if (nextItem) {
+    canvas.setSelection([nextItem.id])
+    focusPresentationItem(nextItem)
+    return
+  }
+
+  const nextBoardIndex = boardIndex + direction
+  const nextBoard = boards[nextBoardIndex]
+  if (!nextBoard) return
+  canvas.setActiveBoard(nextBoard.id)
+  const boardItems = orderedPresentationItems(nextBoard.items)
+  const boardItem = direction === 1 ? boardItems[0] : boardItems.at(-1)
+  if (boardItem) {
+    canvas.setSelection([boardItem.id])
+    focusPresentationItem(boardItem)
+  } else {
+    fitActiveBoard(true)
+  }
 }
 
 export default function App(): React.ReactElement {
@@ -303,6 +356,8 @@ export default function App(): React.ReactElement {
         ui.setToolMode('select')
       }
     })
+    resolver.register(Actions.PRESENTATION_NEXT, () => stepPresentation(1))
+    resolver.register(Actions.PRESENTATION_PREV, () => stepPresentation(-1))
 
     // Item ordering
     resolver.register(Actions.BRING_FRONT, () => {
@@ -725,7 +780,39 @@ export default function App(): React.ReactElement {
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
         }}>
+          <button
+            type="button"
+            onClick={() => stepPresentation(-1)}
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              background: 'var(--bg-canvas)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              padding: '2px 6px',
+            }}
+          >
+            Prev
+          </button>
           <span style={{ color: 'var(--text-accent)' }}>{activeBoard?.name ?? 'Presentation'}</span>
+          <button
+            type="button"
+            onClick={() => stepPresentation(1)}
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              background: 'var(--bg-canvas)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              padding: '2px 6px',
+            }}
+          >
+            Next
+          </button>
           <button
             type="button"
             onClick={() => {
