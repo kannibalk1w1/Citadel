@@ -5,6 +5,7 @@ import type { CanvasEvent, CanvasEventType, RecordingSession } from '../../types
 type HistoryState = {
   events: CanvasEvent[]
   cursor: number               // index of last applied event (-1 = nothing applied)
+  savedCursor: number
   recordingSession: RecordingSession | null
   isRecording: boolean
 
@@ -14,6 +15,9 @@ type HistoryState = {
   redo: () => CanvasEvent | null
   canUndo: () => boolean
   canRedo: () => boolean
+  isDirty: () => boolean
+  markSaved: () => void
+  resetHistory: () => void
 
   // Recording
   startRecording: (name: string) => void
@@ -28,6 +32,7 @@ type HistoryState = {
 export const useHistoryStore = create<HistoryState>((set, get) => ({
   events: [],
   cursor: -1,
+  savedCursor: -1,
   recordingSession: null,
   isRecording: false,
   recordings: [],
@@ -74,6 +79,9 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
   canUndo: () => get().cursor >= 0,
   canRedo: () => get().cursor < get().events.length - 1,
+  isDirty: () => get().cursor !== get().savedCursor,
+  markSaved: () => set((s) => ({ savedCursor: s.cursor })),
+  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false }),
 
   startRecording: (name) => {
     set({

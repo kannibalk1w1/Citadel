@@ -38,6 +38,10 @@ export function getCurrentFilePath(): string | null {
   return currentFilePath
 }
 
+function notifyProjectPathChanged(): void {
+  window.dispatchEvent(new Event('citadel:projectPathChanged'))
+}
+
 function ipc() {
   return (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
 }
@@ -69,6 +73,7 @@ function applyProject(file: ProjectFile): void {
     activeBoardId: file.activeBoardId,
     selectedIds: [],
   })
+  useHistoryStore.getState().resetHistory()
 }
 
 function projectStats(file: ProjectFile): { boardCount: number; itemCount: number } {
@@ -146,6 +151,7 @@ async function loadProjectFromPath(path: string): Promise<boolean> {
   const file = deserialize('projectJson' in loaded ? loaded.projectJson : loaded.data)
   applyProject(file)
   currentFilePath = path
+  notifyProjectPathChanged()
   rememberRecentProject(path).catch(console.error)
   return true
 }
@@ -154,6 +160,8 @@ export async function saveProject(path: string): Promise<boolean> {
   try {
     await ipc().invoke('file:save', { path, data: serialize() })
     currentFilePath = path
+    useHistoryStore.getState().markSaved()
+    notifyProjectPathChanged()
     rememberRecentProject(path).catch(console.error)
     return true
   } catch {
@@ -196,10 +204,14 @@ export function newProject(): void {
   currentFilePath = null
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })
   useCanvasStore.getState().initDefaultBoard()
+  useHistoryStore.getState().resetHistory()
+  notifyProjectPathChanged()
 }
 
 export function loadProjectData(file: ProjectFile): void {
+  currentFilePath = null
   applyProject(file)
+  notifyProjectPathChanged()
 }
 
 export async function autoSave(): Promise<void> {

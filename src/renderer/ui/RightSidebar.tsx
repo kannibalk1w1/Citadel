@@ -5,7 +5,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
-import { getRecentProjects, openRecentProject, type RecentProject } from '../utils/projectFile'
+import { getCurrentFilePath, getRecentProjects, openRecentProject, type RecentProject } from '../utils/projectFile'
 
 // ── Effect → CSS class map ─────────────────────────────────────────────────────
 // These apply to the <img> element itself via filter/transform.
@@ -306,11 +306,24 @@ function StatusLine(): React.ReactElement {
   const isRecording = useHistoryStore((s) => s.isRecording)
   const canUndo = useHistoryStore((s) => s.canUndo())
   const canRedo = useHistoryStore((s) => s.canRedo())
+  const isDirty = useHistoryStore((s) => s.isDirty())
   const snapToGrid = useUIStore((s) => s.snapToGrid)
+  const [projectPath, setProjectPath] = useState(getCurrentFilePath())
+
+  useEffect(() => {
+    const refresh = () => setProjectPath(getCurrentFilePath())
+    window.addEventListener('citadel:projectPathChanged', refresh)
+    return () => window.removeEventListener('citadel:projectPathChanged', refresh)
+  }, [])
+
+  const projectName = projectPath?.split(/[\\/]/).pop() ?? 'Unsaved'
+  const needsSave = isDirty || !projectPath
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '6px 0', borderTop: '1px solid var(--border)' }}>
       {[
+        { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
+        { label: 'State', val: needsSave ? 'unsaved' : 'saved', color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
         { label: 'Snap', val: snapToGrid ? 'on' : 'off',  color: snapToGrid ? 'var(--accent)' : 'var(--text-muted)' },
         { label: 'Undo', val: canUndo ? 'ready' : '—',    color: canUndo ? 'var(--text-secondary)' : 'var(--text-muted)' },
         { label: 'Redo', val: canRedo ? 'ready' : '—',    color: canRedo ? 'var(--text-secondary)' : 'var(--text-muted)' },
@@ -318,7 +331,7 @@ function StatusLine(): React.ReactElement {
       ].map(({ label, val, color }) => (
         <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={statLabel}>{label}</span>
-          <span style={{ ...statVal, color }}>{val}</span>
+          <span style={{ ...statVal, color, maxWidth: 84, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val}</span>
         </div>
       ))}
     </div>
