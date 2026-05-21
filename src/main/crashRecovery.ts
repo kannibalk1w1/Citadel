@@ -5,10 +5,8 @@ import { join } from 'path'
 const recoveryPath = join(app.getPath('userData'), 'recovery.citadel')
 
 export function initCrashRecovery(): void {
-  // Handled in renderer — main just exposes the path
   app.on('before-quit', () => {
-    // Recovery file is written by renderer via file:saveRecovery IPC.
-    // On clean exit the renderer sends a cleanup signal.
+    clearRecoveryData()
   })
 }
 

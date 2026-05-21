@@ -27,7 +27,7 @@ import { useUIStore } from './store/uiStore'
 import { resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
-import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, loadProjectData } from './utils/projectFile'
+import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, loadProjectData, parseRecoveryData, type ParsedRecovery } from './utils/projectFile'
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
@@ -42,7 +42,7 @@ export default function App(): React.ReactElement {
   const resolverReady = useRef(false)
   const editingItemId = useUIStore((s) => s.editingItemId)
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
-  const [recoveryData, setRecoveryData] = React.useState<string | null>(null)
+  const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function App(): React.ReactElement {
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
     ipc.invoke('recovery:get').then((res) => {
       const { data } = res as { data: string | null }
-      if (data) setRecoveryData(data)
+      if (data) setRecoveryData(parseRecoveryData(data))
     }).catch(() => {})
 
     ipc.invoke('settings:get', { key: 'ui.youSavedEnabled' }).then((res) => {
@@ -85,6 +85,15 @@ export default function App(): React.ReactElement {
       const { value } = res as { value: unknown }
       if (typeof value === 'number' && value !== 1.0) useUIStore.getState().setUiScale(value)
     }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string) => Promise<unknown> } }).ipc
+    const clearRecoveryOnCleanUnload = () => {
+      ipc.invoke('recovery:clear').catch(() => {})
+    }
+    window.addEventListener('beforeunload', clearRecoveryOnCleanUnload)
+    return () => window.removeEventListener('beforeunload', clearRecoveryOnCleanUnload)
   }, [])
 
   // ── Wire keybind actions once ───────────────────────────────────────────────
@@ -566,7 +575,7 @@ export default function App(): React.ReactElement {
   const handleRecoveryRestore = () => {
     if (!recoveryData) return
     try {
-      loadProjectData(JSON.parse(recoveryData))
+      loadProjectData(recoveryData.project)
       triggerEffect('lightning-in')
     } catch (e) { console.error('Recovery restore failed', e) }
     const ipc = (window as unknown as { ipc: { invoke: (ch: string) => Promise<unknown> } }).ipc
@@ -595,7 +604,13 @@ export default function App(): React.ReactElement {
           fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
         }}>
           <span style={{ color: 'var(--accent)' }}>⚠</span>
-          <span>Unsaved session detected. Restore?</span>
+          <span>
+            Unsaved session detected
+            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+              {recoveryData.savedAt ? `${new Date(recoveryData.savedAt).toLocaleString()} - ` : ''}
+              {recoveryData.boardCount} boards / {recoveryData.itemCount} items
+            </span>
+          </span>
           <button onClick={handleRecoveryRestore} style={{
             background: 'var(--accent)', color: '#0f0d0b', border: 'none',
             borderRadius: 3, padding: '4px 10px', cursor: 'pointer',

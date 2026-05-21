@@ -16,6 +16,21 @@ export type RecentProject = {
   lastOpenedAt: number
 }
 
+export type RecoverySnapshot = {
+  kind: 'citadel-recovery'
+  savedAt: number
+  boardCount: number
+  itemCount: number
+  project: ProjectFile
+}
+
+export type ParsedRecovery = {
+  savedAt: number | null
+  boardCount: number
+  itemCount: number
+  project: ProjectFile
+}
+
 // Path of the currently open file (null = unsaved new project)
 let currentFilePath: string | null = null
 
@@ -27,10 +42,10 @@ function ipc() {
   return (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
 }
 
-function serialize(): string {
+function createProjectFile(): ProjectFile {
   const { boards, activeBoardId } = useCanvasStore.getState()
   const { recordings } = useHistoryStore.getState()
-  const file: ProjectFile = {
+  return {
     version: VERSION,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -38,7 +53,10 @@ function serialize(): string {
     activeBoardId: activeBoardId ?? boards[0]?.id ?? '',
     recordings,
   }
-  return JSON.stringify(file, null, 2)
+}
+
+function serialize(): string {
+  return JSON.stringify(createProjectFile(), null, 2)
 }
 
 function deserialize(json: string): ProjectFile {
@@ -51,6 +69,42 @@ function applyProject(file: ProjectFile): void {
     activeBoardId: file.activeBoardId,
     selectedIds: [],
   })
+}
+
+function projectStats(file: ProjectFile): { boardCount: number; itemCount: number } {
+  return {
+    boardCount: file.boards.length,
+    itemCount: file.boards.reduce((sum, board) => sum + board.items.length, 0),
+  }
+}
+
+function createRecoverySnapshot(): RecoverySnapshot {
+  const project = createProjectFile()
+  return {
+    kind: 'citadel-recovery',
+    savedAt: Date.now(),
+    ...projectStats(project),
+    project,
+  }
+}
+
+export function parseRecoveryData(data: string): ParsedRecovery {
+  const parsed = JSON.parse(data) as ProjectFile | RecoverySnapshot
+  if ('kind' in parsed && parsed.kind === 'citadel-recovery') {
+    return {
+      savedAt: parsed.savedAt,
+      boardCount: parsed.boardCount,
+      itemCount: parsed.itemCount,
+      project: parsed.project,
+    }
+  }
+
+  const project = parsed as ProjectFile
+  return {
+    savedAt: null,
+    ...projectStats(project),
+    project,
+  }
 }
 
 function projectNameFromPath(path: string): string {
@@ -150,6 +204,6 @@ export function loadProjectData(file: ProjectFile): void {
 
 export async function autoSave(): Promise<void> {
   try {
-    await ipc().invoke('file:saveRecovery', { data: serialize() })
+    await ipc().invoke('file:saveRecovery', { data: JSON.stringify(createRecoverySnapshot(), null, 2) })
   } catch { /* non-critical */ }
 }
