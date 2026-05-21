@@ -5,7 +5,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
-import { getCurrentFilePath, getRecentProjects, openRecentProject, type RecentProject } from '../utils/projectFile'
+import { getCurrentFilePath, getRecentProjects, getSaveActivity, openRecentProject, type RecentProject, type SaveActivity } from '../utils/projectFile'
 
 // ── Effect → CSS class map ─────────────────────────────────────────────────────
 // These apply to the <img> element itself via filter/transform.
@@ -309,6 +309,7 @@ function StatusLine(): React.ReactElement {
   const isDirty = useHistoryStore((s) => s.isDirty())
   const snapToGrid = useUIStore((s) => s.snapToGrid)
   const [projectPath, setProjectPath] = useState(getCurrentFilePath())
+  const [saveActivity, setSaveActivity] = useState<SaveActivity>(getSaveActivity())
 
   useEffect(() => {
     const refresh = () => setProjectPath(getCurrentFilePath())
@@ -316,14 +317,23 @@ function StatusLine(): React.ReactElement {
     return () => window.removeEventListener('citadel:projectPathChanged', refresh)
   }, [])
 
+  useEffect(() => {
+    const refresh = () => setSaveActivity(getSaveActivity())
+    window.addEventListener('citadel:saveActivityChanged', refresh)
+    return () => window.removeEventListener('citadel:saveActivityChanged', refresh)
+  }, [])
+
   const projectName = projectPath?.split(/[\\/]/).pop() ?? 'Unsaved'
   const needsSave = isDirty || !projectPath
+  const fmtTime = (ts: number | null) => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '6px 0', borderTop: '1px solid var(--border)' }}>
       {[
         { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
         { label: 'State', val: needsSave ? 'unsaved' : 'saved', color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
+        { label: 'Saved', val: fmtTime(saveActivity.lastManualSaveAt), color: 'var(--text-muted)' },
+        { label: 'Autosave', val: fmtTime(saveActivity.lastRecoverySaveAt), color: 'var(--text-muted)' },
         { label: 'Snap', val: snapToGrid ? 'on' : 'off',  color: snapToGrid ? 'var(--accent)' : 'var(--text-muted)' },
         { label: 'Undo', val: canUndo ? 'ready' : '—',    color: canUndo ? 'var(--text-secondary)' : 'var(--text-muted)' },
         { label: 'Redo', val: canRedo ? 'ready' : '—',    color: canRedo ? 'var(--text-secondary)' : 'var(--text-muted)' },

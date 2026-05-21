@@ -31,15 +31,39 @@ export type ParsedRecovery = {
   project: ProjectFile
 }
 
+export type SaveActivity = {
+  lastManualSaveAt: number | null
+  lastRecoverySaveAt: number | null
+}
+
 // Path of the currently open file (null = unsaved new project)
 let currentFilePath: string | null = null
+let saveActivity: SaveActivity = { lastManualSaveAt: null, lastRecoverySaveAt: null }
 
 export function getCurrentFilePath(): string | null {
   return currentFilePath
 }
 
+export function getSaveActivity(): SaveActivity {
+  return saveActivity
+}
+
 function notifyProjectPathChanged(): void {
   window.dispatchEvent(new Event('citadel:projectPathChanged'))
+}
+
+function notifySaveActivityChanged(): void {
+  window.dispatchEvent(new Event('citadel:saveActivityChanged'))
+}
+
+function setSaveActivity(patch: Partial<SaveActivity>): void {
+  saveActivity = { ...saveActivity, ...patch }
+  notifySaveActivityChanged()
+}
+
+function resetSaveActivity(): void {
+  saveActivity = { lastManualSaveAt: null, lastRecoverySaveAt: null }
+  notifySaveActivityChanged()
 }
 
 function confirmDiscardUnsaved(): boolean {
@@ -156,6 +180,7 @@ async function loadProjectFromPath(path: string): Promise<boolean> {
   const file = deserialize('projectJson' in loaded ? loaded.projectJson : loaded.data)
   applyProject(file)
   currentFilePath = path
+  resetSaveActivity()
   notifyProjectPathChanged()
   rememberRecentProject(path).catch(console.error)
   return true
@@ -166,6 +191,7 @@ export async function saveProject(path: string): Promise<boolean> {
     await ipc().invoke('file:save', { path, data: serialize() })
     currentFilePath = path
     useHistoryStore.getState().markSaved()
+    setSaveActivity({ lastManualSaveAt: Date.now() })
     notifyProjectPathChanged()
     rememberRecentProject(path).catch(console.error)
     return true
@@ -210,6 +236,7 @@ export async function openRecentProject(path: string): Promise<boolean> {
 export function newProject(): boolean {
   if (!confirmDiscardUnsaved()) return false
   currentFilePath = null
+  resetSaveActivity()
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })
   useCanvasStore.getState().initDefaultBoard()
   useHistoryStore.getState().resetHistory()
@@ -219,6 +246,7 @@ export function newProject(): boolean {
 
 export function loadProjectData(file: ProjectFile): void {
   currentFilePath = null
+  resetSaveActivity()
   applyProject(file)
   notifyProjectPathChanged()
 }
@@ -226,5 +254,6 @@ export function loadProjectData(file: ProjectFile): void {
 export async function autoSave(): Promise<void> {
   try {
     await ipc().invoke('file:saveRecovery', { data: JSON.stringify(createRecoverySnapshot(), null, 2) })
+    setSaveActivity({ lastRecoverySaveAt: Date.now() })
   } catch { /* non-critical */ }
 }
