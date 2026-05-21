@@ -455,6 +455,7 @@ export function RightSidebar(): React.ReactElement {
       {/* Quick actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
         <QuickBtn label="Import"     title="Open project file"              onClick={() => resolver.dispatch(Actions.OPEN)} />
+        <QuickBtn label="Boards"     title="Board navigator"                onClick={() => useUIStore.getState().togglePanel('boardNavigator')} />
         <QuickBtn label="New board"  title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
         <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
         <QuickBtn label="Comment"    title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
