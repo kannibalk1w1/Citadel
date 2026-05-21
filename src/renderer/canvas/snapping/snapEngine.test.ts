@@ -31,7 +31,7 @@ beforeEach(() => {
   Object.assign(window, {
     ipc: { invoke: () => Promise.resolve({ ok: true }) },
   })
-  useUIStore.setState({ snapToGrid: false, gridSize: 40 })
+  useUIStore.setState({ snapToGrid: true, gridSize: 40 })
   snapLines.length = 0
 })
 
@@ -61,5 +61,31 @@ describe('snapItem', () => {
       orientation: 'vertical',
       label: '0 px',
     }))
+  })
+
+  it('does not snap when snapping is off', () => {
+    useUIStore.setState({ snapToGrid: false })
+    const dragged = item('dragged', 197, 20)
+    const target = item('target', 300, 20)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    const result = snapItem(dragged, allItems, viewport)
+
+    expect(result.x).toBe(197)
+    expect(snapLines).toHaveLength(0)
+  })
+
+  it('temporarily inverts snapping when requested', () => {
+    useUIStore.setState({ snapToGrid: false })
+    const dragged = item('dragged', 197, 20)
+    const target = item('target', 300, 20)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    const result = snapItem(dragged, allItems, viewport, { invertSnap: true })
+
+    expect(result.x).toBe(200)
+    expect(snapLines.filter((line) => line.orientation === 'vertical')).toHaveLength(1)
   })
 })

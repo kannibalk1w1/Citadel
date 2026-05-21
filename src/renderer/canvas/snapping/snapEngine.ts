@@ -6,6 +6,7 @@ import { useUIStore } from '../../store/uiStore'
 const SNAP_THRESHOLD_SCREEN = 8  // px
 
 type SnapResult = { x: number; y: number }
+type SnapOptions = { invertSnap?: boolean }
 type EdgeName = 'left' | 'right' | 'centerX' | 'top' | 'bottom' | 'centerY'
 type SnapCandidate = {
   delta: number
@@ -59,9 +60,11 @@ function horizontalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLin
 export function snapItem(
   dragged: CanvasItem,
   allItems: CanvasItem[],
-  viewport: Viewport
+  viewport: Viewport,
+  options: SnapOptions = {}
 ): SnapResult {
   const { snapToGrid, gridSize } = useUIStore.getState()
+  const snapActive = options.invertSnap ? !snapToGrid : snapToGrid
   const threshold = SNAP_THRESHOLD_SCREEN / viewport.scale
 
   // Candidates from spatial index (nearby items only)
@@ -71,6 +74,8 @@ export function snapItem(
 
   // Clear previous guides
   snapLines.length = 0
+
+  if (!snapActive) return { x: dragged.x, y: dragged.y }
 
   let snappedX = dragged.x
   let snappedY = dragged.y
@@ -117,7 +122,7 @@ export function snapItem(
     }
   }
 
-  if (snapToGrid) {
+  if (snapActive) {
     const gridSnappedX = Math.round(snappedX / gridSize) * gridSize
     const gridSnappedY = Math.round(snappedY / gridSize) * gridSize
     if (Math.abs(gridSnappedX - snappedX) < threshold) snappedX = gridSnappedX

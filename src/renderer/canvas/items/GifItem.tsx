@@ -145,7 +145,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
           const node = e.target
           const dragged = { ...item, x: node.x(), y: node.y() }
           const viewport = useCanvasStore.getState().viewport()
-          const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport)
+          const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
           node.x(snapped.x)
           node.y(snapped.y)
           useUIStore.getState().bumpSnap()
