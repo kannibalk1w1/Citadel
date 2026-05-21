@@ -22,6 +22,12 @@ type PdfCacheStats = {
   bytes: number
 }
 
+type AssetHealth = {
+  total: number
+  missing: number
+  missingPaths: string[]
+}
+
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   const kb = bytes / 1024
@@ -49,18 +55,26 @@ export function KeybindSettings(): React.ReactElement | null {
   const setExportScale = useUIStore((s) => s.setExportScale)
   const boards = useCanvasStore((s) => s.boards)
   const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
+  const [assetHealth, setAssetHealth] = useState<AssetHealth | null>(null)
   const [cacheBusy, setCacheBusy] = useState(false)
   const [cacheMessage, setCacheMessage] = useState('')
 
   const preservePaths = useMemo(() => (
     boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
   ), [boards])
+  const localAssetPaths = useMemo(() => (
+    preservePaths.filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
+  ), [preservePaths])
 
   const loadCacheStats = async (): Promise<void> => {
     try {
       const result = await getIpc().invoke('cache:pdfStats')
       if (result && typeof result === 'object' && 'count' in result && 'bytes' in result) {
         setCacheStats(result as PdfCacheStats)
+      }
+      const health = await getIpc().invoke('assets:checkPaths', { paths: localAssetPaths })
+      if (health && typeof health === 'object' && 'total' in health && 'missing' in health && 'missingPaths' in health) {
+        setAssetHealth(health as AssetHealth)
       }
     } catch (error) {
       console.error('Failed to read PDF cache stats:', error)
@@ -248,6 +262,21 @@ export function KeybindSettings(): React.ReactElement | null {
           >
             Clear unused
           </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center', marginTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              Local asset health
+            </div>
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: assetHealth?.missing ? 'var(--accent)' : 'var(--text-muted)', marginTop: 2 }}>
+              {assetHealth ? `${assetHealth.total} checked / ${assetHealth.missing} missing` : 'not loaded'}
+            </div>
+          </div>
+          {assetHealth?.missing ? (
+            <span title={assetHealth.missingPaths.join('\n')} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-accent)' }}>
+              inspect
+            </span>
+          ) : null}
         </div>
       </div>
       <input

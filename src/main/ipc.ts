@@ -286,6 +286,12 @@ export function registerIpcHandlers(): void {
     return { ...result, stats: getPdfCacheStats() }
   })
 
+  ipcMain.handle('assets:checkPaths', async (_e, { paths }: { paths: string[] }) => {
+    const uniquePaths = Array.from(new Set(Array.isArray(paths) ? paths : []))
+    const missing = uniquePaths.filter((path) => !existsSync(path))
+    return { total: uniquePaths.length, missing: missing.length, missingPaths: missing }
+  })
+
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: filename,
