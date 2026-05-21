@@ -68,6 +68,10 @@ type UIState = {
   // UI scale
   uiScale: number
   setUiScale: (v: number) => void
+
+  // Export
+  exportScale: number
+  setExportScale: (v: number) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -143,5 +147,13 @@ export const useUIStore = create<UIState>((set) => ({
     set({ uiScale: clamped })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('zoom:set', { factor: clamped }).catch(console.error)
+  },
+
+  exportScale: 1,
+  setExportScale: (v) => {
+    const clamped = Math.min(3, Math.max(1, Math.round(v)))
+    set({ exportScale: clamped })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'export.scale', value: clamped }).catch(console.error)
   },
 }))

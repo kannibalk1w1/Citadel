@@ -1,6 +1,20 @@
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { useMascotStore } from '../store/mascotStore'
+import { useUIStore } from '../store/uiStore'
+
+function scaledCanvas(source: HTMLCanvasElement, scale: number): HTMLCanvasElement {
+  if (scale <= 1) return source
+  const out = document.createElement('canvas')
+  out.width = Math.max(1, Math.round(source.width * scale))
+  out.height = Math.max(1, Math.round(source.height * scale))
+  const ctx = out.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context unavailable')
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(source, 0, 0, out.width, out.height)
+  return out
+}
 
 export async function exportToPdf(filename = 'citadel-export.pdf'): Promise<void> {
   const mascot = useMascotStore.getState()
@@ -11,7 +25,8 @@ export async function exportToPdf(filename = 'citadel-export.pdf'): Promise<void
 
   mascot.triggerEffect('progress-fill', 0.5)
 
-  const dataUrl = canvasEl.toDataURL('image/png')
+  const exportCanvas = scaledCanvas(canvasEl, useUIStore.getState().exportScale)
+  const dataUrl = exportCanvas.toDataURL('image/png')
   const pdf = new jsPDF({
     orientation: canvasEl.width > canvasEl.height ? 'landscape' : 'portrait',
     unit: 'px',

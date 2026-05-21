@@ -45,6 +45,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
   const uiScale = useUIStore((s) => s.uiScale)
   const setUiScale = useUIStore((s) => s.setUiScale)
+  const exportScale = useUIStore((s) => s.exportScale)
+  const setExportScale = useUIStore((s) => s.setExportScale)
   const boards = useCanvasStore((s) => s.boards)
   const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
   const [cacheBusy, setCacheBusy] = useState(false)
@@ -179,6 +181,37 @@ export function KeybindSettings(): React.ReactElement | null {
             aria-label="Increase UI scale"
             style={{ ...btnStyle, opacity: uiScale >= 1.5 ? 0.35 : 1, cursor: uiScale >= 1.5 ? 'not-allowed' : 'pointer' }}
           >+</button>
+        </div>
+      </div>
+      <div style={{
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Export
+        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+            Quality scale
+          </span>
+          {[1, 2, 3].map((scale) => (
+            <button
+              key={scale}
+              type="button"
+              onClick={() => setExportScale(scale)}
+              aria-pressed={exportScale === scale}
+              style={{
+                ...btnStyle,
+                width: 32,
+                fontSize: 11,
+                background: exportScale === scale ? 'var(--accent)' : 'var(--bg-canvas)',
+                color: exportScale === scale ? 'var(--bg-ui)' : 'var(--text-primary)',
+              }}
+            >
+              {scale}x
+            </button>
+          ))}
         </div>
       </div>
       <div style={{

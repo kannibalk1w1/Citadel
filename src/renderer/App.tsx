@@ -85,6 +85,11 @@ export default function App(): React.ReactElement {
       const { value } = res as { value: unknown }
       if (typeof value === 'number' && value !== 1.0) useUIStore.getState().setUiScale(value)
     }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'export.scale' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (typeof value === 'number') useUIStore.getState().setExportScale(value)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
