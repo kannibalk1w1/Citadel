@@ -24,6 +24,7 @@ export const Actions = {
   PASTE: 'edit:paste',
   CUT: 'edit:cut',
   TOGGLE_LOCK: 'item:toggleLock',
+  COMMENT_PIN_ADD: 'annotation:commentPinAdd',
 
   // ── Item ordering ─────────────────────────────────────────────────────────
   BRING_FRONT: 'order:bringFront',

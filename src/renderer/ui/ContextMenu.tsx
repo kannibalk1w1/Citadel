@@ -5,6 +5,8 @@ import { useMascotStore } from '../store/mascotStore'
 import { useHistoryStore } from '../store/historyStore'
 import { nanoid } from 'nanoid'
 import { copyImageSrcToClipboard } from '../utils/clipboardImage'
+import { resolver } from '../keybinds/keybindResolver'
+import { Actions } from '../keybinds/actions'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
@@ -63,6 +65,13 @@ export function ContextMenu(): React.ReactElement | null {
             useHistoryStore.getState().push('ITEM_ADD', activeBoardId!, null, c)
           })
           canvas.setSelection(copies.map((c) => c.id))
+          closeContextMenu()
+        },
+      },
+      {
+        label: 'Add Comment Pin  (Ctrl+Shift+M)',
+        action: () => {
+          resolver.dispatch(Actions.COMMENT_PIN_ADD)
           closeContextMenu()
         },
       },

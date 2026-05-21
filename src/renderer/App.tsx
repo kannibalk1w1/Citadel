@@ -32,6 +32,7 @@ import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
+import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
 
 const ZOOM_STEP = 1.2
@@ -322,6 +323,32 @@ export default function App(): React.ReactElement {
         )
         updateItem(activeBoardId, item.id, { locked: nextLocked })
       })
+    })
+
+    resolver.register(Actions.COMMENT_PIN_ADD, () => {
+      const canvas = useCanvasStore.getState()
+      const { activeBoardId, selectedIds } = canvas
+      if (!activeBoardId) return
+      const target = canvas.items().find((item) => selectedIds.includes(item.id)) ?? null
+      const viewport = canvas.viewport()
+      const sidebarW = useUIStore.getState().presentationMode
+        ? 0
+        : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+      const fallbackPoint = {
+        x: (window.innerWidth - sidebarW) / 2 / viewport.scale - viewport.x / viewport.scale - 110,
+        y: window.innerHeight / 2 / viewport.scale - viewport.y / viewport.scale - 48,
+      }
+      const comment = createCommentPinItem({
+        id: nanoid(),
+        target,
+        point: fallbackPoint,
+        zIndex: Date.now(),
+      })
+      canvas.addItem(activeBoardId, comment)
+      useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, comment)
+      canvas.setSelection([comment.id])
+      useUIStore.getState().setEditingItemId(comment.id)
+      triggerEffect('banner-raise')
     })
 
     // Zoom

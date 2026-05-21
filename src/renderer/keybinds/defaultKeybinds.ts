@@ -26,6 +26,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.PASTE]:          ['ctrl+v', 'meta+v'],
   [Actions.CUT]:            ['ctrl+x', 'meta+x'],
   [Actions.TOGGLE_LOCK]:    ['ctrl+l', 'meta+l'],
+  [Actions.COMMENT_PIN_ADD]: ['ctrl+shift+m', 'meta+shift+m'],
 
   // Item ordering
   [Actions.BRING_FRONT]:    ['ctrl+shift+]', 'meta+shift+]'],

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Group, Rect, Text, Transformer } from 'react-konva'
+import { Group, Line, Rect, Text, Transformer } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
@@ -13,6 +13,10 @@ type Props = { item: CanvasItem }
 
 export function StickyItem({ item }: Props): React.ReactElement {
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const attachedTarget = useCanvasStore((s) => {
+    const targetId = item.meta?.kind === 'comment' ? item.meta?.attachedTo : undefined
+    return typeof targetId === 'string' ? s.items().find((candidate) => candidate.id === targetId) : undefined
+  })
   const setSelection = useCanvasStore((s) => s.setSelection)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
@@ -37,6 +41,11 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const fontSize = (item.meta?.fontSize as number) ?? 14
   const align = (item.meta?.align as string) ?? 'left'
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
+  const isComment = item.meta?.kind === 'comment'
+  const isAttachedComment = isComment && typeof item.meta?.attachedTo === 'string'
+  const strokeColor = isSelected ? '#c8a96e' : isComment ? '#5a4730' : undefined
+  const textY = isComment ? 25 : 8
+  const textHeight = item.height - (isComment ? 33 : 16)
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -118,6 +127,21 @@ export function StickyItem({ item }: Props): React.ReactElement {
 
   return (
     <>
+      {isAttachedComment && attachedTarget && (
+        <Line
+          points={[
+            attachedTarget.x + attachedTarget.width,
+            attachedTarget.y + attachedTarget.height / 2,
+            item.x,
+            item.y + item.height / 2,
+          ]}
+          stroke={isSelected ? '#c8a96e' : '#5a4730'}
+          strokeWidth={isSelected ? 1.4 : 1}
+          opacity={0.85}
+          listening={false}
+          dash={[5, 5]}
+        />
+      )}
       <Group
         ref={groupRef}
         x={item.x} y={item.y}
@@ -146,19 +170,52 @@ export function StickyItem({ item }: Props): React.ReactElement {
           width={item.width}
           height={item.height}
           fill={bg}
-          cornerRadius={4}
+          cornerRadius={isComment ? 8 : 4}
           opacity={item.opacity}
-          stroke={isSelected ? '#c8a96e' : undefined}
-          strokeWidth={isSelected ? 2 : 0}
+          stroke={strokeColor}
+          strokeWidth={isSelected ? 2 : isComment ? 1 : 0}
           shadowEnabled={isSelected}
           shadowColor="rgba(200,169,110,0.7)"
           shadowBlur={20}
           shadowOpacity={0.8}
         />
+        {isComment && (
+          <>
+            <Rect
+              x={0}
+              y={0}
+              width={item.width}
+              height={18}
+              fill="#1a1612"
+              opacity={item.opacity}
+              cornerRadius={[8, 8, 0, 0]}
+            />
+            <Rect
+              x={8}
+              y={7}
+              width={6}
+              height={6}
+              fill={isAttachedComment ? '#c8a96e' : '#505050'}
+              opacity={item.opacity}
+              cornerRadius={3}
+            />
+            <Text
+              x={20}
+              y={4}
+              width={item.width - 28}
+              height={12}
+              text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
+              fill="#c8a96e"
+              fontSize={8}
+              fontFamily="var(--font-mono)"
+              wrap="none"
+            />
+          </>
+        )}
         <Text
-          x={8} y={8}
+          x={8} y={textY}
           width={item.width - 16}
-          height={item.height - 16}
+          height={textHeight}
           text={content || 'Double-click to edit…'}
           fill={content ? 'var(--text-primary)' : '#5c5040'}
           fontSize={fontSize}

@@ -454,6 +454,7 @@ export function RightSidebar(): React.ReactElement {
         <QuickBtn label="Import"     title="Open project file"              onClick={() => resolver.dispatch(Actions.OPEN)} />
         <QuickBtn label="New board"  title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
         <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+        <QuickBtn label="Comment"    title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
         <QuickBtn label="Export PDF" title="Export canvas as PDF"           onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
         <QuickBtn label="Export ZIP" title="Bundle project as .citadelz"    onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
       </div>
