@@ -52,6 +52,28 @@ function cssVarToHex(val: string): string {
   return '#e8ddd0'
 }
 
+function isCommentItem(item: CanvasItem): boolean {
+  return item.type === 'sticky' && item.meta?.kind === 'comment'
+}
+
+function itemLabel(item: CanvasItem | undefined): string {
+  if (!item) return 'None'
+  const content = typeof item.meta?.content === 'string' ? item.meta.content.trim() : ''
+  const src = item.src ? item.src.split(/[\\/]/).pop() : ''
+  return content || src || `${item.type} ${item.id.slice(0, 6)}`
+}
+
+function centerViewportOnItem(item: CanvasItem): void {
+  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const canvasW = window.innerWidth - sidebarW
+  const viewport = useCanvasStore.getState().viewport()
+  useCanvasStore.getState().setSelection([item.id])
+  useCanvasStore.getState().updateViewport({
+    x: canvasW / 2 - (item.x + item.width / 2) * viewport.scale,
+    y: window.innerHeight / 2 - (item.y + item.height / 2) * viewport.scale,
+  })
+}
+
 function Divider({ label }: { label: string }): React.ReactElement {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '2px 0' }}>
@@ -435,6 +457,68 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
 
 // ── Main export ────────────────────────────────────────────────────────────────
 
+function CommentAttachPanel({
+  comment,
+  target,
+  boardId,
+}: {
+  comment: CanvasItem
+  target: CanvasItem
+  boardId: string
+}): React.ReactElement {
+  const updateItem = useCanvasStore((s) => s.updateItem)
+  const pushHistory = useHistoryStore((s) => s.push)
+
+  const attach = () => {
+    const meta = { ...comment.meta, kind: 'comment', attachedTo: target.id }
+    pushHistory('ITEM_STYLE', boardId, comment, { ...comment, meta })
+    updateItem(boardId, comment.id, { meta })
+    useCanvasStore.getState().setSelection([comment.id])
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 48,
+        right: 'calc(var(--sidebar-right-w) + 8px)',
+        width: 224,
+        background: 'var(--bg-panel)',
+        border: '1px solid var(--border)',
+        borderRadius: 6,
+        padding: 12,
+        zIndex: 'var(--z-panels)',
+        boxShadow: 'var(--shadow-md)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}
+    >
+      <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        Comment Link
+      </h3>
+      <div style={{ fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+        Attach <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
+      </div>
+      <button
+        onClick={attach}
+        style={{
+          height: 26,
+          borderRadius: 4,
+          border: '1px solid var(--border)',
+          background: 'var(--bg-ui)',
+          color: 'var(--text-primary)',
+          cursor: 'pointer',
+          fontSize: 11,
+          fontFamily: 'var(--font-mono)',
+        }}
+      >
+        Attach comment
+      </button>
+    </div>
+  )
+}
+
 export function ItemProperties(): React.ReactElement | null {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const items = useCanvasStore((s) => s.items())
@@ -442,11 +526,21 @@ export function ItemProperties(): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const pushHistory = useHistoryStore((s) => s.push)
 
-  if (selectedIds.length > 1) return <AlignPanel />
+  if (!activeBoardId) return null
+
+  if (selectedIds.length > 1) {
+    const selectedItems = items.filter((i) => selectedIds.includes(i.id))
+    const comments = selectedItems.filter(isCommentItem)
+    const targets = selectedItems.filter((i) => !isCommentItem(i))
+    if (selectedItems.length === 2 && comments.length === 1 && targets.length === 1) {
+      return <CommentAttachPanel comment={comments[0]} target={targets[0]} boardId={activeBoardId} />
+    }
+    return <AlignPanel />
+  }
   if (selectedIds.length !== 1) return null
 
   const item = items.find((i) => i.id === selectedIds[0])
-  if (!item || !activeBoardId) return null
+  if (!item) return null
 
   const update = (patch: Parameters<typeof updateItem>[2]) => {
     pushHistory('ITEM_STYLE', activeBoardId, item, { ...item, ...patch })
@@ -458,6 +552,22 @@ export function ItemProperties(): React.ReactElement | null {
     pushHistory('ITEM_STYLE', activeBoardId, item, { ...item, meta: newMeta })
     updateItem(activeBoardId, item.id, { meta: newMeta })
   }
+
+  const isComment = isCommentItem(item)
+  const attachedTargetId = isComment && typeof item.meta?.attachedTo === 'string' ? item.meta.attachedTo : null
+  const attachedTarget = attachedTargetId ? items.find((candidate) => candidate.id === attachedTargetId) : undefined
+  const nearestTarget = isComment
+    ? items
+      .filter((candidate) => candidate.id !== item.id && !isCommentItem(candidate))
+      .map((candidate) => ({
+        item: candidate,
+        distance: Math.hypot(
+          candidate.x + candidate.width / 2 - (item.x + item.width / 2),
+          candidate.y + candidate.height / 2 - (item.y + item.height / 2),
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)[0]?.item
+    : undefined
 
   return (
     <div
@@ -686,6 +796,41 @@ export function ItemProperties(): React.ReactElement | null {
             onSet={(path) => updateMeta({ srcB: path })}
             onClear={() => updateMeta({ srcB: '' })}
           />
+        </>
+      )}
+
+      {isComment && (
+        <>
+          <Divider label="Comment" />
+          <Field label="Target">
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: attachedTarget ? 'var(--text-secondary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {attachedTarget ? itemLabel(attachedTarget) : 'Detached'}
+            </div>
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+            <button
+              onClick={() => { if (attachedTarget) centerViewportOnItem(attachedTarget) }}
+              disabled={!attachedTarget}
+              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: attachedTarget ? 'pointer' : 'default', opacity: attachedTarget ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+            >
+              Jump
+            </button>
+            <button
+              onClick={() => updateMeta({ attachedTo: undefined })}
+              disabled={!attachedTargetId}
+              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: attachedTargetId ? 'pointer' : 'default', opacity: attachedTargetId ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+            >
+              Detach
+            </button>
+          </div>
+          <button
+            onClick={() => { if (nearestTarget) updateMeta({ attachedTo: nearestTarget.id }) }}
+            disabled={!nearestTarget}
+            title={nearestTarget ? `Attach to ${itemLabel(nearestTarget)}` : 'No target item available'}
+            style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: nearestTarget ? 'pointer' : 'default', opacity: nearestTarget ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+          >
+            Attach nearest
+          </button>
         </>
       )}
 

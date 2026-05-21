@@ -186,6 +186,11 @@ export default function App(): React.ReactElement {
       const { value } = res as { value: unknown }
       if (value === 'viewport' || value === 'board') useUIStore.getState().setExportArea(value)
     }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'export.includeComments' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value === false) useUIStore.getState().setIncludeCommentsInExport(false)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {

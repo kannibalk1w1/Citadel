@@ -12,6 +12,10 @@ const BOARD_PADDING = 48
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 
+function isCommentItem(item: CanvasItem): boolean {
+  return item.type === 'sticky' && item.meta?.kind === 'comment'
+}
+
 function getStageCanvas(): HTMLCanvasElement {
   const canvasEl = document.querySelector('canvas') as HTMLCanvasElement | null
   if (!canvasEl) throw new Error('No canvas to export')
@@ -76,7 +80,9 @@ async function captureBoardCanvas(scale: number): Promise<ExportCanvas> {
   const canvasStore = useCanvasStore.getState()
   const boardId = canvasStore.activeBoardId
   const canvasEl = getStageCanvas()
-  const fittedViewport = fitViewportToItems(canvasStore.items(), canvasEl.width, canvasEl.height)
+  const includeComments = useUIStore.getState().includeCommentsInExport
+  const itemsForBounds = includeComments ? canvasStore.items() : canvasStore.items().filter((item) => !isCommentItem(item))
+  const fittedViewport = fitViewportToItems(itemsForBounds, canvasEl.width, canvasEl.height)
   if (!boardId || !fittedViewport) return captureViewportCanvas(scale)
 
   const originalViewport = canvasStore.viewport()
@@ -92,7 +98,22 @@ async function captureBoardCanvas(scale: number): Promise<ExportCanvas> {
 }
 
 export async function prepareExportCanvas(): Promise<ExportCanvas> {
-  const { exportScale, exportArea } = useUIStore.getState()
-  if (exportArea === 'board') return captureBoardCanvas(exportScale)
-  return captureViewportCanvas(exportScale)
+  const ui = useUIStore.getState()
+  const { exportScale, exportArea, includeCommentsInExport, commentPinsVisible } = ui
+  const changedCommentVisibility = commentPinsVisible !== includeCommentsInExport
+  if (changedCommentVisibility) {
+    ui.setCommentPinsVisible(includeCommentsInExport)
+    await waitForPaint()
+    await waitForPaint()
+  }
+
+  try {
+    if (exportArea === 'board') return await captureBoardCanvas(exportScale)
+    return await captureViewportCanvas(exportScale)
+  } finally {
+    if (changedCommentVisibility) {
+      useUIStore.getState().setCommentPinsVisible(commentPinsVisible)
+      await waitForPaint()
+    }
+  }
 }

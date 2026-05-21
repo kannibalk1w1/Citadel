@@ -62,6 +62,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setExportScale = useUIStore((s) => s.setExportScale)
   const exportArea = useUIStore((s) => s.exportArea)
   const setExportArea = useUIStore((s) => s.setExportArea)
+  const includeCommentsInExport = useUIStore((s) => s.includeCommentsInExport)
+  const setIncludeCommentsInExport = useUIStore((s) => s.setIncludeCommentsInExport)
   const boards = useCanvasStore((s) => s.boards)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const markDirty = useHistoryStore((s) => s.markDirty)
@@ -297,6 +299,20 @@ export function KeybindSettings(): React.ReactElement | null {
             </button>
           ))}
         </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={includeCommentsInExport}
+            onChange={(e) => setIncludeCommentsInExport(e.target.checked)}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            Include comment pins
+          </span>
+          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            export
+          </span>
+        </label>
       </div>
       <div style={{
         marginBottom: 16,

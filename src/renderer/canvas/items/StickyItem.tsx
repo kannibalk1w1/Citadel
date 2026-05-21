@@ -23,6 +23,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const toolMode = useUIStore((s) => s.toolMode)
   const setEditingItemId = useUIStore((s) => s.setEditingItemId)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
 
   const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
@@ -46,6 +47,8 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const strokeColor = isSelected ? '#c8a96e' : isComment ? '#5a4730' : undefined
   const textY = isComment ? 25 : 8
   const textHeight = item.height - (isComment ? 33 : 16)
+
+  if (isComment && !commentPinsVisible) return <></>
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true

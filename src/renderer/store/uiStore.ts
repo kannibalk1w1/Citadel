@@ -81,6 +81,13 @@ type UIState = {
   setExportScale: (v: number) => void
   exportArea: ExportArea
   setExportArea: (area: ExportArea) => void
+  includeCommentsInExport: boolean
+  setIncludeCommentsInExport: (enabled: boolean) => void
+
+  // Comments
+  commentPinsVisible: boolean
+  setCommentPinsVisible: (enabled: boolean) => void
+  toggleCommentPinsVisible: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -175,4 +182,14 @@ export const useUIStore = create<UIState>((set) => ({
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'export.area', value: area }).catch(console.error)
   },
+  includeCommentsInExport: true,
+  setIncludeCommentsInExport: (enabled) => {
+    set({ includeCommentsInExport: enabled })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'export.includeComments', value: enabled }).catch(console.error)
+  },
+
+  commentPinsVisible: true,
+  setCommentPinsVisible: (enabled) => set({ commentPinsVisible: enabled }),
+  toggleCommentPinsVisible: () => set((s) => ({ commentPinsVisible: !s.commentPinsVisible })),
 }))

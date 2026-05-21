@@ -9,7 +9,32 @@ beforeEach(() => {
     ipc: { invoke: mockInvoke },
   })
   mockInvoke.mockClear()
-  useUIStore.setState({ uiScale: 1.0, exportArea: 'viewport', presentationMode: false })
+  useUIStore.setState({
+    uiScale: 1.0,
+    exportArea: 'viewport',
+    presentationMode: false,
+    commentPinsVisible: true,
+    includeCommentsInExport: true,
+  })
+})
+
+describe('uiStore - comment pins', () => {
+  it('shows comment pins by default', () => {
+    expect(useUIStore.getState().commentPinsVisible).toBe(true)
+  })
+
+  it('toggles comment pin visibility', () => {
+    useUIStore.getState().toggleCommentPinsVisible()
+    expect(useUIStore.getState().commentPinsVisible).toBe(false)
+    useUIStore.getState().toggleCommentPinsVisible()
+    expect(useUIStore.getState().commentPinsVisible).toBe(true)
+  })
+
+  it('persists export comment inclusion', () => {
+    useUIStore.getState().setIncludeCommentsInExport(false)
+    expect(useUIStore.getState().includeCommentsInExport).toBe(false)
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.includeComments', value: false })
+  })
 })
 
 describe('uiStore — uiScale', () => {
