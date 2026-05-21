@@ -389,7 +389,7 @@ export default function App(): React.ReactElement {
       })
     })
     resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) triggerEffect('lightning-in') }) })
-    resolver.register(Actions.NEW_PROJECT, () => { newProject(); triggerEffect('rise-from-fog') })
+    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) triggerEffect('rise-from-fog') })
 
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {

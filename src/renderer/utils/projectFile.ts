@@ -42,6 +42,11 @@ function notifyProjectPathChanged(): void {
   window.dispatchEvent(new Event('citadel:projectPathChanged'))
 }
 
+function confirmDiscardUnsaved(): boolean {
+  if (!useHistoryStore.getState().isDirty()) return true
+  return window.confirm('Discard unsaved changes and continue?')
+}
+
 function ipc() {
   return (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
 }
@@ -183,6 +188,7 @@ export async function saveCurrentOrAs(): Promise<boolean> {
 }
 
 export async function openProject(): Promise<boolean> {
+  if (!confirmDiscardUnsaved()) return false
   const result = await ipc().invoke('file:openDialog') as { path: string | null }
   if (!result.path) return false
   try {
@@ -193,6 +199,7 @@ export async function openProject(): Promise<boolean> {
 }
 
 export async function openRecentProject(path: string): Promise<boolean> {
+  if (!confirmDiscardUnsaved()) return false
   try {
     return await loadProjectFromPath(path)
   } catch {
@@ -200,12 +207,14 @@ export async function openRecentProject(path: string): Promise<boolean> {
   }
 }
 
-export function newProject(): void {
+export function newProject(): boolean {
+  if (!confirmDiscardUnsaved()) return false
   currentFilePath = null
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })
   useCanvasStore.getState().initDefaultBoard()
   useHistoryStore.getState().resetHistory()
   notifyProjectPathChanged()
+  return true
 }
 
 export function loadProjectData(file: ProjectFile): void {
