@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { Actions } from '../../keybinds/actions'
 
@@ -54,10 +55,14 @@ export function KeybindSettings(): React.ReactElement | null {
   const exportScale = useUIStore((s) => s.exportScale)
   const setExportScale = useUIStore((s) => s.setExportScale)
   const boards = useCanvasStore((s) => s.boards)
+  const updateItem = useCanvasStore((s) => s.updateItem)
+  const markDirty = useHistoryStore((s) => s.markDirty)
   const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
   const [assetHealth, setAssetHealth] = useState<AssetHealth | null>(null)
   const [cacheBusy, setCacheBusy] = useState(false)
   const [cacheMessage, setCacheMessage] = useState('')
+  const [relinkBusy, setRelinkBusy] = useState(false)
+  const [relinkMessage, setRelinkMessage] = useState('')
 
   const preservePaths = useMemo(() => (
     boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
@@ -66,13 +71,13 @@ export function KeybindSettings(): React.ReactElement | null {
     preservePaths.filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
   ), [preservePaths])
 
-  const loadCacheStats = async (): Promise<void> => {
+  const loadCacheStats = async (assetPaths = localAssetPaths): Promise<void> => {
     try {
       const result = await getIpc().invoke('cache:pdfStats')
       if (result && typeof result === 'object' && 'count' in result && 'bytes' in result) {
         setCacheStats(result as PdfCacheStats)
       }
-      const health = await getIpc().invoke('assets:checkPaths', { paths: localAssetPaths })
+      const health = await getIpc().invoke('assets:checkPaths', { paths: assetPaths })
       if (health && typeof health === 'object' && 'total' in health && 'missing' in health && 'missingPaths' in health) {
         setAssetHealth(health as AssetHealth)
       }
@@ -97,6 +102,39 @@ export function KeybindSettings(): React.ReactElement | null {
       setCacheMessage('clear failed')
     } finally {
       setCacheBusy(false)
+    }
+  }
+
+  const relinkMissingAssets = async (): Promise<void> => {
+    if (!assetHealth?.missingPaths.length) return
+    setRelinkBusy(true)
+    setRelinkMessage('')
+    try {
+      const result = await getIpc().invoke('assets:relinkMissing', { missingPaths: assetHealth.missingPaths })
+      const payload = result as { replacements?: Record<string, string>; scanned?: number }
+      const replacements = payload.replacements ?? {}
+      const entries = Object.entries(replacements)
+      if (entries.length === 0) {
+        setRelinkMessage(`no matches in ${payload.scanned ?? 0} files`)
+        return
+      }
+
+      const replacementMap = new Map(entries)
+      for (const board of boards) {
+        for (const item of board.items) {
+          if (item.src && replacementMap.has(item.src)) {
+            updateItem(board.id, item.id, { src: replacementMap.get(item.src) })
+          }
+        }
+      }
+      markDirty()
+      setRelinkMessage(`relinked ${entries.length}`)
+      await loadCacheStats(localAssetPaths.map((path) => replacements[path] ?? path))
+    } catch (error) {
+      console.error('Failed to relink assets:', error)
+      setRelinkMessage('relink failed')
+    } finally {
+      setRelinkBusy(false)
     }
   }
 
@@ -263,19 +301,30 @@ export function KeybindSettings(): React.ReactElement | null {
             Clear unused
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center', marginTop: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', marginTop: 8 }}>
           <div>
             <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               Local asset health
             </div>
             <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: assetHealth?.missing ? 'var(--accent)' : 'var(--text-muted)', marginTop: 2 }}>
               {assetHealth ? `${assetHealth.total} checked / ${assetHealth.missing} missing` : 'not loaded'}
+              {relinkMessage ? ` - ${relinkMessage}` : ''}
             </div>
           </div>
           {assetHealth?.missing ? (
             <span title={assetHealth.missingPaths.join('\n')} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-accent)' }}>
               inspect
             </span>
+          ) : null}
+          {assetHealth?.missing ? (
+            <button
+              type="button"
+              onClick={() => relinkMissingAssets().catch(console.error)}
+              disabled={relinkBusy}
+              style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: relinkBusy ? 0.45 : 1 }}
+            >
+              Relink folder
+            </button>
           ) : null}
         </div>
       </div>

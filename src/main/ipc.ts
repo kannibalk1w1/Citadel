@@ -48,6 +48,28 @@ function clearUnusedPdfPreviews(preservePaths: string[]): { deleted: number; byt
   }, { deleted: 0, bytes: 0 })
 }
 
+function scanFilesByBasename(root: string): { byName: Map<string, string>; scanned: number } {
+  const byName = new Map<string, string>()
+  let scanned = 0
+  const visit = (dir: string): void => {
+    for (const entry of readdirSync(dir)) {
+      const path = join(dir, entry)
+      try {
+        const stat = statSync(path)
+        if (stat.isDirectory()) {
+          visit(path)
+        } else if (stat.isFile()) {
+          scanned += 1
+          const key = basename(path).toLowerCase()
+          if (!byName.has(key)) byName.set(key, path)
+        }
+      } catch { /* skip unreadable files */ }
+    }
+  }
+  visit(root)
+  return { byName, scanned }
+}
+
 type PortableItem = { src?: string; [key: string]: unknown }
 type PortableBoard = { items?: PortableItem[]; [key: string]: unknown }
 type PortableProject = { boards?: PortableBoard[]; [key: string]: unknown }
@@ -290,6 +312,24 @@ export function registerIpcHandlers(): void {
     const uniquePaths = Array.from(new Set(Array.isArray(paths) ? paths : []))
     const missing = uniquePaths.filter((path) => !existsSync(path))
     return { total: uniquePaths.length, missing: missing.length, missingPaths: missing }
+  })
+
+  ipcMain.handle('assets:relinkMissing', async (_e, { missingPaths }: { missingPaths: string[] }) => {
+    const missing = Array.from(new Set(Array.isArray(missingPaths) ? missingPaths : []))
+    if (missing.length === 0) return { replacements: {}, scanned: 0 }
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Choose folder to search for missing assets',
+      properties: ['openDirectory'],
+    })
+    if (canceled || !filePaths[0]) return { replacements: {}, scanned: 0 }
+
+    const { byName, scanned } = scanFilesByBasename(filePaths[0])
+    const replacements = missing.reduce<Record<string, string>>((acc, missingPath) => {
+      const match = byName.get(basename(missingPath).toLowerCase())
+      if (match) acc[missingPath] = match
+      return acc
+    }, {})
+    return { replacements, scanned }
   })
 
   ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
