@@ -5,6 +5,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
+import { getRecentProjects, openRecentProject, type RecentProject } from '../utils/projectFile'
 
 // ── Effect → CSS class map ─────────────────────────────────────────────────────
 // These apply to the <img> element itself via filter/transform.
@@ -327,6 +328,63 @@ function StatusLine(): React.ReactElement {
 const statLabel: React.CSSProperties = { fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
 const statVal:   React.CSSProperties = { fontSize: 9, fontFamily: 'var(--font-mono)' }
 
+function RecentProjects(): React.ReactElement | null {
+  const [projects, setProjects] = useState<RecentProject[]>([])
+  const triggerEffect = useMascotStore((s) => s.triggerEffect)
+
+  const refresh = () => {
+    getRecentProjects()
+      .then((next) => setProjects(next.slice(0, 5)))
+      .catch(() => setProjects([]))
+  }
+
+  useEffect(() => {
+    refresh()
+    window.addEventListener('citadel:recentProjectsChanged', refresh)
+    return () => window.removeEventListener('citadel:recentProjectsChanged', refresh)
+  }, [])
+
+  if (projects.length === 0) return null
+
+  return (
+    <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+      <div style={{ ...statLabel, marginBottom: 5 }}>Recent</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {projects.map((project) => (
+          <button
+            key={project.path}
+            title={project.path}
+            onClick={() => {
+              openRecentProject(project.path).then((ok) => {
+                if (ok) triggerEffect('lightning-in')
+                else triggerEffect('fracture')
+              })
+            }}
+            style={{
+              width: '100%',
+              minHeight: 22,
+              padding: '3px 5px',
+              background: 'var(--bg-ui)',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              color: 'var(--text-secondary)',
+              fontSize: 10,
+              fontFamily: 'var(--font-body)',
+              cursor: 'pointer',
+              textAlign: 'left',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {project.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 export function RightSidebar(): React.ReactElement {
   return (
@@ -375,6 +433,8 @@ export function RightSidebar(): React.ReactElement {
         <QuickBtn label="Export PDF" title="Export canvas as PDF"           onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
         <QuickBtn label="Export ZIP" title="Bundle project as .citadelz"    onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
       </div>
+
+      <RecentProjects />
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
