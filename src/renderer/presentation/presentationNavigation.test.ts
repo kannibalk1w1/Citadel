@@ -29,6 +29,23 @@ describe('presentationNavigation', () => {
     ]).map((entry) => entry.id)).toEqual(['left', 'right', 'bottom'])
   })
 
+  it('uses manual presentation order before spatial fallback', () => {
+    const first = { ...item('first', 300, 300), meta: { presentationOrder: 1 } }
+    const second = { ...item('second', 0, 0), meta: { presentationOrder: 2 } }
+    const fallback = item('fallback', 100, 0)
+
+    expect(orderedPresentationItems([second, fallback, first]).map((entry) => entry.id)).toEqual(['first', 'second', 'fallback'])
+  })
+
+  it('skips items marked out of presentation', () => {
+    const skipped = { ...item('skipped', 0, 0), meta: { skipPresentation: true } }
+
+    expect(orderedPresentationItems([
+      item('visible', 100, 0),
+      skipped,
+    ]).map((entry) => entry.id)).toEqual(['visible'])
+  })
+
   it('returns the next index from the current item id', () => {
     const items = [item('a', 0, 0), item('b', 100, 0), item('c', 200, 0)]
 

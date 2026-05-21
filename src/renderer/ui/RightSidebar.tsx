@@ -459,6 +459,7 @@ export function RightSidebar(): React.ReactElement {
         <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
         <QuickBtn label="Comment"    title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
         <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
+        <QuickBtn label="Sequence"   title="Presentation sequence"          onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
         <QuickBtn label="Export PDF" title="Export canvas as PDF"           onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
         <QuickBtn label="Export ZIP" title="Bundle project as .citadelz"    onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
       </div>

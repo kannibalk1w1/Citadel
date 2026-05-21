@@ -12,6 +12,7 @@ import { ContextMenu } from './ui/ContextMenu'
 import { RecordingBar } from './ui/RecordingBar'
 import { RightSidebar } from './ui/RightSidebar'
 import { TagSearch } from './ui/TagSearch'
+import { PresentationSequence } from './ui/PresentationSequence'
 import { ItemProperties } from './ui/panels/ItemProperties'
 import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
@@ -789,6 +790,7 @@ export default function App(): React.ReactElement {
       {!presentationMode && <Minimap />}
       {!presentationMode && <RecordingBar />}
       {!presentationMode && <TagSearch />}
+      {!presentationMode && <PresentationSequence />}
       {!presentationMode && <ContextMenu />}
       {!presentationMode && <ItemProperties />}
       {!presentationMode && <ConnectionProperties />}

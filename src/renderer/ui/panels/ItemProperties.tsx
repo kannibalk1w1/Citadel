@@ -834,6 +834,23 @@ export function ItemProperties(): React.ReactElement | null {
         </>
       )}
 
+      <Divider label="Presentation" />
+      <Field label="Order">
+        <NumInput
+          value={(item.meta?.presentationOrder as number) ?? 0}
+          onChange={(v) => updateMeta({ presentationOrder: v > 0 ? Math.round(v) : undefined })}
+        />
+      </Field>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+        <input
+          type="checkbox"
+          checked={item.meta?.skipPresentation === true}
+          onChange={(e) => updateMeta({ skipPresentation: e.target.checked ? true : undefined })}
+          style={{ accentColor: 'var(--accent)' }}
+        />
+        Skip in presentation
+      </label>
+
       <Divider label="Tags" />
       <TagsSection item={item} boardId={activeBoardId} />
 

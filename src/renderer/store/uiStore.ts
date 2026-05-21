@@ -6,6 +6,7 @@ type PanelState = {
   connectionProperties: boolean
   keybindSettings: boolean
   tagSearch: boolean
+  presentationSequence: boolean
 }
 
 export type ExportArea = 'viewport' | 'board'
@@ -102,6 +103,7 @@ export const useUIStore = create<UIState>((set) => ({
     connectionProperties: false,
     keybindSettings: false,
     tagSearch: false,
+    presentationSequence: false,
   },
   openPanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: true } })),
   closePanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: false } })),
