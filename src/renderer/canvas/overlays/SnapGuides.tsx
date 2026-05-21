@@ -1,8 +1,17 @@
 import React from 'react'
-import { Line } from 'react-konva'
+import { Line, Text } from 'react-konva'
 import { useUIStore } from '../../store/uiStore'
 
-type SnapLine = { x1: number; y1: number; x2: number; y2: number }
+export type SnapLine = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  orientation: 'vertical' | 'horizontal'
+  label?: string
+  labelX?: number
+  labelY?: number
+}
 
 // Shared mutable array — written by snapEngine, read here
 export const snapLines: SnapLine[] = []
@@ -14,14 +23,26 @@ export function SnapGuides(): React.ReactElement {
   return (
     <>
       {snapLines.map((line, i) => (
-        <Line
-          key={i}
-          points={[line.x1, line.y1, line.x2, line.y2]}
-          stroke="var(--accent)"
-          strokeWidth={0.5}
-          dash={[4, 4]}
-          listening={false}
-        />
+        <React.Fragment key={i}>
+          <Line
+            points={[line.x1, line.y1, line.x2, line.y2]}
+            stroke="var(--accent)"
+            strokeWidth={0.5}
+            dash={[4, 4]}
+            listening={false}
+          />
+          {line.label ? (
+            <Text
+              x={line.labelX ?? line.x1}
+              y={line.labelY ?? line.y1}
+              text={line.label}
+              fontSize={10}
+              fontFamily="var(--font-mono)"
+              fill="var(--text-accent)"
+              listening={false}
+            />
+          ) : null}
+        </React.Fragment>
       ))}
     </>
   )

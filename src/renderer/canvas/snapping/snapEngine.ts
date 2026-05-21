@@ -1,11 +1,60 @@
 import type { CanvasItem, Viewport } from '../../../types'
 import { spatialIndex } from './spatialIndex'
-import { snapLines } from '../overlays/SnapGuides'
+import { snapLines, type SnapLine } from '../overlays/SnapGuides'
 import { useUIStore } from '../../store/uiStore'
 
 const SNAP_THRESHOLD_SCREEN = 8  // px
 
 type SnapResult = { x: number; y: number }
+type EdgeName = 'left' | 'right' | 'centerX' | 'top' | 'bottom' | 'centerY'
+type SnapCandidate = {
+  delta: number
+  value: number
+  target: CanvasItem
+  draggedEdge: EdgeName
+  targetEdge: EdgeName
+}
+
+function isGaplessDock(draggedEdge: EdgeName, targetEdge: EdgeName): boolean {
+  return (
+    (draggedEdge === 'left' && targetEdge === 'right') ||
+    (draggedEdge === 'right' && targetEdge === 'left') ||
+    (draggedEdge === 'top' && targetEdge === 'bottom') ||
+    (draggedEdge === 'bottom' && targetEdge === 'top')
+  )
+}
+
+function pickClosest(current: SnapCandidate | null, candidate: SnapCandidate, threshold: number): SnapCandidate | null {
+  if (Math.abs(candidate.delta) >= threshold) return current
+  if (!current || Math.abs(candidate.delta) < Math.abs(current.delta)) return candidate
+  return current
+}
+
+function verticalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLine {
+  return {
+    x1: candidate.value,
+    y1: Math.min(dragged.y, candidate.target.y) - 20,
+    x2: candidate.value,
+    y2: Math.max(dragged.y + dragged.height, candidate.target.y + candidate.target.height) + 20,
+    orientation: 'vertical',
+    label: isGaplessDock(candidate.draggedEdge, candidate.targetEdge) ? '0 px' : undefined,
+    labelX: candidate.value + 6,
+    labelY: Math.min(dragged.y, candidate.target.y) - 16,
+  }
+}
+
+function horizontalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLine {
+  return {
+    x1: Math.min(dragged.x, candidate.target.x) - 20,
+    y1: candidate.value,
+    x2: Math.max(dragged.x + dragged.width, candidate.target.x + candidate.target.width) + 20,
+    y2: candidate.value,
+    orientation: 'horizontal',
+    label: isGaplessDock(candidate.draggedEdge, candidate.targetEdge) ? '0 px' : undefined,
+    labelX: Math.min(dragged.x, candidate.target.x) - 16,
+    labelY: candidate.value + 6,
+  }
+}
 
 export function snapItem(
   dragged: CanvasItem,
@@ -25,17 +74,19 @@ export function snapItem(
 
   let snappedX = dragged.x
   let snappedY = dragged.y
+  let bestX: SnapCandidate | null = null
+  let bestY: SnapCandidate | null = null
+
+  const dragEdges = {
+    left: dragged.x,
+    right: dragged.x + dragged.width,
+    centerX: dragged.x + dragged.width / 2,
+    top: dragged.y,
+    bottom: dragged.y + dragged.height,
+    centerY: dragged.y + dragged.height / 2,
+  }
 
   for (const target of candidates) {
-    // Edges to compare
-    const dragEdges = {
-      left: dragged.x,
-      right: dragged.x + dragged.width,
-      centerX: dragged.x + dragged.width / 2,
-      top: dragged.y,
-      bottom: dragged.y + dragged.height,
-      centerY: dragged.y + dragged.height / 2,
-    }
     const targetEdges = {
       left: target.x,
       right: target.x + target.width,
@@ -45,41 +96,42 @@ export function snapItem(
       centerY: target.y + target.height / 2,
     }
 
-    // X snaps
-    for (const [dk, tv] of [
-      ['left', targetEdges.left], ['left', targetEdges.right],
-      ['right', targetEdges.left], ['right', targetEdges.right],
-      ['centerX', targetEdges.centerX],
-    ] as [keyof typeof dragEdges, number][]) {
-      const delta = tv - dragEdges[dk]
-      if (Math.abs(delta) < threshold) {
-        snappedX = dragged.x + delta
-        snapLines.push({ x1: tv, y1: Math.min(dragged.y, target.y) - 20, x2: tv, y2: Math.max(dragged.y + dragged.height, target.y + target.height) + 20 })
-        break
-      }
+    for (const [draggedEdge, targetEdge, value] of [
+      ['left', 'left', targetEdges.left],
+      ['left', 'right', targetEdges.right],
+      ['right', 'left', targetEdges.left],
+      ['right', 'right', targetEdges.right],
+      ['centerX', 'centerX', targetEdges.centerX],
+    ] as [EdgeName, EdgeName, number][]) {
+      bestX = pickClosest(bestX, { delta: value - dragEdges[draggedEdge], value, target, draggedEdge, targetEdge }, threshold)
     }
 
-    // Y snaps
-    for (const [dk, tv] of [
-      ['top', targetEdges.top], ['top', targetEdges.bottom],
-      ['bottom', targetEdges.top], ['bottom', targetEdges.bottom],
-      ['centerY', targetEdges.centerY],
-    ] as [keyof typeof dragEdges, number][]) {
-      const delta = tv - dragEdges[dk]
-      if (Math.abs(delta) < threshold) {
-        snappedY = dragged.y + delta
-        snapLines.push({ x1: Math.min(dragged.x, target.x) - 20, y1: tv, x2: Math.max(dragged.x + dragged.width, target.x + target.width) + 20, y2: tv })
-        break
-      }
+    for (const [draggedEdge, targetEdge, value] of [
+      ['top', 'top', targetEdges.top],
+      ['top', 'bottom', targetEdges.bottom],
+      ['bottom', 'top', targetEdges.top],
+      ['bottom', 'bottom', targetEdges.bottom],
+      ['centerY', 'centerY', targetEdges.centerY],
+    ] as [EdgeName, EdgeName, number][]) {
+      bestY = pickClosest(bestY, { delta: value - dragEdges[draggedEdge], value, target, draggedEdge, targetEdge }, threshold)
     }
   }
 
-  // ── Grid snap ────────────────────────────────────────────────────────────────
   if (snapToGrid) {
     const gridSnappedX = Math.round(snappedX / gridSize) * gridSize
     const gridSnappedY = Math.round(snappedY / gridSize) * gridSize
     if (Math.abs(gridSnappedX - snappedX) < threshold) snappedX = gridSnappedX
     if (Math.abs(gridSnappedY - snappedY) < threshold) snappedY = gridSnappedY
+  }
+
+  if (bestX) {
+    snappedX = dragged.x + bestX.delta
+    snapLines.push(verticalGuide(dragged, bestX))
+  }
+
+  if (bestY) {
+    snappedY = dragged.y + bestY.delta
+    snapLines.push(horizontalGuide(dragged, bestY))
   }
 
   return { x: snappedX, y: snappedY }
