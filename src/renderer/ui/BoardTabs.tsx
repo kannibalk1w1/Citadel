@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import type { CanvasBoard } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
+import { boardMoodAccent } from './boardMood'
 
 const THUMB_W = 52
 const THUMB_H = 28
@@ -24,6 +25,8 @@ function itemColour(type: string, meta?: Record<string, unknown>): string {
 
 function BoardThumbnail({ board, active }: { board: CanvasBoard; active: boolean }): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const moodAccent = boardMoodAccent(board)
+  const glow = moodAccent.startsWith('#') ? `${moodAccent}55` : 'rgba(185,148,85,0.2)'
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
@@ -80,8 +83,8 @@ function BoardThumbnail({ board, active }: { board: CanvasBoard; active: boolean
         width: THUMB_W,
         height: THUMB_H,
         borderRadius: 3,
-        border: active ? '1px solid rgba(185,148,85,0.78)' : '1px solid var(--border)',
-        boxShadow: active ? '0 0 8px rgba(185,148,85,0.2)' : 'none',
+        border: active ? `1px solid ${moodAccent}` : '1px solid var(--border)',
+        boxShadow: active ? `0 0 8px ${glow}` : 'none',
         opacity: active ? 1 : 0.72,
         flexShrink: 0,
         pointerEvents: 'none',
@@ -148,9 +151,9 @@ export function BoardTabs(): React.ReactElement {
           style={{
             height: '100%',
             padding: '0 8px',
-            borderBottom: board.id === activeBoardId ? '2px solid var(--accent)' : '2px solid transparent',
+            borderBottom: board.id === activeBoardId ? `2px solid ${boardMoodAccent(board)}` : '2px solid transparent',
             background: board.id === activeBoardId ? 'var(--bg-panel)' : 'transparent',
-            color: board.id === activeBoardId ? 'var(--text-accent)' : 'var(--text-secondary)',
+            color: board.id === activeBoardId ? boardMoodAccent(board) : 'var(--text-secondary)',
             fontSize: 12,
             fontFamily: 'var(--font-body)',
             cursor: 'pointer',

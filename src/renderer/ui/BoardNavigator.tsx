@@ -5,6 +5,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { summarizeBoard } from './boardNavigatorModel'
 import { boardTemplates, createBoardTemplate, type BoardTemplateId } from './boardTemplates'
+import { boardMoodAccent, boardMoodId } from './boardMood'
 
 const BOARD_MOOD_PRESETS = [
   { id: 'gothic', label: 'Gothic', accent: '#bd9652' },
@@ -187,8 +188,8 @@ export function BoardNavigator(): React.ReactElement | null {
         {boards.map((board) => {
           const active = board.id === activeBoardId
           const summary = summarizeBoard(board)
-          const mood = typeof board.meta?.mood === 'string' ? board.meta.mood : 'gothic'
-          const moodAccent = typeof board.meta?.accent === 'string' ? board.meta.accent : 'var(--accent)'
+          const mood = boardMoodId(board)
+          const moodAccent = boardMoodAccent(board)
           return (
             <div
               key={board.id}
