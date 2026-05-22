@@ -662,6 +662,43 @@ export function ItemProperties(): React.ReactElement | null {
       )}
 
       {/* ── Swatch-specific ── */}
+      {item.type === 'image' && (
+        <>
+          <Divider label="Image" />
+          <Field label="Fit">
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[
+                { value: 'stretch', label: 'Stretch' },
+                { value: 'fit', label: 'Fit' },
+                { value: 'fill', label: 'Fill' },
+              ].map(({ value, label }) => {
+                const active = ((item.meta?.fitMode as string) ?? 'stretch') === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => updateMeta({ fitMode: value === 'stretch' ? undefined : value })}
+                    style={{
+                      flex: 1,
+                      height: 24,
+                      fontSize: 9,
+                      borderRadius: 3,
+                      cursor: 'pointer',
+                      border: '1px solid var(--border)',
+                      background: active ? 'var(--accent)' : 'var(--bg-ui)',
+                      color: active ? 'var(--bg-ui)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </Field>
+        </>
+      )}
+
       {item.type === 'swatch' && (
         <>
           <Divider label="Palette" />

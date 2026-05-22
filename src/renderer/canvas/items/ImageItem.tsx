@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { Image as KonvaImage, Transformer } from 'react-konva'
+import { Group, Image as KonvaImage, Rect, Transformer } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import useImage from 'use-image'
 import { nanoid } from 'nanoid'
@@ -11,6 +11,7 @@ import { pathToUrl } from '../../utils/pathToUrl'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { imageCoverCrop, imageFitRect, type ImageFitMode } from './imageFit'
 
 type Props = { item: CanvasItem }
 
@@ -22,14 +23,14 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
-  const imageRef = useRef<import('konva/lib/shapes/Image').Image>(null)
+  const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number; rotation: number } | null>(null)
 
   useEffect(() => {
-    if (isSelected && trRef.current && imageRef.current) {
-      trRef.current.nodes([imageRef.current])
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current])
       trRef.current.getLayer()?.batchDraw()
     }
   }, [isSelected])
@@ -120,7 +121,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   }
 
   const handleTransformEnd = () => {
-    const node = imageRef.current
+    const node = groupRef.current
     if (!node) return
     const after = {
       x: node.x(),
@@ -145,25 +146,22 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
 
   // Highlight border when this item is the connect source
   const isConnectSource = useUIStore.getState().connectFromId === item.id
+  const fitMode = ((item.meta?.fitMode as ImageFitMode | undefined) ?? 'stretch')
+  const imageWidth = image.naturalWidth || image.width
+  const imageHeight = image.naturalHeight || image.height
+  const fitRect = fitMode === 'fit' ? imageFitRect(imageWidth, imageHeight, item.width, item.height) : null
+  const cropRect = fitMode === 'fill' ? imageCoverCrop(imageWidth, imageHeight, item.width, item.height) : undefined
 
   return (
     <>
-      <KonvaImage
-        ref={imageRef}
-        image={image}
+      <Group
+        ref={groupRef}
         x={item.x}
         y={item.y}
         width={item.width}
         height={item.height}
         rotation={item.rotation}
-        opacity={item.opacity}
         draggable={toolMode === 'select' && !item.locked}
-        stroke={isConnectSource || isSelected ? '#b99455' : undefined}
-        strokeWidth={isConnectSource || isSelected ? 2 : 0}
-        shadowEnabled={isSelected}
-        shadowColor="rgba(185,148,85,0.7)"
-        shadowBlur={20}
-        shadowOpacity={0.8}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.evt.preventDefault()
@@ -176,7 +174,41 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         onDragEnd={handleDragEnd}
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
-      />
+      >
+        <Rect
+          x={0}
+          y={0}
+          width={item.width}
+          height={item.height}
+          fill={fitMode === 'fit' ? 'var(--bg-canvas)' : 'rgba(0,0,0,0.001)'}
+          opacity={fitMode === 'fit' ? 0.75 : 1}
+          listening={false}
+        />
+        <KonvaImage
+          image={image}
+          x={fitRect?.x ?? 0}
+          y={fitRect?.y ?? 0}
+          width={fitRect?.width ?? item.width}
+          height={fitRect?.height ?? item.height}
+          crop={cropRect}
+          opacity={item.opacity}
+          listening={false}
+        />
+        <Rect
+          x={0}
+          y={0}
+          width={item.width}
+          height={item.height}
+          fill={undefined}
+          stroke={isConnectSource || isSelected ? '#b99455' : undefined}
+          strokeWidth={isConnectSource || isSelected ? 2 : 0}
+          shadowEnabled={isSelected}
+          shadowColor="rgba(185,148,85,0.7)"
+          shadowBlur={20}
+          shadowOpacity={0.8}
+          listening={false}
+        />
+      </Group>
       {isSelected && !item.locked && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
     </>
   )
