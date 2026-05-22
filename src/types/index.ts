@@ -58,6 +58,7 @@ export type CanvasBoard = {
   items: CanvasItem[]
   connections: Connection[]
   viewport: Viewport
+  meta?: Record<string, unknown>
 }
 
 // ─── Viewport ─────────────────────────────────────────────────────────────────

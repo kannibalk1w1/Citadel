@@ -6,6 +6,13 @@ import { useUIStore } from '../store/uiStore'
 import { summarizeBoard } from './boardNavigatorModel'
 import { boardTemplates, createBoardTemplate, type BoardTemplateId } from './boardTemplates'
 
+const BOARD_MOOD_PRESETS = [
+  { id: 'gothic', label: 'Gothic', accent: '#bd9652' },
+  { id: 'ember', label: 'Ember', accent: '#8a3d3d' },
+  { id: 'verdant', label: 'Verdant', accent: '#6f8a5f' },
+  { id: 'frost', label: 'Frost', accent: '#65798a' },
+] as const
+
 function Stat({ label, value }: { label: string; value: number }): React.ReactElement {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 40 }}>
@@ -69,6 +76,7 @@ export function BoardNavigator(): React.ReactElement | null {
   const duplicateBoard = useCanvasStore((s) => s.duplicateBoard)
   const removeBoard = useCanvasStore((s) => s.removeBoard)
   const renameBoard = useCanvasStore((s) => s.renameBoard)
+  const updateBoardMeta = useCanvasStore((s) => s.updateBoardMeta)
   const markDirty = useHistoryStore((s) => s.markDirty)
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [draftName, setDraftName] = React.useState('')
@@ -112,6 +120,11 @@ export function BoardNavigator(): React.ReactElement | null {
   const deleteBoard = (id: string) => {
     if (boards.length <= 1) return
     removeBoard(id)
+    markDirty()
+  }
+
+  const setBoardMood = (id: string, preset: (typeof BOARD_MOOD_PRESETS)[number]) => {
+    updateBoardMeta(id, { mood: preset.id, accent: preset.accent })
     markDirty()
   }
 
@@ -174,6 +187,8 @@ export function BoardNavigator(): React.ReactElement | null {
         {boards.map((board) => {
           const active = board.id === activeBoardId
           const summary = summarizeBoard(board)
+          const mood = typeof board.meta?.mood === 'string' ? board.meta.mood : 'gothic'
+          const moodAccent = typeof board.meta?.accent === 'string' ? board.meta.accent : 'var(--accent)'
           return (
             <div
               key={board.id}
@@ -183,7 +198,7 @@ export function BoardNavigator(): React.ReactElement | null {
                 display: 'grid',
                 gridTemplateColumns: '1fr auto',
                 gap: 8,
-                border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                border: `1px solid ${active ? moodAccent : 'var(--border)'}`,
                 borderRadius: 5,
                 background: active ? 'var(--bg-hover)' : 'transparent',
                 padding: 8,
@@ -216,7 +231,7 @@ export function BoardNavigator(): React.ReactElement | null {
                   />
                 ) : (
                   <div style={{
-                    color: active ? 'var(--text-accent)' : 'var(--text-primary)',
+                    color: active ? moodAccent : 'var(--text-primary)',
                     fontFamily: 'var(--font-body)',
                     fontSize: 12,
                     overflow: 'hidden',
@@ -226,6 +241,36 @@ export function BoardNavigator(): React.ReactElement | null {
                     {board.name}
                   </div>
                 )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+                  {BOARD_MOOD_PRESETS.map((preset) => {
+                    const selected = mood === preset.id
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        title={`${preset.label} mood`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setBoardMood(board.id, preset)
+                        }}
+                        style={{
+                          height: 18,
+                          background: selected ? preset.accent : 'var(--bg-ui)',
+                          border: `1px solid ${selected ? preset.accent : 'var(--border)'}`,
+                          borderRadius: 3,
+                          color: selected ? 'var(--bg-canvas)' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 8,
+                          padding: 0,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {preset.label.slice(0, 3)}
+                      </button>
+                    )
+                  })}
+                </div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <Stat label="items" value={summary.itemCount} />
                   <Stat label="visible" value={summary.visibleCount} />

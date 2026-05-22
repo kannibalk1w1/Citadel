@@ -18,6 +18,7 @@ type CanvasState = {
   duplicateBoard: (id: string) => string | null
   removeBoard: (id: string) => void
   renameBoard: (id: string, name: string) => void
+  updateBoardMeta: (id: string, patch: Record<string, unknown>) => void
   setActiveBoard: (id: string) => void
 
   // Viewport
@@ -118,6 +119,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   renameBoard: (id, name) => {
     set((s) => ({ boards: s.boards.map((b) => b.id === id ? { ...b, name } : b) }))
+  },
+
+  updateBoardMeta: (id, patch) => {
+    set((s) => ({
+      boards: s.boards.map((b) => b.id === id ? { ...b, meta: { ...b.meta, ...patch } } : b),
+    }))
   },
 
   setActiveBoard: (id) => set({ activeBoardId: id, selectedIds: [] }),
