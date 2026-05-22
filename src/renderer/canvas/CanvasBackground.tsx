@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
+import { pathToUrl } from '../utils/pathToUrl'
 
 const STONE_TILE = 320
 
@@ -54,9 +55,31 @@ function buildStonePatternUrl(snapToGrid: boolean): string {
 export function CanvasBackground(): React.ReactElement {
   const viewport = useCanvasStore((s) => s.viewport())
   const snapToGrid = useUIStore((s) => s.snapToGrid)
+  const canvasBackground = useUIStore((s) => s.canvasBackground)
 
   const stonePatternUrl = useMemo(() => buildStonePatternUrl(snapToGrid), [snapToGrid])
-  const tileSize = STONE_TILE * Math.max(0.65, Math.min(1.6, viewport.scale))
+  const stoneTileSize = STONE_TILE * canvasBackground.scale * Math.max(0.65, Math.min(1.6, viewport.scale))
+
+  if (canvasBackground.mode === 'none') return <></>
+
+  if (canvasBackground.mode === 'custom' && canvasBackground.assetPath) {
+    const customTileSize = STONE_TILE * canvasBackground.scale * Math.max(0.65, Math.min(1.6, viewport.scale))
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: '#050606',
+          backgroundImage: `url("${pathToUrl(canvasBackground.assetPath)}")`,
+          backgroundRepeat: canvasBackground.repeat ? 'repeat' : 'no-repeat',
+          backgroundSize: canvasBackground.repeat ? `${customTileSize}px auto` : 'cover',
+          backgroundPosition: canvasBackground.repeat ? `${viewport.x}px ${viewport.y}px` : 'center',
+          opacity: canvasBackground.opacity,
+          pointerEvents: 'none',
+        }}
+      />
+    )
+  }
 
   return (
     <div
@@ -65,9 +88,9 @@ export function CanvasBackground(): React.ReactElement {
         inset: 0,
         backgroundColor: '#050606',
         backgroundImage: stonePatternUrl,
-        backgroundSize: `${tileSize}px ${tileSize}px`,
+        backgroundSize: `${stoneTileSize}px ${stoneTileSize}px`,
         backgroundPosition: `${viewport.x}px ${viewport.y}px`,
-        opacity: snapToGrid ? 0.72 : 0.62,
+        opacity: canvasBackground.opacity,
         pointerEvents: 'none',
       }}
     />

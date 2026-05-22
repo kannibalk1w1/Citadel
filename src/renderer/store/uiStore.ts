@@ -11,6 +11,36 @@ type PanelState = {
 }
 
 export type ExportArea = 'viewport' | 'board'
+export type CanvasBackgroundMode = 'stone' | 'custom' | 'none'
+
+export type CanvasBackgroundSettings = {
+  mode: CanvasBackgroundMode
+  assetPath: string | null
+  opacity: number
+  scale: number
+  repeat: boolean
+}
+
+const DEFAULT_CANVAS_BACKGROUND: CanvasBackgroundSettings = {
+  mode: 'stone',
+  assetPath: null,
+  opacity: 0.62,
+  scale: 1,
+  repeat: true,
+}
+
+export function normalizeCanvasBackground(settings: Partial<CanvasBackgroundSettings> | null | undefined): CanvasBackgroundSettings {
+  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone'
+    ? settings.mode
+    : DEFAULT_CANVAS_BACKGROUND.mode
+  return {
+    mode,
+    assetPath: typeof settings?.assetPath === 'string' && settings.assetPath ? settings.assetPath : null,
+    opacity: Math.max(0, Math.min(1, typeof settings?.opacity === 'number' ? settings.opacity : DEFAULT_CANVAS_BACKGROUND.opacity)),
+    scale: Math.max(0.25, Math.min(4, typeof settings?.scale === 'number' ? settings.scale : DEFAULT_CANVAS_BACKGROUND.scale)),
+    repeat: typeof settings?.repeat === 'boolean' ? settings.repeat : DEFAULT_CANVAS_BACKGROUND.repeat,
+  }
+}
 
 type UIState = {
   toolMode: ToolMode
@@ -85,6 +115,10 @@ type UIState = {
   setExportArea: (area: ExportArea) => void
   includeCommentsInExport: boolean
   setIncludeCommentsInExport: (enabled: boolean) => void
+
+  // Canvas appearance
+  canvasBackground: CanvasBackgroundSettings
+  setCanvasBackground: (settings: Partial<CanvasBackgroundSettings>) => void
 
   // Comments
   commentPinsVisible: boolean
@@ -191,6 +225,14 @@ export const useUIStore = create<UIState>((set) => ({
     set({ includeCommentsInExport: enabled })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'export.includeComments', value: enabled }).catch(console.error)
+  },
+
+  canvasBackground: DEFAULT_CANVAS_BACKGROUND,
+  setCanvasBackground: (settings) => {
+    const next = normalizeCanvasBackground(settings)
+    set({ canvasBackground: next })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.canvasBackground', value: next }).catch(console.error)
   },
 
   commentPinsVisible: true,

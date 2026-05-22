@@ -26,6 +26,7 @@ import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
+import { normalizeCanvasBackground } from './store/uiStore'
 import { resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
@@ -192,6 +193,13 @@ export default function App(): React.ReactElement {
     ipc.invoke('settings:get', { key: 'export.includeComments' }).then((res) => {
       const { value } = res as { value: unknown }
       if (value === false) useUIStore.getState().setIncludeCommentsInExport(false)
+    }).catch(() => {})
+
+    ipc.invoke('settings:get', { key: 'ui.canvasBackground' }).then((res) => {
+      const { value } = res as { value: unknown }
+      if (value && typeof value === 'object') {
+        useUIStore.setState({ canvasBackground: normalizeCanvasBackground(value) })
+      }
     }).catch(() => {})
   }, [])
 

@@ -64,6 +64,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setExportArea = useUIStore((s) => s.setExportArea)
   const includeCommentsInExport = useUIStore((s) => s.includeCommentsInExport)
   const setIncludeCommentsInExport = useUIStore((s) => s.setIncludeCommentsInExport)
+  const canvasBackground = useUIStore((s) => s.canvasBackground)
+  const setCanvasBackground = useUIStore((s) => s.setCanvasBackground)
   const boards = useCanvasStore((s) => s.boards)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const markDirty = useHistoryStore((s) => s.markDirty)
@@ -148,6 +150,15 @@ export function KeybindSettings(): React.ReactElement | null {
     }
   }
 
+  const chooseCanvasBackground = async (): Promise<void> => {
+    const result = await getIpc().invoke('file:openDialog', {
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
+    })
+    if (result && typeof result === 'object' && 'path' in result && typeof (result as { path?: unknown }).path === 'string') {
+      setCanvasBackground({ ...canvasBackground, mode: 'custom', assetPath: (result as { path: string }).path })
+    }
+  }
+
   useEffect(() => {
     if (isOpen) loadCacheStats().catch(console.error)
   }, [isOpen])
@@ -171,6 +182,107 @@ export function KeybindSettings(): React.ReactElement | null {
         >
           ×
         </button>
+      </div>
+      <div style={{
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Appearance
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              Canvas background
+            </div>
+            <div title={canvasBackground.assetPath ?? undefined} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {canvasBackground.mode === 'custom' && canvasBackground.assetPath
+                ? canvasBackground.assetPath.split(/[\\/]/).pop()
+                : canvasBackground.mode}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'stone' })}
+            aria-pressed={canvasBackground.mode === 'stone'}
+            style={{
+              ...btnStyle,
+              width: 'auto',
+              padding: '0 8px',
+              fontSize: 11,
+              background: canvasBackground.mode === 'stone' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: canvasBackground.mode === 'stone' ? 'var(--bg-ui)' : 'var(--text-primary)',
+            }}
+          >
+            Built-in
+          </button>
+          <button
+            type="button"
+            onClick={() => chooseCanvasBackground().catch(console.error)}
+            aria-pressed={canvasBackground.mode === 'custom'}
+            style={{
+              ...btnStyle,
+              width: 'auto',
+              padding: '0 8px',
+              fontSize: 11,
+              background: canvasBackground.mode === 'custom' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: canvasBackground.mode === 'custom' ? 'var(--bg-ui)' : 'var(--text-primary)',
+            }}
+          >
+            Choose
+          </button>
+          <button
+            type="button"
+            onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'none' })}
+            aria-pressed={canvasBackground.mode === 'none'}
+            style={{
+              ...btnStyle,
+              width: 'auto',
+              padding: '0 8px',
+              fontSize: 11,
+              background: canvasBackground.mode === 'none' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: canvasBackground.mode === 'none' ? 'var(--bg-ui)' : 'var(--text-primary)',
+            }}
+          >
+            None
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, alignItems: 'center', marginTop: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Opacity</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={canvasBackground.opacity}
+              onChange={(e) => setCanvasBackground({ ...canvasBackground, opacity: parseFloat(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Scale</span>
+            <input
+              type="range"
+              min={0.25}
+              max={4}
+              step={0.05}
+              value={canvasBackground.scale}
+              onChange={(e) => setCanvasBackground({ ...canvasBackground, scale: parseFloat(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)' }}>
+            <input
+              type="checkbox"
+              checked={canvasBackground.repeat}
+              onChange={(e) => setCanvasBackground({ ...canvasBackground, repeat: e.target.checked })}
+              style={{ accentColor: 'var(--accent)' }}
+            />
+            Repeat
+          </label>
+        </div>
       </div>
       <div style={{
         marginBottom: 16,

@@ -15,6 +15,7 @@ beforeEach(() => {
     presentationMode: false,
     commentPinsVisible: true,
     includeCommentsInExport: true,
+    canvasBackground: { mode: 'stone', assetPath: null, opacity: 0.62, scale: 1, repeat: true },
   })
 })
 
@@ -34,6 +35,46 @@ describe('uiStore - comment pins', () => {
     useUIStore.getState().setIncludeCommentsInExport(false)
     expect(useUIStore.getState().includeCommentsInExport).toBe(false)
     expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.includeComments', value: false })
+  })
+})
+
+describe('uiStore - canvas background', () => {
+  it('defaults to the built-in stone background', () => {
+    expect(useUIStore.getState().canvasBackground).toEqual({
+      mode: 'stone',
+      assetPath: null,
+      opacity: 0.62,
+      scale: 1,
+      repeat: true,
+    })
+  })
+
+  it('persists custom background settings with clamped values', () => {
+    useUIStore.getState().setCanvasBackground({
+      mode: 'custom',
+      assetPath: 'C:/textures/stone.png',
+      opacity: 2,
+      scale: 0.1,
+      repeat: false,
+    })
+
+    expect(useUIStore.getState().canvasBackground).toEqual({
+      mode: 'custom',
+      assetPath: 'C:/textures/stone.png',
+      opacity: 1,
+      scale: 0.25,
+      repeat: false,
+    })
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', {
+      key: 'ui.canvasBackground',
+      value: {
+        mode: 'custom',
+        assetPath: 'C:/textures/stone.png',
+        opacity: 1,
+        scale: 0.25,
+        repeat: false,
+      },
+    })
   })
 })
 
