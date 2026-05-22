@@ -1,5 +1,6 @@
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
+import type { ExportArea } from '../store/uiStore'
 import type { CanvasItem, Viewport } from '../../types'
 
 type ExportCanvas = {
@@ -14,6 +15,18 @@ const MAX_SCALE = 20
 
 function isCommentItem(item: CanvasItem): boolean {
   return item.type === 'sticky' && item.meta?.kind === 'comment'
+}
+
+export function itemsForFittedExport(
+  items: CanvasItem[],
+  area: Extract<ExportArea, 'board' | 'selection'>,
+  selectedIds: string[],
+  includeComments: boolean,
+): CanvasItem[] {
+  const baseItems = area === 'selection'
+    ? items.filter((item) => selectedIds.includes(item.id))
+    : items
+  return includeComments ? baseItems : baseItems.filter((item) => !isCommentItem(item))
 }
 
 function getStageCanvas(): HTMLCanvasElement {
@@ -76,12 +89,12 @@ async function captureViewportCanvas(scale: number): Promise<ExportCanvas> {
   }
 }
 
-async function captureBoardCanvas(scale: number): Promise<ExportCanvas> {
+async function captureFittedCanvas(area: Extract<ExportArea, 'board' | 'selection'>, scale: number): Promise<ExportCanvas> {
   const canvasStore = useCanvasStore.getState()
   const boardId = canvasStore.activeBoardId
   const canvasEl = getStageCanvas()
   const includeComments = useUIStore.getState().includeCommentsInExport
-  const itemsForBounds = includeComments ? canvasStore.items() : canvasStore.items().filter((item) => !isCommentItem(item))
+  const itemsForBounds = itemsForFittedExport(canvasStore.items(), area, canvasStore.selectedIds, includeComments)
   const fittedViewport = fitViewportToItems(itemsForBounds, canvasEl.width, canvasEl.height)
   if (!boardId || !fittedViewport) return captureViewportCanvas(scale)
 
@@ -108,7 +121,7 @@ export async function prepareExportCanvas(): Promise<ExportCanvas> {
   }
 
   try {
-    if (exportArea === 'board') return await captureBoardCanvas(exportScale)
+    if (exportArea === 'board' || exportArea === 'selection') return await captureFittedCanvas(exportArea, exportScale)
     return await captureViewportCanvas(exportScale)
   } finally {
     if (changedCommentVisibility) {

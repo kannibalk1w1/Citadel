@@ -11,7 +11,7 @@ type PanelState = {
   assetLibrary: boolean
 }
 
-export type ExportArea = 'viewport' | 'board'
+export type ExportArea = 'viewport' | 'board' | 'selection'
 export type CanvasBackgroundMode = 'stone' | 'custom' | 'none'
 
 export type CanvasBackgroundSettings = {

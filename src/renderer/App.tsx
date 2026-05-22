@@ -188,7 +188,7 @@ export default function App(): React.ReactElement {
 
     ipc.invoke('settings:get', { key: 'export.area' }).then((res) => {
       const { value } = res as { value: unknown }
-      if (value === 'viewport' || value === 'board') useUIStore.getState().setExportArea(value)
+      if (value === 'viewport' || value === 'board' || value === 'selection') useUIStore.getState().setExportArea(value)
     }).catch(() => {})
 
     ipc.invoke('settings:get', { key: 'export.includeComments' }).then((res) => {

@@ -43,6 +43,7 @@ const getIpc = (): { invoke: (ch: string, args?: unknown) => Promise<unknown> } 
 
 const exportAreas: { area: ExportArea; label: string }[] = [
   { area: 'viewport', label: 'Viewport' },
+  { area: 'selection', label: 'Selection' },
   { area: 'board', label: 'Board' },
 ]
 
@@ -397,7 +398,11 @@ export function KeybindSettings(): React.ReactElement | null {
               type="button"
               onClick={() => setExportArea(area)}
               aria-pressed={exportArea === area}
-              title={area === 'board' ? 'Fit the active board before exporting' : 'Export the current visible canvas'}
+              title={area === 'board'
+                ? 'Fit the active board before exporting'
+                : area === 'selection'
+                  ? 'Fit the selected items before exporting'
+                  : 'Export the current visible canvas'}
               style={{
                 ...btnStyle,
                 width: 'auto',
