@@ -114,6 +114,17 @@ describe('uiStore — exportArea', () => {
     expect(useUIStore.getState().exportArea).toBe('board')
     expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.area', value: 'board' })
   })
+
+  it('applies export presets as area, scale, and comment settings', () => {
+    useUIStore.getState().applyExportPreset('clean')
+
+    expect(useUIStore.getState().exportArea).toBe('board')
+    expect(useUIStore.getState().exportScale).toBe(2)
+    expect(useUIStore.getState().includeCommentsInExport).toBe(false)
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.area', value: 'board' })
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.scale', value: 2 })
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.includeComments', value: false })
+  })
 })
 
 describe('uiStore — presentationMode', () => {

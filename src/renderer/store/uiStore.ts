@@ -12,6 +12,7 @@ type PanelState = {
 }
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
+export type ExportPreset = 'draft' | 'clean' | 'high-res'
 export type CanvasBackgroundMode = 'stone' | 'custom' | 'none'
 
 export type CanvasBackgroundSettings = {
@@ -28,6 +29,12 @@ const DEFAULT_CANVAS_BACKGROUND: CanvasBackgroundSettings = {
   opacity: 0.62,
   scale: 1,
   repeat: true,
+}
+
+export const exportPresets: Record<ExportPreset, { label: string; area: ExportArea; scale: number; includeComments: boolean }> = {
+  draft: { label: 'Draft', area: 'viewport', scale: 1, includeComments: false },
+  clean: { label: 'Clean', area: 'board', scale: 2, includeComments: false },
+  'high-res': { label: 'High-res', area: 'board', scale: 3, includeComments: true },
 }
 
 export function normalizeCanvasBackground(settings: Partial<CanvasBackgroundSettings> | null | undefined): CanvasBackgroundSettings {
@@ -116,6 +123,7 @@ type UIState = {
   setExportArea: (area: ExportArea) => void
   includeCommentsInExport: boolean
   setIncludeCommentsInExport: (enabled: boolean) => void
+  applyExportPreset: (preset: ExportPreset) => void
 
   // Canvas appearance
   canvasBackground: CanvasBackgroundSettings
@@ -227,6 +235,19 @@ export const useUIStore = create<UIState>((set) => ({
     set({ includeCommentsInExport: enabled })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'export.includeComments', value: enabled }).catch(console.error)
+  },
+  applyExportPreset: (preset) => {
+    const settings = exportPresets[preset]
+    const scale = Math.min(3, Math.max(1, Math.round(settings.scale)))
+    set({
+      exportArea: settings.area,
+      exportScale: scale,
+      includeCommentsInExport: settings.includeComments,
+    })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'export.area', value: settings.area }).catch(console.error)
+    ipc.invoke('settings:set', { key: 'export.scale', value: scale }).catch(console.error)
+    ipc.invoke('settings:set', { key: 'export.includeComments', value: settings.includeComments }).catch(console.error)
   },
 
   canvasBackground: DEFAULT_CANVAS_BACKGROUND,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import type { ExportArea } from '../../store/uiStore'
+import { exportPresets, type ExportPreset } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
@@ -67,6 +68,7 @@ export function KeybindSettings(): React.ReactElement | null {
   const setExportArea = useUIStore((s) => s.setExportArea)
   const includeCommentsInExport = useUIStore((s) => s.includeCommentsInExport)
   const setIncludeCommentsInExport = useUIStore((s) => s.setIncludeCommentsInExport)
+  const applyExportPreset = useUIStore((s) => s.applyExportPreset)
   const canvasBackground = useUIStore((s) => s.canvasBackground)
   const setCanvasBackground = useUIStore((s) => s.setCanvasBackground)
   const boards = useCanvasStore((s) => s.boards)
@@ -179,6 +181,12 @@ export function KeybindSettings(): React.ReactElement | null {
     } finally {
       setExportPreviewBusy(false)
     }
+  }
+
+  const useExportPreset = (preset: ExportPreset): void => {
+    applyExportPreset(preset)
+    setExportPreview(null)
+    setExportPreviewError('')
   }
 
   useEffect(() => {
@@ -439,6 +447,33 @@ export function KeybindSettings(): React.ReactElement | null {
           >
             {exportPreviewBusy ? 'Rendering' : 'Preview'}
           </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
+          {(Object.entries(exportPresets) as [ExportPreset, (typeof exportPresets)[ExportPreset]][]).map(([preset, settings]) => {
+            const active = exportArea === settings.area
+              && exportScale === settings.scale
+              && includeCommentsInExport === settings.includeComments
+            return (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => useExportPreset(preset)}
+                aria-pressed={active}
+                title={`${settings.area} / ${settings.scale}x / comments ${settings.includeComments ? 'included' : 'hidden'}`}
+                style={{
+                  ...btnStyle,
+                  width: '100%',
+                  minHeight: 28,
+                  fontSize: 10,
+                  background: active ? 'var(--accent)' : 'var(--bg-canvas)',
+                  color: active ? 'var(--bg-ui)' : 'var(--text-primary)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {settings.label}
+              </button>
+            )
+          })}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
