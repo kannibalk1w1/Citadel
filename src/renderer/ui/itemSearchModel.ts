@@ -7,6 +7,14 @@ export type SearchResult = {
   haystack: string
 }
 
+type ParsedSearchQuery = {
+  text: string
+  types: string[]
+  tags: string[]
+  states: string[]
+  assets: string[]
+}
+
 function basename(value: string | undefined): string {
   if (!value) return ''
   const clean = value.split('?')[0].replace(/\\/g, '/')
@@ -70,10 +78,60 @@ export function buildSearchResult(item: CanvasItem): SearchResult {
   return { item, label, detail, haystack }
 }
 
+function parseSearchQuery(query: string): ParsedSearchQuery {
+  const parsed: ParsedSearchQuery = { text: '', types: [], tags: [], states: [], assets: [] }
+  const text: string[] = []
+
+  query.trim().toLowerCase().split(/\s+/).filter(Boolean).forEach((token) => {
+    const [prefix, ...valueParts] = token.split(':')
+    const value = valueParts.join(':')
+    if (!value) {
+      text.push(token)
+      return
+    }
+
+    if (prefix === 'type') parsed.types.push(value)
+    else if (prefix === 'tag') parsed.tags.push(value)
+    else if (prefix === 'is') parsed.states.push(value)
+    else if (prefix === 'has') parsed.assets.push(value)
+    else text.push(token)
+  })
+
+  parsed.text = text.join(' ')
+  return parsed
+}
+
+function matchesSearchQuery(result: SearchResult, parsed: ParsedSearchQuery): boolean {
+  const item = result.item
+  const isComment = isCommentItem(item)
+
+  if (parsed.text && !result.haystack.includes(parsed.text)) return false
+  if (parsed.types.length && !parsed.types.some((type) => type === item.type || (type === 'comment' && isComment))) return false
+  if (parsed.tags.length && !parsed.tags.every((tag) => item.tags.some((itemTag) => itemTag.toLowerCase() === tag))) return false
+
+  if (!parsed.states.every((state) => {
+    if (state === 'hidden') return item.visible === false
+    if (state === 'visible') return item.visible !== false
+    if (state === 'locked') return item.locked
+    if (state === 'unlocked') return !item.locked
+    if (state === 'comment') return isComment
+    return true
+  })) return false
+
+  if (!parsed.assets.every((asset) => {
+    if (asset === 'link') return Boolean(item.link)
+    if (asset === 'src' || asset === 'asset') return Boolean(item.src || item.meta?.srcA || item.meta?.srcB)
+    if (asset === 'tag' || asset === 'tags') return item.tags.length > 0
+    return true
+  })) return false
+
+  return true
+}
+
 export function getSearchResults(items: CanvasItem[], query: string, limit = 30): SearchResult[] {
-  const normalizedQuery = query.trim().toLowerCase()
-  if (!normalizedQuery) return []
-  return items.map(buildSearchResult).filter((result) => result.haystack.includes(normalizedQuery)).slice(0, limit)
+  const parsed = parseSearchQuery(query)
+  if (!parsed.text && !parsed.types.length && !parsed.tags.length && !parsed.states.length && !parsed.assets.length) return []
+  return items.map(buildSearchResult).filter((result) => matchesSearchQuery(result, parsed)).slice(0, limit)
 }
 
 export function getCommentResults(items: CanvasItem[], limit = 20): SearchResult[] {

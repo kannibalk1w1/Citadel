@@ -51,4 +51,24 @@ describe('itemSearchModel', () => {
 
     expect(results.map((result) => result.item.id)).toEqual(['comment-1'])
   })
+
+  it('filters by item type and tag tokens', () => {
+    const results = getSearchResults([
+      { ...baseItem, id: 'image-1', type: 'image', tags: ['castle', 'stone'], src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'image-2', type: 'image', tags: ['forest'], src: 'C:/refs/tree.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', tags: ['castle'], meta: { content: 'Gate notes' } },
+    ], 'type:image tag:castle')
+
+    expect(results.map((result) => result.item.id)).toEqual(['image-1'])
+  })
+
+  it('filters by state and asset tokens', () => {
+    const results = getSearchResults([
+      { ...baseItem, id: 'linked-hidden', visible: false, link: 'https://example.com' },
+      { ...baseItem, id: 'linked-visible', link: 'https://example.com' },
+      { ...baseItem, id: 'hidden-no-link', visible: false },
+    ], 'is:hidden has:link')
+
+    expect(results.map((result) => result.item.id)).toEqual(['linked-hidden'])
+  })
 })

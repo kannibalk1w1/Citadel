@@ -4,6 +4,17 @@ import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { getCommentResults, getSearchResults, type SearchResult } from './itemSearchModel'
 
+const SEARCH_CHIPS = [
+  { label: 'Images', token: 'type:image' },
+  { label: 'Notes', token: 'type:sticky' },
+  { label: 'Comments', token: 'type:comment' },
+  { label: 'Hidden', token: 'is:hidden' },
+  { label: 'Locked', token: 'is:locked' },
+  { label: 'Linked', token: 'has:link' },
+  { label: 'Assets', token: 'has:src' },
+  { label: 'Tagged', token: 'has:tag' },
+] as const
+
 export function TagSearch(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.tagSearch)
   const searchQuery = useUIStore((s) => s.searchQuery)
@@ -43,6 +54,11 @@ export function TagSearch(): React.ReactElement | null {
       }
     }, 900)
     close()
+  }
+
+  const appendToken = (token: string) => {
+    const tokens = searchQuery.trim().split(/\s+/).filter(Boolean)
+    if (!tokens.includes(token)) setSearchQuery([...tokens, token].join(' '))
   }
 
   return (
@@ -96,6 +112,32 @@ export function TagSearch(): React.ReactElement | null {
         >
           x
         </button>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+        {SEARCH_CHIPS.map((chip) => {
+          const active = searchQuery.toLowerCase().split(/\s+/).includes(chip.token)
+          return (
+            <button
+              key={chip.token}
+              type="button"
+              onClick={() => appendToken(chip.token)}
+              style={{
+                background: active ? 'var(--accent)' : 'var(--bg-ui)',
+                border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: 3,
+                color: active ? 'var(--bg-canvas)' : 'var(--text-secondary)',
+                cursor: active ? 'default' : 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                padding: '3px 5px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {chip.label}
+            </button>
+          )
+        })}
       </div>
 
       {query && results.length === 0 && (
