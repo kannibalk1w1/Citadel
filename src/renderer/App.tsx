@@ -8,6 +8,7 @@ import { CanvasStage } from './canvas/CanvasStage'
 import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
 import { BoardNavigator } from './ui/BoardNavigator'
+import { AssetLibrary } from './ui/AssetLibrary'
 import { Minimap } from './ui/Minimap'
 import { ContextMenu } from './ui/ContextMenu'
 import { RecordingBar } from './ui/RecordingBar'
@@ -791,6 +792,7 @@ export default function App(): React.ReactElement {
       )}
       {!presentationMode && <BoardTabs />}
       {!presentationMode && <BoardNavigator />}
+      {!presentationMode && <AssetLibrary />}
       {!presentationMode && <Toolbar />}
       {/* Canvas viewport — inset from the right sidebar */}
       <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: presentationMode ? 0 : 'var(--sidebar-right-w)' }}>
