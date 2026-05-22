@@ -24,7 +24,7 @@ export function SelectionBox(): React.ReactElement | null {
       height={maxY - minY + 8}
       stroke="var(--accent)"
       strokeWidth={1}
-      fill="rgba(200,169,110,0.04)"
+      fill="rgba(185,148,85,0.04)"
       dash={[6, 3]}
       listening={false}
     />

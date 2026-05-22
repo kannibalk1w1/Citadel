@@ -91,7 +91,7 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
           <polygon points="4,0 8,4 4,8 0,4" fill="currentColor" />
         </marker>
         <marker id="arrow-rubber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#c8a96e" opacity="0.6" />
+          <path d="M0,0 L0,6 L8,3 z" fill="#b99455" opacity="0.6" />
         </marker>
       </defs>
 
@@ -164,7 +164,7 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
         <line
           x1={rubberBand.x1} y1={rubberBand.y1}
           x2={rubberBand.x2} y2={rubberBand.y2}
-          stroke="#c8a96e"
+          stroke="#b99455"
           strokeWidth={1.5}
           strokeDasharray="6 4"
           opacity={0.6}

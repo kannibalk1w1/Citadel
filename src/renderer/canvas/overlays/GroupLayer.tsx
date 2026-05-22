@@ -45,7 +45,7 @@ export function GroupLayer({ viewport }: Props): React.ReactElement {
             x={sx} y={sy}
             width={sw} height={sh}
             fill="none"
-            stroke="#c8a96e"
+            stroke="#b99455"
             strokeWidth={1}
             strokeDasharray="5 4"
             strokeOpacity={0.4}

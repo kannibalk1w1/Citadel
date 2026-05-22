@@ -14,19 +14,19 @@ const MAP_H = 112
 const SIDEBAR_W = 164
 
 function itemColour(type: string, selected: boolean, meta?: Record<string, unknown>): string {
-  if (selected) return '#c8a96e'
+  if (selected) return '#b99455'
   switch (type) {
     case 'image':
     case 'gif':        return '#4a5260'
     case 'video':
     case 'youtube':    return '#35475a'
-    case 'sticky':     return (meta?.color as string) ?? '#3a3328'
-    case 'text':       return '#3d4938'
-    case 'swatch':     return '#6a5130'
-    case 'comparison': return '#584037'
-    case 'audio':      return '#4c3b5c'
+    case 'sticky':     return (meta?.color as string) ?? '#1e1b18'
+    case 'text':       return '#34402f'
+    case 'swatch':     return '#5b4422'
+    case 'comparison': return '#40322b'
+    case 'audio':      return '#3b3047'
     case 'model3d':    return '#3d4b58'
-    default:           return '#3a332a'
+    default:           return '#2a2722'
   }
 }
 
@@ -51,7 +51,7 @@ export function Minimap(): React.ReactElement | null {
     if (!ctx) return
 
     ctx.clearRect(0, 0, MAP_W, MAP_H)
-    ctx.fillStyle = '#221d18'
+    ctx.fillStyle = '#161514'
     ctx.fillRect(0, 0, MAP_W, MAP_H)
 
     const canvasW = window.innerWidth - SIDEBAR_W
@@ -60,7 +60,7 @@ export function Minimap(): React.ReactElement | null {
     modelRef.current = model
 
     if (items.length === 0) {
-      ctx.fillStyle = '#5c5040'
+      ctx.fillStyle = '#675f54'
       ctx.font = '9px JetBrains Mono, monospace'
       ctx.textAlign = 'center'
       ctx.fillText('empty', MAP_W / 2, MAP_H / 2 + 3)
@@ -76,9 +76,9 @@ export function Minimap(): React.ReactElement | null {
       ctx.strokeRect(rect.x, rect.y, rect.width, rect.height)
     }
 
-    ctx.fillStyle = 'rgba(200,169,110,0.08)'
+    ctx.fillStyle = 'rgba(185,148,85,0.08)'
     ctx.fillRect(model.viewport.x, model.viewport.y, model.viewport.width, model.viewport.height)
-    ctx.strokeStyle = 'rgba(200,169,110,0.85)'
+    ctx.strokeStyle = 'rgba(185,148,85,0.85)'
     ctx.lineWidth = 1.2
     ctx.strokeRect(model.viewport.x, model.viewport.y, model.viewport.width, model.viewport.height)
     ctx.strokeStyle = 'rgba(255,255,255,0.22)'
@@ -166,11 +166,11 @@ export function Minimap(): React.ReactElement | null {
         right: 'calc(var(--sidebar-right-w) + 8px)',
         width: MAP_W,
         height: MAP_H,
-        border: '1px solid rgba(200,169,110,0.25)',
+        border: '1px solid rgba(185,148,85,0.25)',
         borderRadius: 4,
         overflow: 'hidden',
         zIndex: 30,
-        background: '#221d18',
+        background: '#161514',
         boxShadow: '0 4px 16px rgba(0,0,0,0.8)',
       }}
     >

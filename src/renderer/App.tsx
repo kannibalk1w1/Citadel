@@ -770,7 +770,7 @@ export default function App(): React.ReactElement {
             </span>
           </span>
           <button onClick={handleRecoveryRestore} style={{
-            background: 'var(--accent)', color: '#0f0d0b', border: 'none',
+            background: 'var(--accent)', color: '#070808', border: 'none',
             borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
             fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
           }}>Restore</button>

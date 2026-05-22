@@ -4,7 +4,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import { useHistoryStore } from '../store/historyStore'
 
-const STICKY_COLORS = ['#2a2820', '#1a1f2a', '#1f2a1a', '#2a1a1a', '#2a2a1a', '#1a2a27'] as const
+const STICKY_COLORS = ['#1e1b18', '#171d22', '#1a211a', '#241919', '#211e16', '#172220'] as const
 const FONT_SIZES = [
   { label: 'S', value: 12 },
   { label: 'M', value: 14 },
@@ -130,7 +130,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             ))}
             <input
               type="color"
-              value={(pendingMeta.color as string) ?? '#2a2820'}
+              value={(pendingMeta.color as string) ?? '#1e1b18'}
               onChange={(e) => applyMeta({ color: e.target.value })}
               style={{
                 width: 16, height: 16,
@@ -151,7 +151,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
                   style={{
                     width: 22, height: 22,
                     background: active ? 'var(--accent)' : 'var(--bg-canvas)',
-                    color: active ? '#0f0d0b' : 'var(--text-primary)',
+                    color: active ? '#070808' : 'var(--text-primary)',
                     border: '1px solid var(--border)',
                     borderRadius: 3,
                     cursor: 'pointer',
@@ -178,7 +178,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
                   style={{
                     width: 22, height: 22,
                     background: active ? 'var(--accent)' : 'var(--bg-canvas)',
-                    color: active ? '#0f0d0b' : 'var(--text-primary)',
+                    color: active ? '#070808' : 'var(--text-primary)',
                     border: '1px solid var(--border)',
                     borderRadius: 3,
                     cursor: 'pointer',
@@ -200,7 +200,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             style={{
               width: 22, height: 22,
               background: pendingMeta.fontStyle === 'bold' ? 'var(--accent)' : 'var(--bg-canvas)',
-              color: pendingMeta.fontStyle === 'bold' ? '#0f0d0b' : 'var(--text-primary)',
+              color: pendingMeta.fontStyle === 'bold' ? '#070808' : 'var(--text-primary)',
               border: '1px solid var(--border)',
               borderRadius: 3,
               cursor: 'pointer',
@@ -243,8 +243,8 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             ? 'var(--text-primary)'
             : ((item.meta?.color as string) ?? 'var(--text-primary)'),
           background: isSticky
-            ? ((pendingMeta.color as string) ?? '#2a2820')
-            : 'rgba(15,13,11,0.85)',
+            ? ((pendingMeta.color as string) ?? '#1e1b18')
+            : 'rgba(7,8,8,0.88)',
           border: '1.5px solid var(--accent)',
           borderRadius: isSticky ? 4 : 2,
           padding: isSticky ? 8 : '2px 4px',

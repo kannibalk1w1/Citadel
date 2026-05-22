@@ -21,14 +21,14 @@ const inputStyle: React.CSSProperties = {
 }
 
 const STICKY_COLORS = [
-  '#2a2820', '#1e2a1e', '#1e1e2a', '#2a1e2a',
-  '#2a1e1e', '#2a241a', '#1a2428', '#282a1e',
+  '#1e1b18', '#1a211a', '#171d22', '#211721',
+  '#241919', '#211e16', '#172220', '#202216',
 ]
 
 const STICKY_COLORS_DISPLAY: Record<string, string> = {
-  '#2a2820': '#c8a150', '#1e2a1e': '#5aad6e', '#1e1e2a': '#6e7acc',
-  '#2a1e2a': '#a06aac', '#2a1e1e': '#b04040', '#2a241a': '#c89050',
-  '#1a2428': '#4098b0', '#282a1e': '#8aaa40',
+  '#1e1b18': '#b99455', '#1a211a': '#6f8a5f', '#171d22': '#65798a',
+  '#211721': '#8a6384', '#241919': '#8a3d3d', '#211e16': '#9a7a45',
+  '#172220': '#4f8276', '#202216': '#7b8745',
 }
 
 type AlignAction = { label: string; action: string; title: string }
@@ -49,7 +49,7 @@ const ALIGN_ROWS: AlignAction[][] = [
 
 function cssVarToHex(val: string): string {
   if (val.startsWith('#')) return val
-  return '#e8ddd0'
+  return '#e3ded4'
 }
 
 function isCommentItem(item: CanvasItem): boolean {
@@ -621,7 +621,7 @@ export function ItemProperties(): React.ReactElement | null {
               checked={!!item.tint}
               onChange={(e) => {
                 if (e.target.checked) {
-                  update({ tint: { color: '#c8a96e', opacity: 0.25 } })
+                  update({ tint: { color: '#b99455', opacity: 0.25 } })
                 } else {
                   update({ tint: undefined })
                 }
@@ -702,7 +702,7 @@ export function ItemProperties(): React.ReactElement | null {
                   width: 22,
                   height: 22,
                   borderRadius: 3,
-                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? '#c8a96e' : 'transparent'}`,
+                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? '#b99455' : 'transparent'}`,
                   background: bg,
                   cursor: 'pointer',
                   padding: 0,
@@ -712,7 +712,7 @@ export function ItemProperties(): React.ReactElement | null {
             ))}
             <input
               type="color"
-              value={(item.meta?.color as string) ?? '#2a2820'}
+              value={(item.meta?.color as string) ?? '#1e1b18'}
               onChange={(e) => updateMeta({ color: e.target.value })}
               title="Custom color"
               style={{ width: 22, height: 22, borderRadius: 3, border: '1px solid var(--border)', cursor: 'pointer', padding: 0, background: 'none' }}
@@ -731,7 +731,7 @@ export function ItemProperties(): React.ReactElement | null {
           <Field label="Color">
             <input
               type="color"
-              value={cssVarToHex((item.meta?.color as string) ?? '#e8ddd0')}
+              value={cssVarToHex((item.meta?.color as string) ?? '#e3ded4')}
               onChange={(e) => updateMeta({ color: e.target.value })}
               style={{ ...inputStyle, padding: '2px', cursor: 'pointer', height: 24 }}
             />

@@ -19,11 +19,11 @@ export function SearchHighlight(): React.ReactElement | null {
       width={item.width + pad * 2}
       height={item.height + pad * 2}
       rotation={item.rotation}
-      stroke="#c8a96e"
+      stroke="#b99455"
       strokeWidth={2 / viewport.scale}
       dash={[8 / viewport.scale, 5 / viewport.scale]}
       shadowEnabled
-      shadowColor="rgba(200,169,110,0.85)"
+      shadowColor="rgba(185,148,85,0.85)"
       shadowBlur={16 / viewport.scale}
       shadowOpacity={0.9}
       listening={false}

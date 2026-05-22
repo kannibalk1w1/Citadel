@@ -115,10 +115,10 @@ export function TextItem({ item }: Props): React.ReactElement {
           x={item.x - 4} y={item.y - 4}
           width={item.width + 8} height={item.height + 8}
           fill={undefined}
-          stroke="#c8a96e"
+          stroke="#b99455"
           strokeWidth={1.5}
           shadowEnabled
-          shadowColor="rgba(200,169,110,0.7)"
+          shadowColor="rgba(185,148,85,0.7)"
           shadowBlur={16}
           cornerRadius={2}
           listening={false}
@@ -137,7 +137,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         fontFamily="var(--font-body)"
         fontStyle={content ? fontStyle : 'normal'}
         align={align}
-        fill={content ? color : '#5c5040'}
+        fill={content ? color : '#675f54'}
         wrap="word"
         draggable={toolMode === 'select' && !item.locked}
         onClick={handleClick}

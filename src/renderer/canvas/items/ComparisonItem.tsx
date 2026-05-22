@@ -221,7 +221,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
             <Rect
               x={0} y={0}
               width={item.width} height={item.height}
-              fill="#1a1612"
+              fill="#10100f"
               listening={false}
             />
             <Text
@@ -232,7 +232,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
               align="center"
               text="B — set image"
               fontSize={11}
-              fill="#5c5040"
+              fill="#675f54"
               fontFamily="Inter, DM Sans, sans-serif"
               listening={false}
             />
@@ -259,7 +259,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
             <Rect
               x={0} y={0}
               width={splitPx} height={item.height}
-              fill="#221d18"
+              fill="#161514"
               listening={false}
             />
             <Text
@@ -270,7 +270,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
               align="center"
               text="A — set image"
               fontSize={11}
-              fill="#5c5040"
+              fill="#675f54"
               fontFamily="Inter, DM Sans, sans-serif"
               listening={false}
             />
@@ -280,7 +280,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         {/* ── Divider line ── */}
         <Line
           points={[splitPx, 0, splitPx, item.height]}
-          stroke="#c8a96e"
+          stroke="#b99455"
           strokeWidth={2}
           listening={false}
         />
@@ -290,7 +290,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
           x={splitPx}
           y={item.height / 2}
           radius={10}
-          fill="#c8a96e"
+          fill="#b99455"
           listening={false}
         />
         <Text
@@ -328,10 +328,10 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#c8a96e"
+            stroke="#b99455"
             strokeWidth={2}
             shadowEnabled
-            shadowColor="rgba(200,169,110,0.7)"
+            shadowColor="rgba(185,148,85,0.7)"
             shadowBlur={20}
             shadowOpacity={0.8}
             listening={false}

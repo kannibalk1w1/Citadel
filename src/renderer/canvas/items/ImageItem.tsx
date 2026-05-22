@@ -50,7 +50,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           fromAnchor: 'auto',
           toAnchor: 'auto',
           style: 'bezier',
-          color: '#c8a96e',
+          color: '#b99455',
           width: 1.5,
           arrowHead: 'arrow',
           dashed: false,
@@ -158,10 +158,10 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         rotation={item.rotation}
         opacity={item.opacity}
         draggable={toolMode === 'select' && !item.locked}
-        stroke={isConnectSource || isSelected ? '#c8a96e' : undefined}
+        stroke={isConnectSource || isSelected ? '#b99455' : undefined}
         strokeWidth={isConnectSource || isSelected ? 2 : 0}
         shadowEnabled={isSelected}
-        shadowColor="rgba(200,169,110,0.7)"
+        shadowColor="rgba(185,148,85,0.7)"
         shadowBlur={20}
         shadowOpacity={0.8}
         onClick={handleClick}

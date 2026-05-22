@@ -31,7 +31,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
     }
   }, [isSelected])
 
-  const colors = (item.meta?.colors as string[]) ?? ['#c8a96e']
+  const colors = (item.meta?.colors as string[]) ?? ['#b99455']
   // Compute pixel-perfect tile boundaries to avoid sub-pixel gaps
   const n = Math.max(1, colors.length)
   const swatchX = (i: number) => Math.round((item.width * i) / n)
@@ -157,10 +157,10 @@ export function SwatchItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#c8a96e"
+            stroke="#b99455"
             strokeWidth={1.5}
             shadowEnabled
-            shadowColor="rgba(200,169,110,0.7)"
+            shadowColor="rgba(185,148,85,0.7)"
             shadowBlur={16}
             shadowOpacity={0.8}
             listening={false}

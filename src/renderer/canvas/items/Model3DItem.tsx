@@ -21,7 +21,7 @@ export function Model3DItem({ item }: Props): React.ReactElement {
     const h = mountRef.current.clientHeight || item.height
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0f0d0b)
+    scene.background = new THREE.Color(0x070808)
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
     camera.position.set(0, 1, 3)

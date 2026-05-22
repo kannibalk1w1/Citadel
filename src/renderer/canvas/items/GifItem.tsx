@@ -96,10 +96,10 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity}
-        stroke={isSelected ? '#c8a96e' : undefined}
+        stroke={isSelected ? '#b99455' : undefined}
         strokeWidth={isSelected ? 2 : 0}
         shadowEnabled={isSelected}
-        shadowColor="rgba(200,169,110,0.7)"
+        shadowColor="rgba(185,148,85,0.7)"
         shadowBlur={20}
         shadowOpacity={0.8}
         draggable={toolMode === 'select' && !item.locked}
@@ -114,7 +114,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
               const conn: Connection = {
                 id: nanoid(), fromId: ui.connectFromId, toId: item.id,
                 fromAnchor: 'auto', toAnchor: 'auto', style: 'bezier',
-                color: '#c8a96e', width: 1.5, arrowHead: 'arrow', dashed: false,
+                color: '#b99455', width: 1.5, arrowHead: 'arrow', dashed: false,
               }
               canvas.addConnection(activeBoardId, conn)
               useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)

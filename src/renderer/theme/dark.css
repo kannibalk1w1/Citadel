@@ -4,24 +4,24 @@
 
 :root {
   /* Backgrounds */
-  --bg-canvas:  #0f0d0b;
-  --bg-ui:      #1a1612;
-  --bg-panel:   #221d18;
-  --bg-hover:   #2e2820;
+  --bg-canvas:  #070808;
+  --bg-ui:      #10100f;
+  --bg-panel:   #161514;
+  --bg-hover:   #20201d;
 
   /* Text */
-  --text-primary:   #e8ddd0;
-  --text-secondary: #a09080;
-  --text-muted:     #5c5040;
-  --text-accent:    #c8a96e;
+  --text-primary:   #e3ded4;
+  --text-secondary: #a59b8e;
+  --text-muted:     #675f54;
+  --text-accent:    #b99455;
 
   /* Accent */
-  --accent:        #c8a96e;
-  --accent-danger: #8b2020;
+  --accent:        #b99455;
+  --accent-danger: #6f1717;
 
   /* Borders */
-  --border:       #2e2820;
-  --border-muted: #1e1a16;
+  --border:       #2a2722;
+  --border-muted: #181714;
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;
@@ -42,8 +42,8 @@
   --z-modal:  100;
 
   /* Shadows */
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.7);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.62);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.78);
 
   /* Motion */
   --transition-fast: 80ms ease;

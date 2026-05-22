@@ -37,14 +37,14 @@ export function StickyItem({ item }: Props): React.ReactElement {
     }
   }, [isSelected])
 
-  const bg = (item.meta?.color as string) ?? '#2a2820'
+  const bg = (item.meta?.color as string) ?? '#1e1b18'
   const content = (item.meta?.content as string) ?? ''
   const fontSize = (item.meta?.fontSize as number) ?? 14
   const align = (item.meta?.align as string) ?? 'left'
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
   const isComment = item.meta?.kind === 'comment'
   const isAttachedComment = isComment && typeof item.meta?.attachedTo === 'string'
-  const strokeColor = isSelected ? '#c8a96e' : isComment ? '#5a4730' : undefined
+  const strokeColor = isSelected ? '#b99455' : isComment ? '#5a4730' : undefined
   const textY = isComment ? 25 : 8
   const textHeight = item.height - (isComment ? 33 : 16)
 
@@ -138,7 +138,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
             item.x,
             item.y + item.height / 2,
           ]}
-          stroke={isSelected ? '#c8a96e' : '#5a4730'}
+          stroke={isSelected ? '#b99455' : '#5a4730'}
           strokeWidth={isSelected ? 1.4 : 1}
           opacity={0.85}
           listening={false}
@@ -178,7 +178,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
           stroke={strokeColor}
           strokeWidth={isSelected ? 2 : isComment ? 1 : 0}
           shadowEnabled={isSelected}
-          shadowColor="rgba(200,169,110,0.7)"
+          shadowColor="rgba(185,148,85,0.7)"
           shadowBlur={20}
           shadowOpacity={0.8}
         />
@@ -189,7 +189,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               y={0}
               width={item.width}
               height={18}
-              fill="#1a1612"
+              fill="#10100f"
               opacity={item.opacity}
               cornerRadius={[8, 8, 0, 0]}
             />
@@ -198,7 +198,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               y={7}
               width={6}
               height={6}
-              fill={isAttachedComment ? '#c8a96e' : '#505050'}
+              fill={isAttachedComment ? '#b99455' : '#505050'}
               opacity={item.opacity}
               cornerRadius={3}
             />
@@ -208,7 +208,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               width={item.width - 28}
               height={12}
               text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
-              fill="#c8a96e"
+              fill="#b99455"
               fontSize={8}
               fontFamily="var(--font-mono)"
               wrap="none"
@@ -220,7 +220,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
           width={item.width - 16}
           height={textHeight}
           text={content || 'Double-click to edit…'}
-          fill={content ? 'var(--text-primary)' : '#5c5040'}
+          fill={content ? 'var(--text-primary)' : '#675f54'}
           fontSize={fontSize}
           fontStyle={fontStyle}
           fontFamily="var(--font-body)"

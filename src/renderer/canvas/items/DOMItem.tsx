@@ -62,7 +62,7 @@ export function DOMItem({ item, children, style }: Props): React.ReactElement {
             position: 'absolute',
             top: 4,
             right: 4,
-            color: '#c8a96e',
+            color: '#b99455',
             fontSize: 14,
             lineHeight: 1,
             textShadow: '0 1px 4px rgba(0,0,0,0.85)',

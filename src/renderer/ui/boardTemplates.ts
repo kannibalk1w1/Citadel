@@ -42,7 +42,7 @@ function baseItem(id: string, type: CanvasItem['type'], x: number, y: number, wi
   }
 }
 
-function sticky(id: string, x: number, y: number, content: string, color = '#2a241a', meta: Record<string, unknown> = {}): CanvasItem {
+function sticky(id: string, x: number, y: number, content: string, color = '#211e16', meta: Record<string, unknown> = {}): CanvasItem {
   return baseItem(id, 'sticky', x, y, 220, 120, {
     content,
     color,
@@ -74,7 +74,7 @@ export function createBoardTemplate(id: BoardTemplateId, makeId: IdFactory): Boa
     const hero = baseItem(makeId(), 'image', -360, -160, 320, 220, { placeholder: 'hero reference' })
     const detail = baseItem(makeId(), 'image', 0, -160, 220, 150, { placeholder: 'detail reference' })
     const note = sticky(makeId(), 260, -160, 'Notes, silhouettes, materials')
-    const palette = baseItem(makeId(), 'swatch', 0, 40, 300, 90, { colors: ['#0f0d0b', '#c8a96e', '#8b2020', '#e8ddd0'] })
+    const palette = baseItem(makeId(), 'swatch', 0, 40, 300, 90, { colors: ['#070808', '#b99455', '#6f1717', '#e3ded4'] })
     return {
       name: 'Moodboard',
       items: [title, hero, detail, note, palette],
@@ -96,9 +96,9 @@ export function createBoardTemplate(id: BoardTemplateId, makeId: IdFactory): Boa
   }
 
   const title = text(makeId(), -380, -240, 'Storyboard')
-  const beat1 = sticky(makeId(), -380, -120, 'Beat 1', '#2a241a', { presentationOrder: 1 })
-  const beat2 = sticky(makeId(), -100, -120, 'Beat 2', '#2a241a', { presentationOrder: 2 })
-  const beat3 = sticky(makeId(), 180, -120, 'Beat 3', '#2a241a', { presentationOrder: 3 })
+  const beat1 = sticky(makeId(), -380, -120, 'Beat 1', '#211e16', { presentationOrder: 1 })
+  const beat2 = sticky(makeId(), -100, -120, 'Beat 2', '#211e16', { presentationOrder: 2 })
+  const beat3 = sticky(makeId(), 180, -120, 'Beat 3', '#211e16', { presentationOrder: 3 })
   return {
     name: 'Storyboard',
     items: [title, beat1, beat2, beat3],

@@ -95,12 +95,12 @@ export function LassoOverlay(): React.ReactElement | null {
       {points.length > 2 && (
         <Line
           points={points}
-          stroke="#c8a96e"
+          stroke="#b99455"
           strokeWidth={strokeW}
           closed
           dash={[dashLen, dashLen]}
           listening={false}
-          fill="rgba(200,169,110,0.08)"
+          fill="rgba(185,148,85,0.08)"
         />
       )}
     </>

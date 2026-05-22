@@ -109,7 +109,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'sticky' as const,
         x: cx - 100, y: cy - 80, width: 200, height: 160,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { content: '', color: '#2a2820' },
+        tags: [], meta: { content: '', color: '#1e1b18' },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
@@ -139,7 +139,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'swatch' as const,
         x: cx - 150, y: cy - 40, width: 300, height: 80,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { colors: ['#c87060', '#c8a060', '#7a9e7e', '#60a8c8', '#9a70b0'] },
+        tags: [], meta: { colors: ['#070808', '#b99455', '#6f1717', '#d8d2c8', '#3f4a46'] },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)

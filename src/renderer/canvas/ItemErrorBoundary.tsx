@@ -36,7 +36,7 @@ export class ItemErrorBoundary extends React.Component<Props, State> {
             text="render error"
             fontSize={10}
             fontFamily="JetBrains Mono, monospace"
-            fill="#8b2020"
+            fill="#6f1717"
           />
         </>
       )

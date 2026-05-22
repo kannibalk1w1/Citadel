@@ -35,7 +35,7 @@ const item = {
   x: 0, y: 0, width: 200, height: 150,
   rotation: 0, zIndex: 1, locked: false, visible: true, opacity: 1,
   tags: [],
-  meta: { content: 'hello', color: '#2a2820', fontSize: 14, align: 'left', fontStyle: 'normal' },
+  meta: { content: 'hello', color: '#1e1b18', fontSize: 14, align: 'left', fontStyle: 'normal' },
 }
 
 beforeEach(() => {

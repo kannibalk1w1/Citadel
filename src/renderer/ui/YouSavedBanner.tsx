@@ -38,9 +38,9 @@ export function YouSavedBanner(): React.ReactElement | null {
             fontFamily: "'Cinzel', serif",
             fontWeight: 900,
             fontSize: 52,
-            color: '#c8a96e',
+            color: '#b99455',
             letterSpacing: '0.18em',
-            textShadow: '0 0 40px rgba(200,169,110,0.55), 0 0 80px rgba(200,169,110,0.25)',
+            textShadow: '0 0 40px rgba(185,148,85,0.55), 0 0 80px rgba(185,148,85,0.25)',
             userSelect: 'none',
           }}
         >

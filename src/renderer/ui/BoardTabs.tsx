@@ -11,14 +11,14 @@ function itemColour(type: string, meta?: Record<string, unknown>): string {
     case 'image':
     case 'gif':
     case 'video':
-    case 'youtube':   return '#2a3540'
-    case 'sticky':    return (meta?.color as string) ?? '#2a2820'
-    case 'text':      return '#1e2a1e'
-    case 'swatch':    return '#3a2a1a'
-    case 'comparison': return '#2e2420'
+    case 'youtube':   return '#25313a'
+    case 'sticky':    return (meta?.color as string) ?? '#1e1b18'
+    case 'text':      return '#1a211a'
+    case 'swatch':    return '#342816'
+    case 'comparison': return '#27201c'
     case 'audio':
-    case 'model3d':   return '#2a2035'
-    default:          return '#2e2820'
+    case 'model3d':   return '#211b28'
+    default:          return '#20201d'
   }
 }
 
@@ -30,11 +30,11 @@ function BoardThumbnail({ board, active }: { board: CanvasBoard; active: boolean
     if (!ctx) return
 
     ctx.clearRect(0, 0, THUMB_W, THUMB_H)
-    ctx.fillStyle = '#221d18'
+    ctx.fillStyle = '#161514'
     ctx.fillRect(0, 0, THUMB_W, THUMB_H)
 
     if (board.items.length === 0) {
-      ctx.fillStyle = '#5c5040'
+      ctx.fillStyle = '#675f54'
       ctx.font = '7px JetBrains Mono, monospace'
       ctx.textAlign = 'center'
       ctx.fillText('empty', THUMB_W / 2, THUMB_H / 2 + 3)
@@ -80,8 +80,8 @@ function BoardThumbnail({ board, active }: { board: CanvasBoard; active: boolean
         width: THUMB_W,
         height: THUMB_H,
         borderRadius: 3,
-        border: active ? '1px solid rgba(200,169,110,0.75)' : '1px solid var(--border)',
-        boxShadow: active ? '0 0 8px rgba(200,169,110,0.18)' : 'none',
+        border: active ? '1px solid rgba(185,148,85,0.78)' : '1px solid var(--border)',
+        boxShadow: active ? '0 0 8px rgba(185,148,85,0.2)' : 'none',
         opacity: active ? 1 : 0.72,
         flexShrink: 0,
         pointerEvents: 'none',

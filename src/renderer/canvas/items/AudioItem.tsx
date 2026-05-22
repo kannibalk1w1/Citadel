@@ -36,7 +36,7 @@ export function AudioItem({ item }: Props): React.ReactElement {
     cv.height = h
 
     ctx.clearRect(0, 0, w, h)
-    ctx.fillStyle = '#1a1612'
+    ctx.fillStyle = '#10100f'
     ctx.fillRect(0, 0, w, h)
 
     ctx.lineWidth = 1.5
@@ -67,9 +67,9 @@ export function AudioItem({ item }: Props): React.ReactElement {
     const h = cv.clientHeight || 60
     cv.width = w
     cv.height = h
-    ctx.fillStyle = '#1a1612'
+    ctx.fillStyle = '#10100f'
     ctx.fillRect(0, 0, w, h)
-    ctx.strokeStyle = '#2e2820'
+    ctx.strokeStyle = '#2a2722'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(0, h / 2)
@@ -113,8 +113,8 @@ export function AudioItem({ item }: Props): React.ReactElement {
         x={item.x} y={item.y}
         width={item.width} height={item.height}
         rotation={item.rotation}
-        fill="#1a1612"
-        stroke="#2e2820"
+        fill="#10100f"
+        stroke="#2a2722"
         strokeWidth={1}
         onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
       />
