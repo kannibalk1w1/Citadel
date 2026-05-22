@@ -1,8 +1,10 @@
 import React from 'react'
+import { nanoid } from 'nanoid'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { summarizeBoard } from './boardNavigatorModel'
+import { boardTemplates, createBoardTemplate, type BoardTemplateId } from './boardTemplates'
 
 function Stat({ label, value }: { label: string; value: number }): React.ReactElement {
   return (
@@ -61,6 +63,9 @@ export function BoardNavigator(): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const setActiveBoard = useCanvasStore((s) => s.setActiveBoard)
   const addBoard = useCanvasStore((s) => s.addBoard)
+  const addItem = useCanvasStore((s) => s.addItem)
+  const addConnection = useCanvasStore((s) => s.addConnection)
+  const setViewport = useCanvasStore((s) => s.setViewport)
   const duplicateBoard = useCanvasStore((s) => s.duplicateBoard)
   const removeBoard = useCanvasStore((s) => s.removeBoard)
   const renameBoard = useCanvasStore((s) => s.renameBoard)
@@ -85,6 +90,16 @@ export function BoardNavigator(): React.ReactElement | null {
 
   const createBoard = () => {
     const id = addBoard(`Board ${boards.length + 1}`)
+    setActiveBoard(id)
+    markDirty()
+  }
+
+  const createTemplateBoard = (templateId: BoardTemplateId) => {
+    const template = createBoardTemplate(templateId, nanoid)
+    const id = addBoard(template.name)
+    template.items.forEach((item) => addItem(id, item))
+    template.connections.forEach((connection) => addConnection(id, connection))
+    setViewport(id, template.viewport)
     setActiveBoard(id)
     markDirty()
   }
@@ -128,6 +143,30 @@ export function BoardNavigator(): React.ReactElement | null {
           <IconButton label="+" title="New board" onClick={createBoard} />
           <IconButton label="x" title="Close" onClick={() => closePanel('boardNavigator')} />
         </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+        {boardTemplates.map((template) => (
+          <button
+            key={template.id}
+            type="button"
+            title={template.title}
+            onClick={() => createTemplateBoard(template.id)}
+            style={{
+              height: 24,
+              background: 'var(--bg-ui)',
+              border: '1px solid var(--border)',
+              borderRadius: 3,
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              padding: 0,
+            }}
+          >
+            {template.label}
+          </button>
+        ))}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', paddingRight: 2 }}>
