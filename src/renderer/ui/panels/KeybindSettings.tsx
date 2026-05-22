@@ -5,6 +5,8 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { Actions } from '../../keybinds/actions'
+import { prepareExportCanvas } from '../../export/exportCanvas'
+import { describeExportPreview } from '../../export/exportPreviewModel'
 
 const btnStyle: React.CSSProperties = {
   width: 22, height: 22,
@@ -68,6 +70,7 @@ export function KeybindSettings(): React.ReactElement | null {
   const canvasBackground = useUIStore((s) => s.canvasBackground)
   const setCanvasBackground = useUIStore((s) => s.setCanvasBackground)
   const boards = useCanvasStore((s) => s.boards)
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const markDirty = useHistoryStore((s) => s.markDirty)
   const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
@@ -76,6 +79,9 @@ export function KeybindSettings(): React.ReactElement | null {
   const [cacheMessage, setCacheMessage] = useState('')
   const [relinkBusy, setRelinkBusy] = useState(false)
   const [relinkMessage, setRelinkMessage] = useState('')
+  const [exportPreview, setExportPreview] = useState<{ src: string; width: number; height: number } | null>(null)
+  const [exportPreviewBusy, setExportPreviewBusy] = useState(false)
+  const [exportPreviewError, setExportPreviewError] = useState('')
 
   const preservePaths = useMemo(() => (
     boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
@@ -157,6 +163,21 @@ export function KeybindSettings(): React.ReactElement | null {
     })
     if (result && typeof result === 'object' && 'path' in result && typeof (result as { path?: unknown }).path === 'string') {
       setCanvasBackground({ ...canvasBackground, mode: 'custom', assetPath: (result as { path: string }).path })
+    }
+  }
+
+  const generateExportPreview = async (): Promise<void> => {
+    setExportPreviewBusy(true)
+    setExportPreviewError('')
+    try {
+      const { canvas, width, height } = await prepareExportCanvas()
+      setExportPreview({ src: canvas.toDataURL('image/png'), width, height })
+    } catch (error) {
+      console.error('Failed to generate export preview:', error)
+      setExportPreview(null)
+      setExportPreviewError('preview failed')
+    } finally {
+      setExportPreviewBusy(false)
     }
   }
 
@@ -366,6 +387,59 @@ export function KeybindSettings(): React.ReactElement | null {
         <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Export
         </h3>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '132px 1fr auto',
+          gap: 10,
+          alignItems: 'center',
+          marginBottom: 10,
+          padding: 8,
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          background: 'var(--bg-canvas)',
+        }}>
+          <div style={{
+            width: 132,
+            height: 74,
+            border: '1px solid var(--border)',
+            borderRadius: 3,
+            background: 'var(--bg-ui)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            {exportPreview ? (
+              <img
+                src={exportPreview.src}
+                alt="Export preview"
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+              />
+            ) : (
+              <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                preview
+              </span>
+            )}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              {describeExportPreview({ area: exportArea, scale: exportScale, includeComments: includeCommentsInExport, selectedCount: selectedIds.length })}
+            </div>
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: exportPreviewError ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: 3 }}>
+              {exportPreview
+                ? `${exportPreview.width} x ${exportPreview.height}px source`
+                : exportPreviewError || 'Generate a preview before exporting'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => generateExportPreview().catch(console.error)}
+            disabled={exportPreviewBusy}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: exportPreviewBusy ? 0.45 : 1 }}
+          >
+            {exportPreviewBusy ? 'Rendering' : 'Preview'}
+          </button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
             Quality scale
