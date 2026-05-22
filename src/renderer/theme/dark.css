@@ -5,23 +5,23 @@
 :root {
   /* Backgrounds */
   --bg-canvas:  #070808;
-  --bg-ui:      #10100f;
-  --bg-panel:   #161514;
-  --bg-hover:   #20201d;
+  --bg-ui:      #0a0a09;
+  --bg-panel:   #11100e;
+  --bg-hover:   #191610;
 
   /* Text */
-  --text-primary:   #e3ded4;
-  --text-secondary: #a59b8e;
-  --text-muted:     #675f54;
-  --text-accent:    #b99455;
+  --text-primary:   #e0d6c7;
+  --text-secondary: #b7aa97;
+  --text-muted:     #756858;
+  --text-accent:    #bd9652;
 
   /* Accent */
-  --accent:        #b99455;
+  --accent:        #bd9652;
   --accent-danger: #6f1717;
 
   /* Borders */
-  --border:       #2a2722;
-  --border-muted: #181714;
+  --border:       #3a3020;
+  --border-muted: #211d17;
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;

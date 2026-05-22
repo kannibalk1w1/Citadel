@@ -1,0 +1,77 @@
+:root {
+  --chrome-face: #0d0d0b;
+  --chrome-face-raised: #14120f;
+  --chrome-face-sunk: #070706;
+  --chrome-edge: #3a3020;
+  --chrome-edge-muted: #211d17;
+  --chrome-gold: #bd9652;
+  --chrome-text: #cbbca6;
+}
+
+.app-root {
+  background: #050606;
+}
+
+.citadel-board-tabs {
+  background: linear-gradient(180deg, #151514 0%, var(--chrome-face) 100%) !important;
+  border-bottom: 1px solid var(--chrome-edge) !important;
+  box-shadow: inset 0 -1px 0 rgba(189, 150, 82, 0.18), 0 2px 14px rgba(0, 0, 0, 0.72);
+}
+
+.citadel-board-tab {
+  border-right: 1px solid rgba(58, 48, 32, 0.36);
+}
+
+.citadel-board-tab-active {
+  background: linear-gradient(180deg, #181511 0%, #100f0d 100%) !important;
+  box-shadow: inset 0 -2px 0 var(--chrome-gold);
+}
+
+.citadel-toolbar {
+  background: linear-gradient(180deg, #171511 0%, #0d0d0b 100%) !important;
+  border: 1px solid var(--chrome-edge) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025), 0 12px 32px rgba(0, 0, 0, 0.76) !important;
+}
+
+.citadel-toolbar button,
+.citadel-sidebar button,
+.citadel-panel-button {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.018);
+}
+
+.citadel-toolbar button:hover,
+.citadel-sidebar button:hover {
+  border-color: var(--chrome-gold) !important;
+  color: var(--chrome-gold) !important;
+  background: #191610 !important;
+}
+
+.citadel-sidebar {
+  background: linear-gradient(180deg, #151412 0%, #0c0c0a 100%) !important;
+  border-left: 1px solid var(--chrome-edge) !important;
+  box-shadow: inset 1px 0 0 rgba(189, 150, 82, 0.18), -10px 0 30px rgba(0, 0, 0, 0.62);
+}
+
+.citadel-sidebar-title {
+  color: var(--chrome-gold) !important;
+  text-shadow: 0 0 12px rgba(189, 150, 82, 0.18);
+}
+
+.citadel-sidebar-rule {
+  background: linear-gradient(90deg, transparent, var(--chrome-edge), transparent) !important;
+}
+
+.citadel-sidebar button {
+  background: linear-gradient(180deg, #151310 0%, #0d0c0a 100%) !important;
+  border: 1px solid var(--chrome-edge-muted) !important;
+  border-radius: 4px !important;
+  color: var(--chrome-text) !important;
+}
+
+.citadel-floating-panel,
+.citadel-minimap {
+  background: linear-gradient(180deg, #151310 0%, #0d0c0a 100%) !important;
+  border-color: var(--chrome-edge) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 12px 30px rgba(0, 0, 0, 0.72) !important;
+}

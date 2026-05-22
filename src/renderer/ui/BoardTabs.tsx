@@ -122,6 +122,7 @@ export function BoardTabs(): React.ReactElement {
 
   return (
     <div
+      className="citadel-board-tabs"
       style={{
         position: 'absolute',
         top: 0,
@@ -141,6 +142,7 @@ export function BoardTabs(): React.ReactElement {
       {boards.map((board) => (
         <div
           key={board.id}
+          className={board.id === activeBoardId ? 'citadel-board-tab citadel-board-tab-active' : 'citadel-board-tab'}
           onClick={() => setActiveBoard(board.id)}
           onDoubleClick={() => startEdit(board.id, board.name)}
           style={{

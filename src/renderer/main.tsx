@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './theme/dark.css'
 import './theme/light.css'
+import './theme/gothicChrome.css'
 
 class RootErrorBoundary extends React.Component<
   { children: React.ReactNode },

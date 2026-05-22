@@ -301,6 +301,7 @@ export function Toolbar(): React.ReactElement {
 
   return (
     <div
+      className="citadel-toolbar"
       style={{
         position: 'absolute',
         top: 48,

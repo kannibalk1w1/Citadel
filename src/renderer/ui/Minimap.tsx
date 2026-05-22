@@ -160,6 +160,7 @@ export function Minimap(): React.ReactElement | null {
 
   return (
     <div
+      className="citadel-minimap"
       style={{
         position: 'absolute',
         bottom: 12,

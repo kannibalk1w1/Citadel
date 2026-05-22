@@ -272,6 +272,7 @@ function QuickBtn({
 }: { label: React.ReactNode; title: string; onClick: () => void }): React.ReactElement {
   return (
     <button
+      className="citadel-panel-button"
       title={title}
       onClick={onClick}
       style={{
@@ -415,6 +416,7 @@ export function RightSidebar(): React.ReactElement {
 
   return (
     <div
+      className="citadel-sidebar"
       style={{
         position: 'fixed',
         top: 40,
@@ -437,20 +439,23 @@ export function RightSidebar(): React.ReactElement {
       <MascotPNG />
 
       {/* Label */}
-      <div style={{
-        fontSize: 9,
-        fontFamily: 'var(--font-display)',
-        color: 'var(--text-accent)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.18em',
-        opacity: 0.6,
-        marginTop: -4,
-      }}>
+      <div
+        className="citadel-sidebar-title"
+        style={{
+          fontSize: 9,
+          fontFamily: 'var(--font-display)',
+          color: 'var(--text-accent)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.18em',
+          opacity: 0.72,
+          marginTop: -4,
+        }}
+      >
         Citadel
       </div>
 
       {/* Divider */}
-      <div style={{ width: '100%', height: 1, background: 'var(--border)' }} />
+      <div className="citadel-sidebar-rule" style={{ width: '100%', height: 1, background: 'var(--border)' }} />
 
       {/* Quick actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
