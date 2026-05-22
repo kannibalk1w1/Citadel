@@ -75,3 +75,36 @@
   border-color: var(--chrome-edge) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 12px 30px rgba(0, 0, 0, 0.72) !important;
 }
+
+.citadel-floating-panel input,
+.citadel-floating-panel select,
+.citadel-floating-panel kbd {
+  background: #090908 !important;
+  border-color: var(--chrome-edge-muted) !important;
+}
+
+.citadel-floating-panel button:not([aria-pressed="true"]):hover {
+  color: var(--chrome-gold) !important;
+  border-color: var(--chrome-edge) !important;
+  background: #181510 !important;
+}
+
+.citadel-context-menu {
+  background: linear-gradient(180deg, #16130f 0%, #090908 100%) !important;
+  border-color: var(--chrome-edge) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 16px 36px rgba(0, 0, 0, 0.78) !important;
+}
+
+.citadel-context-menu button:hover {
+  background: #1a1711 !important;
+  color: var(--chrome-gold) !important;
+}
+
+.citadel-list-row {
+  background: rgba(255, 255, 255, 0.012);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.citadel-list-row:hover {
+  background: #181510 !important;
+}

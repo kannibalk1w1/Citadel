@@ -117,6 +117,7 @@ export function BoardNavigator(): React.ReactElement | null {
 
   return (
     <div
+      className="citadel-floating-panel"
       style={{
         position: 'absolute',
         top: 48,
@@ -176,6 +177,7 @@ export function BoardNavigator(): React.ReactElement | null {
           return (
             <div
               key={board.id}
+              className="citadel-list-row"
               onClick={() => setActiveBoard(board.id)}
               style={{
                 display: 'grid',

@@ -18,7 +18,7 @@ export function ConnectionProperties(): React.ReactElement | null {
     updateConnection(activeBoardId, conn.id, patch)
 
   return (
-    <div style={{ position: 'absolute', top: 48, right: 'calc(var(--sidebar-right-w) + 8px)', width: 220, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, zIndex: 'var(--z-panels)', boxShadow: 'var(--shadow-md)' }}>
+    <div className="citadel-floating-panel" style={{ position: 'absolute', top: 48, right: 'calc(var(--sidebar-right-w) + 8px)', width: 220, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, zIndex: 'var(--z-panels)', boxShadow: 'var(--shadow-md)' }}>
       <h3 style={{ margin: '0 0 10px', fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
         Connection
       </h3>

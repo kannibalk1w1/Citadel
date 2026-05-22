@@ -81,7 +81,7 @@ export function RecordingBar(): React.ReactElement | null {
 
   if (isRecording) {
     return (
-      <div style={barStyle}>
+      <div className="citadel-floating-panel" style={barStyle}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-danger)', display: 'inline-block', animation: 'pulse 1s infinite' }} />
         <span style={labelStyle}>Recording</span>
         <button onClick={handleToggleRecord} style={btnStyle}>Stop</button>
@@ -94,6 +94,7 @@ export function RecordingBar(): React.ReactElement | null {
   return (
     <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'] }}>
       <button
+        className="citadel-panel-button"
         onClick={() => setShowList((v) => !v)}
         style={{
           background: 'var(--bg-panel)',
@@ -111,7 +112,7 @@ export function RecordingBar(): React.ReactElement | null {
       </button>
 
       {showList && (
-        <div style={{
+        <div className="citadel-floating-panel" style={{
           marginTop: 4,
           background: 'var(--bg-panel)',
           border: '1px solid var(--border)',

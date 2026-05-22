@@ -198,6 +198,7 @@ function AlignPanel(): React.ReactElement {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   return (
     <div
+      className="citadel-floating-panel"
       style={{
         position: 'absolute',
         top: 48,
@@ -478,6 +479,7 @@ function CommentAttachPanel({
 
   return (
     <div
+      className="citadel-floating-panel"
       style={{
         position: 'absolute',
         top: 48,
@@ -571,6 +573,7 @@ export function ItemProperties(): React.ReactElement | null {
 
   return (
     <div
+      className="citadel-floating-panel"
       style={{
         position: 'absolute',
         top: 48,

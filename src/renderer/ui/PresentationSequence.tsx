@@ -63,6 +63,7 @@ export function PresentationSequence(): React.ReactElement | null {
 
   return (
     <div
+      className="citadel-floating-panel"
       style={{
         position: 'absolute',
         top: 48,
@@ -105,6 +106,7 @@ export function PresentationSequence(): React.ReactElement | null {
             return (
               <div
                 key={item.id}
+                className="citadel-list-row"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '22px 1fr 24px 24px',
