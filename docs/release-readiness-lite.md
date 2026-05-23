@@ -82,6 +82,10 @@ Network or download failures:
 
 - Electron Builder may need cached Electron or builder dependencies. Re-run after network access is restored, or pre-populate the relevant caches.
 
+PowerShell npm execution policy:
+
+- If PowerShell blocks `npm.ps1` with an execution policy error, run the command through the Windows npm shim instead: `npm.cmd run package`. Use the same pattern for builds, for example `npm.cmd run build`.
+
 Locked output files:
 
 - Close running Citadel packaged builds before packaging again.
