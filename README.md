@@ -41,9 +41,12 @@ Dark fantasy. Stone tones, aged gold (`#c8a96e`) text, arcane details. Display f
 npm install
 npm run dev       # Vite + Electron with HMR
 npm run build     # Production build
+npm run package   # Production build + Windows installer/portable artifacts
 npm run test      # Unit tests (Vitest)
 npm run e2e       # End-to-end tests (Playwright)
 ```
+
+For local alpha packaging and smoke testing, see [Citadel Release Readiness Lite](docs/release-readiness-lite.md).
 
 ## Project file format
 
