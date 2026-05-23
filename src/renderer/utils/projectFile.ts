@@ -36,9 +36,12 @@ export type SaveActivity = {
   lastRecoverySaveAt: number | null
 }
 
+export type AutoSaveResult = 'saved' | 'skipped-clean' | 'skipped-unchanged' | 'failed'
+
 // Path of the currently open file (null = unsaved new project)
 let currentFilePath: string | null = null
 let saveActivity: SaveActivity = { lastManualSaveAt: null, lastRecoverySaveAt: null }
+let lastRecoveryProjectPayload: string | null = null
 
 export function getCurrentFilePath(): string | null {
   return currentFilePath
@@ -64,6 +67,14 @@ function setSaveActivity(patch: Partial<SaveActivity>): void {
 function resetSaveActivity(): void {
   saveActivity = { lastManualSaveAt: null, lastRecoverySaveAt: null }
   notifySaveActivityChanged()
+}
+
+function resetRecoveryAutosaveCache(): void {
+  lastRecoveryProjectPayload = null
+}
+
+export function resetRecoveryAutosaveCacheForTests(): void {
+  resetRecoveryAutosaveCache()
 }
 
 function confirmDiscardUnsaved(): boolean {
@@ -102,6 +113,7 @@ function applyProject(file: ProjectFile): void {
     activeBoardId: file.activeBoardId,
     selectedIds: [],
   })
+  resetRecoveryAutosaveCache()
   useHistoryStore.getState().resetHistory()
 }
 
@@ -181,6 +193,7 @@ async function loadProjectFromPath(path: string): Promise<boolean> {
   applyProject(file)
   currentFilePath = path
   resetSaveActivity()
+  resetRecoveryAutosaveCache()
   notifyProjectPathChanged()
   rememberRecentProject(path).catch(console.error)
   return true
@@ -191,6 +204,7 @@ export async function saveProject(path: string): Promise<boolean> {
     await ipc().invoke('file:save', { path, data: serialize() })
     currentFilePath = path
     useHistoryStore.getState().markSaved()
+    resetRecoveryAutosaveCache()
     setSaveActivity({ lastManualSaveAt: Date.now() })
     notifyProjectPathChanged()
     rememberRecentProject(path).catch(console.error)
@@ -237,6 +251,7 @@ export function newProject(): boolean {
   if (!confirmDiscardUnsaved()) return false
   currentFilePath = null
   resetSaveActivity()
+  resetRecoveryAutosaveCache()
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })
   useCanvasStore.getState().initDefaultBoard()
   useHistoryStore.getState().resetHistory()
@@ -247,13 +262,33 @@ export function newProject(): boolean {
 export function loadProjectData(file: ProjectFile): void {
   currentFilePath = null
   resetSaveActivity()
+  resetRecoveryAutosaveCache()
   applyProject(file)
   notifyProjectPathChanged()
 }
 
-export async function autoSave(): Promise<void> {
+export async function clearRecoveryIfClean(): Promise<boolean> {
+  if (useHistoryStore.getState().isDirty()) return false
   try {
-    await ipc().invoke('file:saveRecovery', { data: JSON.stringify(createRecoverySnapshot(), null, 2) })
+    await ipc().invoke('recovery:clear')
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function autoSave(): Promise<AutoSaveResult> {
+  if (!useHistoryStore.getState().isDirty()) return 'skipped-clean'
+  const snapshot = createRecoverySnapshot()
+  const projectPayload = JSON.stringify(snapshot.project)
+  if (projectPayload === lastRecoveryProjectPayload) return 'skipped-unchanged'
+  const payload = JSON.stringify(snapshot, null, 2)
+  try {
+    await ipc().invoke('file:saveRecovery', { data: payload })
+    lastRecoveryProjectPayload = projectPayload
     setSaveActivity({ lastRecoverySaveAt: Date.now() })
-  } catch { /* non-critical */ }
+    return 'saved'
+  } catch {
+    return 'failed'
+  }
 }

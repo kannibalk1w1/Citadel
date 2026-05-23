@@ -245,9 +245,13 @@ export const useUIStore = create<UIState>((set) => ({
       includeCommentsInExport: settings.includeComments,
     })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'export.area', value: settings.area }).catch(console.error)
-    ipc.invoke('settings:set', { key: 'export.scale', value: scale }).catch(console.error)
-    ipc.invoke('settings:set', { key: 'export.includeComments', value: settings.includeComments }).catch(console.error)
+    ipc.invoke('settings:setMany', {
+      values: {
+        'export.area': settings.area,
+        'export.scale': scale,
+        'export.includeComments': settings.includeComments,
+      },
+    }).catch(console.error)
   },
 
   canvasBackground: DEFAULT_CANVAS_BACKGROUND,

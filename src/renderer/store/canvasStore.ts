@@ -9,6 +9,9 @@ type CanvasState = {
   // Derived helpers
   activeBoard: () => CanvasBoard | undefined
   items: () => CanvasItem[]
+  selectedItems: () => CanvasItem[]
+  selectedUnlockedItems: () => CanvasItem[]
+  sortedItems: () => CanvasItem[]
   connections: () => Connection[]
   viewport: () => Viewport
 
@@ -53,6 +56,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   activeBoard: () => get().boards.find((b) => b.id === get().activeBoardId),
   items: () => get().activeBoard()?.items ?? [],
+  selectedItems: () => {
+    const selected = new Set(get().selectedIds)
+    return get().items().filter((item) => selected.has(item.id))
+  },
+  selectedUnlockedItems: () => get().selectedItems().filter((item) => !item.locked),
+  sortedItems: () => [...get().items()].sort((a, b) => a.zIndex - b.zIndex),
   connections: () => get().activeBoard()?.connections ?? [],
   viewport: () => get().activeBoard()?.viewport ?? { x: 0, y: 0, scale: 1 },
 
