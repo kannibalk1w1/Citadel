@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Stage, Layer } from 'react-konva'
 import type Konva from 'konva'
 import { nanoid } from 'nanoid'
@@ -38,6 +38,7 @@ export function CanvasStage(): React.ReactElement {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
+  const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -280,11 +281,9 @@ export function CanvasStage(): React.ReactElement {
         }}
       >
         <Layer>
-          {[...items]
-            .sort((a, b) => a.zIndex - b.zIndex)
-            .map((item) => (
-              <ItemRenderer key={item.id} item={item} />
-            ))}
+          {sortedItems.map((item) => (
+            <ItemRenderer key={item.id} item={item} />
+          ))}
         </Layer>
         <Layer listening={false}>
           <SnapGuides />

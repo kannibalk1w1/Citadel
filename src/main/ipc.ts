@@ -2,15 +2,16 @@ import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
+import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
 const pdfCacheDir = (): string => join(app.getPath('userData'), 'pdf-cache')
 function readSettings(): Record<string, unknown> {
-  try { return JSON.parse(readFileSync(settingsPath, 'utf-8')) } catch { return {} }
+  return readSettingsFile(settingsPath)
 }
 function writeSettings(data: Record<string, unknown>): void {
-  writeFileSync(settingsPath, JSON.stringify(data, null, 2))
+  writeSettingsFile(settingsPath, data)
 }
 
 function getPdfCacheStats(): { count: number; bytes: number } {
@@ -410,10 +411,21 @@ export function registerIpcHandlers(): void {
     return { value: settings[key] ?? null }
   })
 
+  ipcMain.handle('settings:getMany', async (_e, { keys }: { keys?: unknown } = {}) => {
+    const settings = readSettings()
+    return { values: getManySettings(settings, Array.isArray(keys) ? keys : []) }
+  })
+
   // ── settings:set ──────────────────────────────────────────────────────────
   ipcMain.handle('settings:set', async (_e, { key, value }: { key: string; value: unknown }) => {
     const settings = readSettings()
     settings[key] = value
+    writeSettings(settings)
+    return { ok: true }
+  })
+
+  ipcMain.handle('settings:setMany', async (_e, { values }: { values?: unknown } = {}) => {
+    const settings = setManySettings(readSettings(), values)
     writeSettings(settings)
     return { ok: true }
   })

@@ -31,7 +31,7 @@ import { normalizeCanvasBackground } from './store/uiStore'
 import { resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
-import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, loadProjectData, parseRecoveryData, type ParsedRecovery } from './utils/projectFile'
+import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clearRecoveryIfClean, loadProjectData, parseRecoveryData, type ParsedRecovery } from './utils/projectFile'
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
@@ -158,56 +158,47 @@ export default function App(): React.ReactElement {
       if (data) setRecoveryData(parseRecoveryData(data))
     }).catch(() => {})
 
-    ipc.invoke('settings:get', { key: 'ui.youSavedEnabled' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value === true) useUIStore.getState().setYouSavedEnabled(true)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'ui.hyperTypeEnabled' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value === true) {
-        useUIStore.getState().setHyperTypeEnabled(true)
+    ipc.invoke('settings:getMany', {
+      keys: [
+        'ui.youSavedEnabled',
+        'ui.hyperTypeEnabled',
+        'ui.dragonCursorEnabled',
+        'ui.zoomFactor',
+        'export.scale',
+        'export.area',
+        'export.includeComments',
+        'ui.canvasBackground',
+      ],
+    }).then((res) => {
+      const { values } = res as { values: Record<string, unknown> }
+      const nextState: Partial<ReturnType<typeof useUIStore.getState>> = {}
+      if (values['ui.youSavedEnabled'] === true) nextState.youSavedEnabled = true
+      if (values['ui.hyperTypeEnabled'] === true) {
+        nextState.hyperTypeEnabled = true
         engine.setEnabled(true)
       }
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'ui.dragonCursorEnabled' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value === true) useUIStore.getState().setDragonCursorEnabled(true)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'ui.zoomFactor' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (typeof value === 'number' && value !== 1.0) useUIStore.getState().setUiScale(value)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'export.scale' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (typeof value === 'number') useUIStore.getState().setExportScale(value)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'export.area' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value === 'viewport' || value === 'board' || value === 'selection') useUIStore.getState().setExportArea(value)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'export.includeComments' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value === false) useUIStore.getState().setIncludeCommentsInExport(false)
-    }).catch(() => {})
-
-    ipc.invoke('settings:get', { key: 'ui.canvasBackground' }).then((res) => {
-      const { value } = res as { value: unknown }
-      if (value && typeof value === 'object') {
-        useUIStore.setState({ canvasBackground: normalizeCanvasBackground(value) })
+      if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
+      if (typeof values['export.scale'] === 'number') {
+        nextState.exportScale = Math.min(3, Math.max(1, Math.round(values['export.scale'])))
       }
+      const exportArea = values['export.area']
+      if (exportArea === 'viewport' || exportArea === 'board' || exportArea === 'selection') {
+        nextState.exportArea = exportArea
+      }
+      if (values['export.includeComments'] === false) nextState.includeCommentsInExport = false
+      const canvasBackground = values['ui.canvasBackground']
+      if (canvasBackground && typeof canvasBackground === 'object') {
+        nextState.canvasBackground = normalizeCanvasBackground(canvasBackground)
+      }
+      if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
+      const zoomFactor = values['ui.zoomFactor']
+      if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
     }).catch(() => {})
   }, [])
 
   useEffect(() => {
-    const ipc = (window as unknown as { ipc: { invoke: (ch: string) => Promise<unknown> } }).ipc
     const clearRecoveryOnCleanUnload = () => {
-      ipc.invoke('recovery:clear').catch(() => {})
+      clearRecoveryIfClean().catch(() => {})
     }
     window.addEventListener('beforeunload', clearRecoveryOnCleanUnload)
     return () => window.removeEventListener('beforeunload', clearRecoveryOnCleanUnload)
@@ -286,9 +277,9 @@ export default function App(): React.ReactElement {
     // Delete selected items
     resolver.register(Actions.DELETE, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      const toDelete = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const toDelete = canvas.selectedUnlockedItems()
       if (toDelete.length === 0) return
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
@@ -300,9 +291,9 @@ export default function App(): React.ReactElement {
     // Duplicate selected items
     resolver.register(Actions.DUPLICATE, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      const originals = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const originals = canvas.selectedUnlockedItems()
       if (originals.length === 0) return
       const copies = originals.map((i) => ({ ...i, id: nanoid(), x: i.x + 20, y: i.y + 20 }))
       copies.forEach((c) => {
@@ -326,9 +317,9 @@ export default function App(): React.ReactElement {
 
     resolver.register(Actions.TOGGLE_LOCK, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items, updateItem } = canvas
+      const { selectedIds, activeBoardId, updateItem } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      const selectedItems = items().filter((i) => selectedIds.includes(i.id))
+      const selectedItems = canvas.selectedItems()
       const nextLocked = selectedItems.some((i) => !i.locked)
       selectedItems.forEach((item) => {
         useHistoryStore.getState().push(
@@ -343,9 +334,9 @@ export default function App(): React.ReactElement {
 
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
       const canvas = useCanvasStore.getState()
-      const { activeBoardId, selectedIds } = canvas
+      const { activeBoardId } = canvas
       if (!activeBoardId) return
-      const target = canvas.items().find((item) => selectedIds.includes(item.id)) ?? null
+      const target = canvas.selectedItems()[0] ?? null
       const viewport = canvas.viewport()
       const sidebarW = useUIStore.getState().presentationMode
         ? 0
@@ -405,46 +396,46 @@ export default function App(): React.ReactElement {
     // Item ordering
     resolver.register(Actions.BRING_FRONT, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
-      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'front'))
+      const { activeBoardId } = canvas
+      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'front'))
     })
     resolver.register(Actions.SEND_BACK, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
-      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'back'))
+      const { activeBoardId } = canvas
+      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'back'))
     })
     resolver.register(Actions.BRING_FORWARD, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
-      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'forward'))
+      const { activeBoardId } = canvas
+      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'forward'))
     })
     resolver.register(Actions.SEND_BACKWARD, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
-      if (activeBoardId) items().filter((i) => selectedIds.includes(i.id) && !i.locked).forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'backward'))
+      const { activeBoardId } = canvas
+      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'backward'))
     })
 
     // Snap toggle
     resolver.register(Actions.TOGGLE_SNAP, () => useUIStore.getState().toggleSnapToGrid())
 
     resolver.register(Actions.GROUP, () => {
-      const { selectedIds, activeBoardId, items } = useCanvasStore.getState()
+      const { selectedIds, activeBoardId, selectedUnlockedItems, groupItems } = useCanvasStore.getState()
       if (!activeBoardId || selectedIds.length < 2) return
-      const selectedItems = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const selectedItems = selectedUnlockedItems()
       if (selectedItems.length < 2) return
       if (selectedItems.every((i) => i.groupId)) return
-      useCanvasStore.getState().groupItems(activeBoardId, selectedItems.map((i) => i.id))
+      groupItems(activeBoardId, selectedItems.map((i) => i.id))
     })
 
     resolver.register(Actions.UNGROUP, () => {
-      const { selectedIds, activeBoardId, items } = useCanvasStore.getState()
+      const { activeBoardId, selectedUnlockedItems, ungroupItems } = useCanvasStore.getState()
       if (!activeBoardId) return
       const groupIds = new Set(
-        items()
-          .filter((i) => selectedIds.includes(i.id) && i.groupId && !i.locked)
+        selectedUnlockedItems()
+          .filter((i) => i.groupId)
           .map((i) => i.groupId!)
       )
-      groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId, gid))
+      groupIds.forEach((gid) => ungroupItems(activeBoardId, gid))
     })
 
     // Boards
@@ -527,9 +518,9 @@ export default function App(): React.ReactElement {
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, items } = canvas
+      const { selectedIds } = canvas
       if (selectedIds.length === 0) return
-      clipboard = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      clipboard = canvas.selectedUnlockedItems()
     })
 
     resolver.register(Actions.PASTE, () => {
@@ -548,9 +539,9 @@ export default function App(): React.ReactElement {
 
     resolver.register(Actions.CUT, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length === 0) return
-      clipboard = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      clipboard = canvas.selectedUnlockedItems()
       pasteOffset = 0
       if (clipboard.length === 0) return
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, clipboard, clipboard.map((i) => ({ id: i.id })))
@@ -561,45 +552,45 @@ export default function App(): React.ReactElement {
     // Align selected items
     resolver.register(Actions.ALIGN_LEFT, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const minX = Math.min(...sel.map((i) => i.x))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { x: minX }))
     })
     resolver.register(Actions.ALIGN_RIGHT, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const maxX = Math.max(...sel.map((i) => i.x + i.width))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { x: maxX - i.width }))
     })
     resolver.register(Actions.ALIGN_TOP, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const minY = Math.min(...sel.map((i) => i.y))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { y: minY }))
     })
     resolver.register(Actions.ALIGN_BOTTOM, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const maxY = Math.max(...sel.map((i) => i.y + i.height))
       sel.forEach((i) => canvas.updateItem(activeBoardId, i.id, { y: maxY - i.height }))
     })
     resolver.register(Actions.ALIGN_CENTER_H, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const minX = Math.min(...sel.map((i) => i.x))
       const maxX = Math.max(...sel.map((i) => i.x + i.width))
@@ -608,9 +599,9 @@ export default function App(): React.ReactElement {
     })
     resolver.register(Actions.ALIGN_CENTER_V, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const sel = items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+      const sel = canvas.selectedUnlockedItems()
       if (sel.length < 2) return
       const minY = Math.min(...sel.map((i) => i.y))
       const maxY = Math.max(...sel.map((i) => i.y + i.height))
@@ -619,9 +610,9 @@ export default function App(): React.ReactElement {
     })
     resolver.register(Actions.AUTO_ARRANGE, () => {
       const canvas = useCanvasStore.getState()
-      const { selectedIds, activeBoardId, items } = canvas
+      const { selectedIds, activeBoardId } = canvas
       if (!activeBoardId || selectedIds.length < 2) return
-      const selectedItems = items().filter((item) => selectedIds.includes(item.id) && !item.locked)
+      const selectedItems = canvas.selectedUnlockedItems()
       const moves = autoArrangeGrid(selectedItems)
       if (moves.length === 0) return
       const before = selectedItems.map((item) => ({ id: item.id, x: item.x, y: item.y }))
@@ -715,8 +706,9 @@ export default function App(): React.ReactElement {
   // ── Auto-save every 2 minutes ──────────────────────────────────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      autoSave()
-      triggerEffect('base-pulse')
+      autoSave().then((result) => {
+        if (result === 'saved') triggerEffect('base-pulse')
+      }).catch(() => {})
     }, 2 * 60 * 1000)
     return () => clearInterval(id)
   }, [])

@@ -121,9 +121,13 @@ describe('uiStore — exportArea', () => {
     expect(useUIStore.getState().exportArea).toBe('board')
     expect(useUIStore.getState().exportScale).toBe(2)
     expect(useUIStore.getState().includeCommentsInExport).toBe(false)
-    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.area', value: 'board' })
-    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.scale', value: 2 })
-    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.includeComments', value: false })
+    expect(mockInvoke).toHaveBeenCalledWith('settings:setMany', {
+      values: {
+        'export.area': 'board',
+        'export.scale': 2,
+        'export.includeComments': false,
+      },
+    })
   })
 })
 
