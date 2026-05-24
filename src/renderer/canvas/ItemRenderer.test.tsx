@@ -40,7 +40,7 @@ function modelItem(overrides: Partial<CanvasItem> = {}): CanvasItem {
 }
 
 describe('ItemRenderer DOM-layer items', () => {
-  it('renders only a Konva hit area for 3D models inside the stage', () => {
+  it('keeps 3D models out of the Konva stage tree', () => {
     useCanvasStore.setState({
       boards: [{
         id: 'board-1',
@@ -54,7 +54,7 @@ describe('ItemRenderer DOM-layer items', () => {
 
     render(<ItemRenderer item={modelItem()} />)
 
-    expect(screen.getByTestId('konva-rect')).toBeTruthy()
+    expect(screen.queryByTestId('konva-rect')).toBeNull()
     expect(screen.queryByTestId('model3d-item')).toBeNull()
     expect(screen.queryByTestId('konva-group')).toBeNull()
   })

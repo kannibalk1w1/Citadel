@@ -35,28 +35,10 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
   }
 }
 
-function DOMHitArea({ item }: Props): React.ReactElement {
-  return (
-    <Rect
-      x={item.x} y={item.y}
-      width={item.width} height={item.height}
-      rotation={item.rotation}
-      opacity={0}
-      listening={false}
-    />
-  )
-}
-
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
-  if (DOM_TYPES.has(item.type)) {
-    return (
-      <ItemErrorBoundary itemId={item.id} x={item.x} y={item.y} width={item.width} height={item.height}>
-        <DOMHitArea item={item} />
-      </ItemErrorBoundary>
-    )
-  }
+  if (DOM_TYPES.has(item.type)) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
   const tintRect = item.tint ? (
     <Rect
