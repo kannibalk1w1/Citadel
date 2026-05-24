@@ -7,6 +7,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { canvasToScreen } from '../../../types'
+import { chromeFrameStyle } from '../overlays/boardChromeViewModel'
 
 type Props = {
   item: CanvasItem
@@ -46,6 +47,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const pointerStart = useRef<PointerStart | null>(null)
   const isSelected = selectedIds.includes(item.id)
   const canEdit = editableFrame && isSelected && !item.locked && toolMode === 'select' && !!activeBoardId
+  const frame = chromeFrameStyle({ selected: isSelected, locked: item.locked })
 
   useLayoutEffect(() => {
     if (!ref.current) return
@@ -134,6 +136,16 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       onPointerCancel={handlePointerUp}
     >
       {children}
+      <div
+        style={{
+          position: 'absolute',
+          inset: -2,
+          border: `${frame.strokeWidth}px ${frame.dash ? 'dashed' : 'solid'} ${frame.stroke}`,
+          borderRadius: 3,
+          boxShadow: frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
+          pointerEvents: 'none',
+        }}
+      />
       {canEdit && (
         <>
           <div
@@ -142,8 +154,6 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
             style={{
               position: 'absolute',
               inset: 0,
-              border: '2px solid var(--accent)',
-              boxShadow: '0 0 18px rgba(200,169,110,0.35)',
               cursor: 'move',
               pointerEvents: 'auto',
             }}

@@ -13,11 +13,18 @@ import { StickyItem } from './items/StickyItem'
 import { TextItem } from './items/TextItem'
 import { SwatchItem } from './items/SwatchItem'
 import { ComparisonItem } from './items/ComparisonItem'
+import { chromeFrameStyle } from './overlays/boardChromeViewModel'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
 
 type Props = { item: CanvasItem }
 type InnerProps = { item: CanvasItem; domOnly?: boolean }
+
+function canvasToken(value: string): string {
+  if (!value.startsWith('var(')) return value
+  const token = value.slice(4, -1).trim()
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#bd9652'
+}
 
 function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null {
   switch (item.type) {
@@ -37,8 +44,42 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
 
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
   if (!item.visible) return null
   if (DOM_TYPES.has(item.type)) return null
+  const isSelected = selectedIds.includes(item.id)
+  const frame = chromeFrameStyle({ selected: isSelected, locked: item.locked })
+  const frameStroke = canvasToken(frame.stroke)
+  const chromeFrame = (
+    <>
+      {frame.glowOpacity > 0 && (
+        <Rect
+          x={item.x - 4 / viewport.scale}
+          y={item.y - 4 / viewport.scale}
+          width={item.width + 8 / viewport.scale}
+          height={item.height + 8 / viewport.scale}
+          rotation={item.rotation}
+          stroke={canvasToken('var(--accent)')}
+          strokeWidth={3 / viewport.scale}
+          opacity={frame.glowOpacity}
+          cornerRadius={2 / viewport.scale}
+          listening={false}
+        />
+      )}
+      <Rect
+        x={item.x - 2 / viewport.scale}
+        y={item.y - 2 / viewport.scale}
+        width={item.width + 4 / viewport.scale}
+        height={item.height + 4 / viewport.scale}
+        rotation={item.rotation}
+        stroke={frameStroke}
+        strokeWidth={frame.strokeWidth / viewport.scale}
+        dash={frame.dash?.map((n) => n / viewport.scale)}
+        cornerRadius={2 / viewport.scale}
+        listening={false}
+      />
+    </>
+  )
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
   const tintRect = item.tint ? (
     <Rect
@@ -68,6 +109,7 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       <Group>
         <Inner item={item} />
         {tintRect}
+        {chromeFrame}
         {lockMarker}
       </Group>
     </ItemErrorBoundary>

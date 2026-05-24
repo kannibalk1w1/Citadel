@@ -10,6 +10,7 @@ import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
 import { SelectionBox } from './overlays/SelectionBox'
+import { SelectedActionStrip } from './overlays/SelectedActionStrip'
 import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
 import { CanvasBackground } from './CanvasBackground'
@@ -314,6 +315,7 @@ export function CanvasStage(): React.ReactElement {
       {sortedItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
+      <SelectedActionStrip />
     </div>
   )
 }

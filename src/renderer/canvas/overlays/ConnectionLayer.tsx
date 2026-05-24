@@ -164,13 +164,23 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
                 d={d}
                 fill="none"
                 stroke="#c8a96e"
-                strokeWidth={conn.width + 6}
+                strokeWidth={conn.width + 8}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                opacity={0.16}
+                opacity={0.12}
                 style={{ pointerEvents: 'none' }}
               />
             )}
+            <path
+              d={d}
+              fill="none"
+              stroke="#050403"
+              strokeWidth={connectorStrokeWidth(conn.width, isActive) + 3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.42}
+              style={{ pointerEvents: 'none' }}
+            />
             <path
               d={d}
               fill="none"
@@ -194,11 +204,20 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
                   y={plaque.y - plaque.height / 2}
                   width={plaque.width}
                   height={plaque.height}
-                  rx={4}
-                  fill="#221d18"
+                  rx={3}
+                  fill="#120f0b"
                   stroke={isActive ? '#c8a96e' : '#4b3b22'}
                   strokeWidth={1}
                   opacity={0.96}
+                />
+                <line
+                  x1={plaque.x - plaque.width / 2 + 5}
+                  y1={plaque.y - plaque.height / 2 + 4}
+                  x2={plaque.x + plaque.width / 2 - 5}
+                  y2={plaque.y - plaque.height / 2 + 4}
+                  stroke="#c8a96e"
+                  strokeWidth={0.75}
+                  opacity={0.28}
                 />
                 <text
                   x={plaque.textX}
