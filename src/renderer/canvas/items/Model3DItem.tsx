@@ -114,6 +114,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
       )}
       <DOMItem
         item={item}
+        editableFrame
         onClick={(e) => {
           e.stopPropagation()
           setSelection([item.id])
