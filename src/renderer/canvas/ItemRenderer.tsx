@@ -36,14 +36,13 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
 }
 
 function DOMHitArea({ item }: Props): React.ReactElement {
-  const setSelection = useCanvasStore((s) => s.setSelection)
   return (
     <Rect
       x={item.x} y={item.y}
       width={item.width} height={item.height}
       rotation={item.rotation}
       opacity={0}
-      onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+      listening={false}
     />
   )
 }

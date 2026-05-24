@@ -4,17 +4,74 @@ import { Rect } from 'react-konva'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
-import type { CanvasItem } from '../../../types'
+import { nanoid } from 'nanoid'
+import type { CanvasItem, Connection } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useHistoryStore } from '../../store/historyStore'
+import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function Model3DItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+
+  const handleDomClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    if (!activeBoardId) return
+
+    if (toolMode === 'connect') {
+      const ui = useUIStore.getState()
+      const canvas = useCanvasStore.getState()
+      if (!ui.connectFromId) {
+        ui.setConnectFromId(item.id)
+      } else if (ui.connectFromId !== item.id) {
+        const conn: Connection = {
+          id: nanoid(),
+          fromId: ui.connectFromId,
+          toId: item.id,
+          fromAnchor: 'auto',
+          toAnchor: 'auto',
+          style: 'bezier',
+          color: '#b99455',
+          width: 1.5,
+          arrowHead: 'arrow',
+          dashed: false,
+        }
+        canvas.addConnection(activeBoardId, conn)
+        useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
+        ui.setConnectFromId(null)
+        ui.setToolMode('select')
+      }
+      return
+    }
+
+    if (toolMode === 'link') {
+      if (item.link) {
+        const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+        ipc.invoke('shell:openURL', { url: item.link })
+      }
+      return
+    }
+
+    if (toolMode === 'tag') {
+      setSelection([item.id])
+      useUIStore.getState().openPanel('tagSearch')
+      return
+    }
+
+    if (toolMode !== 'select') return
+    if (e.shiftKey) {
+      useCanvasStore.getState().addToSelection(item.id)
+    } else {
+      setSelection([item.id])
+    }
+  }
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -134,10 +191,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
       <DOMItem
         item={item}
         editableFrame
-        onClick={(e) => {
-          e.stopPropagation()
-          setSelection([item.id])
-        }}
+        onClick={handleDomClick}
       >
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
       </DOMItem>
