@@ -8,9 +8,9 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { DOMItem } from './DOMItem'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function Model3DItem({ item }: Props): React.ReactElement {
+export function Model3DItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -103,14 +103,22 @@ export function Model3DItem({ item }: Props): React.ReactElement {
 
   return (
     <>
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        opacity={0}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item}>
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          opacity={0}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+        />
+      )}
+      <DOMItem
+        item={item}
+        onClick={(e) => {
+          e.stopPropagation()
+          setSelection([item.id])
+        }}
+      >
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
       </DOMItem>
     </>

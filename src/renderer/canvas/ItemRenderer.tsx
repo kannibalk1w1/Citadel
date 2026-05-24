@@ -17,15 +17,16 @@ import { ComparisonItem } from './items/ComparisonItem'
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
 
 type Props = { item: CanvasItem }
+type InnerProps = { item: CanvasItem; domOnly?: boolean }
 
-function Inner({ item }: Props): React.ReactElement | null {
+function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null {
   switch (item.type) {
     case 'image':      return <ImageItem item={item} />
     case 'gif':        return <GifItem item={item} />
-    case 'video':      return <VideoItem item={item} />
-    case 'youtube':    return <YouTubeItem item={item} />
-    case 'audio':      return <AudioItem item={item} />
-    case 'model3d':    return <Model3DItem item={item} />
+    case 'video':      return <VideoItem item={item} domOnly={domOnly} />
+    case 'youtube':    return <YouTubeItem item={item} domOnly={domOnly} />
+    case 'audio':      return <AudioItem item={item} domOnly={domOnly} />
+    case 'model3d':    return <Model3DItem item={item} domOnly={domOnly} />
     case 'sticky':     return <StickyItem item={item} />
     case 'text':       return <TextItem item={item} />
     case 'swatch':     return <SwatchItem item={item} />
@@ -34,13 +35,26 @@ function Inner({ item }: Props): React.ReactElement | null {
   }
 }
 
+function DOMHitArea({ item }: Props): React.ReactElement {
+  const setSelection = useCanvasStore((s) => s.setSelection)
+  return (
+    <Rect
+      x={item.x} y={item.y}
+      width={item.width} height={item.height}
+      rotation={item.rotation}
+      opacity={0}
+      onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+    />
+  )
+}
+
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
   if (DOM_TYPES.has(item.type)) {
     return (
       <ItemErrorBoundary itemId={item.id} x={item.x} y={item.y} width={item.width} height={item.height}>
-        <Inner item={item} />
+        <DOMHitArea item={item} />
       </ItemErrorBoundary>
     )
   }
@@ -77,4 +91,9 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       </Group>
     </ItemErrorBoundary>
   )
+}
+
+export function DOMLayerItemRenderer({ item }: Props): React.ReactElement | null {
+  if (!item.visible || !DOM_TYPES.has(item.type)) return null
+  return <Inner item={item} domOnly />
 }

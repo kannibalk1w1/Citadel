@@ -4,21 +4,29 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { DOMItem } from './DOMItem'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function YouTubeItem({ item }: Props): React.ReactElement {
+export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
 
   return (
     <>
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        opacity={0}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item}>
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          opacity={0}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+        />
+      )}
+      <DOMItem
+        item={item}
+        onClick={(e) => {
+          e.stopPropagation()
+          setSelection([item.id])
+        }}
+      >
         {/* Electron <webview> required for YouTube */}
         <webview
           src={item.src ?? 'about:blank'}

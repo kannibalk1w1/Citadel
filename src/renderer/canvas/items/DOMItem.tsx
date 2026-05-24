@@ -10,6 +10,7 @@ type Props = {
   item: CanvasItem
   children: React.ReactNode
   style?: React.CSSProperties
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }
 
 // Mount point for all DOM items
@@ -21,7 +22,7 @@ if (!domLayer) {
   document.getElementById('root')?.appendChild(domLayer)
 }
 
-export function DOMItem({ item, children, style }: Props): React.ReactElement {
+export function DOMItem({ item, children, style, onClick }: Props): React.ReactElement {
   const viewport = useCanvasStore((s) => s.viewport())
   const ref = useRef<HTMLDivElement>(null)
 
@@ -46,6 +47,7 @@ export function DOMItem({ item, children, style }: Props): React.ReactElement {
         overflow: 'hidden',
         ...style,
       }}
+      onClick={onClick}
     >
       {children}
       {item.tint && (

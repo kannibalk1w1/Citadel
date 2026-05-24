@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
-import { ItemRenderer } from './ItemRenderer'
+import { DOMLayerItemRenderer, ItemRenderer } from './ItemRenderer'
 import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
@@ -301,6 +301,9 @@ export function CanvasStage(): React.ReactElement {
 
       <ConnectionLayer viewport={viewport} items={items} rubberBand={rubberBand} />
       <GroupLayer viewport={viewport} />
+      {sortedItems.map((item) => (
+        <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
+      ))}
     </div>
   )
 }

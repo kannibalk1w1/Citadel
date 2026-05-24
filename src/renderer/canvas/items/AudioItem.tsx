@@ -6,9 +6,9 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function AudioItem({ item }: Props): React.ReactElement {
+export function AudioItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
   const audioRef = useRef<HTMLAudioElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -109,16 +109,25 @@ export function AudioItem({ item }: Props): React.ReactElement {
 
   return (
     <>
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        fill="#10100f"
-        stroke="#2a2722"
-        strokeWidth={1}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item} style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}>
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          fill="#10100f"
+          stroke="#2a2722"
+          strokeWidth={1}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+        />
+      )}
+      <DOMItem
+        item={item}
+        style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}
+        onClick={(e) => {
+          e.stopPropagation()
+          setSelection([item.id])
+        }}
+      >
         <canvas
           ref={canvasRef}
           style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}

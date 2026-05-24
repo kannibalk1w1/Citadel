@@ -10,9 +10,9 @@ import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { copyImageDataUrl } from '../../utils/clipboardImage'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function VideoItem({ item }: Props): React.ReactElement {
+export function VideoItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
@@ -88,15 +88,23 @@ export function VideoItem({ item }: Props): React.ReactElement {
 
   return (
     <>
-      {/* Transparent hit area in Konva */}
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        opacity={0}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item} style={{ background: 'var(--bg-canvas)' }}>
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          opacity={0}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+        />
+      )}
+      <DOMItem
+        item={item}
+        style={{ background: 'var(--bg-canvas)' }}
+        onClick={(e) => {
+          e.stopPropagation()
+          setSelection([item.id])
+        }}
+      >
         <video
           ref={videoRef}
           src={pathToUrl(item.src ?? '')}

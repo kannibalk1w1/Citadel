@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
-import { ItemRenderer } from './ItemRenderer'
+import { DOMLayerItemRenderer, ItemRenderer } from './ItemRenderer'
 
 vi.mock('react-konva', () => ({
   Group: ({ children }: { children: React.ReactNode }) => <div data-testid="konva-group">{children}</div>,
@@ -13,7 +13,9 @@ vi.mock('react-konva', () => ({
 }))
 
 vi.mock('./items/Model3DItem', () => ({
-  Model3DItem: ({ item }: { item: CanvasItem }) => <div data-testid="model3d-item">{item.id}</div>,
+  Model3DItem: ({ item, domOnly }: { item: CanvasItem; domOnly?: boolean }) => (
+    <div data-testid="model3d-item" data-dom-only={domOnly ? 'true' : 'false'}>{item.id}</div>
+  ),
 }))
 
 afterEach(() => cleanup())
@@ -38,7 +40,7 @@ function modelItem(overrides: Partial<CanvasItem> = {}): CanvasItem {
 }
 
 describe('ItemRenderer DOM-layer items', () => {
-  it('does not wrap 3D model DOM portals inside a Konva group', () => {
+  it('renders only a Konva hit area for 3D models inside the stage', () => {
     useCanvasStore.setState({
       boards: [{
         id: 'board-1',
@@ -52,7 +54,15 @@ describe('ItemRenderer DOM-layer items', () => {
 
     render(<ItemRenderer item={modelItem()} />)
 
-    expect(screen.getByTestId('model3d-item')).toBeTruthy()
+    expect(screen.getByTestId('konva-rect')).toBeTruthy()
+    expect(screen.queryByTestId('model3d-item')).toBeNull()
     expect(screen.queryByTestId('konva-group')).toBeNull()
+  })
+
+  it('renders the 3D model in the DOM layer outside the stage', () => {
+    render(<DOMLayerItemRenderer item={modelItem()} />)
+
+    expect(screen.getByTestId('model3d-item').dataset.domOnly).toBe('true')
+    expect(screen.queryByTestId('konva-rect')).toBeNull()
   })
 })
