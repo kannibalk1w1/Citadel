@@ -37,8 +37,15 @@ function Inner({ item }: Props): React.ReactElement | null {
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
+  if (DOM_TYPES.has(item.type)) {
+    return (
+      <ItemErrorBoundary itemId={item.id} x={item.x} y={item.y} width={item.width} height={item.height}>
+        <Inner item={item} />
+      </ItemErrorBoundary>
+    )
+  }
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
-  const tintRect = item.tint && !DOM_TYPES.has(item.type) ? (
+  const tintRect = item.tint ? (
     <Rect
       x={item.x} y={item.y}
       width={item.width} height={item.height}
@@ -48,7 +55,7 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       listening={false}
     />
   ) : null
-  const lockMarker = item.locked && !DOM_TYPES.has(item.type) ? (
+  const lockMarker = item.locked ? (
     <Text
       x={item.x + item.width - 18 / viewport.scale}
       y={item.y + 4 / viewport.scale}
