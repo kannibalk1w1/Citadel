@@ -301,6 +301,16 @@ export function CanvasStage(): React.ReactElement {
 
       <ConnectionLayer viewport={viewport} items={items} rubberBand={rubberBand} />
       <GroupLayer viewport={viewport} />
+      <div
+        id="dom-items-layer"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 2,
+          overflow: 'visible',
+        }}
+      />
       {sortedItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}

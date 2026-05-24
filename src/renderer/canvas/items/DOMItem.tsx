@@ -16,13 +16,15 @@ type Props = {
   editableFrame?: boolean
 }
 
-// Mount point for all DOM items
-let domLayer = document.getElementById('dom-items-layer')
-if (!domLayer) {
-  domLayer = document.createElement('div')
-  domLayer.id = 'dom-items-layer'
-  domLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:var(--z-dom-items,10);'
-  document.getElementById('root')?.appendChild(domLayer)
+function domLayerTarget(): HTMLElement {
+  const existing = document.getElementById('dom-items-layer')
+  if (existing) return existing
+
+  const layer = document.createElement('div')
+  layer.id = 'dom-items-layer'
+  layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;'
+  document.getElementById('root')?.appendChild(layer)
+  return layer
 }
 
 type PointerStart = {
@@ -176,6 +178,6 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
         </div>
       )}
     </div>,
-    domLayer!
+    domLayerTarget()
   )
 }
