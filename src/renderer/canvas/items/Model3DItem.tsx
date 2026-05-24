@@ -1,5 +1,5 @@
 // Model3DItem: Three.js scene rendered into a DOM canvas synced to viewport.
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { Rect } from 'react-konva'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -14,6 +14,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
   const setSelection = useCanvasStore((s) => s.setSelection)
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -25,10 +26,14 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
     camera.position.set(0, 1, 3)
+    cameraRef.current = camera
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(w, h)
+    renderer.setSize(w, h, false)
     renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = '100%'
+    renderer.domElement.style.display = 'block'
     mountRef.current.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
@@ -97,9 +102,23 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
     return () => {
       cancelAnimationFrame(animId)
       renderer.dispose()
-      mountRef.current?.removeChild(renderer.domElement)
+      rendererRef.current = null
+      cameraRef.current = null
+      if (renderer.domElement.parentElement) renderer.domElement.parentElement.removeChild(renderer.domElement)
     }
-  }, [item.src, item.width, item.height])
+  }, [item.src])
+
+  useLayoutEffect(() => {
+    const mount = mountRef.current
+    const renderer = rendererRef.current
+    const camera = cameraRef.current
+    if (!mount || !renderer || !camera) return
+    const width = Math.max(1, mount.clientWidth || item.width)
+    const height = Math.max(1, mount.clientHeight || item.height)
+    renderer.setSize(width, height, false)
+    camera.aspect = width / height
+    camera.updateProjectionMatrix()
+  }, [item.width, item.height])
 
   return (
     <>

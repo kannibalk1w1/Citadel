@@ -61,7 +61,13 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
     if (!canEdit || !activeBoardId) return
     event.preventDefault()
     event.stopPropagation()
-    ref.current?.setPointerCapture(event.pointerId)
+    if (ref.current?.isConnected) {
+      try {
+        ref.current.setPointerCapture(event.pointerId)
+      } catch {
+        // Pointer capture can fail if the target is replaced during a React update.
+      }
+    }
     pointerStart.current = {
       pointerId: event.pointerId,
       mode,
@@ -93,7 +99,13 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     const start = pointerStart.current
     if (!start || !activeBoardId || event.pointerId !== start.pointerId) return
-    ref.current?.releasePointerCapture(event.pointerId)
+    if (ref.current?.hasPointerCapture(event.pointerId)) {
+      try {
+        ref.current.releasePointerCapture(event.pointerId)
+      } catch {
+        // If the pointer was already released, keep the item update and history write.
+      }
+    }
     pointerStart.current = null
     const after = useCanvasStore.getState().items().find((candidate) => candidate.id === item.id)
     if (!after) return
