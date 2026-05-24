@@ -15,6 +15,7 @@ import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
 import { AnchorHandles } from './overlays/AnchorHandles'
 import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
+import { KonvaItemChrome } from './overlays/KonvaItemChrome'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
@@ -292,6 +293,7 @@ export function CanvasStage(): React.ReactElement {
           <SnapGuides />
         </Layer>
         <Layer listening={false}>
+          <KonvaItemChrome />
           <SelectionBox />
           <AnchorHandles />
         </Layer>
