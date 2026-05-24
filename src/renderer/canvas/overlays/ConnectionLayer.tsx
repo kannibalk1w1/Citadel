@@ -1,7 +1,9 @@
 import React from 'react'
 import type { CanvasItem, Connection, Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 
 type Props = {
   viewport: Viewport
@@ -61,12 +63,34 @@ function elbowPath(from: { x: number; y: number }, to: { x: number; y: number })
 
 export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.ReactElement {
   const connections = useCanvasStore((s) => s.connections())
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const updateConnection = useCanvasStore((s) => s.updateConnection)
   const activeConnectionId = useUIStore((s) => s.activeConnectionId)
   const setActiveConnectionId = useUIStore((s) => s.setActiveConnectionId)
   const openPanel = useUIStore((s) => s.openPanel)
   const closePanel = useUIStore((s) => s.closePanel)
 
   const itemMap = new Map(items.map((i) => [i.id, i]))
+  const activateConnection = (id: string, isActive: boolean) => {
+    const next = isActive ? null : id
+    setActiveConnectionId(next)
+    if (next) openPanel('connectionProperties')
+    else closePanel('connectionProperties')
+  }
+
+  const editLabel = (conn: Connection) => {
+    if (!activeBoardId) return
+    const label = window.prompt('Connector label', conn.label ?? '')
+    if (label === null) return
+    const nextLabel = label.trim() || undefined
+    updateConnection(activeBoardId, conn.id, { label: nextLabel })
+    useHistoryStore.getState().push(
+      'CONNECTION_STYLE',
+      activeBoardId,
+      { id: conn.id, label: conn.label },
+      { id: conn.id, label: nextLabel },
+    )
+  }
 
   return (
     <svg
@@ -81,6 +105,9 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
       }}
     >
       <defs>
+        <filter id="connector-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#c8a96e" floodOpacity="0.72" />
+        </filter>
         <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
           <path d="M0,0 L0,6 L8,3 z" fill="currentColor" />
         </marker>
@@ -117,6 +144,8 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
 
         const markerEnd = conn.arrowHead !== 'none' ? `url(#${conn.arrowHead})` : undefined
         const isActive = conn.id === activeConnectionId
+        const labelText = conn.label?.trim()
+        const plaque = labelText ? connectionLabelPlaque(from, to, labelText) : null
 
         return (
           <g key={conn.id} style={{ color: conn.color }}>
@@ -127,33 +156,63 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
               stroke="transparent"
               strokeWidth={12}
               style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-              onClick={() => {
-                const next = isActive ? null : conn.id
-                setActiveConnectionId(next)
-                if (next) openPanel('connectionProperties')
-                else closePanel('connectionProperties')
-              }}
+              onClick={() => activateConnection(conn.id, isActive)}
+              onDoubleClick={() => editLabel(conn)}
             />
+            {isActive && (
+              <path
+                d={d}
+                fill="none"
+                stroke="#c8a96e"
+                strokeWidth={conn.width + 6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={0.16}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
             <path
               d={d}
               fill="none"
               stroke={conn.color}
-              strokeWidth={isActive ? conn.width + 2 : conn.width}
+              strokeWidth={connectorStrokeWidth(conn.width, isActive)}
               strokeDasharray={conn.dashed ? '8 4' : undefined}
               markerEnd={markerEnd}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter={isActive ? 'url(#connector-glow)' : undefined}
               style={{ pointerEvents: 'none' }}
             />
-            {conn.label && (
-              <text
-                x={(from.x + to.x) / 2}
-                y={(from.y + to.y) / 2 - 6}
-                textAnchor="middle"
-                fill={conn.color}
-                fontSize={11}
-                fontFamily="var(--font-body)"
+            {plaque && labelText && (
+              <g
+                style={{ pointerEvents: 'all', cursor: 'text' }}
+                onClick={() => activateConnection(conn.id, false)}
+                onDoubleClick={() => editLabel(conn)}
               >
-                {conn.label}
-              </text>
+                <rect
+                  x={plaque.x - plaque.width / 2}
+                  y={plaque.y - plaque.height / 2}
+                  width={plaque.width}
+                  height={plaque.height}
+                  rx={4}
+                  fill="#221d18"
+                  stroke={isActive ? '#c8a96e' : '#4b3b22'}
+                  strokeWidth={1}
+                  opacity={0.96}
+                />
+                <text
+                  x={plaque.textX}
+                  y={plaque.textY}
+                  textAnchor="middle"
+                  fill="#e8ddd0"
+                  fontSize={11}
+                  fontFamily="var(--font-body)"
+                  fontWeight={600}
+                  style={{ userSelect: 'none' }}
+                >
+                  {labelText.length > 24 ? `${labelText.slice(0, 23)}...` : labelText}
+                </text>
+              </g>
             )}
           </g>
         )
