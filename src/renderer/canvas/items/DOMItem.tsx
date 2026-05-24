@@ -7,7 +7,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { canvasToScreen } from '../../../types'
-import { chromeFrameStyle } from '../overlays/boardChromeViewModel'
+import { chromeFrameStyle, connectedItemIds, frameVariant, frameVariantStyle, itemTypeBadge } from '../overlays/boardChromeViewModel'
 
 type Props = {
   item: CanvasItem
@@ -42,12 +42,17 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const viewport = useCanvasStore((s) => s.viewport())
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const connections = useCanvasStore((s) => s.connections())
   const toolMode = useUIStore((s) => s.toolMode)
   const ref = useRef<HTMLDivElement>(null)
   const pointerStart = useRef<PointerStart | null>(null)
   const isSelected = selectedIds.includes(item.id)
+  const relatedIds = selectedIds.length === 1 ? connectedItemIds(selectedIds[0], connections) : new Set<string>()
+  const isRelated = relatedIds.has(item.id)
   const canEdit = editableFrame && isSelected && !item.locked && toolMode === 'select' && !!activeBoardId
   const frame = chromeFrameStyle({ selected: isSelected, locked: item.locked })
+  const variant = frameVariantStyle(frameVariant(item))
+  const badge = itemTypeBadge(item)
 
   useLayoutEffect(() => {
     if (!ref.current) return
@@ -127,7 +132,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
         transformOrigin: 'top left',
         opacity: item.opacity,
         pointerEvents: 'auto',
-        overflow: 'hidden',
+        overflow: 'visible',
         ...style,
       }}
       onClick={onClick}
@@ -142,10 +147,55 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
           inset: -2,
           border: `${frame.strokeWidth}px ${frame.dash ? 'dashed' : 'solid'} ${frame.stroke}`,
           borderRadius: 3,
-          boxShadow: frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
+          boxShadow: isRelated && !isSelected
+            ? '0 0 18px rgba(189,150,82,0.18)'
+            : frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
+          opacity: isRelated && !isSelected ? 0.86 : 1,
           pointerEvents: 'none',
         }}
       />
+      <div
+        style={{
+          position: 'absolute',
+          left: 6,
+          top: -13,
+          minWidth: 26,
+          height: 14,
+          padding: '1px 5px',
+          border: `1px solid ${frame.stroke}`,
+          borderRadius: 2,
+          background: variant.badgeFill,
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 8,
+          lineHeight: '11px',
+          opacity: 0.94,
+          pointerEvents: 'none',
+        }}
+      >
+        {badge}
+      </div>
+      <div style={{ position: 'absolute', inset: -3, pointerEvents: 'none', opacity: variant.lineOpacity }}>
+        {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const).map((corner) => {
+          const horizontal: React.CSSProperties = {
+            position: 'absolute',
+            width: variant.cornerSize,
+            height: 1,
+            background: frame.stroke,
+            [corner.includes('Right') ? 'right' : 'left']: 0,
+            [corner.includes('bottom') ? 'bottom' : 'top']: 0,
+          }
+          const vertical: React.CSSProperties = {
+            position: 'absolute',
+            width: 1,
+            height: variant.cornerSize,
+            background: frame.stroke,
+            [corner.includes('Right') ? 'right' : 'left']: 0,
+            [corner.includes('bottom') ? 'bottom' : 'top']: 0,
+          }
+          return <React.Fragment key={corner}><div style={horizontal} /><div style={vertical} /></React.Fragment>
+        })}
+      </div>
       {canEdit && (
         <>
           <div

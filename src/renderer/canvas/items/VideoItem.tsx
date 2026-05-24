@@ -9,6 +9,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { copyImageDataUrl } from '../../utils/clipboardImage'
+import { MediaPlaceholder } from './MediaPlaceholder'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -105,13 +106,15 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
           setSelection([item.id])
         }}
       >
-        <video
-          ref={videoRef}
-          src={pathToUrl(item.src ?? '')}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
-          controls
-          loop
-        />
+        {item.src ? (
+          <video
+            ref={videoRef}
+            src={pathToUrl(item.src)}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
+            controls
+            loop
+          />
+        ) : <MediaPlaceholder item={item} />}
         <button
           type="button"
           onClick={(e) => { captureFrame(e).catch(console.error) }}

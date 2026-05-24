@@ -597,6 +597,21 @@ export function ItemProperties(): React.ReactElement | null {
         />
       </Field>
 
+      <Field label="Frame">
+        <select
+          value={(item.meta?.frameVariant as string) ?? 'auto'}
+          onChange={(e) => updateMeta({ frameVariant: e.target.value === 'auto' ? undefined : e.target.value })}
+          style={{ ...inputStyle, padding: '3px 5px' }}
+        >
+          <option value="auto">Auto</option>
+          <option value="plain">Plain</option>
+          <option value="relic">Relic</option>
+          <option value="dossier">Dossier</option>
+          <option value="sketch">Sketch</option>
+          <option value="evidence">Evidence</option>
+        </select>
+      </Field>
+
       {/* ── Tint ── */}
       {!['video', 'youtube', 'audio', 'model3d'].includes(item.type) && (
         <>

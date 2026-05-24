@@ -13,6 +13,8 @@ import { SelectionBox } from './overlays/SelectionBox'
 import { SelectedActionStrip } from './overlays/SelectedActionStrip'
 import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
+import { AnchorHandles } from './overlays/AnchorHandles'
+import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
@@ -291,6 +293,7 @@ export function CanvasStage(): React.ReactElement {
         </Layer>
         <Layer listening={false}>
           <SelectionBox />
+          <AnchorHandles />
         </Layer>
         <Layer listening={false}>
           <SearchHighlight />
@@ -315,6 +318,7 @@ export function CanvasStage(): React.ReactElement {
       {sortedItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
+      <ConnectorQuickToolbar />
       <SelectedActionStrip />
     </div>
   )

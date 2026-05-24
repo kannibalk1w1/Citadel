@@ -5,6 +5,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
+import { MediaPlaceholder } from './MediaPlaceholder'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -128,19 +129,23 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
           setSelection([item.id])
         }}
       >
-        <canvas
-          ref={canvasRef}
-          style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
-        />
-        <audio
-          ref={audioRef}
-          src={pathToUrl(item.src ?? '')}
-          controls
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handlePause}
-          style={{ width: '100%', height: 32, display: 'block' }}
-        />
+        {item.src ? (
+          <>
+            <canvas
+              ref={canvasRef}
+              style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
+            />
+            <audio
+              ref={audioRef}
+              src={pathToUrl(item.src)}
+              controls
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onEnded={handlePause}
+              style={{ width: '100%', height: 32, display: 'block' }}
+            />
+          </>
+        ) : <MediaPlaceholder item={item} />}
       </DOMItem>
     </>
   )

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Viewport } from '../../../types'
 import {
+  anchorHandles,
   chromeFrameStyle,
+  connectedItemIds,
+  connectionQuickToolbarPosition,
+  frameVariantStyle,
+  frameVariant,
+  itemTypeBadge,
+  mediaPlaceholderLabel,
   selectedActionStripPosition,
   selectionBounds,
 } from './boardChromeViewModel'
@@ -77,5 +84,46 @@ describe('board chrome view model', () => {
       width: 332,
       height: 192,
     })
+  })
+
+  it('returns compact item badges for scan-friendly token labels', () => {
+    expect(itemTypeBadge(baseItem)).toBe('IMG')
+    expect(itemTypeBadge({ ...baseItem, type: 'model3d' })).toBe('3D')
+    expect(itemTypeBadge({ ...baseItem, type: 'comparison' })).toBe('A/B')
+  })
+
+  it('returns the four connector anchors in canvas coordinates', () => {
+    expect(anchorHandles(baseItem)).toEqual([
+      { side: 'top', x: 220, y: 80 },
+      { side: 'right', x: 340, y: 140 },
+      { side: 'bottom', x: 220, y: 200 },
+      { side: 'left', x: 100, y: 140 },
+    ])
+  })
+
+  it('finds ids related to a selected item through connections', () => {
+    expect(connectedItemIds('a', [
+      { id: 'c1', fromId: 'a', toId: 'b', fromAnchor: 'auto', toAnchor: 'auto', style: 'bezier', color: '#fff', width: 1, arrowHead: 'arrow', dashed: false },
+      { id: 'c2', fromId: 'c', toId: 'a', fromAnchor: 'auto', toAnchor: 'auto', style: 'bezier', color: '#fff', width: 1, arrowHead: 'arrow', dashed: false },
+    ])).toEqual(new Set(['b', 'c']))
+  })
+
+  it('positions the connector quick toolbar above the connector midpoint', () => {
+    expect(connectionQuickToolbarPosition({ x: 100, y: 100 }, { x: 300, y: 180 })).toEqual({
+      left: 200,
+      top: 112,
+      transform: 'translateX(-50%)',
+    })
+  })
+
+  it('returns distinct frame variant treatments', () => {
+    expect(frameVariantStyle('relic')).toEqual({ cornerSize: 12, badgeFill: '#21180e', lineOpacity: 0.52 })
+    expect(frameVariantStyle('dossier')).toEqual({ cornerSize: 7, badgeFill: '#14110d', lineOpacity: 0.42 })
+    expect(frameVariant({ ...baseItem, type: 'model3d', meta: { frameVariant: 'plain' } })).toBe('plain')
+  })
+
+  it('returns gothic placeholders for empty or failed media items', () => {
+    expect(mediaPlaceholderLabel({ ...baseItem, type: 'model3d', src: undefined })).toBe('3D relic missing')
+    expect(mediaPlaceholderLabel({ ...baseItem, type: 'audio', src: undefined })).toBe('Audio source missing')
   })
 })

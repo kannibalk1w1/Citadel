@@ -3,6 +3,7 @@ import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { DOMItem } from './DOMItem'
+import { MediaPlaceholder } from './MediaPlaceholder'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -27,13 +28,14 @@ export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElemen
           setSelection([item.id])
         }}
       >
-        {/* Electron <webview> required for YouTube */}
-        <webview
-          src={item.src ?? 'about:blank'}
-          style={{ width: '100%', height: '100%' }}
-          // @ts-expect-error webview is an Electron-specific element
-          allowpopups="false"
-        />
+        {item.src ? (
+          <webview
+            src={item.src}
+            style={{ width: '100%', height: '100%' }}
+            // @ts-expect-error webview is an Electron-specific element
+            allowpopups="false"
+          />
+        ) : <MediaPlaceholder item={item} />}
       </DOMItem>
     </>
   )

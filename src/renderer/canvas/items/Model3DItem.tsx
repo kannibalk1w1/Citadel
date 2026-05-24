@@ -10,6 +10,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
+import { MediaPlaceholder } from './MediaPlaceholder'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -20,6 +21,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+  const [loadError, setLoadError] = React.useState<string | null>(null)
 
   const handleDomClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
@@ -117,6 +119,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
     animate()
 
     // Load model if src is provided
+    setLoadError(null)
     if (item.src) {
       const ext = item.src.split('.').pop()?.toLowerCase()
       // Resolve src through the local:// protocol for file paths
@@ -137,7 +140,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => console.error('GLTFLoader error', err))
+        }, undefined, (err) => { console.error('GLTFLoader error', err); setLoadError('3D relic failed') })
       } else if (ext === 'obj') {
         const loader = new OBJLoader()
         loader.load(url, (obj) => {
@@ -152,7 +155,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => console.error('OBJLoader error', err))
+        }, undefined, (err) => { console.error('OBJLoader error', err); setLoadError('3D relic failed') })
       }
     }
 
@@ -194,6 +197,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
         onClick={handleDomClick}
       >
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+        <MediaPlaceholder item={item} label={loadError} />
       </DOMItem>
     </>
   )
