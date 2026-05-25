@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add tests for multi-result Index marks
-- add keyboard shortcuts for next and previous result navigation
 - add richer visual binding animation around endpoints
+- add an Index result row test covering Enter and Ctrl+Enter focus behavior
 
 ### Phase 2: Viewport Virtualization
 

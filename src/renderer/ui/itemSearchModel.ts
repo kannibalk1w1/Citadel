@@ -30,6 +30,12 @@ export type SearchResultGroup = {
   results: SearchResult[]
 }
 
+export type IndexKeyAction =
+  | { type: 'close' }
+  | { type: 'step'; direction: 1 | -1 }
+  | { type: 'focus'; keepOpen: boolean }
+  | { type: 'none' }
+
 type ParsedSearchQuery = {
   text: string
   types: string[]
@@ -274,6 +280,14 @@ export function nextSearchResultIndex(currentIndex: number, resultCount: number,
   if (resultCount <= 0) return -1
   if (currentIndex < 0 || currentIndex >= resultCount) return direction === 1 ? 0 : resultCount - 1
   return (currentIndex + direction + resultCount) % resultCount
+}
+
+export function indexKeyAction(key: string, ctrlKey = false): IndexKeyAction {
+  if (key === 'Escape') return { type: 'close' }
+  if (key === 'ArrowDown') return { type: 'step', direction: 1 }
+  if (key === 'ArrowUp') return { type: 'step', direction: -1 }
+  if (key === 'Enter') return { type: 'focus', keepOpen: ctrlKey }
+  return { type: 'none' }
 }
 
 export function threadFocusPoint(fromItem: CanvasItem, toItem: CanvasItem): { x: number; y: number } {

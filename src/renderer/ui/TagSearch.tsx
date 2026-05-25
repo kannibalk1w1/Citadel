@@ -5,6 +5,7 @@ import {
   getCommentResults,
   getIndexResults,
   groupSearchResults,
+  indexKeyAction,
   isItemSearchResult,
   nextSearchResultIndex,
   threadFocusPoint,
@@ -108,6 +109,25 @@ export function TagSearch(): React.ReactElement | null {
     focusResult(results[index], false)
   }
 
+  const handleIndexKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const action = indexKeyAction(event.key, event.ctrlKey)
+    if (action.type === 'none') return
+
+    event.preventDefault()
+    if (action.type === 'close') {
+      close()
+      return
+    }
+
+    if (action.type === 'step') {
+      stepResult(action.direction)
+      return
+    }
+
+    const result = results[activeResultIndex]
+    if (result) focusResult(result, !action.keepOpen)
+  }
+
   const appendToken = (token: string) => {
     const tokens = searchQuery.trim().split(/\s+/).filter(Boolean)
     if (!tokens.includes(token)) setSearchQuery([...tokens, token].join(' '))
@@ -134,7 +154,7 @@ export function TagSearch(): React.ReactElement | null {
           autoFocus
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Escape') close() }}
+          onKeyDown={handleIndexKeyDown}
           placeholder="Search the Index..."
           style={{
             flex: 1,
@@ -201,7 +221,7 @@ export function TagSearch(): React.ReactElement | null {
             <button
               type="button"
               onClick={() => stepResult(-1)}
-              title="Previous result"
+              title="Previous result (ArrowUp)"
               style={navButtonStyle}
             >
               Prev
@@ -209,7 +229,7 @@ export function TagSearch(): React.ReactElement | null {
             <button
               type="button"
               onClick={() => stepResult(1)}
-              title="Next result"
+              title="Next result (ArrowDown)"
               style={navButtonStyle}
             >
               Next

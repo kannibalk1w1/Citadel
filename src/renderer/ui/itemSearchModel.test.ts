@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Connection } from '../../types'
-import { buildSearchResult, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, nextSearchResultIndex, threadFocusPoint } from './itemSearchModel'
+import { buildSearchResult, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, threadFocusPoint } from './itemSearchModel'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -154,5 +154,14 @@ describe('itemSearchModel', () => {
     expect(nextSearchResultIndex(0, 3, -1)).toBe(2)
     expect(nextSearchResultIndex(-1, 3, 1)).toBe(0)
     expect(nextSearchResultIndex(0, 0, 1)).toBe(-1)
+  })
+
+  it('maps index keyboard input to navigation actions', () => {
+    expect(indexKeyAction('Escape')).toEqual({ type: 'close' })
+    expect(indexKeyAction('ArrowDown')).toEqual({ type: 'step', direction: 1 })
+    expect(indexKeyAction('ArrowUp')).toEqual({ type: 'step', direction: -1 })
+    expect(indexKeyAction('Enter')).toEqual({ type: 'focus', keepOpen: false })
+    expect(indexKeyAction('Enter', true)).toEqual({ type: 'focus', keepOpen: true })
+    expect(indexKeyAction('Tab')).toEqual({ type: 'none' })
   })
 })
