@@ -11,8 +11,8 @@ const SEARCH_CHIPS = [
   { label: 'Hidden', token: 'is:hidden' },
   { label: 'Locked', token: 'is:locked' },
   { label: 'Linked', token: 'has:link' },
-  { label: 'Assets', token: 'has:src' },
-  { label: 'Tagged', token: 'has:tag' },
+  { label: 'Relics', token: 'has:src' },
+  { label: 'Sigils', token: 'has:tag' },
 ] as const
 
 export function TagSearch(): React.ReactElement | null {
@@ -83,7 +83,7 @@ export function TagSearch(): React.ReactElement | null {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') close() }}
-          placeholder="Search items..."
+          placeholder="Search the Index..."
           style={{
             flex: 1,
             background: 'var(--bg-ui)',

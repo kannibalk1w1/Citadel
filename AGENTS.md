@@ -8,10 +8,32 @@
 
 - **Name:** Citadel
 - **Type:** Electron desktop app (Windows)
-- **Purpose:** Infinite canvas creative reference tool — spiritual clone of Ref Flow with major extensions
+- **Purpose:** Atmospheric archive for memory, research, reference, introspection, and nonlinear thought — an infinite canvas where files, notes, media, and ideas become relics that can be marked, arranged, annotated, searched, and bound together.
 - **Theme:** Dark fantasy. Stone tones, aged gold text, arcane details. Never generic/material/flat.
 - **File extensions:** `.citadel` (JSON project), `.citadelz` (zip archive with bundled assets)
 - **License:** MIT. Open source from day one.
+
+## Defining Movement
+
+Citadel is **not primarily a worldbuilding application**. It may support worldbuilding, campaign planning, game design, visual development, personal archives, academic research, grief/memory work, and creative investigation, but no single use case should dominate the default product language.
+
+Core direction:
+
+> Citadel is a dark archival canvas for collecting files, memories, research, fragments, and thoughts, then marking, arranging, and binding them into visible patterns.
+
+Preferred product language:
+
+- **Relic:** any imported file, capture, note, memory, reference, PDF, audio, video, model, or fragment.
+- **Inscription:** an annotation, note, comment, or written mark.
+- **Thread:** a visual and logical relationship between relics or thoughts.
+- **Sigil:** a searchable tag, marker, category, mood, or conceptual mark.
+- **Chamber:** a board or archive space.
+- **Index:** the searchable catalogue across relics, inscriptions, threads, sigils, and chambers.
+- **Binding:** the act of creating a meaningful thread.
+
+Avoid making default first-class concepts like Character, Place, Clue, Event, or Faction. Those can exist as user-created sigils/templates, but the foundation is archival, reflective, and research-oriented.
+
+See `docs/citadel-defining-movement.md` for the full direction and `docs/citadel-performance-roadmap.md` for the medium-term performance strategy.
 
 ---
 
