@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth, threadMeaningBadgeLabel } from './connectionViewModel'
+import { bindingEndpointMarks, connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth, threadMeaningBadgeLabel } from './connectionViewModel'
 
 describe('connectionViewModel', () => {
   it('centres a mindmap label plaque between connector endpoints', () => {
@@ -48,5 +48,20 @@ describe('connectionViewModel', () => {
     expect(fading?.opacity).toBeLessThan(fresh!.opacity)
 
     expect(connectionBindingPulse(1000, 1901)).toBeNull()
+  })
+
+  it('creates endpoint sigil marks for active and pulsing bindings only', () => {
+    expect(bindingEndpointMarks({ x: 10, y: 20 }, { x: 90, y: 40 }, { isActive: false, pulse: null })).toEqual([])
+
+    const activeMarks = bindingEndpointMarks({ x: 10, y: 20 }, { x: 90, y: 40 }, { isActive: true, pulse: null })
+    expect(activeMarks).toHaveLength(2)
+    expect(activeMarks[0]).toMatchObject({ x: 10, y: 20, radius: 5.5, opacity: 0.68, strokeWidth: 1.25 })
+
+    const pulseMarks = bindingEndpointMarks({ x: 10, y: 20 }, { x: 90, y: 40 }, {
+      isActive: false,
+      pulse: { opacity: 0.5, strokeBoost: 3 },
+    })
+    expect(pulseMarks[0].radius).toBeGreaterThan(activeMarks[0].radius)
+    expect(pulseMarks[0].opacity).toBeCloseTo(0.5)
   })
 })

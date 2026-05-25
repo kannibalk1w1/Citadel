@@ -3,7 +3,7 @@ import type { CanvasItem, Connection, Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
-import { connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
+import { bindingEndpointMarks, connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 import { visibleConnectionIds } from './overlayVisibility'
 
 type Props = {
@@ -173,6 +173,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
         const pulse = bindingPulse?.connectionId === conn.id
           ? connectionBindingPulse(bindingPulse.startedAt, pulseNow)
           : null
+        const endpointMarks = bindingEndpointMarks(from, to, { isActive, pulse })
 
         return (
           <g key={conn.id} style={{ color: conn.color }}>
@@ -210,6 +211,37 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                 style={{ pointerEvents: 'none' }}
               />
             )}
+            {endpointMarks.map((mark, index) => (
+              <g key={`${conn.id}-endpoint-${index}`} style={{ pointerEvents: 'none' }}>
+                <circle
+                  cx={mark.x}
+                  cy={mark.y}
+                  r={mark.radius + 3}
+                  fill="none"
+                  stroke="var(--text-accent)"
+                  strokeWidth={0.75}
+                  opacity={mark.opacity * 0.22}
+                />
+                <circle
+                  cx={mark.x}
+                  cy={mark.y}
+                  r={mark.radius}
+                  fill="var(--bg-panel)"
+                  fillOpacity={0.35}
+                  stroke="var(--text-accent)"
+                  strokeWidth={mark.strokeWidth}
+                  opacity={mark.opacity}
+                />
+                <path
+                  d={`M ${mark.x - mark.radius - 2} ${mark.y} L ${mark.x - 2} ${mark.y} M ${mark.x + 2} ${mark.y} L ${mark.x + mark.radius + 2} ${mark.y} M ${mark.x} ${mark.y - mark.radius - 2} L ${mark.x} ${mark.y - 2} M ${mark.x} ${mark.y + 2} L ${mark.x} ${mark.y + mark.radius + 2}`}
+                  fill="none"
+                  stroke="var(--text-primary)"
+                  strokeWidth={0.75}
+                  strokeLinecap="round"
+                  opacity={mark.opacity * 0.62}
+                />
+              </g>
+            ))}
             <path
               d={d}
               fill="none"

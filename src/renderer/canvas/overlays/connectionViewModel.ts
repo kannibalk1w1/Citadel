@@ -14,6 +14,19 @@ export type LabelPlaque = {
   badgeY: number
 }
 
+export type BindingPulse = {
+  opacity: number
+  strokeBoost: number
+}
+
+export type BindingEndpointMark = {
+  x: number
+  y: number
+  radius: number
+  opacity: number
+  strokeWidth: number
+}
+
 const MIN_LABEL_WIDTH = 44
 const MAX_LABEL_WIDTH = 180
 const LABEL_HEIGHT = 22
@@ -52,7 +65,7 @@ export function connectorStrokeWidth(width: number, isActive: boolean): number {
   return isActive ? width + 2 : width
 }
 
-export function connectionBindingPulse(startedAt: number, now: number): { opacity: number; strokeBoost: number } | null {
+export function connectionBindingPulse(startedAt: number, now: number): BindingPulse | null {
   const elapsed = now - startedAt
   if (elapsed < 0 || elapsed > BINDING_PULSE_MS) return null
   const progress = elapsed / BINDING_PULSE_MS
@@ -61,4 +74,21 @@ export function connectionBindingPulse(startedAt: number, now: number): { opacit
     opacity: 0.72 * fade,
     strokeBoost: 6 * fade,
   }
+}
+
+export function bindingEndpointMarks(
+  from: ScreenPoint,
+  to: ScreenPoint,
+  state: { isActive: boolean; pulse: BindingPulse | null },
+): BindingEndpointMark[] {
+  if (!state.isActive && !state.pulse) return []
+
+  const pulseRadius = state.pulse ? state.pulse.strokeBoost * 1.15 : 0
+  const radius = state.isActive ? Math.max(5.5, 5.5 + pulseRadius) : 5.5 + pulseRadius
+  const opacity = state.pulse?.opacity ?? 0.68
+  const strokeWidth = state.isActive ? 1.25 : 1
+  return [
+    { x: from.x, y: from.y, radius, opacity, strokeWidth },
+    { x: to.x, y: to.y, radius, opacity, strokeWidth },
+  ]
 }
