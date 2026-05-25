@@ -181,7 +181,7 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- add a first large-chamber profiling note using the Chamber Load readout
+- capture a second large-chamber profile after endpoint animation lands
 
 ### Phase 2: Viewport Virtualization
 

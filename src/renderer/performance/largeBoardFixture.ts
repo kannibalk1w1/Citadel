@@ -1,5 +1,10 @@
 import type { CanvasBoard, CanvasItem } from '../../types'
+import type { ScreenSize, VisibleItemOptions } from '../canvas/visibility/viewportVisibility'
+import type { CanvasRuntimeStats } from './canvasRuntimeStats'
+import type { Viewport } from '../../types'
+import { visibleItemIds } from '../canvas/visibility/viewportVisibility'
 import { getSearchResults } from '../ui/itemSearchModel'
+import { canvasRuntimeStats } from './canvasRuntimeStats'
 
 const DEFAULT_ITEM_COUNT = 1000
 const DEFAULT_COLUMNS = 40
@@ -31,6 +36,11 @@ type SearchMeasurement = {
   resultCount: number
   markCount: number
   firstResultIds: string[]
+}
+
+type ChamberLoadMeasurementOptions = VisibleItemOptions & {
+  viewport: Viewport
+  screen: ScreenSize
 }
 
 function paddedIndex(index: number): string {
@@ -99,4 +109,15 @@ export function measureLivingIndexSearch(
     markCount: Math.min(results.length, markLimit),
     firstResultIds: results.slice(0, 5).map((result) => result.id),
   }
+}
+
+export function measureChamberLoad(
+  items: CanvasItem[],
+  options: ChamberLoadMeasurementOptions,
+): CanvasRuntimeStats {
+  const visibleIds = new Set(visibleItemIds(items, options.viewport, options.screen, {
+    overscanPx: options.overscanPx,
+    alwaysIncludeIds: options.alwaysIncludeIds,
+  }))
+  return canvasRuntimeStats(items, items.filter((item) => visibleIds.has(item.id)))
 }
