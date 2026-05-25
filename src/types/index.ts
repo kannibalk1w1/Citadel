@@ -36,6 +36,18 @@ export type CanvasItem = {
 
 export type AnchorSide = 'top' | 'right' | 'bottom' | 'left' | 'auto'
 
+export type ThreadMeaning =
+  | 'reference'
+  | 'memory'
+  | 'source'
+  | 'echo'
+  | 'contradiction'
+  | 'question'
+  | 'proof'
+  | 'inspiration'
+  | 'warning'
+  | 'sequence'
+
 export type Connection = {
   id: string
   fromId: string
@@ -47,6 +59,7 @@ export type Connection = {
   width: number
   arrowHead: 'none' | 'arrow' | 'dot' | 'diamond'
   label?: string
+  meaning?: ThreadMeaning
   dashed: boolean
 }
 

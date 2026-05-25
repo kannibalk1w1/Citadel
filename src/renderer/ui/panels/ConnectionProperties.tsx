@@ -1,6 +1,20 @@
 import React from 'react'
+import type { ThreadMeaning } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+
+const THREAD_MEANINGS: { value: ThreadMeaning; label: string }[] = [
+  { value: 'reference', label: 'Reference' },
+  { value: 'memory', label: 'Memory' },
+  { value: 'source', label: 'Source' },
+  { value: 'echo', label: 'Echo' },
+  { value: 'contradiction', label: 'Contradiction' },
+  { value: 'question', label: 'Question' },
+  { value: 'proof', label: 'Proof' },
+  { value: 'inspiration', label: 'Inspiration' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'sequence', label: 'Sequence' },
+]
 
 export function ConnectionProperties(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.connectionProperties)
@@ -45,6 +59,19 @@ export function ConnectionProperties(): React.ReactElement | null {
         />
       </label>
 
+      <label style={labelStyle}>Meaning
+        <select
+          value={conn.meaning ?? ''}
+          onChange={(e) => update({ meaning: (e.target.value || undefined) as ThreadMeaning | undefined })}
+          style={selectStyle}
+        >
+          <option value="">Unmarked thread</option>
+          {THREAD_MEANINGS.map((meaning) => (
+            <option key={meaning.value} value={meaning.value}>{meaning.label}</option>
+          ))}
+        </select>
+      </label>
+
       <label style={labelStyle}>Thread Shape
         <select value={conn.style} onChange={(e) => update({ style: e.target.value as never })} style={selectStyle}>
           <option value="bezier">Curved thread</option>
@@ -86,7 +113,7 @@ export function ConnectionProperties(): React.ReactElement | null {
             strokeLinecap="round"
           />
           <rect x="57" y="10" width="66" height="20" rx="4" fill="var(--bg-panel)" stroke="var(--border)" />
-          <text x="90" y="24" textAnchor="middle" fill="var(--text-primary)" fontSize="10">{conn.label || 'label'}</text>
+          <text x="90" y="24" textAnchor="middle" fill="var(--text-primary)" fontSize="10">{conn.label || conn.meaning || 'label'}</text>
         </svg>
       </div>
     </div>

@@ -36,6 +36,7 @@ type ParsedSearchQuery = {
   tags: string[]
   states: string[]
   assets: string[]
+  meanings: string[]
 }
 
 function basename(value: string | undefined): string {
@@ -128,6 +129,7 @@ export function buildThreadSearchResult(
   const toLabel = toItem ? buildSearchResult(toItem).label : thread.toId
   const detail = [
     'thread',
+    thread.meaning ?? '',
     `${fromLabel} -> ${toLabel}`,
     thread.style,
     thread.dashed ? 'dashed' : '',
@@ -136,6 +138,7 @@ export function buildThreadSearchResult(
     'thread connection link binding',
     thread.id,
     thread.label ?? '',
+    thread.meaning ?? '',
     thread.style,
     thread.arrowHead,
     fromLabel,
@@ -148,7 +151,7 @@ export function buildThreadSearchResult(
 }
 
 function parseSearchQuery(query: string): ParsedSearchQuery {
-  const parsed: ParsedSearchQuery = { text: '', types: [], tags: [], states: [], assets: [] }
+  const parsed: ParsedSearchQuery = { text: '', types: [], tags: [], states: [], assets: [], meanings: [] }
   const text: string[] = []
 
   query.trim().toLowerCase().split(/\s+/).filter(Boolean).forEach((token) => {
@@ -163,6 +166,7 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
     else if (prefix === 'tag') parsed.tags.push(value)
     else if (prefix === 'is') parsed.states.push(value)
     else if (prefix === 'has') parsed.assets.push(value)
+    else if (prefix === 'meaning') parsed.meanings.push(value)
     else text.push(token)
   })
 
@@ -177,6 +181,7 @@ function matchesItemSearchQuery(result: ItemSearchResult, parsed: ParsedSearchQu
   if (parsed.text && !result.haystack.includes(parsed.text)) return false
   if (parsed.types.length && !parsed.types.some((type) => type === item.type || (type === 'comment' && isComment))) return false
   if (parsed.tags.length && !parsed.tags.every((tag) => item.tags.some((itemTag) => itemTag.toLowerCase() === tag))) return false
+  if (parsed.meanings.length) return false
 
   if (!parsed.states.every((state) => {
     if (state === 'hidden') return item.visible === false
@@ -191,6 +196,7 @@ function matchesItemSearchQuery(result: ItemSearchResult, parsed: ParsedSearchQu
     if (asset === 'link') return Boolean(item.link)
     if (asset === 'src' || asset === 'asset') return Boolean(item.src || item.meta?.srcA || item.meta?.srcB)
     if (asset === 'tag' || asset === 'tags') return item.tags.length > 0
+    if (asset === 'meaning') return false
     return true
   })) return false
 
@@ -204,13 +210,18 @@ function matchesThreadSearchQuery(result: ThreadSearchResult, parsed: ParsedSear
     result.fromItem?.tags.some((itemTag) => itemTag.toLowerCase() === tag) ||
     result.toItem?.tags.some((itemTag) => itemTag.toLowerCase() === tag)
   ))) return false
+  if (parsed.meanings.length && !parsed.meanings.every((meaning) => result.thread.meaning === meaning)) return false
   if (parsed.states.length > 0) return false
-  if (!parsed.assets.every((asset) => asset === 'label' || asset === 'thread')) return false
+  if (!parsed.assets.every((asset) => {
+    if (asset === 'label') return Boolean(result.thread.label)
+    if (asset === 'meaning') return Boolean(result.thread.meaning)
+    return asset === 'thread'
+  })) return false
   return true
 }
 
 function hasSearchTerms(parsed: ParsedSearchQuery): boolean {
-  return Boolean(parsed.text || parsed.types.length || parsed.tags.length || parsed.states.length || parsed.assets.length)
+  return Boolean(parsed.text || parsed.types.length || parsed.tags.length || parsed.states.length || parsed.assets.length || parsed.meanings.length)
 }
 
 export function getSearchResults(items: CanvasItem[], query: string, limit = 30): ItemSearchResult[] {

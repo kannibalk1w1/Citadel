@@ -21,6 +21,9 @@ const SEARCH_CHIPS = [
   { label: 'Relics', token: 'has:src' },
   { label: 'Sigils', token: 'has:tag' },
   { label: 'Threads', token: 'type:thread' },
+  { label: 'Meanings', token: 'has:meaning' },
+  { label: 'Memory', token: 'meaning:memory' },
+  { label: 'Questions', token: 'meaning:question' },
 ] as const
 
 export function TagSearch(): React.ReactElement | null {

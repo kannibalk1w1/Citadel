@@ -114,6 +114,31 @@ describe('itemSearchModel', () => {
     expect(groups.find((group) => group.id === 'threads')?.results.map((result) => result.id)).toEqual(['thread-1'])
   })
 
+  it('indexes and filters thread meanings', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [{ ...baseConnection, label: 'old interview', meaning: 'memory' }], 'meaning:memory')
+
+    expect(results.map((result) => result.id)).toEqual(['thread-1'])
+    expect(results[0].detail).toContain('memory')
+    expect(results[0].haystack).toContain('memory')
+  })
+
+  it('filters to marked threads with has:meaning', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [
+      { ...baseConnection, id: 'thread-1', meaning: 'memory' },
+      { ...baseConnection, id: 'thread-2', label: 'plain relation', meaning: undefined },
+    ], 'has:meaning')
+
+    expect(results.map((result) => result.id)).toEqual(['thread-1'])
+  })
+
   it('computes a focus point between thread endpoints', () => {
     const point = threadFocusPoint(
       { ...baseItem, id: 'image-1', x: 10, y: 20, width: 100, height: 80 },
