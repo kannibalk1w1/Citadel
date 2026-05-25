@@ -145,7 +145,8 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
         const markerEnd = conn.arrowHead !== 'none' ? `url(#${conn.arrowHead})` : undefined
         const isActive = conn.id === activeConnectionId
         const labelText = conn.label?.trim()
-        const plaque = labelText ? connectionLabelPlaque(from, to, labelText) : null
+        const plaqueText = labelText || (conn.meaning ? 'Thread' : '')
+        const plaque = plaqueText ? connectionLabelPlaque(from, to, plaqueText, conn.meaning) : null
 
         return (
           <g key={conn.id} style={{ color: conn.color }}>
@@ -193,7 +194,7 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
               filter={isActive ? 'url(#connector-glow)' : undefined}
               style={{ pointerEvents: 'none' }}
             />
-            {plaque && labelText && (
+            {plaque && plaqueText && (
               <g
                 style={{ pointerEvents: 'all', cursor: 'text' }}
                 onClick={() => activateConnection(conn.id, false)}
@@ -229,8 +230,35 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
                   fontWeight={600}
                   style={{ userSelect: 'none' }}
                 >
-                  {labelText.length > 24 ? `${labelText.slice(0, 23)}...` : labelText}
+                  {plaqueText.length > 24 ? `${plaqueText.slice(0, 23)}...` : plaqueText}
                 </text>
+                {plaque.badgeText && (
+                  <>
+                    <rect
+                      x={plaque.badgeX - Math.min(plaque.width - 18, plaque.badgeText.length * 6 + 14) / 2}
+                      y={plaque.badgeY - 9}
+                      width={Math.min(plaque.width - 18, plaque.badgeText.length * 6 + 14)}
+                      height={12}
+                      rx={2}
+                      fill="#1d1710"
+                      stroke="#c8a96e"
+                      strokeWidth={0.75}
+                      opacity={0.88}
+                    />
+                    <text
+                      x={plaque.badgeX}
+                      y={plaque.badgeY}
+                      textAnchor="middle"
+                      fill="#c8a96e"
+                      fontSize={8}
+                      fontFamily="var(--font-mono)"
+                      fontWeight={700}
+                      style={{ userSelect: 'none' }}
+                    >
+                      {plaque.badgeText}
+                    </text>
+                  </>
+                )}
               </g>
             )}
           </g>
