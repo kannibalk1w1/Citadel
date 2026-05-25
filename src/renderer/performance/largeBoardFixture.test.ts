@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { createLargeBoardFixture, measureChamberLoad, measureLivingIndexSearch } from './largeBoardFixture'
+import { createLargeBoardFixture, measureBindingOverlayLoad, measureChamberLoad, measureLivingIndexSearch } from './largeBoardFixture'
+import type { Connection } from '../../types'
+
+function connection(id: string, fromId: string, toId: string): Connection {
+  return {
+    id,
+    fromId,
+    toId,
+    fromAnchor: 'auto',
+    toAnchor: 'auto',
+    style: 'bezier',
+    color: '#c8a96e',
+    width: 1.5,
+    arrowHead: 'arrow',
+    dashed: false,
+  }
+}
 
 describe('largeBoardFixture', () => {
   it('creates a deterministic large chamber with predictable Index matches', () => {
@@ -64,6 +80,28 @@ describe('largeBoardFixture', () => {
       mountedRelics: 23,
       awakeDOMMedia: 2,
       sleepingAnimatedRelics: 1,
+    })
+  })
+
+  it('measures visible binding overlay load after endpoint sigils', () => {
+    const fixture = createLargeBoardFixture({ itemCount: 1000, columns: 50 })
+    const connections = [
+      connection('visible-thread', 'fixture-relic-0000', 'fixture-relic-0001'),
+      connection('sleeping-thread', 'fixture-relic-0900', 'fixture-relic-0901'),
+      connection('active-thread', 'fixture-relic-0902', 'fixture-relic-0903'),
+      connection('pulsing-thread', 'fixture-relic-0904', 'fixture-relic-0905'),
+    ]
+
+    expect(measureBindingOverlayLoad(fixture.board.items, connections, {
+      viewport: { x: 0, y: 0, scale: 1 },
+      screen: { width: 540, height: 280 },
+      overscanPx: 240,
+      activeConnectionId: 'active-thread',
+      pulsingConnectionId: 'pulsing-thread',
+    })).toEqual({
+      renderedConnections: 3,
+      activeOrPulsingConnections: 2,
+      endpointSigilMarks: 4,
     })
   })
 })

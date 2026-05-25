@@ -180,8 +180,8 @@ Goals:
 
 Next:
 
-- add richer visual binding animation around endpoints
-- capture a second large-chamber profile after endpoint animation lands
+- add a short Binding reveal animation for newly created visible threads
+- capture a third large-chamber profile only if reveal animation adds persistent SVG elements or timers
 
 ### Phase 2: Viewport Virtualization
 

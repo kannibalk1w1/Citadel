@@ -1,8 +1,9 @@
-import type { CanvasBoard, CanvasItem } from '../../types'
+import type { CanvasBoard, CanvasItem, Connection } from '../../types'
 import type { ScreenSize, VisibleItemOptions } from '../canvas/visibility/viewportVisibility'
 import type { CanvasRuntimeStats } from './canvasRuntimeStats'
 import type { Viewport } from '../../types'
 import { visibleItemIds } from '../canvas/visibility/viewportVisibility'
+import { visibleConnectionIds } from '../canvas/overlays/overlayVisibility'
 import { getSearchResults } from '../ui/itemSearchModel'
 import { canvasRuntimeStats } from './canvasRuntimeStats'
 
@@ -41,6 +42,17 @@ type SearchMeasurement = {
 type ChamberLoadMeasurementOptions = VisibleItemOptions & {
   viewport: Viewport
   screen: ScreenSize
+}
+
+type BindingOverlayMeasurementOptions = ChamberLoadMeasurementOptions & {
+  activeConnectionId?: string | null
+  pulsingConnectionId?: string | null
+}
+
+type BindingOverlayMeasurement = {
+  renderedConnections: number
+  activeOrPulsingConnections: number
+  endpointSigilMarks: number
 }
 
 function paddedIndex(index: number): string {
@@ -120,4 +132,29 @@ export function measureChamberLoad(
     alwaysIncludeIds: options.alwaysIncludeIds,
   }))
   return canvasRuntimeStats(items, items.filter((item) => visibleIds.has(item.id)))
+}
+
+export function measureBindingOverlayLoad(
+  items: CanvasItem[],
+  connections: Connection[],
+  options: BindingOverlayMeasurementOptions,
+): BindingOverlayMeasurement {
+  const visibleIds = new Set(visibleItemIds(items, options.viewport, options.screen, {
+    overscanPx: options.overscanPx,
+    alwaysIncludeIds: options.alwaysIncludeIds,
+  }))
+  const renderedConnectionIds = visibleConnectionIds(connections, visibleIds, {
+    activeConnectionId: options.activeConnectionId,
+    pulsingConnectionId: options.pulsingConnectionId,
+  })
+  const activeOrPulsing = new Set([
+    options.activeConnectionId,
+    options.pulsingConnectionId,
+  ].filter((id): id is string => Boolean(id) && renderedConnectionIds.has(id)))
+
+  return {
+    renderedConnections: renderedConnectionIds.size,
+    activeOrPulsingConnections: activeOrPulsing.size,
+    endpointSigilMarks: activeOrPulsing.size * 2,
+  }
 }
