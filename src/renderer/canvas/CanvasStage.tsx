@@ -315,8 +315,8 @@ export function CanvasStage(): React.ReactElement {
         </Layer>
       </Stage>
 
-      <ConnectionLayer viewport={viewport} items={items} rubberBand={rubberBand} />
-      <GroupLayer viewport={viewport} />
+      <ConnectionLayer viewport={viewport} items={items} visibleItemIds={visibleIds} rubberBand={rubberBand} />
+      <GroupLayer viewport={viewport} visibleItemIds={visibleIds} />
       <div
         id="dom-items-layer"
         style={{

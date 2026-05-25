@@ -4,10 +4,12 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
+import { visibleConnectionIds } from './overlayVisibility'
 
 type Props = {
   viewport: Viewport
   items: CanvasItem[]
+  visibleItemIds?: ReadonlySet<string>
   rubberBand?: { x1: number; y1: number; x2: number; y2: number } | null
 }
 
@@ -61,7 +63,7 @@ function elbowPath(from: { x: number; y: number }, to: { x: number; y: number })
   return `M ${from.x} ${from.y} L ${mx} ${from.y} L ${mx} ${to.y} L ${to.x} ${to.y}`
 }
 
-export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.ReactElement {
+export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }: Props): React.ReactElement {
   const connections = useCanvasStore((s) => s.connections())
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const updateConnection = useCanvasStore((s) => s.updateConnection)
@@ -85,6 +87,12 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
   }, [bindingPulse, clearBindingPulse])
 
   const itemMap = new Map(items.map((i) => [i.id, i]))
+  const renderConnectionIds = visibleItemIds
+    ? visibleConnectionIds(connections, visibleItemIds, {
+        activeConnectionId,
+        pulsingConnectionId: bindingPulse?.connectionId,
+      })
+    : null
   const activateConnection = (id: string, isActive: boolean) => {
     const next = isActive ? null : id
     setActiveConnectionId(next)
@@ -137,6 +145,7 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
       </defs>
 
       {connections.map((conn) => {
+        if (renderConnectionIds && !renderConnectionIds.has(conn.id)) return null
         const fromItem = itemMap.get(conn.fromId)
         const toItem = itemMap.get(conn.toId)
         if (!fromItem || !toItem) return null

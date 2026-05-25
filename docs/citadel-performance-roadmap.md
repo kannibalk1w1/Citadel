@@ -181,7 +181,6 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- make connection and group overlays visibility-aware without dropping selected or active thread context
 - add a lightweight runtime measurement note for mounted relic count, DOM media count, and sleeping animated relics
 
 ### Phase 2: Viewport Virtualization
