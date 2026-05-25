@@ -59,7 +59,13 @@ export function SearchHighlight(): React.ReactElement | null {
         const markSize = 12 / viewport.scale
         const opacity = Math.max(0.24, pulse - index * 0.008)
         return (
-          <Group key={`index-mark-${resultItem.id}`} listening={false} opacity={opacity}>
+          <Group
+            key={`index-mark-${resultItem.id}`}
+            data-index-mark-id={resultItem.id}
+            data-testid="index-mark"
+            listening={false}
+            opacity={opacity}
+          >
             <Rect
               x={resultItem.x - markPad}
               y={resultItem.y - markPad}

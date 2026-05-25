@@ -180,9 +180,9 @@ Goals:
 
 Next:
 
-- add tests for multi-result Index marks
 - add richer visual binding animation around endpoints
 - add a large-board fixture to measure Index mark and search responsiveness
+- define the first viewport-visibility helper API for canvas virtualization
 
 ### Phase 2: Viewport Virtualization
 
