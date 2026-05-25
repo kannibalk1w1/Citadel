@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- define the first viewport-visibility helper API for canvas virtualization
 - connect the large-board fixture to a repeatable render-level smoke test
+- wire viewport visibility into `CanvasStage` behind a conservative selector and keep selected/highlighted items mounted
 
 ### Phase 2: Viewport Virtualization
 
