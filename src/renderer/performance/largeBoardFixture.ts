@@ -1,0 +1,102 @@
+import type { CanvasBoard, CanvasItem } from '../../types'
+import { getSearchResults } from '../ui/itemSearchModel'
+
+const DEFAULT_ITEM_COUNT = 1000
+const DEFAULT_COLUMNS = 40
+const DEFAULT_MATCH_EVERY = 5
+const DEFAULT_QUERY = 'tag:index-probe'
+const DEFAULT_MARK_LIMIT = 24
+
+type LargeBoardFixtureOptions = {
+  itemCount?: number
+  columns?: number
+  matchEvery?: number
+  query?: string
+}
+
+type LargeBoardFixture = {
+  board: CanvasBoard
+  query: string
+  expectedMatchCount: number
+  expectedMarkCount: number
+}
+
+type SearchMeasurementOptions = {
+  markLimit?: number
+  now?: () => number
+}
+
+type SearchMeasurement = {
+  durationMs: number
+  resultCount: number
+  markCount: number
+  firstResultIds: string[]
+}
+
+function paddedIndex(index: number): string {
+  return index.toString().padStart(4, '0')
+}
+
+function createFixtureItem(index: number, columns: number, matchEvery: number): CanvasItem {
+  const matched = index % matchEvery === 0
+  const col = index % columns
+  const row = Math.floor(index / columns)
+  return {
+    id: `fixture-relic-${paddedIndex(index)}`,
+    type: matched ? 'image' : 'sticky',
+    x: col * 180,
+    y: row * 140,
+    width: matched ? 144 : 132,
+    height: matched ? 96 : 88,
+    rotation: 0,
+    zIndex: index,
+    locked: false,
+    visible: true,
+    opacity: 1,
+    tags: matched ? ['index-probe', 'memory'] : ['archive'],
+    src: matched ? `C:/citadel-fixture/relic-${paddedIndex(index)}.png` : undefined,
+    meta: matched ? { content: `Index probe memory ${paddedIndex(index)}` } : { content: `Archive note ${paddedIndex(index)}` },
+  }
+}
+
+export function createLargeBoardFixture(options: LargeBoardFixtureOptions = {}): LargeBoardFixture {
+  const itemCount = options.itemCount ?? DEFAULT_ITEM_COUNT
+  const columns = options.columns ?? DEFAULT_COLUMNS
+  const matchEvery = Math.max(1, options.matchEvery ?? DEFAULT_MATCH_EVERY)
+  const query = options.query ?? DEFAULT_QUERY
+  const items = Array.from({ length: itemCount }, (_, index) => createFixtureItem(index, columns, matchEvery))
+  const expectedMatchCount = items.filter((_, index) => index % matchEvery === 0).length
+
+  return {
+    board: {
+      id: 'fixture-large-board',
+      name: 'Large Fixture Chamber',
+      items,
+      connections: [],
+      viewport: { x: 0, y: 0, scale: 1 },
+      meta: { mood: 'gothic', fixture: 'large-board' },
+    },
+    query,
+    expectedMatchCount,
+    expectedMarkCount: Math.min(expectedMatchCount, DEFAULT_MARK_LIMIT),
+  }
+}
+
+export function measureLivingIndexSearch(
+  items: CanvasItem[],
+  query: string,
+  options: SearchMeasurementOptions = {},
+): SearchMeasurement {
+  const markLimit = options.markLimit ?? DEFAULT_MARK_LIMIT
+  const now = options.now ?? (() => performance.now())
+  const start = now()
+  const results = getSearchResults(items, query, items.length)
+  const end = now()
+
+  return {
+    durationMs: end - start,
+    resultCount: results.length,
+    markCount: Math.min(results.length, markLimit),
+    firstResultIds: results.slice(0, 5).map((result) => result.id),
+  }
+}

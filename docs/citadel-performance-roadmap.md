@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- add a large-board fixture to measure Index mark and search responsiveness
 - define the first viewport-visibility helper API for canvas virtualization
+- connect the large-board fixture to a repeatable render-level smoke test
 
 ### Phase 2: Viewport Virtualization
 
@@ -195,8 +195,7 @@ Goals:
 
 Verification:
 
-- add a generated large-board test fixture
-- measure pan and zoom responsiveness with 1,000+ simple items
+- use the generated large-board fixture to measure search, mark, pan, and zoom responsiveness with 1,000+ simple items
 - measure GIF, video, and 3D offscreen behavior
 
 ### Phase 3: Asset Metadata And Thumbnails
