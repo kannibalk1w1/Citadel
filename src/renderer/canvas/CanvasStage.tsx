@@ -20,10 +20,12 @@ import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
+import { visibleItemIds } from './visibility/viewportVisibility'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
+const VIEWPORT_OVERSCAN_PX = 240
 
 export function CanvasStage(): React.ReactElement {
   const stageRef = useRef<Konva.Stage>(null)
@@ -40,9 +42,10 @@ export function CanvasStage(): React.ReactElement {
   const connectFromId = useUIStore((s) => s.connectFromId)
   const setConnectFromId = useUIStore((s) => s.setConnectFromId)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
-  const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -236,6 +239,12 @@ export function CanvasStage(): React.ReactElement {
   )
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
+  const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
+  const visibleIds = useMemo(() => new Set(visibleItemIds(sortedItems, viewport, { width, height }, {
+    overscanPx: VIEWPORT_OVERSCAN_PX,
+    alwaysIncludeIds: [...selectedIds, searchHighlightId, connectFromId].filter((id): id is string => Boolean(id)),
+  })), [connectFromId, height, searchHighlightId, selectedIds, sortedItems, viewport, width])
+  const renderedItems = useMemo(() => sortedItems.filter((item) => visibleIds.has(item.id)), [sortedItems, visibleIds])
 
   // Compute rubber-band endpoints in screen space
   const connectSource = connectFromId ? items.find((i) => i.id === connectFromId) : null
@@ -285,7 +294,7 @@ export function CanvasStage(): React.ReactElement {
         }}
       >
         <Layer>
-          {sortedItems.map((item) => (
+          {renderedItems.map((item) => (
             <ItemRenderer key={item.id} item={item} />
           ))}
         </Layer>
@@ -317,7 +326,7 @@ export function CanvasStage(): React.ReactElement {
           overflow: 'visible',
         }}
       />
-      {sortedItems.map((item) => (
+      {renderedItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
       <ConnectorQuickToolbar />

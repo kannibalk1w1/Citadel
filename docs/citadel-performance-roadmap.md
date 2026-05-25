@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- connect the large-board fixture to a repeatable render-level smoke test
-- wire viewport visibility into `CanvasStage` behind a conservative selector and keep selected/highlighted items mounted
+- make canvas chrome and selection overlays consume the same viewport-visible item set
+- add DOM media pause/wake rules for offscreen video, audio, GIF, and 3D relics
 
 ### Phase 2: Viewport Virtualization
 
