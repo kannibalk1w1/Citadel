@@ -182,7 +182,7 @@ Next:
 
 - add tests for multi-result Index marks
 - add richer visual binding animation around endpoints
-- add an Index result row test covering Enter and Ctrl+Enter focus behavior
+- add a large-board fixture to measure Index mark and search responsiveness
 
 ### Phase 2: Viewport Virtualization
 
