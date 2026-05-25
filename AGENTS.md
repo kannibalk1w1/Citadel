@@ -353,4 +353,4 @@ Before writing any new feature, confirm:
 After finishing any task:
 - Summarize what changed and how it was verified.
 - Commit and push completed code changes when appropriate.
-- Suggest the next highest-value step to build or review.
+- Always suggest the next highest-value step to build or review, so the project keeps momentum without the user needing to ask.
