@@ -20,6 +20,7 @@ const LABEL_HEIGHT = 22
 const BADGE_LABEL_HEIGHT = 36
 const LABEL_PAD_X = 14
 const APPROX_CHAR_WIDTH = 7
+const BINDING_PULSE_MS = 900
 
 export function threadMeaningBadgeLabel(meaning?: ThreadMeaning): string | null {
   return meaning ? meaning.toUpperCase() : null
@@ -49,4 +50,15 @@ export function connectionLabelPlaque(from: ScreenPoint, to: ScreenPoint, label:
 
 export function connectorStrokeWidth(width: number, isActive: boolean): number {
   return isActive ? width + 2 : width
+}
+
+export function connectionBindingPulse(startedAt: number, now: number): { opacity: number; strokeBoost: number } | null {
+  const elapsed = now - startedAt
+  if (elapsed < 0 || elapsed > BINDING_PULSE_MS) return null
+  const progress = elapsed / BINDING_PULSE_MS
+  const fade = 1 - progress
+  return {
+    opacity: 0.72 * fade,
+    strokeBoost: 6 * fade,
+  }
 }

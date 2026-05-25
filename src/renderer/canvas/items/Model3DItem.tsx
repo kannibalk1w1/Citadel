@@ -47,6 +47,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
         }
         canvas.addConnection(activeBoardId, conn)
         useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
+        ui.triggerBindingPulse(conn.id)
         ui.setConnectFromId(null)
         ui.setToolMode('select')
       }

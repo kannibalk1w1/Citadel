@@ -58,6 +58,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         }
         canvas.addConnection(activeBoardId, conn)
         useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
+        ui.triggerBindingPulse(conn.id)
         ui.setConnectFromId(null)
         ui.setToolMode('select')
       }

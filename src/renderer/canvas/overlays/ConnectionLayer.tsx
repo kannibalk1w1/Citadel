@@ -3,7 +3,7 @@ import type { CanvasItem, Connection, Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
-import { connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
+import { connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 
 type Props = {
   viewport: Viewport
@@ -66,9 +66,23 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const updateConnection = useCanvasStore((s) => s.updateConnection)
   const activeConnectionId = useUIStore((s) => s.activeConnectionId)
+  const bindingPulse = useUIStore((s) => s.bindingPulse)
   const setActiveConnectionId = useUIStore((s) => s.setActiveConnectionId)
   const openPanel = useUIStore((s) => s.openPanel)
   const closePanel = useUIStore((s) => s.closePanel)
+  const clearBindingPulse = useUIStore((s) => s.clearBindingPulse)
+  const [pulseNow, setPulseNow] = React.useState(() => Date.now())
+
+  React.useEffect(() => {
+    if (!bindingPulse) return undefined
+    setPulseNow(Date.now())
+    const interval = window.setInterval(() => {
+      const now = Date.now()
+      setPulseNow(now)
+      if (!connectionBindingPulse(bindingPulse.startedAt, now)) clearBindingPulse()
+    }, 50)
+    return () => window.clearInterval(interval)
+  }, [bindingPulse, clearBindingPulse])
 
   const itemMap = new Map(items.map((i) => [i.id, i]))
   const activateConnection = (id: string, isActive: boolean) => {
@@ -147,6 +161,9 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
         const labelText = conn.label?.trim()
         const plaqueText = labelText || (conn.meaning ? 'Thread' : '')
         const plaque = plaqueText ? connectionLabelPlaque(from, to, plaqueText, conn.meaning) : null
+        const pulse = bindingPulse?.connectionId === conn.id
+          ? connectionBindingPulse(bindingPulse.startedAt, pulseNow)
+          : null
 
         return (
           <g key={conn.id} style={{ color: conn.color }}>
@@ -169,6 +186,18 @@ export function ConnectionLayer({ viewport, items, rubberBand }: Props): React.R
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 opacity={0.12}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+            {pulse && (
+              <path
+                d={d}
+                fill="none"
+                stroke="#c8a96e"
+                strokeWidth={conn.width + pulse.strokeBoost}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={pulse.opacity}
                 style={{ pointerEvents: 'none' }}
               />
             )}

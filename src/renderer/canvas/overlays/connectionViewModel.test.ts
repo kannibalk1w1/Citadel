@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { connectionLabelPlaque, connectorStrokeWidth, threadMeaningBadgeLabel } from './connectionViewModel'
+import { connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth, threadMeaningBadgeLabel } from './connectionViewModel'
 
 describe('connectionViewModel', () => {
   it('centres a mindmap label plaque between connector endpoints', () => {
@@ -35,5 +35,18 @@ describe('connectionViewModel', () => {
   it('formats thread meaning badge labels', () => {
     expect(threadMeaningBadgeLabel('source')).toBe('SOURCE')
     expect(threadMeaningBadgeLabel(undefined)).toBeNull()
+  })
+
+  it('fades thread binding pulses over their duration', () => {
+    expect(connectionBindingPulse(1000, 950)).toBeNull()
+
+    const fresh = connectionBindingPulse(1000, 1000)
+    expect(fresh?.opacity).toBeCloseTo(0.72)
+    expect(fresh?.strokeBoost).toBeGreaterThan(5)
+
+    const fading = connectionBindingPulse(1000, 1450)
+    expect(fading?.opacity).toBeLessThan(fresh!.opacity)
+
+    expect(connectionBindingPulse(1000, 1901)).toBeNull()
   })
 })

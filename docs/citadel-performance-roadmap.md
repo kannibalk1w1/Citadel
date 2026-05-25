@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add tests for multi-result Index marks
-- add thread binding creation feedback
 - add keyboard shortcuts for next and previous result navigation
+- add richer visual binding animation around endpoints
 
 ### Phase 2: Viewport Virtualization
 
