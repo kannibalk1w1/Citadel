@@ -1,8 +1,15 @@
 import React from 'react'
-import type { CanvasItem } from '../../types'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
-import { getCommentResults, getSearchResults, groupSearchResults, nextSearchResultIndex, type SearchResult } from './itemSearchModel'
+import {
+  getCommentResults,
+  getIndexResults,
+  groupSearchResults,
+  isItemSearchResult,
+  nextSearchResultIndex,
+  threadFocusPoint,
+  type SearchResult,
+} from './itemSearchModel'
 
 const SEARCH_CHIPS = [
   { label: 'Images', token: 'type:image' },
@@ -13,6 +20,7 @@ const SEARCH_CHIPS = [
   { label: 'Linked', token: 'has:link' },
   { label: 'Relics', token: 'has:src' },
   { label: 'Sigils', token: 'has:tag' },
+  { label: 'Threads', token: 'type:thread' },
 ] as const
 
 export function TagSearch(): React.ReactElement | null {
@@ -21,13 +29,15 @@ export function TagSearch(): React.ReactElement | null {
   const setSearchQuery = useUIStore((s) => s.setSearchQuery)
   const setSearchHighlight = useUIStore((s) => s.setSearchHighlight)
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const clearSelection = useCanvasStore((s) => s.clearSelection)
   const updateViewport = useCanvasStore((s) => s.updateViewport)
   const viewport = useCanvasStore((s) => s.viewport())
   const items = useCanvasStore((s) => s.items())
+  const connections = useCanvasStore((s) => s.connections())
   const [activeResultIndex, setActiveResultIndex] = React.useState(-1)
 
   const query = searchQuery.trim().toLowerCase()
-  const results = getSearchResults(items, query)
+  const results = getIndexResults(items, connections, query)
   const groupedResults = groupSearchResults(results)
   const commentResults = query ? [] : getCommentResults(items)
 
@@ -47,35 +57,52 @@ export function TagSearch(): React.ReactElement | null {
     useUIStore.getState().closePanel('tagSearch')
   }
 
-  const focusResult = (item: CanvasItem, closeAfterFocus: boolean) => {
+  const focusPoint = (x: number, y: number) => {
     const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
     const canvasW = window.innerWidth - sidebarW
-    const cx = item.x + item.width / 2
-    const cy = item.y + item.height / 2
 
-    setSelection([item.id])
     updateViewport({
-      x: canvasW / 2 - cx * viewport.scale,
-      y: window.innerHeight / 2 - cy * viewport.scale,
+      x: canvasW / 2 - x * viewport.scale,
+      y: window.innerHeight / 2 - y * viewport.scale,
     })
-    setSearchHighlight(item.id)
-    window.setTimeout(() => {
-      if (useUIStore.getState().searchHighlightId === item.id) {
-        useUIStore.getState().setSearchHighlight(null)
-      }
-    }, 900)
+  }
+
+  const focusResult = (result: SearchResult, closeAfterFocus: boolean) => {
+    if (isItemSearchResult(result)) {
+      const cx = result.item.x + result.item.width / 2
+      const cy = result.item.y + result.item.height / 2
+
+      setSelection([result.item.id])
+      focusPoint(cx, cy)
+      setSearchHighlight(result.item.id)
+      window.setTimeout(() => {
+        if (useUIStore.getState().searchHighlightId === result.item.id) {
+          useUIStore.getState().setSearchHighlight(null)
+        }
+      }, 900)
+      if (closeAfterFocus) close()
+      return
+    }
+
+    if (result.fromItem && result.toItem) {
+      const point = threadFocusPoint(result.fromItem, result.toItem)
+      focusPoint(point.x, point.y)
+    }
+    clearSelection()
+    useUIStore.getState().setActiveConnectionId(result.thread.id)
+    useUIStore.getState().openPanel('connectionProperties')
     if (closeAfterFocus) close()
   }
 
-  const selectResult = (item: CanvasItem) => {
-    focusResult(item, true)
+  const selectResult = (result: SearchResult) => {
+    focusResult(result, true)
   }
 
   const stepResult = (direction: 1 | -1) => {
     const index = nextSearchResultIndex(activeResultIndex, results.length, direction)
     if (index === -1) return
     setActiveResultIndex(index)
-    focusResult(results[index].item, false)
+    focusResult(results[index], false)
   }
 
   const appendToken = (token: string) => {
@@ -200,7 +227,7 @@ export function TagSearch(): React.ReactElement | null {
 
       {results.length > 0 && groupedResults.map((group) => (
         group.results.length > 0
-          ? <ResultList key={group.id} title={group.title} results={group.results} activeItemId={results[activeResultIndex]?.item.id ?? null} selectResult={selectResult} />
+          ? <ResultList key={group.id} title={group.title} results={group.results} activeItemId={results[activeResultIndex]?.id ?? null} selectResult={selectResult} />
           : null
       ))}
     </div>
@@ -228,7 +255,7 @@ function ResultList({
   title?: string
   results: SearchResult[]
   activeItemId?: string | null
-  selectResult: (item: CanvasItem) => void
+  selectResult: (result: SearchResult) => void
 }): React.ReactElement {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 340, overflowY: 'auto' }}>
@@ -237,12 +264,12 @@ function ResultList({
           {title}
         </div>
       )}
-      {results.map(({ item, label, detail }) => {
-        const active = item.id === activeItemId
+      {results.map((result) => {
+        const active = result.id === activeItemId
         return (
         <button
-          key={item.id}
-          onClick={() => selectResult(item)}
+          key={result.id}
+          onClick={() => selectResult(result)}
           style={{
             background: active ? 'var(--bg-hover)' : 'transparent',
             border: `1px solid ${active ? 'var(--accent)' : 'transparent'}`,
@@ -270,7 +297,7 @@ function ResultList({
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}>
-              {label}
+              {result.label}
             </span>
             <span style={{
               color: 'var(--accent)',
@@ -282,7 +309,7 @@ function ResultList({
               flexShrink: 0,
               textTransform: 'uppercase',
             }}>
-              {item.meta?.kind === 'comment' ? 'comment' : item.type}
+              {resultBadge(result)}
             </span>
           </div>
           <div style={{
@@ -294,11 +321,16 @@ function ResultList({
             whiteSpace: 'nowrap',
             marginTop: 2,
           }}>
-            {detail}
+            {result.detail}
           </div>
         </button>
         )
       })}
     </div>
   )
+}
+
+function resultBadge(result: SearchResult): string {
+  if (!isItemSearchResult(result)) return 'thread'
+  return result.item.meta?.kind === 'comment' ? 'comment' : result.item.type
 }

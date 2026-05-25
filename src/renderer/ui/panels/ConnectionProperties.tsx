@@ -21,7 +21,7 @@ export function ConnectionProperties(): React.ReactElement | null {
     <div className="citadel-floating-panel" style={panelStyle}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Mindmap Link
+          Thread
         </h3>
         <button
           type="button"
@@ -36,19 +36,19 @@ export function ConnectionProperties(): React.ReactElement | null {
         </button>
       </div>
 
-      <label style={labelStyle}>Label
+      <label style={labelStyle}>Inscription
         <input
           value={conn.label ?? ''}
           onChange={(e) => update({ label: e.target.value || undefined })}
           style={inputStyle}
-          placeholder="names the relationship"
+          placeholder="names the binding"
         />
       </label>
 
-      <label style={labelStyle}>Branch Shape
+      <label style={labelStyle}>Thread Shape
         <select value={conn.style} onChange={(e) => update({ style: e.target.value as never })} style={selectStyle}>
-          <option value="bezier">Curved branch</option>
-          <option value="elbow">Elbow branch</option>
+          <option value="bezier">Curved thread</option>
+          <option value="elbow">Elbow thread</option>
           <option value="straight">Straight link</option>
         </select>
       </label>

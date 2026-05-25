@@ -181,8 +181,7 @@ Goals:
 Next:
 
 - add tests for multi-result Index marks
-- extend grouping to Threads once thread labels are indexed
-- include connection labels in search
+- add richer thread meaning metadata beyond labels
 - add keyboard shortcuts for next and previous result navigation
 
 ### Phase 2: Viewport Virtualization
