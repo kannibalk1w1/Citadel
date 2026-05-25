@@ -45,14 +45,19 @@ export function GifItem({ item }: Props): React.ReactElement | null {
 
   useEffect(() => {
     if (!item.src) return
+    let awake = true
     const anim = getGifler()(pathToUrl(item.src))
     anim.frames(canvasRef.current, (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => {
+      if (!awake) return
       canvasRef.current.width = frame.buffer.width
       canvasRef.current.height = frame.buffer.height
       ctx.drawImage(frame.buffer, 0, 0)
       imageRef.current?.getLayer()?.batchDraw()
     })
-    return () => anim.stop?.()
+    return () => {
+      awake = false
+      anim.stop?.()
+    }
   }, [item.src])
 
   const handleTransformStart = () => {

@@ -182,7 +182,7 @@ Next:
 
 - add richer visual binding animation around endpoints
 - make connection and group overlays visibility-aware without dropping selected or active thread context
-- add GIF-specific pause/wake controls so animated Konva relics stop rendering while offscreen
+- add a lightweight runtime measurement note for mounted relic count, DOM media count, and sleeping animated relics
 
 ### Phase 2: Viewport Virtualization
 
