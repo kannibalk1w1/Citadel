@@ -2,7 +2,7 @@ import React from 'react'
 import type { CanvasItem } from '../../types'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
-import { getCommentResults, getSearchResults, type SearchResult } from './itemSearchModel'
+import { getCommentResults, getSearchResults, groupSearchResults, nextSearchResultIndex, type SearchResult } from './itemSearchModel'
 
 const SEARCH_CHIPS = [
   { label: 'Images', token: 'type:image' },
@@ -24,19 +24,30 @@ export function TagSearch(): React.ReactElement | null {
   const updateViewport = useCanvasStore((s) => s.updateViewport)
   const viewport = useCanvasStore((s) => s.viewport())
   const items = useCanvasStore((s) => s.items())
-
-  if (!isOpen) return null
+  const [activeResultIndex, setActiveResultIndex] = React.useState(-1)
 
   const query = searchQuery.trim().toLowerCase()
   const results = getSearchResults(items, query)
+  const groupedResults = groupSearchResults(results)
   const commentResults = query ? [] : getCommentResults(items)
+
+  React.useEffect(() => {
+    setActiveResultIndex((index) => {
+      if (results.length === 0) return -1
+      if (index < 0) return 0
+      return Math.min(index, results.length - 1)
+    })
+  }, [query, results.length])
+
+  if (!isOpen) return null
 
   const close = () => {
     setSearchQuery('')
+    setActiveResultIndex(-1)
     useUIStore.getState().closePanel('tagSearch')
   }
 
-  const selectResult = (item: CanvasItem) => {
+  const focusResult = (item: CanvasItem, closeAfterFocus: boolean) => {
     const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
     const canvasW = window.innerWidth - sidebarW
     const cx = item.x + item.width / 2
@@ -53,7 +64,18 @@ export function TagSearch(): React.ReactElement | null {
         useUIStore.getState().setSearchHighlight(null)
       }
     }, 900)
-    close()
+    if (closeAfterFocus) close()
+  }
+
+  const selectResult = (item: CanvasItem) => {
+    focusResult(item, true)
+  }
+
+  const stepResult = (direction: 1 | -1) => {
+    const index = nextSearchResultIndex(activeResultIndex, results.length, direction)
+    if (index === -1) return
+    setActiveResultIndex(index)
+    focusResult(results[index].item, false)
   }
 
   const appendToken = (token: string) => {
@@ -140,6 +162,32 @@ export function TagSearch(): React.ReactElement | null {
         })}
       </div>
 
+      {results.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {activeResultIndex + 1} / {results.length}
+          </span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              type="button"
+              onClick={() => stepResult(-1)}
+              title="Previous result"
+              style={navButtonStyle}
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => stepResult(1)}
+              title="Next result"
+              style={navButtonStyle}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {query && results.length === 0 && (
         <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)', padding: '4px 2px' }}>
           No items found
@@ -150,20 +198,36 @@ export function TagSearch(): React.ReactElement | null {
         <ResultList title="Comments" results={commentResults} selectResult={selectResult} />
       )}
 
-      {results.length > 0 && (
-        <ResultList results={results} selectResult={selectResult} />
-      )}
+      {results.length > 0 && groupedResults.map((group) => (
+        group.results.length > 0
+          ? <ResultList key={group.id} title={group.title} results={group.results} activeItemId={results[activeResultIndex]?.item.id ?? null} selectResult={selectResult} />
+          : null
+      ))}
     </div>
   )
+}
+
+const navButtonStyle: React.CSSProperties = {
+  background: 'var(--bg-ui)',
+  border: '1px solid var(--border)',
+  borderRadius: 3,
+  color: 'var(--text-secondary)',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 9,
+  padding: '3px 6px',
+  textTransform: 'uppercase',
 }
 
 function ResultList({
   title,
   results,
+  activeItemId,
   selectResult,
 }: {
   title?: string
   results: SearchResult[]
+  activeItemId?: string | null
   selectResult: (item: CanvasItem) => void
 }): React.ReactElement {
   return (
@@ -173,13 +237,15 @@ function ResultList({
           {title}
         </div>
       )}
-      {results.map(({ item, label, detail }) => (
+      {results.map(({ item, label, detail }) => {
+        const active = item.id === activeItemId
+        return (
         <button
           key={item.id}
           onClick={() => selectResult(item)}
           style={{
-            background: 'transparent',
-            border: '1px solid transparent',
+            background: active ? 'var(--bg-hover)' : 'transparent',
+            border: `1px solid ${active ? 'var(--accent)' : 'transparent'}`,
             textAlign: 'left',
             color: 'var(--text-primary)',
             fontSize: 11,
@@ -193,8 +259,8 @@ function ResultList({
             e.currentTarget.style.borderColor = 'var(--border)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
+            e.currentTarget.style.background = active ? 'var(--bg-hover)' : 'transparent'
+            e.currentTarget.style.borderColor = active ? 'var(--accent)' : 'transparent'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
@@ -231,7 +297,8 @@ function ResultList({
             {detail}
           </div>
         </button>
-      ))}
+        )
+      })}
     </div>
   )
 }

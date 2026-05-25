@@ -169,7 +169,7 @@ Needed improvements:
 
 ### Phase 1: Living Index First Slice
 
-Status: started.
+Status: in progress.
 
 Goals:
 
@@ -181,9 +181,9 @@ Goals:
 Next:
 
 - add tests for multi-result Index marks
-- add result grouping by Relics, Inscriptions, Sigils, and Threads
+- extend grouping to Threads once thread labels are indexed
 - include connection labels in search
-- add next and previous result navigation
+- add keyboard shortcuts for next and previous result navigation
 
 ### Phase 2: Viewport Virtualization
 

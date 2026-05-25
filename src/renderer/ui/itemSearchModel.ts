@@ -7,6 +7,14 @@ export type SearchResult = {
   haystack: string
 }
 
+export type SearchResultGroupId = 'relics' | 'inscriptions' | 'sigils'
+
+export type SearchResultGroup = {
+  id: SearchResultGroupId
+  title: string
+  results: SearchResult[]
+}
+
 type ParsedSearchQuery = {
   text: string
   types: string[]
@@ -27,6 +35,14 @@ function textValue(value: unknown): string {
 
 function arrayText(value: unknown): string {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string').join(', ') : ''
+}
+
+function hasInscription(item: CanvasItem): boolean {
+  return item.type === 'sticky' || item.type === 'text' || textValue(item.meta?.content) !== ''
+}
+
+function hasRelicSource(item: CanvasItem): boolean {
+  return Boolean(item.src || item.meta?.srcA || item.meta?.srcB)
 }
 
 export function isCommentItem(item: CanvasItem): boolean {
@@ -136,4 +152,30 @@ export function getSearchResults(items: CanvasItem[], query: string, limit = 30)
 
 export function getCommentResults(items: CanvasItem[], limit = 20): SearchResult[] {
   return items.filter(isCommentItem).map(buildSearchResult).slice(0, limit)
+}
+
+export function groupSearchResults(results: SearchResult[]): SearchResultGroup[] {
+  return [
+    {
+      id: 'relics',
+      title: 'Relics',
+      results: results.filter((result) => hasRelicSource(result.item)),
+    },
+    {
+      id: 'inscriptions',
+      title: 'Inscriptions',
+      results: results.filter((result) => hasInscription(result.item)),
+    },
+    {
+      id: 'sigils',
+      title: 'Sigils',
+      results: results.filter((result) => result.item.tags.length > 0),
+    },
+  ]
+}
+
+export function nextSearchResultIndex(currentIndex: number, resultCount: number, direction: 1 | -1): number {
+  if (resultCount <= 0) return -1
+  if (currentIndex < 0 || currentIndex >= resultCount) return direction === 1 ? 0 : resultCount - 1
+  return (currentIndex + direction + resultCount) % resultCount
 }

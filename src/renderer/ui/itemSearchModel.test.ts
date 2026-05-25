@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem } from '../../types'
-import { buildSearchResult, getCommentResults, getSearchResults } from './itemSearchModel'
+import { buildSearchResult, getCommentResults, getSearchResults, groupSearchResults, nextSearchResultIndex } from './itemSearchModel'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -70,5 +70,28 @@ describe('itemSearchModel', () => {
     ], 'is:hidden has:link')
 
     expect(results.map((result) => result.item.id)).toEqual(['linked-hidden'])
+  })
+
+  it('groups index results by relics, inscriptions, and sigils', () => {
+    const results = getSearchResults([
+      { ...baseItem, id: 'image-1', type: 'image', tags: ['castle'], src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', tags: [], meta: { content: 'Gate notes' } },
+      { ...baseItem, id: 'memory-1', type: 'audio', tags: ['interview'], src: 'C:/audio/interview.mp3' },
+    ], 'gate')
+
+    const groups = groupSearchResults(results)
+
+    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils'])
+    expect(groups.find((group) => group.id === 'relics')?.results.map((result) => result.item.id)).toEqual(['image-1'])
+    expect(groups.find((group) => group.id === 'inscriptions')?.results.map((result) => result.item.id)).toEqual(['note-1'])
+    expect(groups.find((group) => group.id === 'sigils')?.results.map((result) => result.item.id)).toEqual(['image-1'])
+  })
+
+  it('wraps index navigation in both directions', () => {
+    expect(nextSearchResultIndex(0, 3, 1)).toBe(1)
+    expect(nextSearchResultIndex(2, 3, 1)).toBe(0)
+    expect(nextSearchResultIndex(0, 3, -1)).toBe(2)
+    expect(nextSearchResultIndex(-1, 3, 1)).toBe(0)
+    expect(nextSearchResultIndex(0, 0, 1)).toBe(-1)
   })
 })
