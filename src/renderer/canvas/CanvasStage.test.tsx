@@ -18,6 +18,7 @@ vi.mock('react-konva', () => ({
 vi.mock('./ItemRenderer', () => ({
   ItemRenderer: ({ item }: { item: CanvasItem }) => <div data-testid="canvas-stage-item" data-item-id={item.id} />,
   DOMLayerItemRenderer: ({ item }: { item: CanvasItem }) => <div data-testid="canvas-stage-dom-item" data-item-id={item.id} />,
+  isDOMLayerItem: (item: CanvasItem) => ['video', 'youtube', 'audio', 'model3d'].includes(item.type),
 }))
 
 vi.mock('./CanvasBackground', () => ({ CanvasBackground: () => <div data-testid="canvas-background" /> }))
@@ -57,10 +58,57 @@ beforeEach(() => {
   })
 
   const fixture = createLargeBoardFixture({ itemCount: 1000, columns: 50 })
+  const mediaItems: CanvasItem[] = [
+    {
+      id: 'fixture-video-near',
+      type: 'video',
+      x: 40,
+      y: 40,
+      width: 240,
+      height: 160,
+      rotation: 0,
+      zIndex: 1001,
+      locked: false,
+      visible: true,
+      opacity: 1,
+      tags: ['media'],
+      src: 'C:/media/near.mp4',
+    },
+    {
+      id: 'fixture-audio-selected',
+      type: 'audio',
+      x: 9000,
+      y: 9000,
+      width: 280,
+      height: 120,
+      rotation: 0,
+      zIndex: 1002,
+      locked: false,
+      visible: true,
+      opacity: 1,
+      tags: ['media'],
+      src: 'C:/media/selected.mp3',
+    },
+    {
+      id: 'fixture-model-offscreen',
+      type: 'model3d',
+      x: 9400,
+      y: 9400,
+      width: 320,
+      height: 320,
+      rotation: 0,
+      zIndex: 1003,
+      locked: false,
+      visible: true,
+      opacity: 1,
+      tags: ['media'],
+      src: 'C:/media/offscreen.glb',
+    },
+  ]
   useCanvasStore.setState({
-    boards: [fixture.board],
+    boards: [{ ...fixture.board, items: [...fixture.board.items, ...mediaItems] }],
     activeBoardId: fixture.board.id,
-    selectedIds: ['fixture-relic-0999'],
+    selectedIds: ['fixture-relic-0999', 'fixture-audio-selected'],
   })
   useUIStore.setState({
     toolMode: 'select',
@@ -80,12 +128,17 @@ describe('CanvasStage viewport rendering', () => {
     const renderedIds = screen.getAllByTestId('canvas-stage-item').map((element) => element.dataset.itemId)
     const chromeIds = screen.getAllByTestId('canvas-stage-chrome').map((element) => element.dataset.itemId)
     const selectionIds = screen.getByTestId('canvas-stage-selection-box').dataset.itemIds?.split(',')
+    const domIds = screen.getAllByTestId('canvas-stage-dom-item').map((element) => element.dataset.itemId)
 
     expect(renderedIds.length).toBeLessThan(80)
     expect(renderedIds).toContain('fixture-relic-0000')
     expect(renderedIds).toContain('fixture-relic-0999')
+    expect(renderedIds).toContain('fixture-video-near')
+    expect(renderedIds).toContain('fixture-audio-selected')
     expect(renderedIds).not.toContain('fixture-relic-0900')
+    expect(renderedIds).not.toContain('fixture-model-offscreen')
     expect(chromeIds).toEqual(renderedIds)
     expect(selectionIds).toEqual(renderedIds)
+    expect(domIds).toEqual(['fixture-video-near', 'fixture-audio-selected'])
   })
 })

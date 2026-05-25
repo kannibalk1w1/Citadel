@@ -16,6 +16,10 @@ import { ComparisonItem } from './items/ComparisonItem'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
 
+export function isDOMLayerItem(item: CanvasItem): boolean {
+  return DOM_TYPES.has(item.type)
+}
+
 type Props = { item: CanvasItem }
 type InnerProps = { item: CanvasItem; domOnly?: boolean }
 
@@ -38,7 +42,7 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
-  if (DOM_TYPES.has(item.type)) return null
+  if (isDOMLayerItem(item)) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
   const tintRect = item.tint ? (
     <Rect
@@ -75,6 +79,6 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
 }
 
 export function DOMLayerItemRenderer({ item }: Props): React.ReactElement | null {
-  if (!item.visible || !DOM_TYPES.has(item.type)) return null
+  if (!item.visible || !isDOMLayerItem(item)) return null
   return <Inner item={item} domOnly />
 }

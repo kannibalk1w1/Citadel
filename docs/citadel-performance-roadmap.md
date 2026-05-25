@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- add DOM media pause/wake rules for offscreen video, audio, GIF, and 3D relics
 - make connection and group overlays visibility-aware without dropping selected or active thread context
+- add GIF-specific pause/wake controls so animated Konva relics stop rendering while offscreen
 
 ### Phase 2: Viewport Virtualization
 

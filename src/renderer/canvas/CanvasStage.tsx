@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
-import { DOMLayerItemRenderer, ItemRenderer } from './ItemRenderer'
+import { DOMLayerItemRenderer, isDOMLayerItem, ItemRenderer } from './ItemRenderer'
 import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
@@ -245,6 +245,7 @@ export function CanvasStage(): React.ReactElement {
     alwaysIncludeIds: [...selectedIds, searchHighlightId, connectFromId].filter((id): id is string => Boolean(id)),
   })), [connectFromId, height, searchHighlightId, selectedIds, sortedItems, viewport, width])
   const renderedItems = useMemo(() => sortedItems.filter((item) => visibleIds.has(item.id)), [sortedItems, visibleIds])
+  const renderedDOMItems = useMemo(() => renderedItems.filter(isDOMLayerItem), [renderedItems])
 
   // Compute rubber-band endpoints in screen space
   const connectSource = connectFromId ? items.find((i) => i.id === connectFromId) : null
@@ -326,7 +327,7 @@ export function CanvasStage(): React.ReactElement {
           overflow: 'visible',
         }}
       />
-      {renderedItems.map((item) => (
+      {renderedDOMItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
       <ConnectorQuickToolbar />
