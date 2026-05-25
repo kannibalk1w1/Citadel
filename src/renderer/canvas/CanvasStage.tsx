@@ -302,8 +302,8 @@ export function CanvasStage(): React.ReactElement {
           <SnapGuides />
         </Layer>
         <Layer listening={false}>
-          <KonvaItemChrome />
-          <SelectionBox />
+          <KonvaItemChrome items={renderedItems} />
+          <SelectionBox items={renderedItems} />
           <AnchorHandles />
         </Layer>
         <Layer listening={false}>

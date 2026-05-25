@@ -25,13 +25,23 @@ vi.mock('./useFileDrop', () => ({ useFileDrop: () => ({ handleDragOver: vi.fn(),
 vi.mock('./overlays/ConnectionLayer', () => ({ ConnectionLayer: () => null }))
 vi.mock('./overlays/GroupLayer', () => ({ GroupLayer: () => null }))
 vi.mock('./overlays/SnapGuides', () => ({ SnapGuides: () => null }))
-vi.mock('./overlays/SelectionBox', () => ({ SelectionBox: () => null }))
+vi.mock('./overlays/SelectionBox', () => ({
+  SelectionBox: ({ items }: { items?: CanvasItem[] }) => (
+    <div data-testid="canvas-stage-selection-box" data-item-ids={(items ?? []).map((item) => item.id).join(',')} />
+  ),
+}))
 vi.mock('./overlays/SelectedActionStrip', () => ({ SelectedActionStrip: () => null }))
 vi.mock('./overlays/SearchHighlight', () => ({ SearchHighlight: () => null }))
 vi.mock('./overlays/LassoOverlay', () => ({ LassoOverlay: () => null }))
 vi.mock('./overlays/AnchorHandles', () => ({ AnchorHandles: () => null }))
 vi.mock('./overlays/ConnectorQuickToolbar', () => ({ ConnectorQuickToolbar: () => null }))
-vi.mock('./overlays/KonvaItemChrome', () => ({ KonvaItemChrome: () => null }))
+vi.mock('./overlays/KonvaItemChrome', () => ({
+  KonvaItemChrome: ({ items }: { items?: CanvasItem[] }) => (
+    <>
+      {(items ?? []).map((item) => <div key={item.id} data-testid="canvas-stage-chrome" data-item-id={item.id} />)}
+    </>
+  ),
+}))
 vi.mock('../arcade/HyperTypeEngine', () => ({ engine: { burst: vi.fn() } }))
 vi.mock('../arcade/dragonCursor', () => ({
   DS_NORMAL: 'default',
@@ -68,10 +78,14 @@ describe('CanvasStage viewport rendering', () => {
     render(<CanvasStage />)
 
     const renderedIds = screen.getAllByTestId('canvas-stage-item').map((element) => element.dataset.itemId)
+    const chromeIds = screen.getAllByTestId('canvas-stage-chrome').map((element) => element.dataset.itemId)
+    const selectionIds = screen.getByTestId('canvas-stage-selection-box').dataset.itemIds?.split(',')
 
     expect(renderedIds.length).toBeLessThan(80)
     expect(renderedIds).toContain('fixture-relic-0000')
     expect(renderedIds).toContain('fixture-relic-0999')
     expect(renderedIds).not.toContain('fixture-relic-0900')
+    expect(chromeIds).toEqual(renderedIds)
+    expect(selectionIds).toEqual(renderedIds)
   })
 })

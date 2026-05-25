@@ -181,8 +181,8 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- make canvas chrome and selection overlays consume the same viewport-visible item set
 - add DOM media pause/wake rules for offscreen video, audio, GIF, and 3D relics
+- make connection and group overlays visibility-aware without dropping selected or active thread context
 
 ### Phase 2: Viewport Virtualization
 

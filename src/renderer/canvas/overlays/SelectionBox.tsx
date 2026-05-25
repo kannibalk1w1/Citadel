@@ -1,5 +1,6 @@
 import React from 'react'
 import { Rect } from 'react-konva'
+import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { selectionBounds } from './boardChromeViewModel'
 
@@ -7,9 +8,14 @@ function canvasToken(name: string, fallback: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 }
 
-export function SelectionBox(): React.ReactElement | null {
+type SelectionBoxProps = {
+  items?: CanvasItem[]
+}
+
+export function SelectionBox({ items: providedItems }: SelectionBoxProps = {}): React.ReactElement | null {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
-  const items = useCanvasStore((s) => s.items())
+  const storeItems = useCanvasStore((s) => s.items())
+  const items = providedItems ?? storeItems
 
   if (selectedIds.length < 2) return null
 

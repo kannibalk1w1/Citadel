@@ -89,8 +89,13 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
   )
 }
 
-export function KonvaItemChrome(): React.ReactElement | null {
-  const items = useCanvasStore((s) => s.items())
+type KonvaItemChromeProps = {
+  items?: CanvasItem[]
+}
+
+export function KonvaItemChrome({ items: providedItems }: KonvaItemChromeProps = {}): React.ReactElement | null {
+  const storeItems = useCanvasStore((s) => s.items())
+  const items = providedItems ?? storeItems
   const visibleKonvaItems = items.filter((item) => item.visible && !DOM_TYPES.has(item.type))
   if (visibleKonvaItems.length === 0) return null
   return (
@@ -101,4 +106,3 @@ export function KonvaItemChrome(): React.ReactElement | null {
     </>
   )
 }
-
