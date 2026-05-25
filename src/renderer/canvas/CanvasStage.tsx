@@ -16,11 +16,13 @@ import { LassoOverlay } from './overlays/LassoOverlay'
 import { AnchorHandles } from './overlays/AnchorHandles'
 import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
+import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
 import { visibleItemIds } from './visibility/viewportVisibility'
+import { canvasRuntimeStats } from '../performance/canvasRuntimeStats'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
@@ -246,6 +248,7 @@ export function CanvasStage(): React.ReactElement {
   })), [connectFromId, height, searchHighlightId, selectedIds, sortedItems, viewport, width])
   const renderedItems = useMemo(() => sortedItems.filter((item) => visibleIds.has(item.id)), [sortedItems, visibleIds])
   const renderedDOMItems = useMemo(() => renderedItems.filter(isDOMLayerItem), [renderedItems])
+  const runtimeStats = useMemo(() => canvasRuntimeStats(sortedItems, renderedItems), [renderedItems, sortedItems])
 
   // Compute rubber-band endpoints in screen space
   const connectSource = connectFromId ? items.find((i) => i.id === connectFromId) : null
@@ -330,6 +333,7 @@ export function CanvasStage(): React.ReactElement {
       {renderedDOMItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
+      <RuntimeStatsSigil stats={runtimeStats} />
       <ConnectorQuickToolbar />
       <SelectedActionStrip />
     </div>

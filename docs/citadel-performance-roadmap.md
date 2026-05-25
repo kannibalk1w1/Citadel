@@ -181,7 +181,7 @@ Goals:
 Next:
 
 - add richer visual binding animation around endpoints
-- add a lightweight runtime measurement note for mounted relic count, DOM media count, and sleeping animated relics
+- add a first large-chamber profiling note using the Chamber Load readout
 
 ### Phase 2: Viewport Virtualization
 

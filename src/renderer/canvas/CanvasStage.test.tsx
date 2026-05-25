@@ -43,6 +43,17 @@ vi.mock('./overlays/KonvaItemChrome', () => ({
     </>
   ),
 }))
+vi.mock('./overlays/RuntimeStatsSigil', () => ({
+  RuntimeStatsSigil: ({ stats }: { stats: { totalRelics: number; mountedRelics: number; awakeDOMMedia: number; sleepingAnimatedRelics: number } }) => (
+    <div
+      data-testid="runtime-stats-sigil"
+      data-total-relics={stats.totalRelics}
+      data-mounted-relics={stats.mountedRelics}
+      data-awake-dom-media={stats.awakeDOMMedia}
+      data-sleeping-animated-relics={stats.sleepingAnimatedRelics}
+    />
+  ),
+}))
 vi.mock('../arcade/HyperTypeEngine', () => ({ engine: { burst: vi.fn() } }))
 vi.mock('../arcade/dragonCursor', () => ({
   DS_NORMAL: 'default',
@@ -129,6 +140,7 @@ describe('CanvasStage viewport rendering', () => {
     const chromeIds = screen.getAllByTestId('canvas-stage-chrome').map((element) => element.dataset.itemId)
     const selectionIds = screen.getByTestId('canvas-stage-selection-box').dataset.itemIds?.split(',')
     const domIds = screen.getAllByTestId('canvas-stage-dom-item').map((element) => element.dataset.itemId)
+    const stats = screen.getByTestId('runtime-stats-sigil').dataset
 
     expect(renderedIds.length).toBeLessThan(80)
     expect(renderedIds).toContain('fixture-relic-0000')
@@ -140,5 +152,9 @@ describe('CanvasStage viewport rendering', () => {
     expect(chromeIds).toEqual(renderedIds)
     expect(selectionIds).toEqual(renderedIds)
     expect(domIds).toEqual(['fixture-video-near', 'fixture-audio-selected'])
+    expect(stats.totalRelics).toBe('1003')
+    expect(stats.mountedRelics).toBe(String(renderedIds.length))
+    expect(stats.awakeDomMedia).toBe('2')
+    expect(stats.sleepingAnimatedRelics).toBe('1')
   })
 })
