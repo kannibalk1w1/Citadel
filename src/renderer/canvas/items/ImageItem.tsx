@@ -2,12 +2,12 @@ import React, { useEffect, useRef } from 'react'
 import { Group, Image as KonvaImage, Rect, Transformer } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import useImage from 'use-image'
-import { nanoid } from 'nanoid'
-import type { CanvasItem, Connection } from '../../../types'
+import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { pathToUrl } from '../../utils/pathToUrl'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -23,6 +23,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const isConnectSource = useUIStore((s) => s.connectFromId === item.id)
   const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
@@ -39,29 +40,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     e.cancelBubble = true
 
     if (toolMode === 'connect') {
-      const ui = useUIStore.getState()
-      const canvas = useCanvasStore.getState()
-      if (!ui.connectFromId) {
-        ui.setConnectFromId(item.id)
-      } else if (ui.connectFromId !== item.id) {
-        const conn: Connection = {
-          id: nanoid(),
-          fromId: ui.connectFromId,
-          toId: item.id,
-          fromAnchor: 'auto',
-          toAnchor: 'auto',
-          style: 'bezier',
-          color: '#b99455',
-          width: 1.5,
-          arrowHead: 'arrow',
-          dashed: false,
-        }
-        canvas.addConnection(activeBoardId, conn)
-        useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
-        ui.triggerBindingPulse(conn.id)
-        ui.setConnectFromId(null)
-        ui.setToolMode('select')
-      }
+      handleConnectRelicClick(activeBoardId, item.id)
       return
     }
 
@@ -145,8 +124,6 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
 
   if (!image) return null
 
-  // Highlight border when this item is the connect source
-  const isConnectSource = useUIStore.getState().connectFromId === item.id
   const fitMode = ((item.meta?.fitMode as ImageFitMode | undefined) ?? 'stretch')
   const imageWidth = image.naturalWidth || image.width
   const imageHeight = image.naturalHeight || image.height

@@ -4,11 +4,10 @@ import { Rect } from 'react-konva'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
-import { nanoid } from 'nanoid'
-import type { CanvasItem, Connection } from '../../../types'
+import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
-import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { DOMItem } from './DOMItem'
 import { MediaPlaceholder } from './MediaPlaceholder'
 
@@ -28,29 +27,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
     if (!activeBoardId) return
 
     if (toolMode === 'connect') {
-      const ui = useUIStore.getState()
-      const canvas = useCanvasStore.getState()
-      if (!ui.connectFromId) {
-        ui.setConnectFromId(item.id)
-      } else if (ui.connectFromId !== item.id) {
-        const conn: Connection = {
-          id: nanoid(),
-          fromId: ui.connectFromId,
-          toId: item.id,
-          fromAnchor: 'auto',
-          toAnchor: 'auto',
-          style: 'bezier',
-          color: '#b99455',
-          width: 1.5,
-          arrowHead: 'arrow',
-          dashed: false,
-        }
-        canvas.addConnection(activeBoardId, conn)
-        useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
-        ui.triggerBindingPulse(conn.id)
-        ui.setConnectFromId(null)
-        ui.setToolMode('select')
-      }
+      handleConnectRelicClick(activeBoardId, item.id)
       return
     }
 

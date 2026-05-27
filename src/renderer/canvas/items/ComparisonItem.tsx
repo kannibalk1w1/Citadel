@@ -6,6 +6,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
@@ -185,6 +186,10 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         draggable={toolMode === 'select' && !item.locked}
         onClick={(e: KonvaEventObject<MouseEvent>) => {
           e.cancelBubble = true
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
           if (toolMode !== 'select') return
           if (e.evt.shiftKey) {
             useCanvasStore.getState().addToSelection(item.id)

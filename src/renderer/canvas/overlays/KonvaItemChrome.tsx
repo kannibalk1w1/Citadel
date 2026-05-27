@@ -2,6 +2,7 @@ import React from 'react'
 import { Group, Rect, Text } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useUIStore } from '../../store/uiStore'
 import {
   chromeFrameStyle,
   connectedItemIds,
@@ -22,17 +23,20 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
   const viewport = useCanvasStore((s) => s.viewport())
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const connections = useCanvasStore((s) => s.connections())
+  const toolMode = useUIStore((s) => s.toolMode)
+  const connectFromId = useUIStore((s) => s.connectFromId)
   const isSelected = selectedIds.includes(item.id)
+  const isConnectSource = toolMode === 'connect' && connectFromId === item.id
   const relatedIds = selectedIds.length === 1 ? connectedItemIds(selectedIds[0], connections) : new Set<string>()
   const isRelated = relatedIds.has(item.id)
-  const frame = chromeFrameStyle({ selected: isSelected, locked: item.locked })
-  const frameStroke = canvasToken(frame.stroke)
+  const frame = chromeFrameStyle({ selected: isSelected || isConnectSource, locked: item.locked })
+  const frameStroke = canvasToken(isConnectSource ? 'var(--text-primary)' : frame.stroke)
   const variant = frameVariantStyle(frameVariant(item))
   const badge = itemTypeBadge(item)
 
   return (
     <Group data-testid="konva-item-chrome" listening={false}>
-      {(frame.glowOpacity > 0 || isRelated) && (
+      {(frame.glowOpacity > 0 || isRelated || isConnectSource) && (
         <Rect
           x={item.x - 4 / viewport.scale}
           y={item.y - 4 / viewport.scale}
@@ -41,7 +45,7 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
           rotation={item.rotation}
           stroke={isRelated && !isSelected ? 'rgba(189,150,82,0.52)' : canvasToken('var(--accent)')}
           strokeWidth={3 / viewport.scale}
-          opacity={isRelated && !isSelected ? 0.18 : frame.glowOpacity}
+          opacity={isConnectSource ? 0.32 : isRelated && !isSelected ? 0.18 : frame.glowOpacity}
           cornerRadius={2 / viewport.scale}
         />
       )}

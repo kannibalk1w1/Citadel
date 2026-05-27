@@ -5,6 +5,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -52,6 +53,10 @@ export function StickyItem({ item }: Props): React.ReactElement {
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
+    if (toolMode === 'connect') {
+      handleConnectRelicClick(activeBoardId, item.id)
+      return
+    }
     if (toolMode === 'link') {
       if (item.link) {
         const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc

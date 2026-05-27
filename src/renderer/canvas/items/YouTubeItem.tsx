@@ -2,6 +2,8 @@ import React from 'react'
 import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useUIStore } from '../../store/uiStore'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { DOMItem } from './DOMItem'
 import { MediaPlaceholder } from './MediaPlaceholder'
 
@@ -9,6 +11,8 @@ type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
 
   return (
     <>
@@ -25,6 +29,10 @@ export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElemen
         item={item}
         onClick={(e) => {
           e.stopPropagation()
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
           setSelection([item.id])
         }}
       >

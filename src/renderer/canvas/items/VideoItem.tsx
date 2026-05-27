@@ -6,15 +6,19 @@ import { nanoid } from 'nanoid'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { copyImageDataUrl } from '../../utils/clipboardImage'
 import { MediaPlaceholder } from './MediaPlaceholder'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function VideoItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
 
@@ -103,6 +107,10 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
         style={{ background: 'var(--bg-canvas)' }}
         onClick={(e) => {
           e.stopPropagation()
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
           setSelection([item.id])
         }}
       >

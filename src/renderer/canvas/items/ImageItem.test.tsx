@@ -7,8 +7,12 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { ImageItem } from './ImageItem'
 
+const imageState = vi.hoisted(() => ({
+  image: { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement | null,
+}))
+
 vi.mock('use-image', () => ({
-  default: () => [{ width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 }],
+  default: () => [imageState.image],
 }))
 
 vi.mock('react-konva', () => ({
@@ -46,6 +50,7 @@ const imageItem: CanvasItem = {
 }
 
 beforeEach(() => {
+  imageState.image = { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement
   useCanvasStore.setState({
     boards: [{
       id: 'board-1',
@@ -67,5 +72,16 @@ describe('ImageItem hit testing', () => {
     render(<ImageItem item={imageItem} />)
 
     expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-listening')).toBe('true')
+  })
+
+  it('keeps hook order stable while the image loads asynchronously', () => {
+    imageState.image = null
+    const { rerender } = render(<ImageItem item={imageItem} />)
+    expect(screen.queryByTestId('image-group')).toBeNull()
+
+    imageState.image = { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement
+
+    expect(() => rerender(<ImageItem item={imageItem} />)).not.toThrow()
+    expect(screen.getByTestId('konva-image')).toBeTruthy()
   })
 })

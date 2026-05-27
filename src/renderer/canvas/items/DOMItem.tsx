@@ -44,13 +44,15 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const connections = useCanvasStore((s) => s.connections())
   const toolMode = useUIStore((s) => s.toolMode)
+  const connectFromId = useUIStore((s) => s.connectFromId)
   const ref = useRef<HTMLDivElement>(null)
   const pointerStart = useRef<PointerStart | null>(null)
   const isSelected = selectedIds.includes(item.id)
+  const isConnectSource = toolMode === 'connect' && connectFromId === item.id
   const relatedIds = selectedIds.length === 1 ? connectedItemIds(selectedIds[0], connections) : new Set<string>()
   const isRelated = relatedIds.has(item.id)
   const canEdit = editableFrame && isSelected && !item.locked && toolMode === 'select' && !!activeBoardId
-  const frame = chromeFrameStyle({ selected: isSelected, locked: item.locked })
+  const frame = chromeFrameStyle({ selected: isSelected || isConnectSource, locked: item.locked })
   const variant = frameVariantStyle(frameVariant(item))
   const badge = itemTypeBadge(item)
 
@@ -145,11 +147,11 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
         style={{
           position: 'absolute',
           inset: -2,
-          border: `${frame.strokeWidth}px ${frame.dash ? 'dashed' : 'solid'} ${frame.stroke}`,
+          border: `${frame.strokeWidth}px ${frame.dash ? 'dashed' : 'solid'} ${isConnectSource ? 'var(--text-primary)' : frame.stroke}`,
           borderRadius: 3,
           boxShadow: isRelated && !isSelected
             ? '0 0 18px rgba(189,150,82,0.18)'
-            : frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
+            : isConnectSource ? '0 0 22px rgba(232,221,208,0.28)' : frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
           opacity: isRelated && !isSelected ? 0.86 : 1,
           pointerEvents: 'none',
         }}

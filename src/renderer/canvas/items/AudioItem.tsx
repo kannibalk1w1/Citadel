@@ -3,14 +3,18 @@ import React, { useEffect, useRef } from 'react'
 import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { MediaPlaceholder } from './MediaPlaceholder'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function AudioItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const audioRef = useRef<HTMLAudioElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number>(0)
@@ -126,6 +130,10 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
         style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}
         onClick={(e) => {
           e.stopPropagation()
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
           setSelection([item.id])
         }}
       >
