@@ -183,7 +183,6 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           height={item.height}
           fill={fitMode === 'fit' ? 'var(--bg-canvas)' : 'rgba(0,0,0,0.001)'}
           opacity={fitMode === 'fit' ? 0.75 : 1}
-          listening={false}
         />
         <KonvaImage
           image={image}

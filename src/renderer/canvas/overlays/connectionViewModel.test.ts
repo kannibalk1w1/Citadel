@@ -43,11 +43,21 @@ describe('connectionViewModel', () => {
     const fresh = connectionBindingPulse(1000, 1000)
     expect(fresh?.opacity).toBeCloseTo(0.72)
     expect(fresh?.strokeBoost).toBeGreaterThan(5)
+    expect(fresh?.pathProgress).toBe(0)
 
     const fading = connectionBindingPulse(1000, 1450)
     expect(fading?.opacity).toBeLessThan(fresh!.opacity)
+    expect(fading?.pathProgress).toBeGreaterThan(0.4)
 
     expect(connectionBindingPulse(1000, 1901)).toBeNull()
+  })
+
+  it('uses a static reveal pulse for reduced motion', () => {
+    const pulse = connectionBindingPulse(1000, 1000, { reducedMotion: true })
+
+    expect(pulse?.pathProgress).toBe(1)
+    expect(pulse?.strokeBoost).toBeLessThan(6)
+    expect(connectionBindingPulse(1000, 1451, { reducedMotion: true })).toBeNull()
   })
 
   it('creates endpoint sigil marks for active and pulsing bindings only', () => {
@@ -59,7 +69,7 @@ describe('connectionViewModel', () => {
 
     const pulseMarks = bindingEndpointMarks({ x: 10, y: 20 }, { x: 90, y: 40 }, {
       isActive: false,
-      pulse: { opacity: 0.5, strokeBoost: 3 },
+      pulse: { opacity: 0.5, strokeBoost: 3, pathProgress: 1 },
     })
     expect(pulseMarks[0].radius).toBeGreaterThan(activeMarks[0].radius)
     expect(pulseMarks[0].opacity).toBeCloseTo(0.5)

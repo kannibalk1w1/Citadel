@@ -63,6 +63,10 @@ function elbowPath(from: { x: number; y: number }, to: { x: number; y: number })
   return `M ${from.x} ${from.y} L ${mx} ${from.y} L ${mx} ${to.y} L ${to.x} ${to.y}`
 }
 
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+}
+
 export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }: Props): React.ReactElement {
   const connections = useCanvasStore((s) => s.connections())
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
@@ -74,6 +78,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
   const closePanel = useUIStore((s) => s.closePanel)
   const clearBindingPulse = useUIStore((s) => s.clearBindingPulse)
   const [pulseNow, setPulseNow] = React.useState(() => Date.now())
+  const reducedMotion = prefersReducedMotion()
 
   React.useEffect(() => {
     if (!bindingPulse) return undefined
@@ -81,10 +86,10 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
     const interval = window.setInterval(() => {
       const now = Date.now()
       setPulseNow(now)
-      if (!connectionBindingPulse(bindingPulse.startedAt, now)) clearBindingPulse()
+      if (!connectionBindingPulse(bindingPulse.startedAt, now, { reducedMotion })) clearBindingPulse()
     }, 50)
     return () => window.clearInterval(interval)
-  }, [bindingPulse, clearBindingPulse])
+  }, [bindingPulse, clearBindingPulse, reducedMotion])
 
   const itemMap = new Map(items.map((i) => [i.id, i]))
   const renderConnectionIds = visibleItemIds
@@ -171,7 +176,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
         const plaqueText = labelText || (conn.meaning ? 'Thread' : '')
         const plaque = plaqueText ? connectionLabelPlaque(from, to, plaqueText, conn.meaning) : null
         const pulse = bindingPulse?.connectionId === conn.id
-          ? connectionBindingPulse(bindingPulse.startedAt, pulseNow)
+          ? connectionBindingPulse(bindingPulse.startedAt, pulseNow, { reducedMotion })
           : null
         const endpointMarks = bindingEndpointMarks(from, to, { isActive, pulse })
 
@@ -208,6 +213,9 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 opacity={pulse.opacity}
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={1 - pulse.pathProgress}
                 style={{ pointerEvents: 'none' }}
               />
             )}
