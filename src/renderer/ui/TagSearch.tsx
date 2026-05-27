@@ -1,8 +1,16 @@
 import React from 'react'
-import type { CanvasItem } from '../../types'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
-import { getCommentResults, getSearchResults, type SearchResult } from './itemSearchModel'
+import {
+  getCommentResults,
+  getIndexResults,
+  groupSearchResults,
+  indexKeyAction,
+  isItemSearchResult,
+  nextSearchResultIndex,
+  threadFocusPoint,
+  type SearchResult,
+} from './itemSearchModel'
 
 const SEARCH_CHIPS = [
   { label: 'Images', token: 'type:image' },
@@ -11,8 +19,12 @@ const SEARCH_CHIPS = [
   { label: 'Hidden', token: 'is:hidden' },
   { label: 'Locked', token: 'is:locked' },
   { label: 'Linked', token: 'has:link' },
-  { label: 'Assets', token: 'has:src' },
-  { label: 'Tagged', token: 'has:tag' },
+  { label: 'Relics', token: 'has:src' },
+  { label: 'Sigils', token: 'has:tag' },
+  { label: 'Threads', token: 'type:thread' },
+  { label: 'Meanings', token: 'has:meaning' },
+  { label: 'Memory', token: 'meaning:memory' },
+  { label: 'Questions', token: 'meaning:question' },
 ] as const
 
 export function TagSearch(): React.ReactElement | null {
@@ -21,39 +33,99 @@ export function TagSearch(): React.ReactElement | null {
   const setSearchQuery = useUIStore((s) => s.setSearchQuery)
   const setSearchHighlight = useUIStore((s) => s.setSearchHighlight)
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const clearSelection = useCanvasStore((s) => s.clearSelection)
   const updateViewport = useCanvasStore((s) => s.updateViewport)
   const viewport = useCanvasStore((s) => s.viewport())
   const items = useCanvasStore((s) => s.items())
+  const connections = useCanvasStore((s) => s.connections())
+  const [activeResultIndex, setActiveResultIndex] = React.useState(-1)
+
+  const query = searchQuery.trim().toLowerCase()
+  const results = getIndexResults(items, connections, query)
+  const groupedResults = groupSearchResults(results)
+  const commentResults = query ? [] : getCommentResults(items)
+
+  React.useEffect(() => {
+    setActiveResultIndex((index) => {
+      if (results.length === 0) return -1
+      if (index < 0) return 0
+      return Math.min(index, results.length - 1)
+    })
+  }, [query, results.length])
 
   if (!isOpen) return null
 
-  const query = searchQuery.trim().toLowerCase()
-  const results = getSearchResults(items, query)
-  const commentResults = query ? [] : getCommentResults(items)
-
   const close = () => {
     setSearchQuery('')
+    setActiveResultIndex(-1)
     useUIStore.getState().closePanel('tagSearch')
   }
 
-  const selectResult = (item: CanvasItem) => {
+  const focusPoint = (x: number, y: number) => {
     const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
     const canvasW = window.innerWidth - sidebarW
-    const cx = item.x + item.width / 2
-    const cy = item.y + item.height / 2
 
-    setSelection([item.id])
     updateViewport({
-      x: canvasW / 2 - cx * viewport.scale,
-      y: window.innerHeight / 2 - cy * viewport.scale,
+      x: canvasW / 2 - x * viewport.scale,
+      y: window.innerHeight / 2 - y * viewport.scale,
     })
-    setSearchHighlight(item.id)
-    window.setTimeout(() => {
-      if (useUIStore.getState().searchHighlightId === item.id) {
-        useUIStore.getState().setSearchHighlight(null)
-      }
-    }, 900)
-    close()
+  }
+
+  const focusResult = (result: SearchResult, closeAfterFocus: boolean) => {
+    if (isItemSearchResult(result)) {
+      const cx = result.item.x + result.item.width / 2
+      const cy = result.item.y + result.item.height / 2
+
+      setSelection([result.item.id])
+      focusPoint(cx, cy)
+      setSearchHighlight(result.item.id)
+      window.setTimeout(() => {
+        if (useUIStore.getState().searchHighlightId === result.item.id) {
+          useUIStore.getState().setSearchHighlight(null)
+        }
+      }, 900)
+      if (closeAfterFocus) close()
+      return
+    }
+
+    if (result.fromItem && result.toItem) {
+      const point = threadFocusPoint(result.fromItem, result.toItem)
+      focusPoint(point.x, point.y)
+    }
+    clearSelection()
+    useUIStore.getState().setActiveConnectionId(result.thread.id)
+    useUIStore.getState().openPanel('connectionProperties')
+    if (closeAfterFocus) close()
+  }
+
+  const selectResult = (result: SearchResult) => {
+    focusResult(result, true)
+  }
+
+  const stepResult = (direction: 1 | -1) => {
+    const index = nextSearchResultIndex(activeResultIndex, results.length, direction)
+    if (index === -1) return
+    setActiveResultIndex(index)
+    focusResult(results[index], false)
+  }
+
+  const handleIndexKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const action = indexKeyAction(event.key, event.ctrlKey)
+    if (action.type === 'none') return
+
+    event.preventDefault()
+    if (action.type === 'close') {
+      close()
+      return
+    }
+
+    if (action.type === 'step') {
+      stepResult(action.direction)
+      return
+    }
+
+    const result = results[activeResultIndex]
+    if (result) focusResult(result, !action.keepOpen)
   }
 
   const appendToken = (token: string) => {
@@ -82,8 +154,8 @@ export function TagSearch(): React.ReactElement | null {
           autoFocus
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Escape') close() }}
-          placeholder="Search items..."
+          onKeyDown={handleIndexKeyDown}
+          placeholder="Search the Index..."
           style={{
             flex: 1,
             background: 'var(--bg-ui)',
@@ -140,6 +212,32 @@ export function TagSearch(): React.ReactElement | null {
         })}
       </div>
 
+      {results.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {activeResultIndex + 1} / {results.length}
+          </span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              type="button"
+              onClick={() => stepResult(-1)}
+              title="Previous result (ArrowUp)"
+              style={navButtonStyle}
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => stepResult(1)}
+              title="Next result (ArrowDown)"
+              style={navButtonStyle}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {query && results.length === 0 && (
         <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)', padding: '4px 2px' }}>
           No items found
@@ -150,21 +248,37 @@ export function TagSearch(): React.ReactElement | null {
         <ResultList title="Comments" results={commentResults} selectResult={selectResult} />
       )}
 
-      {results.length > 0 && (
-        <ResultList results={results} selectResult={selectResult} />
-      )}
+      {results.length > 0 && groupedResults.map((group) => (
+        group.results.length > 0
+          ? <ResultList key={group.id} title={group.title} results={group.results} activeItemId={results[activeResultIndex]?.id ?? null} selectResult={selectResult} />
+          : null
+      ))}
     </div>
   )
+}
+
+const navButtonStyle: React.CSSProperties = {
+  background: 'var(--bg-ui)',
+  border: '1px solid var(--border)',
+  borderRadius: 3,
+  color: 'var(--text-secondary)',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 9,
+  padding: '3px 6px',
+  textTransform: 'uppercase',
 }
 
 function ResultList({
   title,
   results,
+  activeItemId,
   selectResult,
 }: {
   title?: string
   results: SearchResult[]
-  selectResult: (item: CanvasItem) => void
+  activeItemId?: string | null
+  selectResult: (result: SearchResult) => void
 }): React.ReactElement {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 340, overflowY: 'auto' }}>
@@ -173,13 +287,15 @@ function ResultList({
           {title}
         </div>
       )}
-      {results.map(({ item, label, detail }) => (
+      {results.map((result) => {
+        const active = result.id === activeItemId
+        return (
         <button
-          key={item.id}
-          onClick={() => selectResult(item)}
+          key={result.id}
+          onClick={() => selectResult(result)}
           style={{
-            background: 'transparent',
-            border: '1px solid transparent',
+            background: active ? 'var(--bg-hover)' : 'transparent',
+            border: `1px solid ${active ? 'var(--accent)' : 'transparent'}`,
             textAlign: 'left',
             color: 'var(--text-primary)',
             fontSize: 11,
@@ -193,8 +309,8 @@ function ResultList({
             e.currentTarget.style.borderColor = 'var(--border)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.borderColor = 'transparent'
+            e.currentTarget.style.background = active ? 'var(--bg-hover)' : 'transparent'
+            e.currentTarget.style.borderColor = active ? 'var(--accent)' : 'transparent'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
@@ -204,7 +320,7 @@ function ResultList({
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}>
-              {label}
+              {result.label}
             </span>
             <span style={{
               color: 'var(--accent)',
@@ -216,7 +332,7 @@ function ResultList({
               flexShrink: 0,
               textTransform: 'uppercase',
             }}>
-              {item.meta?.kind === 'comment' ? 'comment' : item.type}
+              {resultBadge(result)}
             </span>
           </div>
           <div style={{
@@ -228,10 +344,16 @@ function ResultList({
             whiteSpace: 'nowrap',
             marginTop: 2,
           }}>
-            {detail}
+            {result.detail}
           </div>
         </button>
-      ))}
+        )
+      })}
     </div>
   )
+}
+
+function resultBadge(result: SearchResult): string {
+  if (!isItemSearchResult(result)) return 'thread'
+  return result.item.meta?.kind === 'comment' ? 'comment' : result.item.type
 }

@@ -77,8 +77,8 @@ function centerViewportOnItem(item: CanvasItem): void {
 function Divider({ label }: { label: string }): React.ReactElement {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '2px 0' }}>
-      <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <span style={{ fontSize: 9, color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, var(--border), transparent)' }} />
     </div>
   )
 }
@@ -86,8 +86,39 @@ function Divider({ label }: { label: string }): React.ReactElement {
 function Field({ label, children }: { label: string; children: React.ReactNode }): React.ReactElement {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ width: 50, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{label}</span>
+      <span style={{ width: 54, fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
       <div style={{ flex: 1 }}>{children}</div>
+    </div>
+  )
+}
+
+const panelChrome: React.CSSProperties = {
+  position: 'absolute',
+  top: 48,
+  right: 'calc(var(--sidebar-right-w) + 8px)',
+  width: 236,
+  background: 'linear-gradient(180deg, #17130f 0%, #0b0a09 100%)',
+  border: '1px solid var(--border)',
+  borderRadius: 4,
+  padding: 12,
+  zIndex: 'var(--z-panels)',
+  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.018), 0 14px 34px rgba(0,0,0,0.76)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+}
+
+function PanelTitle({ title, subtitle }: { title: string; subtitle?: string }): React.ReactElement {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, borderBottom: '1px solid var(--border-muted)', paddingBottom: 8 }}>
+      <h3 style={{ margin: 0, fontSize: 12, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+        {title}
+      </h3>
+      {subtitle && (
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {subtitle}
+        </span>
+      )}
     </div>
   )
 }
@@ -199,25 +230,9 @@ function AlignPanel(): React.ReactElement {
   return (
     <div
       className="citadel-floating-panel"
-      style={{
-        position: 'absolute',
-        top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
-        width: 224,
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        borderRadius: 6,
-        padding: 12,
-        zIndex: 'var(--z-panels)',
-        boxShadow: 'var(--shadow-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
+      style={panelChrome}
     >
-      <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-        Align ({selectedIds.length} items)
-      </h3>
+      <PanelTitle title="Align" subtitle={`${selectedIds.length} items selected`} />
       {ALIGN_ROWS.map((row, ri) => (
         <div key={ri} style={{ display: 'flex', gap: 4 }}>
           {row.map(({ label, title, action }) => (
@@ -480,25 +495,9 @@ function CommentAttachPanel({
   return (
     <div
       className="citadel-floating-panel"
-      style={{
-        position: 'absolute',
-        top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
-        width: 224,
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        borderRadius: 6,
-        padding: 12,
-        zIndex: 'var(--z-panels)',
-        boxShadow: 'var(--shadow-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
+      style={panelChrome}
     >
-      <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-        Comment Link
-      </h3>
+      <PanelTitle title="Comment Link" subtitle="Attach note to item" />
       <div style={{ fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
         Attach <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
       </div>
@@ -573,26 +572,10 @@ export function ItemProperties(): React.ReactElement | null {
 
   return (
     <div
-      className="citadel-floating-panel"
-      style={{
-        position: 'absolute',
-        top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
-        width: 224,
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        borderRadius: 6,
-        padding: 12,
-        zIndex: 'var(--z-panels)',
-        boxShadow: 'var(--shadow-md)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-      }}
+      className="citadel-floating-panel citadel-item-properties"
+      style={panelChrome}
     >
-      <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-        Properties
-      </h3>
+      <PanelTitle title="Codex" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         <Field label="X"><NumInput value={item.x} onChange={(v) => update({ x: v })} /></Field>
@@ -612,6 +595,21 @@ export function ItemProperties(): React.ReactElement | null {
           onChange={(e) => update({ opacity: parseFloat(e.target.value) })}
           style={{ width: '100%' }}
         />
+      </Field>
+
+      <Field label="Frame">
+        <select
+          value={(item.meta?.frameVariant as string) ?? 'auto'}
+          onChange={(e) => updateMeta({ frameVariant: e.target.value === 'auto' ? undefined : e.target.value })}
+          style={{ ...inputStyle, padding: '3px 5px' }}
+        >
+          <option value="auto">Auto</option>
+          <option value="plain">Plain</option>
+          <option value="relic">Relic</option>
+          <option value="dossier">Dossier</option>
+          <option value="sketch">Sketch</option>
+          <option value="evidence">Evidence</option>
+        </select>
       </Field>
 
       {/* ── Tint ── */}

@@ -16,16 +16,21 @@ import { ComparisonItem } from './items/ComparisonItem'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
 
-type Props = { item: CanvasItem }
+export function isDOMLayerItem(item: CanvasItem): boolean {
+  return DOM_TYPES.has(item.type)
+}
 
-function Inner({ item }: Props): React.ReactElement | null {
+type Props = { item: CanvasItem }
+type InnerProps = { item: CanvasItem; domOnly?: boolean }
+
+function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null {
   switch (item.type) {
     case 'image':      return <ImageItem item={item} />
     case 'gif':        return <GifItem item={item} />
-    case 'video':      return <VideoItem item={item} />
-    case 'youtube':    return <YouTubeItem item={item} />
-    case 'audio':      return <AudioItem item={item} />
-    case 'model3d':    return <Model3DItem item={item} />
+    case 'video':      return <VideoItem item={item} domOnly={domOnly} />
+    case 'youtube':    return <YouTubeItem item={item} domOnly={domOnly} />
+    case 'audio':      return <AudioItem item={item} domOnly={domOnly} />
+    case 'model3d':    return <Model3DItem item={item} domOnly={domOnly} />
     case 'sticky':     return <StickyItem item={item} />
     case 'text':       return <TextItem item={item} />
     case 'swatch':     return <SwatchItem item={item} />
@@ -37,8 +42,9 @@ function Inner({ item }: Props): React.ReactElement | null {
 export function ItemRenderer({ item }: Props): React.ReactElement | null {
   const viewport = useCanvasStore((s) => s.viewport())
   if (!item.visible) return null
+  if (isDOMLayerItem(item)) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
-  const tintRect = item.tint && !DOM_TYPES.has(item.type) ? (
+  const tintRect = item.tint ? (
     <Rect
       x={item.x} y={item.y}
       width={item.width} height={item.height}
@@ -48,7 +54,7 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       listening={false}
     />
   ) : null
-  const lockMarker = item.locked && !DOM_TYPES.has(item.type) ? (
+  const lockMarker = item.locked ? (
     <Text
       x={item.x + item.width - 18 / viewport.scale}
       y={item.y + 4 / viewport.scale}
@@ -70,4 +76,9 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       </Group>
     </ItemErrorBoundary>
   )
+}
+
+export function DOMLayerItemRenderer({ item }: Props): React.ReactElement | null {
+  if (!item.visible || !isDOMLayerItem(item)) return null
+  return <Inner item={item} domOnly />
 }

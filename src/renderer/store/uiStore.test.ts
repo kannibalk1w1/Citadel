@@ -19,6 +19,18 @@ beforeEach(() => {
   })
 })
 
+describe('uiStore - binding pulse', () => {
+  it('tracks and clears thread binding pulses', () => {
+    useUIStore.getState().triggerBindingPulse('thread-1')
+
+    expect(useUIStore.getState().bindingPulse?.connectionId).toBe('thread-1')
+    expect(typeof useUIStore.getState().bindingPulse?.startedAt).toBe('number')
+
+    useUIStore.getState().clearBindingPulse()
+    expect(useUIStore.getState().bindingPulse).toBeNull()
+  })
+})
+
 describe('uiStore - comment pins', () => {
   it('shows comment pins by default', () => {
     expect(useUIStore.getState().commentPinsVisible).toBe(true)

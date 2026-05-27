@@ -5,12 +5,12 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 // gifler is a browserify bundle — it has no ESM default export.
 // It does set window.gifler itself, so we use a side-effect import + window access.
 import 'gifler'
-import { nanoid } from 'nanoid'
-import type { CanvasItem, Connection } from '../../../types'
+import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { pathToUrl } from '../../utils/pathToUrl'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -45,14 +45,19 @@ export function GifItem({ item }: Props): React.ReactElement | null {
 
   useEffect(() => {
     if (!item.src) return
+    let awake = true
     const anim = getGifler()(pathToUrl(item.src))
     anim.frames(canvasRef.current, (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => {
+      if (!awake) return
       canvasRef.current.width = frame.buffer.width
       canvasRef.current.height = frame.buffer.height
       ctx.drawImage(frame.buffer, 0, 0)
       imageRef.current?.getLayer()?.batchDraw()
     })
-    return () => anim.stop?.()
+    return () => {
+      awake = false
+      anim.stop?.()
+    }
   }, [item.src])
 
   const handleTransformStart = () => {
@@ -106,21 +111,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         onClick={(e: KonvaEventObject<MouseEvent>) => {
           e.cancelBubble = true
           if (toolMode === 'connect') {
-            const ui = useUIStore.getState()
-            const canvas = useCanvasStore.getState()
-            if (!ui.connectFromId) {
-              ui.setConnectFromId(item.id)
-            } else if (ui.connectFromId !== item.id) {
-              const conn: Connection = {
-                id: nanoid(), fromId: ui.connectFromId, toId: item.id,
-                fromAnchor: 'auto', toAnchor: 'auto', style: 'bezier',
-                color: '#b99455', width: 1.5, arrowHead: 'arrow', dashed: false,
-              }
-              canvas.addConnection(activeBoardId, conn)
-              useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, conn)
-              ui.setConnectFromId(null)
-              ui.setToolMode('select')
-            }
+            handleConnectRelicClick(activeBoardId, item.id)
             return
           }
           if (toolMode === 'select') {

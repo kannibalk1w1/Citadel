@@ -5,21 +5,29 @@ import { nanoid } from 'nanoid'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
-import { ItemRenderer } from './ItemRenderer'
+import { DOMLayerItemRenderer, isDOMLayerItem, ItemRenderer } from './ItemRenderer'
 import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
 import { SnapGuides } from './overlays/SnapGuides'
 import { SelectionBox } from './overlays/SelectionBox'
+import { SelectedActionStrip } from './overlays/SelectedActionStrip'
 import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
+import { AnchorHandles } from './overlays/AnchorHandles'
+import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
+import { KonvaItemChrome } from './overlays/KonvaItemChrome'
+import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
+import { visibleItemIds } from './visibility/viewportVisibility'
+import { canvasRuntimeStats } from '../performance/canvasRuntimeStats'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
+const VIEWPORT_OVERSCAN_PX = 240
 
 export function CanvasStage(): React.ReactElement {
   const stageRef = useRef<Konva.Stage>(null)
@@ -36,9 +44,10 @@ export function CanvasStage(): React.ReactElement {
   const connectFromId = useUIStore((s) => s.connectFromId)
   const setConnectFromId = useUIStore((s) => s.setConnectFromId)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
-  const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -232,6 +241,14 @@ export function CanvasStage(): React.ReactElement {
   )
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
+  const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
+  const visibleIds = useMemo(() => new Set(visibleItemIds(sortedItems, viewport, { width, height }, {
+    overscanPx: VIEWPORT_OVERSCAN_PX,
+    alwaysIncludeIds: [...selectedIds, searchHighlightId, connectFromId].filter((id): id is string => Boolean(id)),
+  })), [connectFromId, height, searchHighlightId, selectedIds, sortedItems, viewport, width])
+  const renderedItems = useMemo(() => sortedItems.filter((item) => visibleIds.has(item.id)), [sortedItems, visibleIds])
+  const renderedDOMItems = useMemo(() => renderedItems.filter(isDOMLayerItem), [renderedItems])
+  const runtimeStats = useMemo(() => canvasRuntimeStats(sortedItems, renderedItems), [renderedItems, sortedItems])
 
   // Compute rubber-band endpoints in screen space
   const connectSource = connectFromId ? items.find((i) => i.id === connectFromId) : null
@@ -281,7 +298,7 @@ export function CanvasStage(): React.ReactElement {
         }}
       >
         <Layer>
-          {sortedItems.map((item) => (
+          {renderedItems.map((item) => (
             <ItemRenderer key={item.id} item={item} />
           ))}
         </Layer>
@@ -289,7 +306,9 @@ export function CanvasStage(): React.ReactElement {
           <SnapGuides />
         </Layer>
         <Layer listening={false}>
-          <SelectionBox />
+          <KonvaItemChrome items={renderedItems} />
+          <SelectionBox items={renderedItems} />
+          <AnchorHandles />
         </Layer>
         <Layer listening={false}>
           <SearchHighlight />
@@ -299,8 +318,24 @@ export function CanvasStage(): React.ReactElement {
         </Layer>
       </Stage>
 
-      <ConnectionLayer viewport={viewport} items={items} rubberBand={rubberBand} />
-      <GroupLayer viewport={viewport} />
+      <ConnectionLayer viewport={viewport} items={items} visibleItemIds={visibleIds} rubberBand={rubberBand} />
+      <GroupLayer viewport={viewport} visibleItemIds={visibleIds} />
+      <div
+        id="dom-items-layer"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 2,
+          overflow: 'visible',
+        }}
+      />
+      {renderedDOMItems.map((item) => (
+        <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
+      ))}
+      <RuntimeStatsSigil stats={runtimeStats} />
+      <ConnectorQuickToolbar />
+      <SelectedActionStrip />
     </div>
   )
 }

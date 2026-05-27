@@ -1,31 +1,41 @@
 import React from 'react'
 import { Rect } from 'react-konva'
+import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { selectionBounds } from './boardChromeViewModel'
 
-export function SelectionBox(): React.ReactElement | null {
+function canvasToken(name: string, fallback: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
+
+type SelectionBoxProps = {
+  items?: CanvasItem[]
+}
+
+export function SelectionBox({ items: providedItems }: SelectionBoxProps = {}): React.ReactElement | null {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
-  const items = useCanvasStore((s) => s.items())
+  const storeItems = useCanvasStore((s) => s.items())
+  const items = providedItems ?? storeItems
 
   if (selectedIds.length < 2) return null
 
   const selected = items.filter((i) => selectedIds.includes(i.id))
   if (selected.length === 0) return null
 
-  const minX = Math.min(...selected.map((i) => i.x))
-  const minY = Math.min(...selected.map((i) => i.y))
-  const maxX = Math.max(...selected.map((i) => i.x + i.width))
-  const maxY = Math.max(...selected.map((i) => i.y + i.height))
+  const bounds = selectionBounds(selected)
+  if (!bounds) return null
 
   return (
     <Rect
-      x={minX - 4}
-      y={minY - 4}
-      width={maxX - minX + 8}
-      height={maxY - minY + 8}
-      stroke="var(--accent)"
+      x={bounds.x}
+      y={bounds.y}
+      width={bounds.width}
+      height={bounds.height}
+      stroke={canvasToken('--accent', '#bd9652')}
       strokeWidth={1}
-      fill="rgba(185,148,85,0.04)"
-      dash={[6, 3]}
+      fill="rgba(189,150,82,0.045)"
+      dash={[10, 5]}
+      cornerRadius={2}
       listening={false}
     />
   )

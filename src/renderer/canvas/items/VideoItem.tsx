@@ -6,14 +6,19 @@ import { nanoid } from 'nanoid'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { copyImageDataUrl } from '../../utils/clipboardImage'
+import { MediaPlaceholder } from './MediaPlaceholder'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function VideoItem({ item }: Props): React.ReactElement {
+export function VideoItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
 
@@ -88,22 +93,36 @@ export function VideoItem({ item }: Props): React.ReactElement {
 
   return (
     <>
-      {/* Transparent hit area in Konva */}
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        opacity={0}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item} style={{ background: 'var(--bg-canvas)' }}>
-        <video
-          ref={videoRef}
-          src={pathToUrl(item.src ?? '')}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
-          controls
-          loop
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          opacity={0}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
         />
+      )}
+      <DOMItem
+        item={item}
+        style={{ background: 'var(--bg-canvas)' }}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
+          setSelection([item.id])
+        }}
+      >
+        {item.src ? (
+          <video
+            ref={videoRef}
+            src={pathToUrl(item.src)}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
+            controls
+            loop
+          />
+        ) : <MediaPlaceholder item={item} />}
         <button
           type="button"
           onClick={(e) => { captureFrame(e).catch(console.error) }}

@@ -1,10 +1,12 @@
 # Citadel
 
-An infinite canvas creative reference tool for Windows — a spiritual clone of Ref Flow with major extensions, built on a dark fantasy aesthetic.
+An atmospheric archive for memory, research, reference, introspection, and nonlinear thought.
 
 ## What it is
 
-Citadel is a desktop app for artists, game designers, and creatives who want a single place to collect and arrange visual reference material. Drop images, GIFs, video, audio, 3D models, and sticky notes onto an infinite canvas, connect them with arrows, and export the whole board as a PDF or image.
+Citadel is a Windows desktop app for collecting files, memories, research, fragments, and thoughts, then marking, arranging, annotating, searching, and binding them into visible patterns. It can support worldbuilding, game design, art direction, academic research, personal archives, and creative investigation, but its core identity is a dark archival canvas rather than a worldbuilding-only tool.
+
+Drop images, GIFs, video, audio, 3D models, PDFs, and notes onto an infinite canvas. Connect them with threads, search them through the Index, and preserve the archive as a `.citadel` project or portable `.citadelz` bundle.
 
 ## Features
 
@@ -41,9 +43,12 @@ Dark fantasy. Stone tones, aged gold (`#c8a96e`) text, arcane details. Display f
 npm install
 npm run dev       # Vite + Electron with HMR
 npm run build     # Production build
+npm run package   # Production build + Windows installer/portable artifacts
 npm run test      # Unit tests (Vitest)
 npm run e2e       # End-to-end tests (Playwright)
 ```
+
+For local alpha packaging and smoke testing, see [Citadel Release Readiness Lite](docs/release-readiness-lite.md).
 
 ## Project file format
 

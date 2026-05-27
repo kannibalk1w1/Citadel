@@ -134,6 +134,15 @@ function createRecoverySnapshot(): RecoverySnapshot {
   }
 }
 
+function recoveryProjectFingerprint(project: ProjectFile): string {
+  return JSON.stringify({
+    boards: project.boards,
+    activeBoardId: project.activeBoardId,
+    recordings: project.recordings,
+    keybindOverrides: project.keybindOverrides,
+  })
+}
+
 export function parseRecoveryData(data: string): ParsedRecovery {
   const parsed = JSON.parse(data) as ProjectFile | RecoverySnapshot
   if ('kind' in parsed && parsed.kind === 'citadel-recovery') {
@@ -280,7 +289,7 @@ export async function clearRecoveryIfClean(): Promise<boolean> {
 export async function autoSave(): Promise<AutoSaveResult> {
   if (!useHistoryStore.getState().isDirty()) return 'skipped-clean'
   const snapshot = createRecoverySnapshot()
-  const projectPayload = JSON.stringify(snapshot.project)
+  const projectPayload = recoveryProjectFingerprint(snapshot.project)
   if (projectPayload === lastRecoveryProjectPayload) return 'skipped-unchanged'
   const payload = JSON.stringify(snapshot, null, 2)
   try {

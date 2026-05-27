@@ -1,19 +1,57 @@
 // Model3DItem: Three.js scene rendered into a DOM canvas synced to viewport.
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { Rect } from 'react-konva'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useUIStore } from '../../store/uiStore'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { DOMItem } from './DOMItem'
+import { MediaPlaceholder } from './MediaPlaceholder'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function Model3DItem({ item }: Props): React.ReactElement {
+export function Model3DItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+  const [loadError, setLoadError] = React.useState<string | null>(null)
+
+  const handleDomClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    if (!activeBoardId) return
+
+    if (toolMode === 'connect') {
+      handleConnectRelicClick(activeBoardId, item.id)
+      return
+    }
+
+    if (toolMode === 'link') {
+      if (item.link) {
+        const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+        ipc.invoke('shell:openURL', { url: item.link })
+      }
+      return
+    }
+
+    if (toolMode === 'tag') {
+      setSelection([item.id])
+      useUIStore.getState().openPanel('tagSearch')
+      return
+    }
+
+    if (toolMode !== 'select') return
+    if (e.shiftKey) {
+      useCanvasStore.getState().addToSelection(item.id)
+    } else {
+      setSelection([item.id])
+    }
+  }
 
   useEffect(() => {
     if (!mountRef.current) return
@@ -25,10 +63,14 @@ export function Model3DItem({ item }: Props): React.ReactElement {
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
     camera.position.set(0, 1, 3)
+    cameraRef.current = camera
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(w, h)
+    renderer.setSize(w, h, false)
     renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = '100%'
+    renderer.domElement.style.display = 'block'
     mountRef.current.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
@@ -55,6 +97,7 @@ export function Model3DItem({ item }: Props): React.ReactElement {
     animate()
 
     // Load model if src is provided
+    setLoadError(null)
     if (item.src) {
       const ext = item.src.split('.').pop()?.toLowerCase()
       // Resolve src through the local:// protocol for file paths
@@ -75,7 +118,7 @@ export function Model3DItem({ item }: Props): React.ReactElement {
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => console.error('GLTFLoader error', err))
+        }, undefined, (err) => { console.error('GLTFLoader error', err); setLoadError('3D relic failed') })
       } else if (ext === 'obj') {
         const loader = new OBJLoader()
         loader.load(url, (obj) => {
@@ -90,28 +133,49 @@ export function Model3DItem({ item }: Props): React.ReactElement {
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => console.error('OBJLoader error', err))
+        }, undefined, (err) => { console.error('OBJLoader error', err); setLoadError('3D relic failed') })
       }
     }
 
     return () => {
       cancelAnimationFrame(animId)
       renderer.dispose()
-      mountRef.current?.removeChild(renderer.domElement)
+      rendererRef.current = null
+      cameraRef.current = null
+      if (renderer.domElement.parentElement) renderer.domElement.parentElement.removeChild(renderer.domElement)
     }
-  }, [item.src, item.width, item.height])
+  }, [item.src])
+
+  useLayoutEffect(() => {
+    const mount = mountRef.current
+    const renderer = rendererRef.current
+    const camera = cameraRef.current
+    if (!mount || !renderer || !camera) return
+    const width = Math.max(1, mount.clientWidth || item.width)
+    const height = Math.max(1, mount.clientHeight || item.height)
+    renderer.setSize(width, height, false)
+    camera.aspect = width / height
+    camera.updateProjectionMatrix()
+  }, [item.width, item.height])
 
   return (
     <>
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        opacity={0}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item}>
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          opacity={0}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
+        />
+      )}
+      <DOMItem
+        item={item}
+        editableFrame
+        onClick={handleDomClick}
+      >
         <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+        <MediaPlaceholder item={item} label={loadError} />
       </DOMItem>
     </>
   )

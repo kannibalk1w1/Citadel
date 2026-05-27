@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { CanvasItem } from '../../types'
-import { buildSearchResult, getCommentResults, getSearchResults } from './itemSearchModel'
+import type { CanvasItem, Connection } from '../../types'
+import { buildSearchResult, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, threadFocusPoint } from './itemSearchModel'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -15,6 +15,20 @@ const baseItem: CanvasItem = {
   visible: true,
   opacity: 1,
   tags: [],
+}
+
+const baseConnection: Connection = {
+  id: 'thread-1',
+  fromId: 'image-1',
+  toId: 'note-1',
+  fromAnchor: 'auto',
+  toAnchor: 'auto',
+  style: 'bezier',
+  color: '#bd9652',
+  width: 1,
+  arrowHead: 'arrow',
+  label: 'source memory',
+  dashed: false,
 }
 
 describe('itemSearchModel', () => {
@@ -70,5 +84,84 @@ describe('itemSearchModel', () => {
     ], 'is:hidden has:link')
 
     expect(results.map((result) => result.item.id)).toEqual(['linked-hidden'])
+  })
+
+  it('groups index results by relics, inscriptions, and sigils', () => {
+    const results = getSearchResults([
+      { ...baseItem, id: 'image-1', type: 'image', tags: ['castle'], src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', tags: [], meta: { content: 'Gate notes' } },
+      { ...baseItem, id: 'memory-1', type: 'audio', tags: ['interview'], src: 'C:/audio/interview.mp3' },
+    ], 'gate')
+
+    const groups = groupSearchResults(results)
+
+    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils', 'threads'])
+    expect(groups.find((group) => group.id === 'relics')?.results.map((result) => result.id)).toEqual(['image-1'])
+    expect(groups.find((group) => group.id === 'inscriptions')?.results.map((result) => result.id)).toEqual(['note-1'])
+    expect(groups.find((group) => group.id === 'sigils')?.results.map((result) => result.id)).toEqual(['image-1'])
+  })
+
+  it('finds thread labels and groups them as threads', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [baseConnection], 'source')
+    const groups = groupSearchResults(results)
+
+    expect(results.map((result) => result.id)).toContain('thread-1')
+    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils', 'threads'])
+    expect(groups.find((group) => group.id === 'threads')?.results.map((result) => result.id)).toEqual(['thread-1'])
+  })
+
+  it('indexes and filters thread meanings', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [{ ...baseConnection, label: 'old interview', meaning: 'memory' }], 'meaning:memory')
+
+    expect(results.map((result) => result.id)).toEqual(['thread-1'])
+    expect(results[0].detail).toContain('memory')
+    expect(results[0].haystack).toContain('memory')
+  })
+
+  it('filters to marked threads with has:meaning', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [
+      { ...baseConnection, id: 'thread-1', meaning: 'memory' },
+      { ...baseConnection, id: 'thread-2', label: 'plain relation', meaning: undefined },
+    ], 'has:meaning')
+
+    expect(results.map((result) => result.id)).toEqual(['thread-1'])
+  })
+
+  it('computes a focus point between thread endpoints', () => {
+    const point = threadFocusPoint(
+      { ...baseItem, id: 'image-1', x: 10, y: 20, width: 100, height: 80 },
+      { ...baseItem, id: 'note-1', x: 310, y: 220, width: 50, height: 40 },
+    )
+
+    expect(point).toEqual({ x: 197.5, y: 150 })
+  })
+
+  it('wraps index navigation in both directions', () => {
+    expect(nextSearchResultIndex(0, 3, 1)).toBe(1)
+    expect(nextSearchResultIndex(2, 3, 1)).toBe(0)
+    expect(nextSearchResultIndex(0, 3, -1)).toBe(2)
+    expect(nextSearchResultIndex(-1, 3, 1)).toBe(0)
+    expect(nextSearchResultIndex(0, 0, 1)).toBe(-1)
+  })
+
+  it('maps index keyboard input to navigation actions', () => {
+    expect(indexKeyAction('Escape')).toEqual({ type: 'close' })
+    expect(indexKeyAction('ArrowDown')).toEqual({ type: 'step', direction: 1 })
+    expect(indexKeyAction('ArrowUp')).toEqual({ type: 'step', direction: -1 })
+    expect(indexKeyAction('Enter')).toEqual({ type: 'focus', keepOpen: false })
+    expect(indexKeyAction('Enter', true)).toEqual({ type: 'focus', keepOpen: true })
+    expect(indexKeyAction('Tab')).toEqual({ type: 'none' })
   })
 })

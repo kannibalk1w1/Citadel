@@ -73,6 +73,9 @@ type UIState = {
 
   activeConnectionId: string | null
   setActiveConnectionId: (id: string | null) => void
+  bindingPulse: { connectionId: string; startedAt: number } | null
+  triggerBindingPulse: (connectionId: string) => void
+  clearBindingPulse: () => void
 
   // Pending connect interaction
   connectFromId: string | null
@@ -166,6 +169,9 @@ export const useUIStore = create<UIState>((set) => ({
 
   activeConnectionId: null,
   setActiveConnectionId: (id) => set({ activeConnectionId: id }),
+  bindingPulse: null,
+  triggerBindingPulse: (connectionId) => set({ bindingPulse: { connectionId, startedAt: Date.now() } }),
+  clearBindingPulse: () => set({ bindingPulse: null }),
 
   connectFromId: null,
   setConnectFromId: (id) => set({ connectFromId: id }),

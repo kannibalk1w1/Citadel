@@ -7,6 +7,7 @@ import { useMascotStore } from '../store/mascotStore'
 import type { CanvasItem, ToolMode } from '../../types'
 import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
+import { GothicIcon } from './icons/GothicIcon'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: React.ReactElement }
 
@@ -34,13 +35,7 @@ const TOOLS: ToolDef[] = [
   },
   {
     mode: 'lasso', label: 'Lasso', key: 'L',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" {...S}>
-        <path d="M9 4C6 4 4 6 4 8.5C4 11 6 13 9 13C12 13 14 11 14 8.5C14 6 12 4 9 4Z" strokeDasharray="2.5 2" />
-        <path d="M9 13L8 17" />
-        <path d="M9 13L10 17" />
-      </svg>
-    ),
+    icon: <GothicIcon name="templar-eye" size={18} />,
   },
   {
     mode: 'connect', label: 'Connect', key: 'C',
@@ -64,14 +59,7 @@ const TOOLS: ToolDef[] = [
   },
   {
     mode: 'sticky', label: 'Sticky', key: 'N',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" {...S}>
-        <path d="M3 3H11L15 7V15H3Z" />
-        <path d="M11 3V7H15" />
-        <line x1="6" y1="10" x2="12" y2="10" />
-        <line x1="6" y1="12.5" x2="10" y2="12.5" />
-      </svg>
-    ),
+    icon: <GothicIcon name="scroll-unfurled" size={18} />,
   },
   {
     mode: 'link', label: 'Link', key: 'K',
@@ -479,10 +467,14 @@ export function Toolbar(): React.ReactElement {
           transition: 'var(--transition-fast)',
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-          <circle cx="9" cy="9" r={isRecording ? 5 : 6} />
-          {isRecording && <rect x="5.5" y="5.5" width="7" height="7" rx="1" fill="var(--bg-ui)" />}
-        </svg>
+        {isRecording ? (
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+            <circle cx="9" cy="9" r="5" />
+            <rect x="5.5" y="5.5" width="7" height="7" rx="1" fill="var(--bg-ui)" />
+          </svg>
+        ) : (
+          <GothicIcon name="crowned-skull" size={18} />
+        )}
       </button>
 
       <button
@@ -532,12 +524,7 @@ export function Toolbar(): React.ReactElement {
           transition: 'var(--transition-fast)',
         }}
       >
-        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.3">
-          <rect x="2" y="3" width="13" height="9" rx="1" />
-          <path d="M8.5 12V15" />
-          <path d="M6 15H11" />
-          <path d="M6 7.5L8 9.5L11.5 6" />
-        </svg>
+        <GothicIcon name="watchtower" size={18} />
       </button>
 
       <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />

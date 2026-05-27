@@ -3,13 +3,18 @@ import React, { useEffect, useRef } from 'react'
 import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
+import { MediaPlaceholder } from './MediaPlaceholder'
+import { handleConnectRelicClick } from '../connections/connectInteraction'
 
-type Props = { item: CanvasItem }
+type Props = { item: CanvasItem; domOnly?: boolean }
 
-export function AudioItem({ item }: Props): React.ReactElement {
+export function AudioItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const toolMode = useUIStore((s) => s.toolMode)
   const audioRef = useRef<HTMLAudioElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number>(0)
@@ -109,29 +114,46 @@ export function AudioItem({ item }: Props): React.ReactElement {
 
   return (
     <>
-      <Rect
-        x={item.x} y={item.y}
-        width={item.width} height={item.height}
-        rotation={item.rotation}
-        fill="#10100f"
-        stroke="#2a2722"
-        strokeWidth={1}
-        onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
-      />
-      <DOMItem item={item} style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}>
-        <canvas
-          ref={canvasRef}
-          style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
+      {!domOnly && (
+        <Rect
+          x={item.x} y={item.y}
+          width={item.width} height={item.height}
+          rotation={item.rotation}
+          fill="#10100f"
+          stroke="#2a2722"
+          strokeWidth={1}
+          onClick={(e) => { e.cancelBubble = true; setSelection([item.id]) }}
         />
-        <audio
-          ref={audioRef}
-          src={pathToUrl(item.src ?? '')}
-          controls
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handlePause}
-          style={{ width: '100%', height: 32, display: 'block' }}
-        />
+      )}
+      <DOMItem
+        item={item}
+        style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (toolMode === 'connect') {
+            handleConnectRelicClick(activeBoardId, item.id)
+            return
+          }
+          setSelection([item.id])
+        }}
+      >
+        {item.src ? (
+          <>
+            <canvas
+              ref={canvasRef}
+              style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
+            />
+            <audio
+              ref={audioRef}
+              src={pathToUrl(item.src)}
+              controls
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onEnded={handlePause}
+              style={{ width: '100%', height: 32, display: 'block' }}
+            />
+          </>
+        ) : <MediaPlaceholder item={item} />}
       </DOMItem>
     </>
   )

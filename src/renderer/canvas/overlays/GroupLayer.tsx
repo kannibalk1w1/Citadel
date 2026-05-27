@@ -1,15 +1,21 @@
 import React from 'react'
 import type { Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { visibleGroupIds } from './overlayVisibility'
 
-type Props = { viewport: Viewport }
+type Props = {
+  viewport: Viewport
+  visibleItemIds?: ReadonlySet<string>
+}
 
-export function GroupLayer({ viewport }: Props): React.ReactElement {
+export function GroupLayer({ viewport, visibleItemIds }: Props): React.ReactElement {
   const items = useCanvasStore((s) => s.items())
+  const renderGroupIds = visibleItemIds ? visibleGroupIds(items, visibleItemIds) : null
 
   const groups = new Map<string, typeof items>()
   for (const item of items) {
     if (!item.groupId) continue
+    if (renderGroupIds && !renderGroupIds.has(item.groupId)) continue
     if (!groups.has(item.groupId)) groups.set(item.groupId, [])
     groups.get(item.groupId)!.push(item)
   }
