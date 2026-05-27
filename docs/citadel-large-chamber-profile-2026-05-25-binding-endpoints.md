@@ -58,3 +58,9 @@ Keep the endpoint sigil direction.
 The next high-value step is to make the Binding interaction feel more deliberate at creation time: a short thread-binding reveal that travels along the visible line, then resolves into the endpoint sigils. It should use the same active/pulsing visibility path and respect reduced motion.
 
 Recommended next step: add a short Binding reveal animation for newly created visible threads, then capture a third profile only if it introduces new persistent SVG elements or timers.
+
+## Follow-Up Status
+
+The Binding reveal animation has since landed through the existing `bindingPulse` path, with reduced-motion support and centralized Binding creation via `handleConnectRelicClick`.
+
+Current next step: capture the third large-chamber profile for the landed reveal animation, then compare it against this endpoint profile before adding more persistent SVG ornamentation.

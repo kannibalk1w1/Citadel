@@ -42,6 +42,8 @@ Implemented performance decisions:
 - Connection and group overlays are visibility-aware; visible, active, and pulsing Binding context is preserved while dormant offscreen overlays sleep.
 - `Chamber Load` gives a lightweight runtime readout for total relics, mounted relics, awake DOM media, and sleeping animated relics.
 - Binding endpoint sigils are allowed for active and pulsing visible-context threads, but must remain tied to the existing overlay visibility path.
+- Binding creation is centralized through `handleConnectRelicClick`, so new item types should use that helper rather than duplicating connection creation.
+- Binding reveal now uses the existing `bindingPulse` path, includes path-progress reveal data, and supports reduced motion with a static shortened pulse.
 
 Profiling notes:
 
@@ -50,10 +52,10 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Add a short Binding reveal animation for newly created visible threads.
-2. Respect reduced motion for Binding reveal and any future atmospheric animation.
-3. Capture a third large-chamber profile only if the reveal animation adds persistent SVG elements or timers.
-4. Continue evolving the Living Index toward searchable sigil marks once Binding feedback is stable.
+1. Capture the third large-chamber profile for the landed Binding reveal animation.
+2. Compare reveal profile numbers against the baseline and endpoint profile before adding more persistent SVG ornamentation.
+3. Continue evolving the Living Index toward searchable sigil marks once Binding feedback remains stable.
+4. Keep reduced-motion support mandatory for any future atmospheric animation.
 
 ## Rendering Strategy
 
@@ -212,8 +214,8 @@ Goals:
 
 Next:
 
-- add a short Binding reveal animation for newly created visible threads
-- capture a third large-chamber profile only if reveal animation adds persistent SVG elements or timers
+- capture the third large-chamber profile for the landed Binding reveal animation
+- continue Living Index sigil mark work after the reveal profile is recorded
 
 ### Phase 2: Viewport Virtualization
 
