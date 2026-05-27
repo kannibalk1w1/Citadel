@@ -23,6 +23,38 @@ The target interaction budget is:
 - heavy media wakes only when useful
 - save, export, and archive operations show progress and avoid blocking the renderer where possible
 
+## Current Decisions From Recent Sessions
+
+These are the active implementation decisions that future sessions should preserve.
+
+Completed direction:
+
+- Citadel remains an atmospheric archive for memory, research, reference, introspection, and nonlinear thought, not primarily a worldbuilding app.
+- Product language should stay broad and archival: Relic, Inscription, Thread, Sigil, Chamber, Index, Binding, and Rite.
+- Default first-class concepts like Character, Place, Event, Faction, and Clue should not drive the base UX; they can be user-created sigils or templates later.
+- Performance work should preserve atmosphere rather than flatten the app into a generic productivity canvas.
+
+Implemented performance decisions:
+
+- `CanvasStage` uses viewport virtualization with overscan and protected IDs for selected, highlighted, and active connection-source relics.
+- DOM-layer media (`video`, `youtube`, `audio`, `model3d`) only mounts from the rendered viewport slice, with selected/protected media kept awake.
+- GIF relics stop playback on unmount and ignore late gifler frames after sleep.
+- Connection and group overlays are visibility-aware; visible, active, and pulsing Binding context is preserved while dormant offscreen overlays sleep.
+- `Chamber Load` gives a lightweight runtime readout for total relics, mounted relics, awake DOM media, and sleeping animated relics.
+- Binding endpoint sigils are allowed for active and pulsing visible-context threads, but must remain tied to the existing overlay visibility path.
+
+Profiling notes:
+
+- Baseline profile: `docs/citadel-large-chamber-profile-2026-05-25.md`.
+- Binding endpoint profile: `docs/citadel-large-chamber-profile-2026-05-25-binding-endpoints.md`.
+
+Active next-step queue:
+
+1. Add a short Binding reveal animation for newly created visible threads.
+2. Respect reduced motion for Binding reveal and any future atmospheric animation.
+3. Capture a third large-chamber profile only if the reveal animation adds persistent SVG elements or timers.
+4. Continue evolving the Living Index toward searchable sigil marks once Binding feedback is stable.
+
 ## Rendering Strategy
 
 ### 1. Viewport Visibility

@@ -35,6 +35,8 @@ Avoid making default first-class concepts like Character, Place, Clue, Event, or
 
 See `docs/citadel-defining-movement.md` for the full direction and `docs/citadel-performance-roadmap.md` for the medium-term performance strategy.
 
+Current implementation decisions and the active next-step queue live in `docs/citadel-performance-roadmap.md` under **Current Decisions From Recent Sessions**. Large-chamber profiling notes live beside it in `docs/citadel-large-chamber-profile-*.md`.
+
 ---
 
 ## Stack — Use These. Don't Substitute.
