@@ -63,4 +63,6 @@ Recommended next step: add a short Binding reveal animation for newly created vi
 
 The Binding reveal animation has since landed through the existing `bindingPulse` path, with reduced-motion support and centralized Binding creation via `handleConnectRelicClick`.
 
-Current next step: capture the third large-chamber profile for the landed reveal animation, then compare it against this endpoint profile before adding more persistent SVG ornamentation.
+The third profile is captured in `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`.
+
+Current next step: continue Living Index sigil mark work, keeping search marks capped and visibility-aware before adding richer persistent ornamentation.

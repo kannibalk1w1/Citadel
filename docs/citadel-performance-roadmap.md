@@ -44,18 +44,20 @@ Implemented performance decisions:
 - Binding endpoint sigils are allowed for active and pulsing visible-context threads, but must remain tied to the existing overlay visibility path.
 - Binding creation is centralized through `handleConnectRelicClick`, so new item types should use that helper rather than duplicating connection creation.
 - Binding reveal now uses the existing `bindingPulse` path, includes path-progress reveal data, and supports reduced motion with a static shortened pulse.
+- Living Index canvas sigil marks are capped and filtered through the current viewport visibility context, so search can scan the chamber without drawing marks for dormant offscreen relics.
 
 Profiling notes:
 
 - Baseline profile: `docs/citadel-large-chamber-profile-2026-05-25.md`.
 - Binding endpoint profile: `docs/citadel-large-chamber-profile-2026-05-25-binding-endpoints.md`.
+- Binding reveal profile: `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`.
 
 Active next-step queue:
 
-1. Capture the third large-chamber profile for the landed Binding reveal animation.
-2. Compare reveal profile numbers against the baseline and endpoint profile before adding more persistent SVG ornamentation.
-3. Continue evolving the Living Index toward searchable sigil marks once Binding feedback remains stable.
-4. Keep reduced-motion support mandatory for any future atmospheric animation.
+1. Extend Living Index result handling toward richer searchable sigils and thread context without changing the base archival language.
+2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
+3. Preserve reduced-motion support for any future atmospheric animation.
+4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
 
 ## Rendering Strategy
 
@@ -214,8 +216,8 @@ Goals:
 
 Next:
 
-- capture the third large-chamber profile for the landed Binding reveal animation
-- continue Living Index sigil mark work after the reveal profile is recorded
+- enrich Living Index results with clearer sigil and thread context
+- keep any new search marks visibility-aware and capped before adding richer ornamentation
 
 ### Phase 2: Viewport Virtualization
 

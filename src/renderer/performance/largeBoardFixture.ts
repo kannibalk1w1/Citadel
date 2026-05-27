@@ -30,6 +30,7 @@ type LargeBoardFixture = {
 type SearchMeasurementOptions = {
   markLimit?: number
   now?: () => number
+  visibleItemIds?: ReadonlySet<string>
 }
 
 type SearchMeasurement = {
@@ -114,11 +115,14 @@ export function measureLivingIndexSearch(
   const start = now()
   const results = getSearchResults(items, query, items.length)
   const end = now()
+  const markableResults = options.visibleItemIds
+    ? results.filter((result) => options.visibleItemIds?.has(result.id))
+    : results
 
   return {
     durationMs: end - start,
     resultCount: results.length,
-    markCount: Math.min(results.length, markLimit),
+    markCount: Math.min(markableResults.length, markLimit),
     firstResultIds: results.slice(0, 5).map((result) => result.id),
   }
 }

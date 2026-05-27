@@ -102,4 +102,24 @@ describe('SearchHighlight Index marks', () => {
 
     expect(screen.getAllByTestId('index-mark')).toHaveLength(24)
   })
+
+  it('only renders Index marks for visible search results when visibility context is provided', () => {
+    useCanvasStore.setState((state) => ({
+      boards: state.boards.map((board) => ({
+        ...board,
+        items: [
+          item('gate-offscreen-a', 0),
+          item('gate-visible-a', 120),
+          item('gate-offscreen-b', 240),
+          item('gate-visible-b', 360),
+        ],
+      })),
+    }))
+
+    render(<SearchHighlight visibleItemIds={new Set(['gate-visible-a', 'gate-visible-b'])} />)
+
+    const marks = screen.getAllByTestId('index-mark')
+    expect(marks).toHaveLength(2)
+    expect(marks.map((mark) => mark.dataset.indexMarkId)).toEqual(['gate-visible-a', 'gate-visible-b'])
+  })
 })

@@ -311,7 +311,7 @@ export function CanvasStage(): React.ReactElement {
           <AnchorHandles />
         </Layer>
         <Layer listening={false}>
-          <SearchHighlight />
+          <SearchHighlight visibleItemIds={visibleIds} />
         </Layer>
         <Layer>
           <LassoOverlay />

@@ -6,6 +6,10 @@ import { getSearchResults } from '../../ui/itemSearchModel'
 
 const MAX_INDEX_MARKS = 24
 
+type SearchHighlightProps = {
+  visibleItemIds?: ReadonlySet<string>
+}
+
 function cssVar(name: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
@@ -22,7 +26,7 @@ function markForId(id: string): string {
   return marks[total % marks.length]
 }
 
-export function SearchHighlight(): React.ReactElement | null {
+export function SearchHighlight({ visibleItemIds }: SearchHighlightProps = {}): React.ReactElement | null {
   const highlightId = useUIStore((s) => s.searchHighlightId)
   const searchQuery = useUIStore((s) => s.searchQuery)
   const searchOpen = useUIStore((s) => s.panels.tagSearch)
@@ -33,8 +37,11 @@ export function SearchHighlight(): React.ReactElement | null {
 
   const activeResults = React.useMemo(() => {
     if (!searchOpen || !searchQuery.trim()) return []
-    return getSearchResults(items, searchQuery.trim().toLowerCase(), MAX_INDEX_MARKS).map((result) => result.item)
-  }, [items, searchOpen, searchQuery])
+    return getSearchResults(items, searchQuery.trim().toLowerCase(), items.length)
+      .map((result) => result.item)
+      .filter((resultItem) => visibleItemIds ? visibleItemIds.has(resultItem.id) : resultItem.visible !== false)
+      .slice(0, MAX_INDEX_MARKS)
+  }, [items, searchOpen, searchQuery, visibleItemIds])
 
   React.useEffect(() => {
     if (activeResults.length === 0 || prefersReducedMotion()) return undefined

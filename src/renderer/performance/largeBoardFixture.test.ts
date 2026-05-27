@@ -62,6 +62,23 @@ describe('largeBoardFixture', () => {
     })
   })
 
+  it('measures Living Index marks against the visible item set when provided', () => {
+    const fixture = createLargeBoardFixture({ itemCount: 100, matchEvery: 4 })
+    const visibleItemIds = new Set(['fixture-relic-0000', 'fixture-relic-0008', 'fixture-relic-0016'])
+
+    const measurement = measureLivingIndexSearch(fixture.board.items, fixture.query, {
+      markLimit: 24,
+      visibleItemIds,
+      now: () => 20,
+    })
+
+    expect(measurement).toMatchObject({
+      durationMs: 0,
+      resultCount: 25,
+      markCount: 3,
+    })
+  })
+
   it('measures the chamber load readout for a stage-sized large board slice', () => {
     const fixture = createLargeBoardFixture({ itemCount: 1000, columns: 50 })
     const mediaItems = [

@@ -71,11 +71,9 @@ Do not start deeper chunk caching yet. The current mounted relic ratio is low en
 
 ## Next Measurement
 
-After endpoint animation lands, capture:
+Endpoint sigils and the Binding reveal animation have since landed. Follow-up profiles:
 
-- mounted relic count
-- rendered connection count
-- pulsing/active Binding count
-- frame responsiveness while panning across the 1,000-relic fixture
+- `docs/citadel-large-chamber-profile-2026-05-25-binding-endpoints.md`
+- `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`
 
-Recommended next step: build the richer visual Binding endpoint animation around visible and active threads, then record the second large-chamber profile against this note.
+Current recommended next step: continue Living Index sigil mark work, keeping search marks capped and visibility-aware before adding richer persistent ornamentation.
