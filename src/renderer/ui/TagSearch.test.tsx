@@ -2,7 +2,7 @@
 import React from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CanvasItem } from '../../types'
+import type { CanvasItem, Connection } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import { TagSearch } from './TagSearch'
@@ -23,6 +23,20 @@ const baseItem: CanvasItem = {
   opacity: 1,
   tags: ['gate'],
   src: 'C:/refs/gate.png',
+}
+
+const baseConnection: Connection = {
+  id: 'thread-gate-note',
+  fromId: 'gate-relic',
+  toId: 'gate-note',
+  fromAnchor: 'auto',
+  toAnchor: 'auto',
+  style: 'bezier',
+  color: '#bd9652',
+  width: 1,
+  arrowHead: 'arrow',
+  meaning: 'reference',
+  dashed: false,
 }
 
 beforeEach(() => {
@@ -99,5 +113,25 @@ describe('TagSearch keyboard interactions', () => {
     expect(useCanvasStore.getState().selectedIds).toEqual(['gate-relic'])
     expect(useUIStore.getState().panels.tagSearch).toBe(true)
     expect(screen.getByPlaceholderText('Search the Index...')).toBeTruthy()
+  })
+
+  it('reveals a directly related Binding when focusing a relic result', async () => {
+    useCanvasStore.setState((state) => ({
+      boards: state.boards.map((board) => ({
+        ...board,
+        connections: [baseConnection],
+      })),
+    }))
+
+    render(<TagSearch />)
+
+    const input = screen.getByPlaceholderText('Search the Index...')
+    await waitFor(() => expect(screen.getByText('1 / 3')).toBeTruthy())
+
+    fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
+
+    expect(useCanvasStore.getState().selectedIds).toEqual(['gate-relic'])
+    expect(useUIStore.getState().activeConnectionId).toBe('thread-gate-note')
+    expect(useUIStore.getState().panels.connectionProperties).toBe(false)
   })
 })

@@ -45,6 +45,8 @@ Implemented performance decisions:
 - Binding creation is centralized through `handleConnectRelicClick`, so new item types should use that helper rather than duplicating connection creation.
 - Binding reveal now uses the existing `bindingPulse` path, includes path-progress reveal data, and supports reduced motion with a static shortened pulse.
 - Living Index canvas sigil marks are capped and filtered through the current viewport visibility context, so search can scan the chamber without drawing marks for dormant offscreen relics.
+- Living Index result rows now use archive-native context: tagged relics surface Sigils, thread rows surface Binding inscriptions, meanings, endpoints, and shape.
+- Living Index relic focus activates one directly related Binding through the existing active-thread visibility path, revealing nearby context without waking every dormant offscreen thread.
 
 Profiling notes:
 
@@ -54,7 +56,7 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Extend Living Index result handling toward richer searchable sigils and thread context without changing the base archival language.
+1. Expand Index search beyond active-chamber items only when the data model has a clear cross-chamber result and focus path.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
@@ -216,7 +218,7 @@ Goals:
 
 Next:
 
-- enrich Living Index results with clearer sigil and thread context
+- plan the cross-chamber Index path before implementing all-chamber results
 - keep any new search marks visibility-aware and capped before adding richer ornamentation
 
 ### Phase 2: Viewport Virtualization

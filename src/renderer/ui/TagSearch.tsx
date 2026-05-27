@@ -7,7 +7,9 @@ import {
   groupSearchResults,
   indexKeyAction,
   isItemSearchResult,
+  firstRelatedThread,
   nextSearchResultIndex,
+  resultBadgeLabel,
   threadFocusPoint,
   type SearchResult,
 } from './itemSearchModel'
@@ -79,6 +81,7 @@ export function TagSearch(): React.ReactElement | null {
       setSelection([result.item.id])
       focusPoint(cx, cy)
       setSearchHighlight(result.item.id)
+      useUIStore.getState().setActiveConnectionId(firstRelatedThread(result.item.id, connections)?.id ?? null)
       window.setTimeout(() => {
         if (useUIStore.getState().searchHighlightId === result.item.id) {
           useUIStore.getState().setSearchHighlight(null)
@@ -354,6 +357,5 @@ function ResultList({
 }
 
 function resultBadge(result: SearchResult): string {
-  if (!isItemSearchResult(result)) return 'thread'
-  return result.item.meta?.kind === 'comment' ? 'comment' : result.item.type
+  return resultBadgeLabel(result)
 }

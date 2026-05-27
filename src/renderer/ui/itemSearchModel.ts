@@ -59,6 +59,20 @@ function arrayText(value: unknown): string {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string').join(', ') : ''
 }
 
+function titleCase(value: string): string {
+  return value.split(/[-_\s]+/).filter(Boolean).map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`).join(' ')
+}
+
+function formatSigils(tags: string[]): string {
+  return tags.map((tag) => `#${tag}`).join(' ')
+}
+
+function threadStyleLabel(style: Connection['style']): string {
+  if (style === 'bezier') return 'curved'
+  if (style === 'elbow') return 'elbow'
+  return 'straight'
+}
+
 function hasInscription(item: CanvasItem): boolean {
   return item.type === 'sticky' || item.type === 'text' || textValue(item.meta?.content) !== ''
 }
@@ -86,6 +100,8 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
   const srcBName = basename(textValue(item.meta?.srcB))
   const swatches = arrayText(item.meta?.colors)
   const isComment = isCommentItem(item)
+  const hasSource = hasRelicSource(item)
+  const hasText = hasInscription(item)
 
   const label =
     content ||
@@ -97,10 +113,10 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
     `${item.type} ${item.id.slice(0, 6)}`
 
   const detailParts = [
-    isComment ? 'comment' : item.type,
+    isComment ? 'inscription: comment' : hasSource ? `relic: ${item.type}` : hasText ? `inscription: ${item.type}` : `relic: ${item.type}`,
     isComment && item.meta?.attachedTo ? 'attached' : '',
-    item.tags.length ? `tags: ${item.tags.join(', ')}` : '',
-    item.src ? `src: ${item.src}` : '',
+    item.tags.length ? `sigils: ${formatSigils(item.tags)}` : '',
+    item.src ? `source: ${srcName || item.src}` : '',
     item.link ? `link: ${item.link}` : '',
     srcAName ? `A: ${srcAName}` : '',
     srcBName ? `B: ${srcBName}` : '',
@@ -111,8 +127,10 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
   const haystack = [
     item.type,
     isComment ? 'comment annotation note' : '',
+    item.tags.length ? 'sigil sigils' : '',
     item.id,
     item.tags.join(' '),
+    formatSigils(item.tags),
     item.src ?? '',
     item.link ?? '',
     content,
@@ -130,14 +148,16 @@ export function buildThreadSearchResult(
 ): ThreadSearchResult {
   const fromItem = itemMap.get(thread.fromId)
   const toItem = itemMap.get(thread.toId)
-  const label = textValue(thread.label) || `thread ${thread.id.slice(0, 6)}`
+  const meaningLabel = thread.meaning ? titleCase(thread.meaning) : ''
+  const label = textValue(thread.label) || (meaningLabel ? `${meaningLabel} Binding` : `thread ${thread.id.slice(0, 6)}`)
   const fromLabel = fromItem ? buildSearchResult(fromItem).label : thread.fromId
   const toLabel = toItem ? buildSearchResult(toItem).label : thread.toId
   const detail = [
-    'thread',
-    thread.meaning ?? '',
+    'Binding',
+    meaningLabel ? `meaning: ${meaningLabel}` : '',
+    thread.label ? `inscription: ${thread.label}` : '',
     `${fromLabel} -> ${toLabel}`,
-    thread.style,
+    `shape: ${threadStyleLabel(thread.style)}`,
     thread.dashed ? 'dashed' : '',
   ].filter(Boolean).join('  |  ')
   const haystack = [
@@ -145,12 +165,15 @@ export function buildThreadSearchResult(
     thread.id,
     thread.label ?? '',
     thread.meaning ?? '',
+    meaningLabel,
     thread.style,
     thread.arrowHead,
     fromLabel,
     toLabel,
     fromItem?.tags.join(' ') ?? '',
+    fromItem ? formatSigils(fromItem.tags) : '',
     toItem?.tags.join(' ') ?? '',
+    toItem ? formatSigils(toItem.tags) : '',
   ].join(' ').toLowerCase()
 
   return { id: thread.id, kind: 'thread', thread, fromItem, toItem, label, detail, haystack }
@@ -295,4 +318,15 @@ export function threadFocusPoint(fromItem: CanvasItem, toItem: CanvasItem): { x:
     x: ((fromItem.x + fromItem.width / 2) + (toItem.x + toItem.width / 2)) / 2,
     y: ((fromItem.y + fromItem.height / 2) + (toItem.y + toItem.height / 2)) / 2,
   }
+}
+
+export function firstRelatedThread(itemId: string, connections: Connection[]): Connection | null {
+  return connections.find((thread) => thread.fromId === itemId || thread.toId === itemId) ?? null
+}
+
+export function resultBadgeLabel(result: SearchResult): string {
+  if (isThreadSearchResult(result)) return result.thread.meaning ? result.thread.meaning : 'thread'
+  if (isCommentItem(result.item)) return 'comment'
+  if (result.item.tags.length > 0) return result.item.tags.length === 1 ? '1 sigil' : `${result.item.tags.length} sigils`
+  return result.item.type
 }

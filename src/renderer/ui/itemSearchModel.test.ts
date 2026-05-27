@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Connection } from '../../types'
-import { buildSearchResult, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, threadFocusPoint } from './itemSearchModel'
+import { buildSearchResult, firstRelatedThread, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, resultBadgeLabel, threadFocusPoint } from './itemSearchModel'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -74,6 +74,8 @@ describe('itemSearchModel', () => {
     ], 'type:image tag:castle')
 
     expect(results.map((result) => result.item.id)).toEqual(['image-1'])
+    expect(results[0].detail).toContain('sigils: #castle #stone')
+    expect(resultBadgeLabel(results[0])).toBe('2 sigils')
   })
 
   it('filters by state and asset tokens', () => {
@@ -110,6 +112,8 @@ describe('itemSearchModel', () => {
     const groups = groupSearchResults(results)
 
     expect(results.map((result) => result.id)).toContain('thread-1')
+    expect(results.find((result) => result.id === 'thread-1')?.detail).toContain('Binding')
+    expect(results.find((result) => result.id === 'thread-1')?.detail).toContain('inscription: source memory')
     expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils', 'threads'])
     expect(groups.find((group) => group.id === 'threads')?.results.map((result) => result.id)).toEqual(['thread-1'])
   })
@@ -122,8 +126,21 @@ describe('itemSearchModel', () => {
     const results = getIndexResults(items, [{ ...baseConnection, label: 'old interview', meaning: 'memory' }], 'meaning:memory')
 
     expect(results.map((result) => result.id)).toEqual(['thread-1'])
-    expect(results[0].detail).toContain('memory')
+    expect(results[0].label).toBe('old interview')
+    expect(results[0].detail).toContain('meaning: Memory')
     expect(results[0].haystack).toContain('memory')
+    expect(resultBadgeLabel(results[0])).toBe('memory')
+  })
+
+  it('uses thread meaning as the fallback Binding label', () => {
+    const items = [
+      { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+      { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+    ]
+    const results = getIndexResults(items, [{ ...baseConnection, label: undefined, meaning: 'question' }], 'meaning:question')
+
+    expect(results[0].label).toBe('Question Binding')
+    expect(results[0].detail).toContain('shape: curved')
   })
 
   it('filters to marked threads with has:meaning', () => {
@@ -146,6 +163,17 @@ describe('itemSearchModel', () => {
     )
 
     expect(point).toEqual({ x: 197.5, y: 150 })
+  })
+
+  it('finds the first Binding related to a relic result', () => {
+    const threads = [
+      { ...baseConnection, id: 'unrelated', fromId: 'other-1', toId: 'other-2' },
+      { ...baseConnection, id: 'related', fromId: 'image-1', toId: 'note-1' },
+      { ...baseConnection, id: 'also-related', fromId: 'memory-1', toId: 'image-1' },
+    ]
+
+    expect(firstRelatedThread('image-1', threads)?.id).toBe('related')
+    expect(firstRelatedThread('missing', threads)).toBeNull()
   })
 
   it('wraps index navigation in both directions', () => {
