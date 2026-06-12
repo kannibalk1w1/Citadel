@@ -48,6 +48,11 @@ Implemented performance decisions:
 - Living Index result rows now use archive-native context: tagged relics surface Sigils, thread rows surface Binding inscriptions, meanings, endpoints, and shape.
 - Living Index relic focus activates one directly related Binding through the existing active-thread visibility path, revealing nearby context without waking every dormant offscreen thread.
 - Index search now sweeps every chamber via `getArchiveIndexResults`: active-chamber results lead, dormant-chamber results carry chamber identity in the row detail, and focusing one travels there through `setActiveBoard` before the existing focus/highlight path. Canvas sigil marks remain active-chamber only, so the visibility discipline is unchanged.
+- Asset metadata records live in renderer memory (`src/renderer/assets/assetMetadata.ts`), keyed by item src — derived cache, never persisted into the project file, so relinking simply produces fresh records for the new path.
+- Image relics render thumbnail-first: a cached 256px thumbnail when the relic's largest on-screen side fits within thumbnail resolution, the full source when selected or larger on screen (`previewPolicy.preferThumbnail`). `useStableImage` keeps the previous bitmap while the swap loads so relics never blank.
+- Thumbnails are content-addressed (`thumb-<hash>-<size>-<mtime>.png`) in `userData/preview-cache`; the legacy `pdf-cache` is read/cleaned only and new PDF page previews also land in `preview-cache`. Settings maintenance shows one unified "Preview cache".
+- Thumbnail generation is lazy (it runs on relic mount, which viewport virtualization already limits) through a concurrency-2 queue in `thumbnailPipeline.ensureThumbnail`; failures record `thumbnailPath: null` and fall back to the full source without retrying.
+- Missing image sources render a dark placeholder with the filename instead of disappearing, so relink keeps the relic's place in the chamber.
 
 Profiling notes:
 
@@ -57,11 +62,12 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Begin Phase 3 groundwork: asset metadata records and thumbnail-first media, starting from the existing PDF preview cache.
-2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
-3. Preserve reduced-motion support for any future atmospheric animation.
-4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
-5. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
+1. Extend thumbnail-first media beyond images: GIF first frames, video poster frames, and 3D preview captures, reusing the `preview-cache` and `assetMetadata` paths.
+2. Profile thumbnail-first rendering against the large-chamber fixture (far-zoom sweep over a fresh chamber, then a warm cache) and record the result next to the existing profiles.
+3. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
+4. Preserve reduced-motion support for any future atmospheric animation.
+5. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
+6. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
 
 ## Rendering Strategy
 
@@ -239,18 +245,26 @@ Verification:
 
 ### Phase 3: Asset Metadata And Thumbnails
 
+Status: first slice complete (images). Spec: `docs/superpowers/specs/2026-06-12-asset-metadata-thumbnails-design.md`.
+
 Goals:
 
-- introduce asset metadata records
-- generate and cache thumbnails
-- use thumbnails for far and mid zoom
-- unify PDF preview cache with broader asset preview cache
+- introduce asset metadata records — done (renderer-memory records keyed by src)
+- generate and cache thumbnails — done for images (content-addressed `preview-cache`, lazy concurrency-2 generation)
+- use thumbnails for far and mid zoom — done for image relics (resolution-aware `preferThumbnail`)
+- unify PDF preview cache with broader asset preview cache — done (`cache:previewStats` / `cache:clearUnusedPreviews` span both dirs)
+
+Remaining:
+
+- video poster frames, 3D preview captures, GIF first-frame thumbnails
+- move generation into a worker once volume justifies it
+- progressive text/label detail at far zoom
 
 Verification:
 
 - import mixed media
 - save and load portable archives
-- relink missing assets without losing metadata
+- relink missing assets without losing metadata (missing relics now keep a placeholder)
 
 ### Phase 4: Thread Binding
 

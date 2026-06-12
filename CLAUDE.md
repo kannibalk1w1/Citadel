@@ -300,6 +300,10 @@ Key tokens:
 | `shell:openURL` | r→m | `{ url }` |
 | `settings:get` | r→m | `{ key }` → `{ value }` |
 | `settings:set` | r→m | `{ key, value }` |
+| `assets:getThumbnail` | r→m | `{ path }` → `{ exists, size?, mtimeMs?, thumbnailPath \| null }` |
+| `assets:cacheThumbnail` | r→m | `{ path, imageData }` → `{ thumbnailPath }` |
+| `cache:previewStats` | r→m | → `{ count, bytes }` across `preview-cache` + legacy `pdf-cache` |
+| `cache:clearUnusedPreviews` | r→m | `{ preservePaths, assetPaths }` — keeps referenced previews + live-asset thumbnails |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
 
 ---
