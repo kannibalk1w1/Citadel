@@ -1,52 +1,21 @@
 import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
+import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
 const pdfCacheDir = (): string => join(app.getPath('userData'), 'pdf-cache')
+const previewCacheDir = (): string => join(app.getPath('userData'), 'preview-cache')
+// New previews are written to preview-cache; legacy pdf-cache is read and cleaned only.
+const previewCacheDirs = (): string[] => [previewCacheDir(), pdfCacheDir()]
 function readSettings(): Record<string, unknown> {
   return readSettingsFile(settingsPath)
 }
 function writeSettings(data: Record<string, unknown>): void {
   writeSettingsFile(settingsPath, data)
-}
-
-function getPdfCacheStats(): { count: number; bytes: number } {
-  const cacheDir = pdfCacheDir()
-  if (!existsSync(cacheDir)) return { count: 0, bytes: 0 }
-
-  return readdirSync(cacheDir).reduce((acc, filename) => {
-    const path = join(cacheDir, filename)
-    try {
-      const stat = statSync(path)
-      if (stat.isFile()) {
-        acc.count += 1
-        acc.bytes += stat.size
-      }
-    } catch { /* skip unreadable cache entries */ }
-    return acc
-  }, { count: 0, bytes: 0 })
-}
-
-function clearUnusedPdfPreviews(preservePaths: string[]): { deleted: number; bytes: number } {
-  const cacheDir = pdfCacheDir()
-  if (!existsSync(cacheDir)) return { deleted: 0, bytes: 0 }
-  const preserved = new Set(preservePaths.map((path) => path.toLowerCase()))
-
-  return readdirSync(cacheDir).reduce((acc, filename) => {
-    const path = join(cacheDir, filename)
-    try {
-      const stat = statSync(path)
-      if (!stat.isFile() || preserved.has(path.toLowerCase())) return acc
-      unlinkSync(path)
-      acc.deleted += 1
-      acc.bytes += stat.size
-    } catch { /* skip locked or unreadable cache entries */ }
-    return acc
-  }, { deleted: 0, bytes: 0 })
 }
 
 function scanFilesByBasename(root: string): { byName: Map<string, string>; scanned: number } {
@@ -303,8 +272,6 @@ export function registerIpcHandlers(): void {
 
   // ── export:zip ─────────────────────────────────────────────────────────────
   ipcMain.handle('pdf:cachePageImage', async (_e, { pdfPath, page, imageData }: { pdfPath: string; page: number; imageData: string }) => {
-    const cacheDir = pdfCacheDir()
-    if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true })
     const safeBase = pdfPath
       .split(/[/\\]/)
       .pop()
@@ -312,17 +279,43 @@ export function registerIpcHandlers(): void {
       .replace(/[^a-z0-9_-]+/gi, '-')
       .replace(/^-+|-+$/g, '') || 'document'
     const filename = `${safeBase}-page-${page}-${Date.now()}.png`
-    const outPath = join(cacheDir, filename)
-    const base64 = imageData.replace(/^data:image\/png;base64,/, '')
-    writeFileSync(outPath, Buffer.from(base64, 'base64'))
-    return { path: outPath }
+    return { path: writePreviewPng(previewCacheDir(), filename, imageData) }
   })
 
-  ipcMain.handle('cache:pdfStats', async () => getPdfCacheStats())
+  ipcMain.handle('cache:previewStats', async () => getPreviewCacheStats(previewCacheDirs()))
 
-  ipcMain.handle('cache:clearUnusedPdfPreviews', async (_e, { preservePaths }: { preservePaths: string[] }) => {
-    const result = clearUnusedPdfPreviews(Array.isArray(preservePaths) ? preservePaths : [])
-    return { ...result, stats: getPdfCacheStats() }
+  ipcMain.handle('cache:clearUnusedPreviews', async (_e, { preservePaths, assetPaths }: { preservePaths: string[]; assetPaths: string[] }) => {
+    const preserved = (Array.isArray(preservePaths) ? preservePaths : []).slice()
+    for (const assetPath of Array.isArray(assetPaths) ? assetPaths : []) {
+      const stat = statSource(assetPath)
+      if (stat.exists && stat.size !== undefined && stat.mtimeMs !== undefined) {
+        preserved.push(join(previewCacheDir(), thumbnailFilename(assetPath, stat.size, stat.mtimeMs)))
+      }
+    }
+    const result = clearUnusedPreviews(previewCacheDirs(), preserved)
+    return { ...result, stats: getPreviewCacheStats(previewCacheDirs()) }
+  })
+
+  ipcMain.handle('assets:getThumbnail', async (_e, { path }: { path: string }) => {
+    const stat = statSource(path)
+    if (!stat.exists || stat.size === undefined || stat.mtimeMs === undefined) {
+      return { exists: false, thumbnailPath: null }
+    }
+    const thumbnailPath = join(previewCacheDir(), thumbnailFilename(path, stat.size, stat.mtimeMs))
+    return {
+      exists: true,
+      size: stat.size,
+      mtimeMs: stat.mtimeMs,
+      thumbnailPath: existsSync(thumbnailPath) ? thumbnailPath : null,
+    }
+  })
+
+  ipcMain.handle('assets:cacheThumbnail', async (_e, { path, imageData }: { path: string; imageData: string }) => {
+    const stat = statSource(path)
+    if (!stat.exists || stat.size === undefined || stat.mtimeMs === undefined) {
+      throw new Error('Cannot cache thumbnail for missing source file')
+    }
+    return { thumbnailPath: writePreviewPng(previewCacheDir(), thumbnailFilename(path, stat.size, stat.mtimeMs), imageData) }
   })
 
   ipcMain.handle('assets:checkPaths', async (_e, { paths }: { paths: string[] }) => {
