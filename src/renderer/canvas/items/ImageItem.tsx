@@ -1,8 +1,11 @@
 import React, { useEffect, useRef } from 'react'
-import { Group, Image as KonvaImage, Rect, Transformer } from 'react-konva'
+import { Group, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import useImage from 'use-image'
 import type { CanvasItem } from '../../../types'
+import { useAssetMetadata } from '../../assets/assetMetadata'
+import { preferThumbnail } from '../../assets/previewPolicy'
+import { ensureThumbnail } from '../../assets/thumbnailPipeline'
+import { useStableImage } from './useStableImage'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
@@ -16,8 +19,13 @@ import { imageCoverCrop, imageFitRect, type ImageFitMode } from './imageFit'
 type Props = { item: CanvasItem }
 
 export function ImageItem({ item }: Props): React.ReactElement | null {
-  const [image] = useImage(pathToUrl(item.src ?? ''))
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const scale = useCanvasStore((s) => s.viewport().scale)
+  const meta = useAssetMetadata(item.src)
+  const useThumb = preferThumbnail(item.width * scale, item.height * scale, isSelected)
+  const displaySrc = useThumb && meta?.thumbnailPath ? meta.thumbnailPath : item.src ?? ''
+  const image = useStableImage(pathToUrl(displaySrc))
+  const isMissing = meta?.exists === false
   const setSelection = useCanvasStore((s) => s.setSelection)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
@@ -35,6 +43,8 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
       trRef.current.getLayer()?.batchDraw()
     }
   }, [isSelected])
+
+  useEffect(() => { void ensureThumbnail(item.src) }, [item.src])
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -122,13 +132,14 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     }
   }
 
-  if (!image) return null
+  if (!image && !isMissing) return null
 
   const fitMode = ((item.meta?.fitMode as ImageFitMode | undefined) ?? 'stretch')
-  const imageWidth = image.naturalWidth || image.width
-  const imageHeight = image.naturalHeight || image.height
+  const imageWidth = image ? (image.naturalWidth || image.width) : item.width
+  const imageHeight = image ? (image.naturalHeight || image.height) : item.height
   const fitRect = fitMode === 'fit' ? imageFitRect(imageWidth, imageHeight, item.width, item.height) : null
   const cropRect = fitMode === 'fill' ? imageCoverCrop(imageWidth, imageHeight, item.width, item.height) : undefined
+  const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing relic'
 
   return (
     <>
@@ -161,16 +172,44 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           fill={fitMode === 'fit' ? 'var(--bg-canvas)' : 'rgba(0,0,0,0.001)'}
           opacity={fitMode === 'fit' ? 0.75 : 1}
         />
-        <KonvaImage
-          image={image}
-          x={fitRect?.x ?? 0}
-          y={fitRect?.y ?? 0}
-          width={fitRect?.width ?? item.width}
-          height={fitRect?.height ?? item.height}
-          crop={cropRect}
-          opacity={item.opacity}
-          listening={false}
-        />
+        {isMissing || !image ? (
+          <>
+            <Rect
+              x={0}
+              y={0}
+              width={item.width}
+              height={item.height}
+              fill="#221d18"
+              stroke="#2e2820"
+              strokeWidth={1}
+              dash={[6, 4]}
+              listening={false}
+            />
+            <Text
+              x={8}
+              y={item.height / 2 - 8}
+              width={Math.max(16, item.width - 16)}
+              text={missingLabel}
+              fontSize={12}
+              fontFamily="JetBrains Mono, monospace"
+              fill="#8a7a5c"
+              ellipsis
+              wrap="none"
+              listening={false}
+            />
+          </>
+        ) : (
+          <KonvaImage
+            image={image}
+            x={fitRect?.x ?? 0}
+            y={fitRect?.y ?? 0}
+            width={fitRect?.width ?? item.width}
+            height={fitRect?.height ?? item.height}
+            crop={cropRect}
+            opacity={item.opacity}
+            listening={false}
+          />
+        )}
         <Rect
           x={0}
           y={0}
