@@ -1,4 +1,9 @@
-import type { CanvasItem, Connection } from '../../types'
+import type { CanvasBoard, CanvasItem, Connection } from '../../types'
+
+export type ChamberRef = {
+  id: string
+  name: string
+}
 
 export type ItemSearchResult = {
   id: string
@@ -7,6 +12,7 @@ export type ItemSearchResult = {
   label: string
   detail: string
   haystack: string
+  chamber?: ChamberRef
 }
 
 export type ThreadSearchResult = {
@@ -18,6 +24,7 @@ export type ThreadSearchResult = {
   label: string
   detail: string
   haystack: string
+  chamber?: ChamberRef
 }
 
 export type SearchResult = ItemSearchResult | ThreadSearchResult
@@ -268,6 +275,39 @@ export function getIndexResults(items: CanvasItem[], connections: Connection[], 
     .map((thread) => buildThreadSearchResult(thread, itemMap))
     .filter((result) => matchesThreadSearchQuery(result, parsed))
   return [...itemResults, ...threadResults].slice(0, limit)
+}
+
+function withChamber<T extends SearchResult>(result: T, chamber: ChamberRef): T {
+  return { ...result, chamber, detail: `${result.detail}  |  chamber: ${chamber.name}` }
+}
+
+export function getArchiveIndexResults(
+  boards: CanvasBoard[],
+  activeBoardId: string | null,
+  query: string,
+  limit = 30,
+): SearchResult[] {
+  const parsed = parseSearchQuery(query)
+  if (!hasSearchTerms(parsed)) return []
+
+  const orderedBoards = [
+    ...boards.filter((board) => board.id === activeBoardId),
+    ...boards.filter((board) => board.id !== activeBoardId),
+  ]
+
+  const results: SearchResult[] = []
+  for (const board of orderedBoards) {
+    if (results.length >= limit) break
+    const remaining = limit - results.length
+    const boardResults = getIndexResults(board.items, board.connections, query, remaining)
+    if (board.id === activeBoardId) {
+      results.push(...boardResults)
+    } else {
+      const chamber = { id: board.id, name: board.name }
+      results.push(...boardResults.map((result) => withChamber(result, chamber)))
+    }
+  }
+  return results
 }
 
 export function getCommentResults(items: CanvasItem[], limit = 20): ItemSearchResult[] {

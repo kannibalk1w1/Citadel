@@ -47,6 +47,7 @@ Implemented performance decisions:
 - Living Index canvas sigil marks are capped and filtered through the current viewport visibility context, so search can scan the chamber without drawing marks for dormant offscreen relics.
 - Living Index result rows now use archive-native context: tagged relics surface Sigils, thread rows surface Binding inscriptions, meanings, endpoints, and shape.
 - Living Index relic focus activates one directly related Binding through the existing active-thread visibility path, revealing nearby context without waking every dormant offscreen thread.
+- Index search now sweeps every chamber via `getArchiveIndexResults`: active-chamber results lead, dormant-chamber results carry chamber identity in the row detail, and focusing one travels there through `setActiveBoard` before the existing focus/highlight path. Canvas sigil marks remain active-chamber only, so the visibility discipline is unchanged.
 
 Profiling notes:
 
@@ -56,10 +57,11 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Expand Index search beyond active-chamber items only when the data model has a clear cross-chamber result and focus path.
+1. Begin Phase 3 groundwork: asset metadata records and thumbnail-first media, starting from the existing PDF preview cache.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
+5. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
 
 ## Rendering Strategy
 
@@ -207,7 +209,7 @@ Needed improvements:
 
 ### Phase 1: Living Index First Slice
 
-Status: in progress.
+Status: complete.
 
 Goals:
 
@@ -215,10 +217,10 @@ Goals:
 - matching current-chamber relics receive subtle sigil marks
 - clicked result still focuses strongly
 - search remains powered by existing `itemSearchModel`
+- search sweeps all chambers; dormant-chamber results travel on focus (see `docs/superpowers/specs/2026-06-12-cross-chamber-index-design.md`)
 
 Next:
 
-- plan the cross-chamber Index path before implementing all-chamber results
 - keep any new search marks visibility-aware and capped before adding richer ornamentation
 
 ### Phase 2: Viewport Virtualization

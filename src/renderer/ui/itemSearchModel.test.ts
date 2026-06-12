@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { CanvasItem, Connection } from '../../types'
-import { buildSearchResult, firstRelatedThread, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, resultBadgeLabel, threadFocusPoint } from './itemSearchModel'
+import type { CanvasBoard, CanvasItem, Connection } from '../../types'
+import { buildSearchResult, firstRelatedThread, getArchiveIndexResults, getCommentResults, getIndexResults, getSearchResults, groupSearchResults, indexKeyAction, nextSearchResultIndex, resultBadgeLabel, threadFocusPoint } from './itemSearchModel'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -154,6 +154,73 @@ describe('itemSearchModel', () => {
     ], 'has:meaning')
 
     expect(results.map((result) => result.id)).toEqual(['thread-1'])
+  })
+
+  it('searches every chamber and marks results from dormant chambers', () => {
+    const boards: CanvasBoard[] = [
+      {
+        id: 'hall',
+        name: 'Hall',
+        items: [{ ...baseItem, id: 'hall-gate', type: 'image', src: 'C:/refs/gate.png' }],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+      {
+        id: 'vault',
+        name: 'Vault',
+        items: [{ ...baseItem, id: 'vault-gate', type: 'sticky', meta: { content: 'gate sketches' } }],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+    ]
+
+    const results = getArchiveIndexResults(boards, 'hall', 'gate')
+
+    expect(results.map((result) => result.id)).toEqual(['hall-gate', 'vault-gate'])
+    expect(results[0].chamber).toBeUndefined()
+    expect(results[1].chamber).toEqual({ id: 'vault', name: 'Vault' })
+    expect(results[1].detail).toContain('chamber: Vault')
+  })
+
+  it('caps archive results across chambers', () => {
+    const manyItems = (prefix: string) => Array.from({ length: 4 }, (_, i) => ({
+      ...baseItem,
+      id: `${prefix}-${i}`,
+      meta: { content: `gate note ${i}` },
+    }))
+    const boards: CanvasBoard[] = [
+      { id: 'hall', name: 'Hall', items: manyItems('hall'), connections: [], viewport: { x: 0, y: 0, scale: 1 } },
+      { id: 'vault', name: 'Vault', items: manyItems('vault'), connections: [], viewport: { x: 0, y: 0, scale: 1 } },
+    ]
+
+    const results = getArchiveIndexResults(boards, 'hall', 'gate', 6)
+
+    expect(results).toHaveLength(6)
+    expect(results.slice(0, 4).every((result) => result.chamber === undefined)).toBe(true)
+    expect(results.slice(4).every((result) => result.chamber?.id === 'vault')).toBe(true)
+  })
+
+  it('resolves dormant-chamber thread endpoints from their own chamber', () => {
+    const boards: CanvasBoard[] = [
+      { id: 'hall', name: 'Hall', items: [], connections: [], viewport: { x: 0, y: 0, scale: 1 } },
+      {
+        id: 'vault',
+        name: 'Vault',
+        items: [
+          { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
+          { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
+        ],
+        connections: [baseConnection],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+    ]
+
+    const results = getArchiveIndexResults(boards, 'hall', 'source')
+    const thread = results.find((result) => result.id === 'thread-1')
+
+    expect(thread?.chamber).toEqual({ id: 'vault', name: 'Vault' })
+    expect(thread?.detail).toContain('gate.png -> Gate notes')
+    expect(thread?.detail).toContain('chamber: Vault')
   })
 
   it('computes a focus point between thread endpoints', () => {

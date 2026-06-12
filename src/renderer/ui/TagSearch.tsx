@@ -2,8 +2,8 @@ import React from 'react'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
 import {
+  getArchiveIndexResults,
   getCommentResults,
-  getIndexResults,
   groupSearchResults,
   indexKeyAction,
   isItemSearchResult,
@@ -37,13 +37,13 @@ export function TagSearch(): React.ReactElement | null {
   const setSelection = useCanvasStore((s) => s.setSelection)
   const clearSelection = useCanvasStore((s) => s.clearSelection)
   const updateViewport = useCanvasStore((s) => s.updateViewport)
-  const viewport = useCanvasStore((s) => s.viewport())
+  const boards = useCanvasStore((s) => s.boards)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const items = useCanvasStore((s) => s.items())
-  const connections = useCanvasStore((s) => s.connections())
   const [activeResultIndex, setActiveResultIndex] = React.useState(-1)
 
   const query = searchQuery.trim().toLowerCase()
-  const results = getIndexResults(items, connections, query)
+  const results = getArchiveIndexResults(boards, activeBoardId, query)
   const groupedResults = groupSearchResults(results)
   const commentResults = query ? [] : getCommentResults(items)
 
@@ -66,14 +66,20 @@ export function TagSearch(): React.ReactElement | null {
   const focusPoint = (x: number, y: number) => {
     const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
     const canvasW = window.innerWidth - sidebarW
+    const scale = useCanvasStore.getState().viewport().scale
 
     updateViewport({
-      x: canvasW / 2 - x * viewport.scale,
-      y: window.innerHeight / 2 - y * viewport.scale,
+      x: canvasW / 2 - x * scale,
+      y: window.innerHeight / 2 - y * scale,
     })
   }
 
   const focusResult = (result: SearchResult, closeAfterFocus: boolean) => {
+    if (result.chamber && result.chamber.id !== useCanvasStore.getState().activeBoardId) {
+      useCanvasStore.getState().setActiveBoard(result.chamber.id)
+    }
+    const connections = useCanvasStore.getState().connections()
+
     if (isItemSearchResult(result)) {
       const cx = result.item.x + result.item.width / 2
       const cy = result.item.y + result.item.height / 2

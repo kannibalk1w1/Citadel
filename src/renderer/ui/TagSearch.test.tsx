@@ -115,6 +115,44 @@ describe('TagSearch keyboard interactions', () => {
     expect(screen.getByPlaceholderText('Search the Index...')).toBeTruthy()
   })
 
+  it('travels to a dormant chamber when focusing its result', async () => {
+    useCanvasStore.setState((state) => ({
+      boards: [
+        ...state.boards,
+        {
+          id: 'board-2',
+          name: 'Vault',
+          items: [{
+            ...baseItem,
+            id: 'vault-gate',
+            type: 'sticky',
+            x: 1000,
+            y: 2000,
+            src: undefined,
+            meta: { content: 'gate sketches' },
+          }],
+          connections: [],
+          viewport: { x: 0, y: 0, scale: 2 },
+        },
+      ],
+    }))
+
+    render(<TagSearch />)
+
+    await waitFor(() => expect(screen.getByText('1 / 3')).toBeTruthy())
+    expect(screen.getAllByText(/chamber: Vault/).length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getAllByText('gate sketches')[0])
+
+    const canvas = useCanvasStore.getState()
+    expect(canvas.activeBoardId).toBe('board-2')
+    expect(canvas.selectedIds).toEqual(['vault-gate'])
+    const vault = canvas.boards.find((board) => board.id === 'board-2')!
+    // centered on the relic at the Vault's own scale (2x)
+    expect(vault.viewport.x).toBeLessThan(0)
+    expect(vault.viewport.y).toBe(800 / 2 - (2000 + 120 / 2) * 2)
+  })
+
   it('reveals a directly related Binding when focusing a relic result', async () => {
     useCanvasStore.setState((state) => ({
       boards: state.boards.map((board) => ({
