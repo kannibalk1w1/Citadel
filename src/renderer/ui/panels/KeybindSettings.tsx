@@ -22,7 +22,7 @@ const btnStyle: React.CSSProperties = {
   lineHeight: 1,
 }
 
-type PdfCacheStats = {
+type PreviewCacheStats = {
   count: number
   bytes: number
 }
@@ -75,7 +75,7 @@ export function KeybindSettings(): React.ReactElement | null {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const markDirty = useHistoryStore((s) => s.markDirty)
-  const [cacheStats, setCacheStats] = useState<PdfCacheStats | null>(null)
+  const [cacheStats, setCacheStats] = useState<PreviewCacheStats | null>(null)
   const [assetHealth, setAssetHealth] = useState<AssetHealth | null>(null)
   const [cacheBusy, setCacheBusy] = useState(false)
   const [cacheMessage, setCacheMessage] = useState('')
@@ -94,16 +94,16 @@ export function KeybindSettings(): React.ReactElement | null {
 
   const loadCacheStats = async (assetPaths = localAssetPaths): Promise<void> => {
     try {
-      const result = await getIpc().invoke('cache:pdfStats')
+      const result = await getIpc().invoke('cache:previewStats')
       if (result && typeof result === 'object' && 'count' in result && 'bytes' in result) {
-        setCacheStats(result as PdfCacheStats)
+        setCacheStats(result as PreviewCacheStats)
       }
       const health = await getIpc().invoke('assets:checkPaths', { paths: assetPaths })
       if (health && typeof health === 'object' && 'total' in health && 'missing' in health && 'missingPaths' in health) {
         setAssetHealth(health as AssetHealth)
       }
     } catch (error) {
-      console.error('Failed to read PDF cache stats:', error)
+      console.error('Failed to read preview cache stats:', error)
       setCacheMessage('cache unavailable')
     }
   }
@@ -112,14 +112,14 @@ export function KeybindSettings(): React.ReactElement | null {
     setCacheBusy(true)
     setCacheMessage('')
     try {
-      const result = await getIpc().invoke('cache:clearUnusedPdfPreviews', { preservePaths })
+      const result = await getIpc().invoke('cache:clearUnusedPreviews', { preservePaths, assetPaths: localAssetPaths })
       if (result && typeof result === 'object' && 'stats' in result) {
-        const payload = result as { deleted: number; bytes: number; stats: PdfCacheStats }
+        const payload = result as { deleted: number; bytes: number; stats: PreviewCacheStats }
         setCacheStats(payload.stats)
         setCacheMessage(payload.deleted === 0 ? 'nothing unused' : `cleared ${payload.deleted} / ${formatBytes(payload.bytes)}`)
       }
     } catch (error) {
-      console.error('Failed to clear PDF cache:', error)
+      console.error('Failed to clear preview cache:', error)
       setCacheMessage('clear failed')
     } finally {
       setCacheBusy(false)
@@ -551,7 +551,7 @@ export function KeybindSettings(): React.ReactElement | null {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
-              PDF preview cache
+              Preview cache
             </div>
             <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
               {cacheStats ? `${cacheStats.count} files / ${formatBytes(cacheStats.bytes)} / ${preservePaths.length} referenced` : 'not loaded'}
