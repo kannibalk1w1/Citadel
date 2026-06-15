@@ -4,24 +4,28 @@
 
 :root {
   /* Backgrounds */
-  --bg-canvas:  #070808;
-  --bg-ui:      #0a0a09;
-  --bg-panel:   #11100e;
-  --bg-hover:   #191610;
+  --bg-canvas:  #070807;
+  --bg-ui:      #0b0a08;
+  --bg-panel:   #12100d;
+  --bg-hover:   #1b1710;
+  --bg-elevated: #18140f;
+  --bg-sunken:  #070705;
 
   /* Text */
-  --text-primary:   #e0d6c7;
-  --text-secondary: #b7aa97;
-  --text-muted:     #756858;
-  --text-accent:    #bd9652;
+  --text-primary:   #e8ddcf;
+  --text-secondary: #bdaf9b;
+  --text-muted:     #7d705f;
+  --text-accent:    #c8a96e;
 
   /* Accent */
-  --accent:        #bd9652;
-  --accent-danger: #6f1717;
+  --accent:        #c8a96e;
+  --accent-soft:   rgba(200, 169, 110, 0.16);
+  --accent-danger: #7e1d1d;
 
   /* Borders */
-  --border:       #3a3020;
-  --border-muted: #211d17;
+  --border:       #3d3323;
+  --border-muted: #242018;
+  --border-bright: rgba(232, 221, 207, 0.09);
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;
@@ -42,11 +46,13 @@
   --z-modal:  100;
 
   /* Shadows */
-  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.62);
-  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.78);
+  --shadow-md: 0 12px 32px rgba(5, 4, 3, 0.64), 0 1px 0 rgba(200, 169, 110, 0.08);
+  --shadow-lg: 0 22px 58px rgba(4, 3, 2, 0.78), 0 1px 0 rgba(232, 221, 207, 0.06);
+  --shadow-inset: inset 0 1px 0 rgba(232, 221, 207, 0.045), inset 0 -1px 0 rgba(0, 0, 0, 0.46);
 
   /* Motion */
-  --transition-fast: 80ms ease;
+  --transition-fast: 140ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  --transition-med: 220ms cubic-bezier(0.22, 0.8, 0.2, 1);
 }
 
 /* ── Global Reset ──────────────────────────────────────────────────────────── */
@@ -68,6 +74,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 #root {
@@ -78,6 +85,37 @@ body {
 a {
   color: var(--text-accent);
   text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button:disabled,
+button[disabled] {
+  filter: saturate(0.72);
+}
+
+::selection {
+  background: rgba(200, 169, 110, 0.26);
+  color: var(--text-primary);
 }
 
 /* ── Scrollbars (Chromium / Electron) ─────────────────────────────────────── */
@@ -98,4 +136,15 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,21 +1,49 @@
 :root {
-  --chrome-face: #0d0d0b;
-  --chrome-face-raised: #14120f;
-  --chrome-face-sunk: #070706;
-  --chrome-edge: #3a3020;
-  --chrome-edge-muted: #211d17;
-  --chrome-gold: #bd9652;
-  --chrome-text: #cbbca6;
+  --chrome-face: #0e0d0a;
+  --chrome-face-raised: #17130e;
+  --chrome-face-sunk: #070705;
+  --chrome-edge: #3d3323;
+  --chrome-edge-muted: #242018;
+  --chrome-gold: #c8a96e;
+  --chrome-text: #d1c3ad;
+  --chrome-text-muted: #817363;
+  --chrome-highlight: rgba(232, 221, 207, 0.07);
+  --chrome-veil: rgba(7, 7, 5, 0.68);
+  --chrome-radius: 7px;
+  --chrome-ease: cubic-bezier(0.22, 0.8, 0.2, 1);
 }
 
 .app-root {
-  background: #050606;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(200, 169, 110, 0.08), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(80, 80, 80, 0.08), transparent 34%),
+    linear-gradient(180deg, #080806 0%, #050606 100%);
+}
+
+.app-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(232, 221, 207, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 221, 207, 0.014) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+.app-root > * {
+  position: relative;
 }
 
 .citadel-board-tabs {
-  background: linear-gradient(180deg, #151514 0%, var(--chrome-face) 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.035), transparent 42%),
+    linear-gradient(180deg, #171511 0%, var(--chrome-face) 100%) !important;
   border-bottom: 1px solid var(--chrome-edge) !important;
-  box-shadow: inset 0 -1px 0 rgba(189, 150, 82, 0.18), 0 2px 14px rgba(0, 0, 0, 0.72);
+  box-shadow: var(--shadow-inset), inset 0 -1px 0 rgba(200, 169, 110, 0.2), 0 10px 26px rgba(4, 3, 2, 0.62);
 }
 
 .citadel-board-tab {
@@ -23,21 +51,36 @@
 }
 
 .citadel-board-tab-active {
-  background: linear-gradient(180deg, #181511 0%, #100f0d 100%) !important;
+  background: linear-gradient(180deg, #1b1711 0%, #100f0d 100%) !important;
   box-shadow: inset 0 -2px 0 var(--chrome-gold);
 }
 
 .citadel-toolbar {
-  background: linear-gradient(180deg, #171511 0%, #0d0d0b 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.035), transparent 36%),
+    linear-gradient(180deg, #171410 0%, #0d0c0a 100%) !important;
   border: 1px solid var(--chrome-edge) !important;
-  border-radius: 4px !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025), 0 12px 32px rgba(0, 0, 0, 0.76) !important;
+  border-radius: var(--chrome-radius) !important;
+  box-shadow: var(--shadow-inset), 0 16px 38px rgba(4, 3, 2, 0.76) !important;
 }
 
 .citadel-toolbar button,
 .citadel-sidebar button,
 .citadel-panel-button {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.018);
+  box-shadow: inset 0 1px 0 rgba(232, 221, 207, 0.035), inset 0 -1px 0 rgba(0, 0, 0, 0.42);
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast) !important;
+}
+
+.citadel-toolbar button:not(:disabled):active,
+.citadel-sidebar button:not(:disabled):active,
+.citadel-panel-button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
 }
 
 .citadel-toolbar button:hover,
@@ -45,7 +88,17 @@
 .citadel-action-strip button:hover {
   border-color: var(--chrome-gold) !important;
   color: var(--chrome-gold) !important;
-  background: #191610 !important;
+  background:
+    linear-gradient(180deg, rgba(200, 169, 110, 0.12), rgba(200, 169, 110, 0.035)),
+    #191610 !important;
+  box-shadow: inset 0 1px 0 rgba(232, 221, 207, 0.06), 0 0 0 1px rgba(200, 169, 110, 0.08) !important;
+}
+
+.citadel-toolbar button:disabled:hover {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .citadel-action-strip {
@@ -66,9 +119,11 @@
 }
 
 .citadel-sidebar {
-  background: linear-gradient(180deg, #151412 0%, #0c0c0a 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.035), transparent 24%),
+    linear-gradient(180deg, #15130f 0%, #0b0b09 100%) !important;
   border-left: 1px solid var(--chrome-edge) !important;
-  box-shadow: inset 1px 0 0 rgba(189, 150, 82, 0.18), -10px 0 30px rgba(0, 0, 0, 0.62);
+  box-shadow: inset 1px 0 0 rgba(200, 169, 110, 0.18), -16px 0 42px rgba(4, 3, 2, 0.64);
 }
 
 .citadel-sidebar-title {
@@ -81,17 +136,21 @@
 }
 
 .citadel-sidebar button {
-  background: linear-gradient(180deg, #151310 0%, #0d0c0a 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.028), transparent 44%),
+    linear-gradient(180deg, #151310 0%, #0d0c0a 100%) !important;
   border: 1px solid var(--chrome-edge-muted) !important;
-  border-radius: 4px !important;
+  border-radius: 5px !important;
   color: var(--chrome-text) !important;
 }
 
 .citadel-floating-panel,
 .citadel-minimap {
-  background: linear-gradient(180deg, #151310 0%, #0d0c0a 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.036), transparent 38%),
+    linear-gradient(180deg, #15130f 0%, #0d0c0a 100%) !important;
   border-color: var(--chrome-edge) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 12px 30px rgba(0, 0, 0, 0.72) !important;
+  box-shadow: var(--shadow-inset), 0 18px 46px rgba(4, 3, 2, 0.74) !important;
 }
 
 .citadel-item-properties {
@@ -101,9 +160,12 @@
 
 .citadel-floating-panel input,
 .citadel-floating-panel select,
+.citadel-floating-panel textarea,
 .citadel-floating-panel kbd {
-  background: #090908 !important;
+  background: linear-gradient(180deg, #090908, #070705) !important;
   border-color: var(--chrome-edge-muted) !important;
+  color: var(--text-primary) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.56);
 }
 
 .citadel-floating-panel button:not([aria-pressed="true"]):hover {
@@ -113,9 +175,11 @@
 }
 
 .citadel-context-menu {
-  background: linear-gradient(180deg, #16130f 0%, #090908 100%) !important;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.035), transparent 34%),
+    linear-gradient(180deg, #16130f 0%, #090908 100%) !important;
   border-color: var(--chrome-edge) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 16px 36px rgba(0, 0, 0, 0.78) !important;
+  box-shadow: var(--shadow-inset), 0 18px 42px rgba(4, 3, 2, 0.8) !important;
 }
 
 .citadel-context-menu button:hover {
@@ -125,9 +189,65 @@
 
 .citadel-list-row {
   background: rgba(255, 255, 255, 0.012);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+  box-shadow: inset 0 0 0 1px rgba(232, 221, 207, 0.018);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .citadel-list-row:hover {
   background: #181510 !important;
+  box-shadow: inset 0 0 0 1px rgba(200, 169, 110, 0.16);
+}
+
+.citadel-sidebar-section {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid rgba(61, 51, 35, 0.72);
+  border-radius: 7px;
+  background:
+    linear-gradient(180deg, rgba(232, 221, 207, 0.026), transparent 42%),
+    rgba(7, 7, 5, 0.36);
+  box-shadow: inset 0 1px 0 rgba(232, 221, 207, 0.026);
+}
+
+.citadel-sidebar-section-title {
+  margin: 0 0 6px;
+  color: var(--chrome-text-muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.citadel-status-strip {
+  border-top: 1px solid rgba(61, 51, 35, 0.8);
+  border-bottom: 1px solid rgba(36, 32, 24, 0.7);
+  padding: 7px 0;
+}
+
+.citadel-status-strip > div {
+  min-height: 14px;
+}
+
+.citadel-keybind-link:hover {
+  color: var(--chrome-gold) !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .citadel-floating-panel,
+  .citadel-toolbar,
+  .citadel-sidebar,
+  .citadel-context-menu {
+    animation: citadelChromeSettle 220ms var(--chrome-ease) both;
+  }
+}
+
+@keyframes citadelChromeSettle {
+  from {
+    opacity: 0.86;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -750,7 +750,7 @@ export default function App(): React.ReactElement {
   }
 
   return (
-    <div className="app-root" style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--bg-canvas)' }}>
+    <div className="app-root" style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative' }}>
       {recoveryData && (
         <div style={{
           position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)',

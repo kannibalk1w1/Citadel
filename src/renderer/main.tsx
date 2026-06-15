@@ -28,7 +28,7 @@ class RootErrorBoundary extends React.Component<
           fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
           whiteSpace: 'pre-wrap', height: '100vh', overflow: 'auto',
         }}>
-          <div style={{ color: '#6f1717', fontSize: 14, marginBottom: 12 }}>RENDER ERROR — check DevTools for full stack</div>
+          <div style={{ color: '#6f1717', fontSize: 14, marginBottom: 12 }}>RENDER ERROR - check DevTools for full stack</div>
           <div style={{ color: '#e3ded4', marginBottom: 8 }}>{e.message}</div>
           <div style={{ color: '#675f54' }}>{e.stack}</div>
         </div>
