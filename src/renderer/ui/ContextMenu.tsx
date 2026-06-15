@@ -10,6 +10,15 @@ import { Actions } from '../keybinds/actions'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
+function itemEffectSource(items: { x: number; y: number; width: number; height: number }[]): { x: number; y: number } | null {
+  if (items.length === 0) return null
+  const minX = Math.min(...items.map((item) => item.x))
+  const minY = Math.min(...items.map((item) => item.y))
+  const maxX = Math.max(...items.map((item) => item.x + item.width))
+  const maxY = Math.max(...items.map((item) => item.y + item.height))
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+}
+
 export function ContextMenu(): React.ReactElement | null {
   const contextMenu = useUIStore((s) => s.contextMenu)
   const closeContextMenu = useUIStore((s) => s.closeContextMenu)
@@ -49,7 +58,7 @@ export function ContextMenu(): React.ReactElement | null {
           useHistoryStore.getState().push('ITEM_DELETE', activeBoardId!, toDelete, toDelete.map((i) => ({ id: i.id })))
           canvas.removeItems(activeBoardId!, toDelete.map((i) => i.id))
           canvas.clearSelection()
-          triggerEffect('crumble')
+          triggerEffect('crumble', undefined, itemEffectSource(toDelete))
           closeContextMenu()
         },
       },

@@ -46,6 +46,15 @@ const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 type MovePatch = { id: string; x: number; y: number }
 
+function itemEffectSource(items: CanvasItem[]): { x: number; y: number } | null {
+  if (items.length === 0) return null
+  const minX = Math.min(...items.map((item) => item.x))
+  const minY = Math.min(...items.map((item) => item.y))
+  const maxX = Math.max(...items.map((item) => item.x + item.width))
+  const maxY = Math.max(...items.map((item) => item.y + item.height))
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+}
+
 function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
   const moves = Array.isArray(patch) ? patch : [patch]
   useCanvasStore.getState().moveItems(boardId, moves)
@@ -286,7 +295,7 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
-      triggerEffect('crumble')
+      triggerEffect('crumble', undefined, itemEffectSource(toDelete))
       engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
     })
 
@@ -357,7 +366,7 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, comment)
       canvas.setSelection([comment.id])
       useUIStore.getState().setEditingItemId(comment.id)
-      triggerEffect('banner-raise')
+      triggerEffect('banner-raise', undefined, { x: comment.x + comment.width / 2, y: comment.y + comment.height / 2 })
     })
 
     // Zoom

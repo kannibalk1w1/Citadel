@@ -18,6 +18,8 @@ import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
 import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
+import { CanvasEffectLayer } from './effects/CanvasEffectLayer'
+import { useCanvasEffectStore } from './effects/canvasEffectStore'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
@@ -48,6 +50,7 @@ export function CanvasStage(): React.ReactElement {
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
+  const setLastCanvasPointer = useCanvasEffectStore((s) => s.setLastCanvasPointer)
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -191,9 +194,17 @@ export function CanvasStage(): React.ReactElement {
 
   // Connect tool rubber-band — track cursor
   const handleMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    const stage = stageRef.current
+    const pointer = stage?.getPointerPosition()
+    if (pointer) {
+      setLastCanvasPointer({
+        x: (pointer.x - viewport.x) / viewport.scale,
+        y: (pointer.y - viewport.y) / viewport.scale,
+      })
+    }
     if (toolMode !== 'connect' || !connectFromId) { setCursorPos(null); return }
     setCursorPos({ x: e.evt.clientX, y: e.evt.clientY })
-  }, [toolMode, connectFromId])
+  }, [connectFromId, setLastCanvasPointer, toolMode, viewport])
 
   // ── Middle-mouse pan ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -272,6 +283,7 @@ export function CanvasStage(): React.ReactElement {
       onDrop={handleDrop}
     >
       <CanvasBackground />
+      <CanvasEffectLayer viewport={viewport} width={width} height={height} />
       <Stage
         ref={stageRef}
         width={width}

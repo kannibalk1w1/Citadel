@@ -5,49 +5,61 @@ import { pathToUrl } from '../utils/pathToUrl'
 
 const STONE_TILE = 320
 
-function buildStonePatternUrl(snapToGrid: boolean): string {
-  const mortar = snapToGrid ? '#191a18' : '#111210'
-  const edge = snapToGrid ? '#3b362b' : '#252720'
-  const highlight = snapToGrid ? '#586066' : '#3d4548'
+export function buildBrokenCobblestoneSvg(snapToGrid: boolean): string {
+  const mortar = snapToGrid ? '#171d1b' : '#0d1110'
+  const edge = snapToGrid ? '#33423f' : '#1d2926'
+  const highlight = snapToGrid ? '#586866' : '#34413f'
+  const seamClass = snapToGrid ? 'snap-mortar' : 'dark-mortar'
   const stones = [
-    'M2,7 L58,0 L83,24 L74,69 L18,78 L0,50 Z',
-    'M85,4 L152,1 L166,40 L143,85 L89,75 L76,31 Z',
-    'M169,8 L237,0 L259,37 L246,76 L180,82 L160,45 Z',
-    'M260,3 L319,10 L320,68 L286,86 L249,65 L255,27 Z',
-    'M4,82 L68,72 L88,112 L72,151 L17,158 L0,127 Z',
-    'M89,88 L149,85 L173,122 L155,163 L98,168 L76,132 Z',
-    'M177,88 L244,80 L265,121 L248,163 L181,170 L159,128 Z',
-    'M267,89 L319,72 L320,151 L277,169 L251,139 Z',
-    'M0,163 L65,154 L88,200 L72,238 L12,246 L0,213 Z',
-    'M91,171 L153,165 L175,203 L158,246 L92,249 L70,210 Z',
-    'M180,174 L247,166 L270,207 L248,250 L184,255 L161,212 Z',
-    'M273,172 L320,154 L320,235 L281,256 L252,219 Z',
-    'M5,250 L73,240 L94,285 L73,320 L10,318 L0,285 Z',
-    'M96,253 L160,246 L181,287 L165,320 L91,320 L75,288 Z',
-    'M184,259 L248,252 L271,289 L256,320 L183,320 L165,291 Z',
-    'M275,260 L320,239 L320,320 L260,320 L251,291 Z',
+    'M-10,10 L70,-5 L111,37 L92,104 L16,113 L-13,66 Z',
+    'M113,2 L214,-10 L244,48 L211,122 L117,108 L91,48 Z',
+    'M244,3 L334,18 L330,104 L278,129 L220,101 L229,39 Z',
+    'M-16,116 L82,103 L119,166 L91,236 L6,245 L-18,184 Z',
+    'M121,124 L218,112 L254,178 L220,252 L118,258 L88,184 Z',
+    'M257,132 L336,105 L335,229 L282,262 L224,214 Z',
+    'M-12,250 L92,236 L126,296 L92,334 L-14,329 Z',
+    'M128,262 L224,252 L260,306 L231,337 L102,334 Z',
+    'M263,268 L336,236 L333,337 L235,338 L225,305 Z',
   ]
 
   const stonePaths = stones.map((d, i) => {
-    const tone = ['#2b2f2f', '#242827', '#303535', '#252a2b'][i % 4]
-    return `<path d="${d}" fill="${tone}" stroke="${edge}" stroke-width="3.5"/>`
+    const tone = ['#262d2c', '#1e2524', '#2b3332', '#202928', '#303938'][i % 5]
+    return `<path class="${seamClass}" d="${d}" fill="${tone}" stroke="${edge}" stroke-width="${snapToGrid ? '4.4' : '3.4'}"/>`
   }).join('')
 
   const chips = [
-    [35, 35, 14], [115, 24, 18], [205, 48, 16], [291, 39, 13],
-    [44, 116, 18], [132, 133, 14], [215, 112, 20], [296, 134, 16],
-    [32, 198, 16], [127, 219, 19], [216, 201, 14], [290, 218, 18],
-    [38, 288, 15], [134, 284, 13], [218, 297, 17], [292, 289, 14],
+    [32, 42, 22], [144, 30, 28], [267, 58, 19],
+    [48, 154, 26], [167, 180, 21], [286, 186, 24],
+    [38, 286, 22], [174, 294, 18], [279, 302, 27],
   ].map(([x, y, w], i) => (
-    `<path d="M${x},${y} l${w},-4 l${Math.round(w / 2)},4 l-${w + 5},5 z" fill="${highlight}" opacity="${i % 3 === 0 ? 0.24 : 0.16}"/>`
+    `<path data-chip="${i}" d="M${x},${y} l${w},-${5 + (i % 3)} l${Math.round(w / 2)},${4 + (i % 2)} l-${w + 7},${7 + (i % 3)} z" fill="${highlight}" opacity="${i % 3 === 0 ? 0.20 : 0.12}"/>`
+  )).join('')
+
+  const cracks = [
+    'M76 14 L69 42 L82 68 L72 101',
+    'M222 39 L204 62 L211 96 L194 120',
+    'M45 142 L66 159 L58 192 L75 219',
+    'M150 128 L176 150 L163 179 L190 211 L178 250',
+    'M275 147 L290 178 L274 206 L298 235',
+    'M88 266 L112 281 L101 309',
+    'M230 268 L250 287 L239 319',
+  ].map((d, i) => (
+    `<path data-crack="${i}" d="${d}" fill="none" stroke="${i % 2 === 0 ? '#090c0c' : '#111817'}" stroke-width="${i % 2 === 0 ? '3.2' : '2.2'}" stroke-linecap="round" opacity="${snapToGrid ? '0.74' : '0.58'}"/>`
   )).join('')
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${STONE_TILE}" height="${STONE_TILE}" viewBox="0 0 ${STONE_TILE} ${STONE_TILE}">
     <rect width="${STONE_TILE}" height="${STONE_TILE}" fill="${mortar}"/>
-    <g opacity="${snapToGrid ? '0.92' : '0.82'}">${stonePaths}</g>
+    <g opacity="${snapToGrid ? '0.94' : '0.84'}">${stonePaths}</g>
+    <g>${cracks}</g>
     <g>${chips}</g>
-    <path d="M0,0 H320 V320 H0 Z" fill="none" stroke="#050606" stroke-width="8" opacity="0.55"/>
+    <path d="M0,0 H320 V320 H0 Z" fill="none" stroke="#050707" stroke-width="8" opacity="0.55"/>
   </svg>`
+
+  return svg
+}
+
+function buildStonePatternUrl(snapToGrid: boolean): string {
+  const svg = buildBrokenCobblestoneSvg(snapToGrid)
 
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 }

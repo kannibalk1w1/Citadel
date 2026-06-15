@@ -118,7 +118,7 @@ export function useFileDrop() {
           { id: hitComparison.id, meta: hitComparison.meta },
           { id: hitComparison.id, meta: newMeta }
         )
-        triggerEffect('lightning-in')
+        triggerEffect('lightning-in', undefined, { x: dropX, y: dropY })
         return
       }
     }
@@ -164,7 +164,7 @@ export function useFileDrop() {
           offsetIndex++
         } catch (error) {
           console.error('PDF drop failed:', error)
-          triggerEffect('fracture')
+          triggerEffect('fracture', undefined, { x: dropX, y: dropY })
         }
         continue
       }
@@ -209,7 +209,13 @@ export function useFileDrop() {
     }
 
     setSelection(added.map((i) => i.id))
-    triggerEffect('lightning-in')
+    const source = added.length > 0
+      ? {
+          x: added.reduce((sum, item) => sum + item.x + item.width / 2, 0) / added.length,
+          y: added.reduce((sum, item) => sum + item.y + item.height / 2, 0) / added.length,
+        }
+      : { x: dropX, y: dropY }
+    triggerEffect('lightning-in', undefined, source)
   }
 
   return { handleDragOver, handleDrop }
