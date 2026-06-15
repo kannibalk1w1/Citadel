@@ -223,6 +223,57 @@ describe('itemSearchModel', () => {
     expect(thread?.detail).toContain('chamber: Vault')
   })
 
+  it('filters archive results by chamber token', () => {
+    const boards: CanvasBoard[] = [
+      {
+        id: 'hall',
+        name: 'Hall',
+        items: [{ ...baseItem, id: 'hall-gate', type: 'image', src: 'C:/refs/gate.png' }],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+      {
+        id: 'vault',
+        name: 'Memory Vault',
+        items: [
+          { ...baseItem, id: 'vault-gate', type: 'sticky', meta: { content: 'gate sketches' } },
+          { ...baseItem, id: 'vault-candle', type: 'sticky', meta: { content: 'candle notes' } },
+        ],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+    ]
+
+    const results = getArchiveIndexResults(boards, 'hall', 'chamber:vault gate')
+
+    expect(results.map((result) => result.id)).toEqual(['vault-gate'])
+    expect(results[0].chamber).toEqual({ id: 'vault', name: 'Memory Vault' })
+  })
+
+  it('supports chamber name tokens as standalone archive filters', () => {
+    const boards: CanvasBoard[] = [
+      {
+        id: 'hall',
+        name: 'Hall',
+        items: [{ ...baseItem, id: 'hall-gate', type: 'image', src: 'C:/refs/gate.png' }],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+      {
+        id: 'memory-vault',
+        name: 'Memory Vault',
+        items: [{ ...baseItem, id: 'vault-note', type: 'sticky', meta: { content: 'quiet note' } }],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      },
+    ]
+
+    const results = getArchiveIndexResults(boards, 'hall', 'chamber:memory-vault')
+
+    expect(results.map((result) => result.id)).toEqual(['vault-note'])
+    expect(results[0].detail).toContain('chamber: Memory Vault')
+  })
+
   it('computes a focus point between thread endpoints', () => {
     const point = threadFocusPoint(
       { ...baseItem, id: 'image-1', x: 10, y: 20, width: 100, height: 80 },

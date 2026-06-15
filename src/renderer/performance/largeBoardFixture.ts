@@ -6,6 +6,7 @@ import { visibleItemIds } from '../canvas/visibility/viewportVisibility'
 import { visibleConnectionIds } from '../canvas/overlays/overlayVisibility'
 import { getSearchResults } from '../ui/itemSearchModel'
 import { canvasRuntimeStats } from './canvasRuntimeStats'
+import { preferThumbnail } from '../assets/previewPolicy'
 
 const DEFAULT_ITEM_COUNT = 1000
 const DEFAULT_COLUMNS = 40
@@ -55,6 +56,20 @@ type BindingOverlayMeasurement = {
   activeOrPulsingConnections: number
   endpointSigilMarks: number
 }
+
+type MediaPreviewMeasurementOptions = ChamberLoadMeasurementOptions & {
+  cachedPreviewIds?: string[]
+  selectedIds?: string[]
+}
+
+type MediaPreviewMeasurement = {
+  previewableMountedRelics: number
+  staticPreviewRelics: number
+  awakePreviewableRelics: number
+  pendingPreviewRelics: number
+}
+
+const HEAVY_PREVIEWABLE_TYPES = new Set<CanvasItem['type']>(['gif', 'video', 'model3d'])
 
 function paddedIndex(index: number): string {
   return index.toString().padStart(4, '0')
@@ -160,5 +175,48 @@ export function measureBindingOverlayLoad(
     renderedConnections: renderedConnectionIds.size,
     activeOrPulsingConnections: activeOrPulsing.size,
     endpointSigilMarks: activeOrPulsing.size * 2,
+  }
+}
+
+export function measureMediaPreviewLoad(
+  items: CanvasItem[],
+  options: MediaPreviewMeasurementOptions,
+): MediaPreviewMeasurement {
+  const visibleIds = new Set(visibleItemIds(items, options.viewport, options.screen, {
+    overscanPx: options.overscanPx,
+    alwaysIncludeIds: options.alwaysIncludeIds,
+  }))
+  const cached = new Set(options.cachedPreviewIds ?? [])
+  const selected = new Set(options.selectedIds ?? [])
+  const mountedPreviewable = items.filter((item) => visibleIds.has(item.id) && HEAVY_PREVIEWABLE_TYPES.has(item.type))
+
+  let staticPreviewRelics = 0
+  let awakePreviewableRelics = 0
+  let pendingPreviewRelics = 0
+
+  for (const item of mountedPreviewable) {
+    const wantsStaticPreview = preferThumbnail(
+      item.width * options.viewport.scale,
+      item.height * options.viewport.scale,
+      selected.has(item.id),
+    )
+
+    if (!wantsStaticPreview) {
+      awakePreviewableRelics += 1
+      continue
+    }
+
+    if (cached.has(item.id)) {
+      staticPreviewRelics += 1
+    } else {
+      pendingPreviewRelics += 1
+    }
+  }
+
+  return {
+    previewableMountedRelics: mountedPreviewable.length,
+    staticPreviewRelics,
+    awakePreviewableRelics,
+    pendingPreviewRelics,
   }
 }

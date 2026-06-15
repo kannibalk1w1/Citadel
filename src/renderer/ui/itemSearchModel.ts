@@ -50,6 +50,7 @@ type ParsedSearchQuery = {
   states: string[]
   assets: string[]
   meanings: string[]
+  chambers: string[]
 }
 
 function basename(value: string | undefined): string {
@@ -68,6 +69,10 @@ function arrayText(value: unknown): string {
 
 function titleCase(value: string): string {
   return value.split(/[-_\s]+/).filter(Boolean).map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`).join(' ')
+}
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, '-')
 }
 
 function formatSigils(tags: string[]): string {
@@ -187,7 +192,7 @@ export function buildThreadSearchResult(
 }
 
 function parseSearchQuery(query: string): ParsedSearchQuery {
-  const parsed: ParsedSearchQuery = { text: '', types: [], tags: [], states: [], assets: [], meanings: [] }
+  const parsed: ParsedSearchQuery = { text: '', types: [], tags: [], states: [], assets: [], meanings: [], chambers: [] }
   const text: string[] = []
 
   query.trim().toLowerCase().split(/\s+/).filter(Boolean).forEach((token) => {
@@ -203,6 +208,7 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
     else if (prefix === 'is') parsed.states.push(value)
     else if (prefix === 'has') parsed.assets.push(value)
     else if (prefix === 'meaning') parsed.meanings.push(value)
+    else if (prefix === 'chamber') parsed.chambers.push(normalizeToken(value))
     else text.push(token)
   })
 
@@ -257,7 +263,25 @@ function matchesThreadSearchQuery(result: ThreadSearchResult, parsed: ParsedSear
 }
 
 function hasSearchTerms(parsed: ParsedSearchQuery): boolean {
-  return Boolean(parsed.text || parsed.types.length || parsed.tags.length || parsed.states.length || parsed.assets.length || parsed.meanings.length)
+  return Boolean(parsed.text || parsed.types.length || parsed.tags.length || parsed.states.length || parsed.assets.length || parsed.meanings.length || parsed.chambers.length)
+}
+
+function boardMatchesChamberTokens(board: CanvasBoard, chambers: string[]): boolean {
+  if (chambers.length === 0) return true
+  const id = normalizeToken(board.id)
+  const name = normalizeToken(board.name)
+  return chambers.some((chamber) => id === chamber || name === chamber || id.includes(chamber) || name.includes(chamber))
+}
+
+function stripArchiveOnlyTokens(query: string): string {
+  return query.trim().split(/\s+/).filter((token) => !token.toLowerCase().startsWith('chamber:')).join(' ')
+}
+
+function getAllIndexResults(items: CanvasItem[], connections: Connection[], limit: number): SearchResult[] {
+  const itemResults = items.map(buildSearchResult)
+  const itemMap = new Map(items.map((item) => [item.id, item]))
+  const threadResults = connections.map((thread) => buildThreadSearchResult(thread, itemMap))
+  return [...itemResults, ...threadResults].slice(0, limit)
 }
 
 export function getSearchResults(items: CanvasItem[], query: string, limit = 30): ItemSearchResult[] {
@@ -289,17 +313,20 @@ export function getArchiveIndexResults(
 ): SearchResult[] {
   const parsed = parseSearchQuery(query)
   if (!hasSearchTerms(parsed)) return []
+  const boardQuery = stripArchiveOnlyTokens(query)
 
   const orderedBoards = [
     ...boards.filter((board) => board.id === activeBoardId),
     ...boards.filter((board) => board.id !== activeBoardId),
-  ]
+  ].filter((board) => boardMatchesChamberTokens(board, parsed.chambers))
 
   const results: SearchResult[] = []
   for (const board of orderedBoards) {
     if (results.length >= limit) break
     const remaining = limit - results.length
-    const boardResults = getIndexResults(board.items, board.connections, query, remaining)
+    const boardResults = boardQuery.trim()
+      ? getIndexResults(board.items, board.connections, boardQuery, remaining)
+      : getAllIndexResults(board.items, board.connections, remaining)
     if (board.id === activeBoardId) {
       results.push(...boardResults)
     } else {

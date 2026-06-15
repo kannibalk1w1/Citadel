@@ -48,6 +48,7 @@ Implemented performance decisions:
 - Living Index result rows now use archive-native context: tagged relics surface Sigils, thread rows surface Binding inscriptions, meanings, endpoints, and shape.
 - Living Index relic focus activates one directly related Binding through the existing active-thread visibility path, revealing nearby context without waking every dormant offscreen thread.
 - Index search now sweeps every chamber via `getArchiveIndexResults`: active-chamber results lead, dormant-chamber results carry chamber identity in the row detail, and focusing one travels there through `setActiveBoard` before the existing focus/highlight path. Canvas sigil marks remain active-chamber only, so the visibility discipline is unchanged.
+- Index search supports `chamber:<id-or-name>` as an archive-level filter; with additional terms it searches inside matching chambers, and by itself it lists the matching chamber's indexed relics and threads.
 - Asset metadata records live in renderer memory (`src/renderer/assets/assetMetadata.ts`), keyed by item src — derived cache, never persisted into the project file, so relinking simply produces fresh records for the new path.
 - Image relics render thumbnail-first: a cached 256px thumbnail when the relic's largest on-screen side fits within thumbnail resolution, the full source when selected or larger on screen (`previewPolicy.preferThumbnail`). `useStableImage` keeps the previous bitmap while the swap loads so relics never blank.
 - Thumbnails are content-addressed (`thumb-<hash>-<size>-<mtime>.png`) in `userData/preview-cache`; the legacy `pdf-cache` is read/cleaned only and new PDF page previews also land in `preview-cache`. Settings maintenance shows one unified "Preview cache".
@@ -70,7 +71,7 @@ Active next-step queue:
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
-5. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
+5. Consider saved trails only after multi-chamber archives are in real use.
 
 ## Rendering Strategy
 
@@ -227,10 +228,12 @@ Goals:
 - clicked result still focuses strongly
 - search remains powered by existing `itemSearchModel`
 - search sweeps all chambers; dormant-chamber results travel on focus (see `docs/superpowers/specs/2026-06-12-cross-chamber-index-design.md`)
+- `chamber:<id-or-name>` filters archive results to matching chambers and can list a chamber by itself
 
 Next:
 
 - keep any new search marks visibility-aware and capped before adding richer ornamentation
+- consider saved trails after multi-chamber archives are in real use
 
 ### Phase 2: Viewport Virtualization
 

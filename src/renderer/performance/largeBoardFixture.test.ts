@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createLargeBoardFixture, measureBindingOverlayLoad, measureChamberLoad, measureLivingIndexSearch } from './largeBoardFixture'
-import type { Connection } from '../../types'
+import { createLargeBoardFixture, measureBindingOverlayLoad, measureChamberLoad, measureLivingIndexSearch, measureMediaPreviewLoad } from './largeBoardFixture'
+import type { CanvasItem, Connection } from '../../types'
 
 function connection(id: string, fromId: string, toId: string): Connection {
   return {
@@ -119,6 +119,49 @@ describe('largeBoardFixture', () => {
       renderedConnections: 3,
       activeOrPulsingConnections: 2,
       endpointSigilMarks: 4,
+    })
+  })
+
+  it('measures warm-cache media preview gates for visible small relics', () => {
+    const fixture = createLargeBoardFixture({ itemCount: 1000, columns: 50 })
+    const mediaItems: CanvasItem[] = [
+      { ...fixture.board.items[0], id: 'fixture-gif-near', type: 'gif', x: 40, y: 40, src: 'C:/media/near.gif' },
+      { ...fixture.board.items[0], id: 'fixture-video-near', type: 'video', x: 220, y: 40, src: 'C:/media/near.mp4' },
+      { ...fixture.board.items[0], id: 'fixture-model-near', type: 'model3d', x: 400, y: 40, src: 'C:/media/near.glb' },
+      { ...fixture.board.items[0], id: 'fixture-video-selected', type: 'video', x: 580, y: 40, src: 'C:/media/selected.mp4' },
+    ]
+
+    expect(measureMediaPreviewLoad([...fixture.board.items, ...mediaItems], {
+      viewport: { x: 0, y: 0, scale: 0.5 },
+      screen: { width: 540, height: 280 },
+      overscanPx: 240,
+      selectedIds: ['fixture-video-selected'],
+      cachedPreviewIds: ['fixture-gif-near', 'fixture-video-near', 'fixture-model-near', 'fixture-video-selected'],
+    })).toEqual({
+      previewableMountedRelics: 4,
+      staticPreviewRelics: 3,
+      awakePreviewableRelics: 1,
+      pendingPreviewRelics: 0,
+    })
+  })
+
+  it('measures cold-cache media preview work still pending', () => {
+    const fixture = createLargeBoardFixture({ itemCount: 1000, columns: 50 })
+    const mediaItems: CanvasItem[] = [
+      { ...fixture.board.items[0], id: 'fixture-gif-near', type: 'gif', x: 40, y: 40, src: 'C:/media/near.gif' },
+      { ...fixture.board.items[0], id: 'fixture-video-near', type: 'video', x: 220, y: 40, src: 'C:/media/near.mp4' },
+      { ...fixture.board.items[0], id: 'fixture-model-near', type: 'model3d', x: 400, y: 40, src: 'C:/media/near.glb' },
+    ]
+
+    expect(measureMediaPreviewLoad([...fixture.board.items, ...mediaItems], {
+      viewport: { x: 0, y: 0, scale: 0.5 },
+      screen: { width: 540, height: 280 },
+      overscanPx: 240,
+      selectedIds: [],
+      cachedPreviewIds: [],
+    })).toMatchObject({
+      staticPreviewRelics: 0,
+      pendingPreviewRelics: 3,
     })
   })
 })

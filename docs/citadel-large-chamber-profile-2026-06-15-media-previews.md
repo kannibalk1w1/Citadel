@@ -39,6 +39,31 @@ Verified by focused component tests:
 | Video | renders cached poster image and does not mount a `<video>` element or frame controls | mounts full `<video>` controls |
 | 3D model | renders cached static preview and does not create a Three.js renderer | creates the Three.js renderer |
 
+## Cold/Warm Fixture Model
+
+Measured with `measureMediaPreviewLoad`, which composes the same viewport visibility and `preferThumbnail` policy used by the renderer. This model counts heavy previewable relics only: GIF, video, and 3D.
+
+Scenario:
+
+- viewport: `{ x: 0, y: 0, scale: 0.5 }`
+- screen: `540 x 280`
+- overscan: `240px`
+- visible heavy media: GIF, video, 3D model
+- selected warm-cache media: one additional video, which must remain awake even with a cached poster
+
+| Metric | Cold Cache | Warm Cache |
+|---|---:|---:|
+| Mounted heavy previewable relics | 3 | 4 |
+| Static preview relics | 0 | 3 |
+| Awake heavy previewable relics | 0 | 1 |
+| Pending preview relics | 3 | 0 |
+
+Interpretation:
+
+- Cold cache still mounts visible heavy media, but all small unselected heavy relics are pending preview generation.
+- Warm cache turns small unselected heavy relics into static previews.
+- Selection still wins over previewing, so the selected video remains awake.
+
 ## Decision
 
 The preview path is stable enough to keep using the existing `assetMetadata` and `preview-cache` contract for heavier media. GIF, video, and 3D previews should remain lazy and failure-tolerant: if generation fails, `thumbnailPath: null` keeps the relic on its full-media fallback without retrying forever.
