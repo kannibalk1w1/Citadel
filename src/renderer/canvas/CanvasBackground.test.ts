@@ -1,21 +1,35 @@
 import { describe, expect, it } from 'vitest'
-import { buildVoidFloorSvg } from './CanvasBackground'
+import {
+  DEFAULT_CANVAS_TEXTURE_TILE_SIZE,
+  buildDefaultCanvasBackgroundStyle,
+  defaultCanvasTextureUrl,
+} from './CanvasBackground'
 
 describe('CanvasBackground', () => {
-  it('generates a dark void-floor SVG with subtle seams and luminous glints', () => {
-    const svg = buildVoidFloorSvg(false)
+  it('uses the bundled raster texture as the default canvas floor', () => {
+    const style = buildDefaultCanvasBackgroundStyle({
+      opacity: 0.62,
+      scale: 1,
+      viewportScale: 1,
+      viewportX: -120,
+      viewportY: 80,
+    })
 
-    expect(svg).toContain('void-floor')
-    expect(svg).toContain('data-seam')
-    expect(svg).toContain('data-glint')
-    expect(svg).not.toContain('data-stone')
+    expect(defaultCanvasTextureUrl).toMatch(/arcane-stone-canvas-tile\.png/)
+    expect(style.backgroundImage).toContain(defaultCanvasTextureUrl)
+    expect(style.backgroundRepeat).toBe('repeat')
+    expect(style.backgroundPosition).toBe('-120px 80px')
   })
 
-  it('adds a restrained alignment lattice when snap to grid is enabled', () => {
-    const off = buildVoidFloorSvg(false)
-    const on = buildVoidFloorSvg(true)
+  it('scales the raster tile with the background scale and clamped viewport scale', () => {
+    const style = buildDefaultCanvasBackgroundStyle({
+      opacity: 0.62,
+      scale: 1.5,
+      viewportScale: 2,
+      viewportX: 0,
+      viewportY: 0,
+    })
 
-    expect(on).not.toBe(off)
-    expect(on).toContain('snap-lattice')
+    expect(style.backgroundSize).toBe(`${DEFAULT_CANVAS_TEXTURE_TILE_SIZE * 1.5 * 1.35}px auto`)
   })
 })
