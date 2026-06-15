@@ -1,20 +1,7 @@
 import React from 'react'
-import type { ThreadMeaning } from '../../../types'
+import { normalizeThreadMeaning, threadMeaningOptions } from '../../canvas/connections/threadMeaning'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
-
-const THREAD_MEANINGS: { value: ThreadMeaning; label: string }[] = [
-  { value: 'reference', label: 'Reference' },
-  { value: 'memory', label: 'Memory' },
-  { value: 'source', label: 'Source' },
-  { value: 'echo', label: 'Echo' },
-  { value: 'contradiction', label: 'Contradiction' },
-  { value: 'question', label: 'Question' },
-  { value: 'proof', label: 'Proof' },
-  { value: 'inspiration', label: 'Inspiration' },
-  { value: 'warning', label: 'Warning' },
-  { value: 'sequence', label: 'Sequence' },
-]
 
 export function ConnectionProperties(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.connectionProperties)
@@ -62,11 +49,11 @@ export function ConnectionProperties(): React.ReactElement | null {
       <label style={labelStyle}>Meaning
         <select
           value={conn.meaning ?? ''}
-          onChange={(e) => update({ meaning: (e.target.value || undefined) as ThreadMeaning | undefined })}
+          onChange={(e) => update({ meaning: normalizeThreadMeaning(e.target.value) })}
           style={selectStyle}
         >
           <option value="">Unmarked thread</option>
-          {THREAD_MEANINGS.map((meaning) => (
+          {threadMeaningOptions.map((meaning) => (
             <option key={meaning.value} value={meaning.value}>{meaning.label}</option>
           ))}
         </select>

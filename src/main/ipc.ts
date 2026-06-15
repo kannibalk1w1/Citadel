@@ -2,6 +2,7 @@ import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
+import { inspectCitadelZip, resolveSafeAssetOutputPath } from './archiveZip'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 
@@ -369,25 +370,20 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('import:zip', async (_e, { zipPath }: { zipPath: string }) => {
     const buf = readFileSync(zipPath)
     const zip = await JSZip.loadAsync(buf)
-    const rawProjectJson = await zip.file('project.citadel')!.async('string')
+    const manifest = inspectCitadelZip(zip)
+    const rawProjectJson = await manifest.project.async('string')
 
     const assetDir = join(dirname(zipPath), '_citadel_assets')
     if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true })
 
-    const assets = zip.folder('assets')
-    if (assets) {
-      const writes: Promise<void>[] = []
-      assets.forEach((relativePath, file) => {
-        const outPath = join(assetDir, relativePath)
-        writes.push(
-          file.async('nodebuffer').then((buf) => {
-            mkdirSync(dirname(outPath), { recursive: true })
-            writeFileSync(outPath, buf)
-          })
-        )
+    const writes = manifest.assets.map((file) => {
+      const outPath = resolveSafeAssetOutputPath(assetDir, file.name)
+      return file.async('nodebuffer').then((buf) => {
+        mkdirSync(dirname(outPath), { recursive: true })
+        writeFileSync(outPath, buf)
       })
-      await Promise.all(writes)
-    }
+    })
+    await Promise.all(writes)
 
     return { projectJson: resolveImportedZipProject(rawProjectJson, assetDir), assetDir }
   })

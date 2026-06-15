@@ -1,6 +1,7 @@
 import { pathToUrl } from '../utils/pathToUrl'
 import { getAssetMetadata, isLocalAssetSrc, recordAssetMetadata } from './assetMetadata'
 import { thumbnailDimensions } from './previewPolicy'
+import { createPreviewScheduler, type PreviewScheduler } from './previewScheduler'
 
 type IpcApi = { invoke: (channel: string, args?: unknown) => Promise<unknown> }
 const getIpc = (): IpcApi => (window as unknown as { ipc: IpcApi }).ipc
@@ -11,28 +12,14 @@ export type ThumbnailGenerator = (src: string) => Promise<string>
 
 const inFlight = new Map<string, Promise<void>>()
 
-// Small queue so a far-zoom sweep over a fresh chamber does not decode
-// hundreds of full images at once.
-const MAX_CONCURRENT_GENERATIONS = 2
-let activeGenerations = 0
-const generationQueue: (() => void)[] = []
+const schedulers = new WeakMap<ThumbnailGenerator, PreviewScheduler<string>>()
 
-function acquireGenerationSlot(): Promise<void> {
-  if (activeGenerations < MAX_CONCURRENT_GENERATIONS) {
-    activeGenerations += 1
-    return Promise.resolve()
-  }
-  return new Promise((resolve) => {
-    generationQueue.push(() => {
-      activeGenerations += 1
-      resolve()
-    })
-  })
-}
-
-function releaseGenerationSlot(): void {
-  activeGenerations -= 1
-  generationQueue.shift()?.()
+function schedulerFor(generate: ThumbnailGenerator): PreviewScheduler<string> {
+  const existing = schedulers.get(generate)
+  if (existing) return existing
+  const scheduler = createPreviewScheduler({ concurrency: 2, generate })
+  schedulers.set(generate, scheduler)
+  return scheduler
 }
 
 export async function generateImageThumbnail(src: string): Promise<string> {
@@ -207,9 +194,8 @@ export function ensureThumbnail(src: string | undefined, generate: ThumbnailGene
       recordAssetMetadata({ src, exists: true, size: lookup.size, mtimeMs: lookup.mtimeMs, thumbnailPath: lookup.thumbnailPath })
       return
     }
-    await acquireGenerationSlot()
     try {
-      const imageData = await generate(src)
+      const imageData = await schedulerFor(generate).request(src)
       const cached = await getIpc().invoke('assets:cacheThumbnail', { path: src, imageData }) as { thumbnailPath?: unknown }
       recordAssetMetadata({
         src,
@@ -221,8 +207,6 @@ export function ensureThumbnail(src: string | undefined, generate: ThumbnailGene
     } catch (error) {
       console.error('Thumbnail generation failed:', error)
       recordAssetMetadata({ src, exists: true, size: lookup.size, mtimeMs: lookup.mtimeMs, thumbnailPath: null })
-    } finally {
-      releaseGenerationSlot()
     }
   })().finally(() => { inFlight.delete(src) })
 
