@@ -24,7 +24,7 @@ class RootErrorBoundary extends React.Component<
       const e = this.state.error
       return (
         <div style={{
-          background: '#070808', color: '#b99455', padding: 24,
+          background: '#070808', color: '#b8c2bd', padding: 24,
           fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
           whiteSpace: 'pre-wrap', height: '100vh', overflow: 'auto',
         }}>

@@ -10,7 +10,7 @@ function connection(id: string, fromId: string, toId: string): Connection {
     fromAnchor: 'auto',
     toAnchor: 'auto',
     style: 'bezier',
-    color: '#c8a96e',
+    color: '#b8c2bd',
     width: 1.5,
     arrowHead: 'arrow',
     dashed: false,

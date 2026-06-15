@@ -4,28 +4,28 @@
 
 :root {
   /* Backgrounds */
-  --bg-canvas:  #070807;
-  --bg-ui:      #0b0a08;
-  --bg-panel:   #12100d;
-  --bg-hover:   #1b1710;
-  --bg-elevated: #18140f;
-  --bg-sunken:  #070705;
+  --bg-canvas:  #070909;
+  --bg-ui:      #0a0d0d;
+  --bg-panel:   #101414;
+  --bg-hover:   #18201f;
+  --bg-elevated: #151b1a;
+  --bg-sunken:  #050707;
 
   /* Text */
-  --text-primary:   #e8ddcf;
-  --text-secondary: #bdaf9b;
-  --text-muted:     #7d705f;
-  --text-accent:    #c8a96e;
+  --text-primary:   #e3e8e4;
+  --text-secondary: #b2bdb8;
+  --text-muted:     #74817c;
+  --text-accent:    #c8d2ce;
 
   /* Accent */
-  --accent:        #c8a96e;
-  --accent-soft:   rgba(200, 169, 110, 0.16);
+  --accent:        #b8c2bd;
+  --accent-soft:   rgba(184, 194, 189, 0.16);
   --accent-danger: #7e1d1d;
 
   /* Borders */
-  --border:       #3d3323;
-  --border-muted: #242018;
-  --border-bright: rgba(232, 221, 207, 0.09);
+  --border:       #31403c;
+  --border-muted: #1d2926;
+  --border-bright: rgba(227, 232, 228, 0.09);
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;
@@ -38,7 +38,10 @@
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Layout */
-  --sidebar-right-w: 164px;
+  --archive-rail-w: 228px;
+  --sidebar-right-w: 228px;
+  --command-spine-w: 54px;
+  --topbar-h: 40px;
 
   /* Z-index scale */
   --z-ui:     10;
@@ -46,9 +49,9 @@
   --z-modal:  100;
 
   /* Shadows */
-  --shadow-md: 0 12px 32px rgba(5, 4, 3, 0.64), 0 1px 0 rgba(200, 169, 110, 0.08);
-  --shadow-lg: 0 22px 58px rgba(4, 3, 2, 0.78), 0 1px 0 rgba(232, 221, 207, 0.06);
-  --shadow-inset: inset 0 1px 0 rgba(232, 221, 207, 0.045), inset 0 -1px 0 rgba(0, 0, 0, 0.46);
+  --shadow-md: 0 12px 32px rgba(3, 5, 5, 0.66), 0 1px 0 rgba(184, 194, 189, 0.08);
+  --shadow-lg: 0 22px 58px rgba(2, 4, 4, 0.8), 0 1px 0 rgba(227, 232, 228, 0.06);
+  --shadow-inset: inset 0 1px 0 rgba(227, 232, 228, 0.045), inset 0 -1px 0 rgba(0, 0, 0, 0.46);
 
   /* Motion */
   --transition-fast: 140ms cubic-bezier(0.22, 0.8, 0.2, 1);
@@ -114,7 +117,7 @@ button[disabled] {
 }
 
 ::selection {
-  background: rgba(200, 169, 110, 0.26);
+  background: rgba(184, 194, 189, 0.26);
   color: var(--text-primary);
 }
 

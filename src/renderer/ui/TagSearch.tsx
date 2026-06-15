@@ -64,7 +64,7 @@ export function TagSearch(): React.ReactElement | null {
   }
 
   const focusPoint = (x: number, y: number) => {
-    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
     const canvasW = window.innerWidth - sidebarW
     const scale = useCanvasStore.getState().viewport().scale
 

@@ -13,6 +13,10 @@ type ToolDef = { mode: ToolMode; label: string; key: string; icon: React.ReactEl
 
 const S = { strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 
+function archiveRailWidth(): number {
+  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--archive-rail-w') || '228')
+}
+
 const TOOLS: ToolDef[] = [
   {
     mode: 'select', label: 'Select', key: 'V',
@@ -145,7 +149,7 @@ export function Toolbar(): React.ReactElement {
       return
     }
     const vp = useCanvasStore.getState().viewport()
-    const sidebarW = 164
+    const sidebarW = archiveRailWidth()
     const canvasW = window.innerWidth - sidebarW
     const cx = (canvasW / 2 - vp.x) / vp.scale
     const cy = (window.innerHeight / 2 - vp.y) / vp.scale
@@ -186,7 +190,7 @@ export function Toolbar(): React.ReactElement {
     if (!result.path) return
 
     const vp = useCanvasStore.getState().viewport()
-    const sidebarW = 164
+    const sidebarW = archiveRailWidth()
     const canvasW = window.innerWidth - sidebarW
     const cx = (canvasW / 2 - vp.x) / vp.scale
     const cy = (window.innerHeight / 2 - vp.y) / vp.scale

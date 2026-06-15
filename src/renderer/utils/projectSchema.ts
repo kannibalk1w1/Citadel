@@ -66,7 +66,7 @@ function migrateConnection(value: unknown, itemIds: Set<string>, index: number):
     fromAnchor: typeof value.fromAnchor === 'string' && ANCHORS.has(value.fromAnchor as AnchorSide) ? value.fromAnchor as AnchorSide : 'auto',
     toAnchor: typeof value.toAnchor === 'string' && ANCHORS.has(value.toAnchor as AnchorSide) ? value.toAnchor as AnchorSide : 'auto',
     style: typeof value.style === 'string' && STYLES.has(value.style as Connection['style']) ? value.style as Connection['style'] : 'bezier',
-    color: typeof value.color === 'string' ? value.color : '#c8a96e',
+    color: typeof value.color === 'string' ? value.color : '#b8c2bd',
     width: Math.max(0.5, finiteNumber(value.width, 1.5)),
     arrowHead: typeof value.arrowHead === 'string' && ARROWS.has(value.arrowHead as Connection['arrowHead']) ? value.arrowHead as Connection['arrowHead'] : 'arrow',
     label: typeof value.label === 'string' ? value.label : undefined,

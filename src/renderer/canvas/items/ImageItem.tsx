@@ -216,7 +216,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           width={item.width}
           height={item.height}
           fill={undefined}
-          stroke={isConnectSource || isSelected ? '#b99455' : undefined}
+          stroke={isConnectSource || isSelected ? '#b8c2bd' : undefined}
           strokeWidth={isConnectSource || isSelected ? 2 : 0}
           shadowEnabled={isSelected}
           shadowColor="rgba(185,148,85,0.7)"

@@ -149,7 +149,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'swatch' as const,
         x: cx - 150, y: cy - 40, width: 300, height: 80,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { colors: ['#070808', '#b99455', '#6f1717', '#d8d2c8', '#3f4a46'] },
+        tags: [], meta: { colors: ['#070909', '#b8c2bd', '#6f1717', '#d9e0dc', '#3f4a46'] },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
@@ -235,9 +235,9 @@ export function CanvasStage(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // empty deps intentional: handlers read store imperatively via getState() to avoid stale closures
 
-  // Sidebar is 152px wide — canvas area excludes it
+  // Archive rail width is reserved from the canvas work area.
   const SIDEBAR_W = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164'
+    getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228'
   )
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight

@@ -73,7 +73,7 @@ describe('projectSchema', () => {
           fromAnchor: 'auto',
           toAnchor: 'auto',
           style: 'bezier',
-          color: '#c8a96e',
+          color: '#b8c2bd',
           width: 1,
           arrowHead: 'arrow',
           dashed: false,

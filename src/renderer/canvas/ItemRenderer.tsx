@@ -60,7 +60,7 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       y={item.y + 4 / viewport.scale}
       text="🔒"
       fontSize={14 / viewport.scale}
-      fill="#b99455"
+      fill="#b8c2bd"
       shadowEnabled
       shadowColor="rgba(0,0,0,0.85)"
       shadowBlur={4 / viewport.scale}

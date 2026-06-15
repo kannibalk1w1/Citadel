@@ -241,7 +241,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
             position: 'absolute',
             top: 4,
             right: 4,
-            color: '#b99455',
+            color: '#b8c2bd',
             fontSize: 14,
             lineHeight: 1,
             textShadow: '0 1px 4px rgba(0,0,0,0.85)',

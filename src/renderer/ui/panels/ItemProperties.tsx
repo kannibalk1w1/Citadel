@@ -26,7 +26,7 @@ const STICKY_COLORS = [
 ]
 
 const STICKY_COLORS_DISPLAY: Record<string, string> = {
-  '#1e1b18': '#b99455', '#1a211a': '#6f8a5f', '#171d22': '#65798a',
+  '#1e1b18': '#b8c2bd', '#1a211a': '#6f8a5f', '#171d22': '#65798a',
   '#211721': '#8a6384', '#241919': '#8a3d3d', '#211e16': '#9a7a45',
   '#172220': '#4f8276', '#202216': '#7b8745',
 }
@@ -64,7 +64,7 @@ function itemLabel(item: CanvasItem | undefined): string {
 }
 
 function centerViewportOnItem(item: CanvasItem): void {
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
   const canvasW = window.innerWidth - sidebarW
   const viewport = useCanvasStore.getState().viewport()
   useCanvasStore.getState().setSelection([item.id])
@@ -622,7 +622,7 @@ export function ItemProperties(): React.ReactElement | null {
               checked={!!item.tint}
               onChange={(e) => {
                 if (e.target.checked) {
-                  update({ tint: { color: '#b99455', opacity: 0.25 } })
+                  update({ tint: { color: '#b8c2bd', opacity: 0.25 } })
                 } else {
                   update({ tint: undefined })
                 }
@@ -740,7 +740,7 @@ export function ItemProperties(): React.ReactElement | null {
                   width: 22,
                   height: 22,
                   borderRadius: 3,
-                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? '#b99455' : 'transparent'}`,
+                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? '#b8c2bd' : 'transparent'}`,
                   background: bg,
                   cursor: 'pointer',
                   padding: 0,

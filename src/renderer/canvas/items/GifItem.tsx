@@ -115,7 +115,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity}
-        stroke={isSelected ? '#b99455' : undefined}
+        stroke={isSelected ? '#b8c2bd' : undefined}
         strokeWidth={isSelected ? 2 : 0}
         shadowEnabled={isSelected}
         shadowColor="rgba(185,148,85,0.7)"
