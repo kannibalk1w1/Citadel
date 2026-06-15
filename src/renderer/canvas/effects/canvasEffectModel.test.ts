@@ -10,6 +10,13 @@ describe('canvasEffectModel', () => {
     expect(canvasEffectForMascotEffect('fracture')?.kind).toBe('error-red-fracture')
   })
 
+  it('assigns bold non-pixel arcane motifs for each effect family', () => {
+    expect(canvasEffectForMascotEffect('rune-seal')?.motif).toBe('blue-flame-ring')
+    expect(canvasEffectForMascotEffect('lightning-in')?.motif).toBe('gold-particle-ring')
+    expect(canvasEffectForMascotEffect('crumble')?.motif).toBe('red-collapse-flame')
+    expect(canvasEffectForMascotEffect('banner-raise')?.motif).toBe('magenta-sigil-slash')
+  })
+
   it('returns no breach effect for tower-only ambience', () => {
     expect(canvasEffectForMascotEffect('rise-from-fog')).toBeNull()
     expect(canvasEffectForMascotEffect('ember-drift')).toBeNull()

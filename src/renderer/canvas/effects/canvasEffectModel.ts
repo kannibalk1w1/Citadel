@@ -24,8 +24,21 @@ export type CanvasEffectKind =
   | 'sigil-grey-flare'
   | 'reduced-pulse'
 
+export type CanvasEffectMotif =
+  | 'blue-flame-ring'
+  | 'blue-energy-ring'
+  | 'gold-particle-ring'
+  | 'red-collapse-flame'
+  | 'cyan-reverse-ring'
+  | 'white-surge-ring'
+  | 'red-fracture-burst'
+  | 'red-recording-eye'
+  | 'magenta-sigil-slash'
+  | 'reduced-pulse'
+
 export type CanvasEffectDefinition = {
   kind: CanvasEffectKind
+  motif: CanvasEffectMotif
   className: string
   color: string
   secondaryColor: string
@@ -37,70 +50,79 @@ export type CanvasEffectDefinition = {
 export const CANVAS_EFFECTS: Record<CanvasEffectKind, CanvasEffectDefinition> = {
   'save-blue-flame': {
     kind: 'save-blue-flame',
+    motif: 'blue-flame-ring',
     className: 'canvas-breach-save',
-    color: '#3aa7ff',
-    secondaryColor: '#95d7ff',
-    lifetimeMs: 1200,
-    intensity: 0.9,
+    color: '#0088ff',
+    secondaryColor: '#52fff1',
+    lifetimeMs: 1450,
+    intensity: 1.15,
   },
   'autosave-blue-pulse': {
     kind: 'autosave-blue-pulse',
+    motif: 'blue-energy-ring',
     className: 'canvas-breach-autosave',
-    color: '#2f6f91',
-    secondaryColor: '#79b9d0',
-    lifetimeMs: 900,
-    intensity: 0.45,
+    color: '#1a63ff',
+    secondaryColor: '#34d6ff',
+    lifetimeMs: 850,
+    intensity: 0.62,
   },
   'delete-red-flame': {
     kind: 'delete-red-flame',
+    motif: 'red-collapse-flame',
     className: 'canvas-breach-delete',
-    color: '#b31318',
-    secondaryColor: '#ff4a37',
-    lifetimeMs: 1150,
-    intensity: 1,
+    color: '#ff1b23',
+    secondaryColor: '#ff8a1d',
+    lifetimeMs: 1250,
+    intensity: 1.18,
   },
   'import-yellow-spark': {
     kind: 'import-yellow-spark',
+    motif: 'gold-particle-ring',
     className: 'canvas-breach-import',
-    color: '#f3c64b',
-    secondaryColor: '#fff1a6',
-    lifetimeMs: 950,
-    intensity: 0.85,
+    color: '#ffb400',
+    secondaryColor: '#fff46a',
+    lifetimeMs: 1150,
+    intensity: 1.08,
   },
   'export-white-ignition': {
     kind: 'export-white-ignition',
+    motif: 'white-surge-ring',
     className: 'canvas-breach-export',
     color: '#d8f4ff',
-    secondaryColor: '#76cfff',
-    lifetimeMs: 1300,
-    intensity: 1,
+    secondaryColor: '#39a8ff',
+    lifetimeMs: 1450,
+    intensity: 1.22,
   },
   'undo-ash-reverse': {
     kind: 'undo-ash-reverse',
+    motif: 'cyan-reverse-ring',
     className: 'canvas-breach-undo',
-    color: '#91a9b4',
-    secondaryColor: '#c6d2d7',
-    lifetimeMs: 850,
-    intensity: 0.65,
+    color: '#2fd7ff',
+    secondaryColor: '#b7f8ff',
+    lifetimeMs: 950,
+    intensity: 0.82,
   },
   'redo-ember-surge': {
     kind: 'redo-ember-surge',
+    motif: 'white-surge-ring',
     className: 'canvas-breach-redo',
-    color: '#c0d4d2',
+    color: '#3bfff0',
     secondaryColor: '#ffffff',
-    lifetimeMs: 850,
-    intensity: 0.7,
+    lifetimeMs: 950,
+    intensity: 0.86,
   },
   'error-red-fracture': {
     kind: 'error-red-fracture',
+    motif: 'red-fracture-burst',
     className: 'canvas-breach-error',
-    color: '#5a0000',
-    secondaryColor: '#d91f1f',
-    lifetimeMs: 1000,
-    intensity: 1,
+    color: '#8b0000',
+    secondaryColor: '#ff1b23',
+    lifetimeMs: 1100,
+    intensity: 1.15,
   },
   'recording-red-eye': {
     kind: 'recording-red-eye',
+    motif: 'red-recording-eye',
     className: 'canvas-breach-recording',
     color: '#8b0000',
     secondaryColor: '#300000',
@@ -110,14 +132,16 @@ export const CANVAS_EFFECTS: Record<CanvasEffectKind, CanvasEffectDefinition> = 
   },
   'sigil-grey-flare': {
     kind: 'sigil-grey-flare',
+    motif: 'magenta-sigil-slash',
     className: 'canvas-breach-sigil',
-    color: '#c8c8c8',
-    secondaryColor: '#ffffff',
-    lifetimeMs: 900,
-    intensity: 0.6,
+    color: '#ff2bd6',
+    secondaryColor: '#8f5bff',
+    lifetimeMs: 1050,
+    intensity: 0.95,
   },
   'reduced-pulse': {
     kind: 'reduced-pulse',
+    motif: 'reduced-pulse',
     className: 'canvas-breach-reduced',
     color: '#c8c8c8',
     secondaryColor: '#ffffff',

@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import {
   CANVAS_EFFECTS,
   type CanvasEffectKind,
+  type CanvasEffectMotif,
   type CanvasPoint,
   reducedCanvasEffect,
 } from './canvasEffectModel'
@@ -10,6 +11,7 @@ import {
 export type ActiveCanvasEffect = {
   id: string
   kind: CanvasEffectKind
+  motif: CanvasEffectMotif
   source?: CanvasPoint
   createdAt: number
   lifetimeMs: number
@@ -45,6 +47,7 @@ export const useCanvasEffectStore = create<CanvasEffectState>((set, get) => ({
     const effect: ActiveCanvasEffect = {
       id: nanoid(),
       kind: definition.kind,
+      motif: definition.motif,
       source: source ?? undefined,
       createdAt: Date.now(),
       lifetimeMs: definition.lifetimeMs,

@@ -3,63 +3,61 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import { pathToUrl } from '../utils/pathToUrl'
 
-const STONE_TILE = 320
+const FLOOR_TILE = 640
 
-export function buildBrokenCobblestoneSvg(snapToGrid: boolean): string {
-  const mortar = snapToGrid ? '#171d1b' : '#0d1110'
-  const edge = snapToGrid ? '#33423f' : '#1d2926'
-  const highlight = snapToGrid ? '#586866' : '#34413f'
-  const seamClass = snapToGrid ? 'snap-mortar' : 'dark-mortar'
-  const stones = [
-    'M-10,10 L70,-5 L111,37 L92,104 L16,113 L-13,66 Z',
-    'M113,2 L214,-10 L244,48 L211,122 L117,108 L91,48 Z',
-    'M244,3 L334,18 L330,104 L278,129 L220,101 L229,39 Z',
-    'M-16,116 L82,103 L119,166 L91,236 L6,245 L-18,184 Z',
-    'M121,124 L218,112 L254,178 L220,252 L118,258 L88,184 Z',
-    'M257,132 L336,105 L335,229 L282,262 L224,214 Z',
-    'M-12,250 L92,236 L126,296 L92,334 L-14,329 Z',
-    'M128,262 L224,252 L260,306 L231,337 L102,334 Z',
-    'M263,268 L336,236 L333,337 L235,338 L225,305 Z',
-  ]
+export function buildVoidFloorSvg(snapToGrid: boolean): string {
+  const seamOpacity = snapToGrid ? '0.32' : '0.18'
+  const glintOpacity = snapToGrid ? '0.34' : '0.24'
+  const lattice = snapToGrid
+    ? `<g class="snap-lattice" opacity="0.18" stroke="#18345a" stroke-width="1">
+        <path d="M0 160 H640 M0 320 H640 M0 480 H640 M160 0 V640 M320 0 V640 M480 0 V640"/>
+      </g>`
+    : ''
 
-  const stonePaths = stones.map((d, i) => {
-    const tone = ['#262d2c', '#1e2524', '#2b3332', '#202928', '#303938'][i % 5]
-    return `<path class="${seamClass}" d="${d}" fill="${tone}" stroke="${edge}" stroke-width="${snapToGrid ? '4.4' : '3.4'}"/>`
-  }).join('')
-
-  const chips = [
-    [32, 42, 22], [144, 30, 28], [267, 58, 19],
-    [48, 154, 26], [167, 180, 21], [286, 186, 24],
-    [38, 286, 22], [174, 294, 18], [279, 302, 27],
-  ].map(([x, y, w], i) => (
-    `<path data-chip="${i}" d="M${x},${y} l${w},-${5 + (i % 3)} l${Math.round(w / 2)},${4 + (i % 2)} l-${w + 7},${7 + (i % 3)} z" fill="${highlight}" opacity="${i % 3 === 0 ? 0.20 : 0.12}"/>`
-  )).join('')
-
-  const cracks = [
-    'M76 14 L69 42 L82 68 L72 101',
-    'M222 39 L204 62 L211 96 L194 120',
-    'M45 142 L66 159 L58 192 L75 219',
-    'M150 128 L176 150 L163 179 L190 211 L178 250',
-    'M275 147 L290 178 L274 206 L298 235',
-    'M88 266 L112 281 L101 309',
-    'M230 268 L250 287 L239 319',
+  const seams = [
+    'M-30 544 C120 500 246 498 360 532 S570 586 690 530',
+    'M-20 430 C116 388 232 406 342 438 S548 490 668 426',
+    'M-10 318 C126 292 260 304 374 330 S558 356 650 314',
+    'M20 218 C160 188 254 212 360 216 S548 216 636 174',
+    'M90 -20 C80 132 104 274 82 404 S58 548 96 674',
+    'M248 -18 C226 126 252 252 232 390 S218 534 258 666',
+    'M418 -12 C396 136 430 258 402 396 S386 542 426 662',
+    'M574 -18 C542 120 566 278 548 410 S534 536 590 660',
   ].map((d, i) => (
-    `<path data-crack="${i}" d="${d}" fill="none" stroke="${i % 2 === 0 ? '#090c0c' : '#111817'}" stroke-width="${i % 2 === 0 ? '3.2' : '2.2'}" stroke-linecap="round" opacity="${snapToGrid ? '0.74' : '0.58'}"/>`
+    `<path data-seam="${i}" d="${d}" fill="none" stroke="${i % 2 === 0 ? '#182426' : '#10202b'}" stroke-width="${i % 3 === 0 ? '2.6' : '1.4'}" stroke-linecap="round" opacity="${seamOpacity}"/>`
   )).join('')
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${STONE_TILE}" height="${STONE_TILE}" viewBox="0 0 ${STONE_TILE} ${STONE_TILE}">
-    <rect width="${STONE_TILE}" height="${STONE_TILE}" fill="${mortar}"/>
-    <g opacity="${snapToGrid ? '0.94' : '0.84'}">${stonePaths}</g>
-    <g>${cracks}</g>
-    <g>${chips}</g>
-    <path d="M0,0 H320 V320 H0 Z" fill="none" stroke="#050707" stroke-width="8" opacity="0.55"/>
+  const glints = [
+    [92, 504, 68, '#4bdcff'],
+    [208, 397, 42, '#7d4dff'],
+    [362, 530, 74, '#16d6c8'],
+    [482, 346, 54, '#a735ff'],
+    [560, 232, 46, '#308bff'],
+  ].map(([x, y, w, color], i) => (
+    `<path data-glint="${i}" d="M${x} ${y} C${Number(x) + Number(w) * 0.35} ${Number(y) - 8} ${Number(x) + Number(w) * 0.7} ${Number(y) + 8} ${Number(x) + Number(w)} ${Number(y)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" opacity="${glintOpacity}"/>`
+  )).join('')
+
+  const svg = `<svg class="void-floor" xmlns="http://www.w3.org/2000/svg" width="${FLOOR_TILE}" height="${FLOOR_TILE}" viewBox="0 0 ${FLOOR_TILE} ${FLOOR_TILE}">
+    <rect width="${FLOOR_TILE}" height="${FLOOR_TILE}" fill="#030506"/>
+    <rect width="${FLOOR_TILE}" height="${FLOOR_TILE}" fill="url(#floor-depth)"/>
+    <defs>
+      <radialGradient id="floor-depth" cx="52%" cy="64%" r="74%">
+        <stop offset="0%" stop-color="#0b161a"/>
+        <stop offset="42%" stop-color="#071014"/>
+        <stop offset="100%" stop-color="#020303"/>
+      </radialGradient>
+    </defs>
+    ${lattice}
+    <g>${seams}</g>
+    <g>${glints}</g>
+    <path d="M0 0 H640 V640 H0 Z" fill="none" stroke="#010202" stroke-width="18" opacity="0.55"/>
   </svg>`
 
   return svg
 }
 
 function buildStonePatternUrl(snapToGrid: boolean): string {
-  const svg = buildBrokenCobblestoneSvg(snapToGrid)
+  const svg = buildVoidFloorSvg(snapToGrid)
 
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 }
@@ -70,18 +68,18 @@ export function CanvasBackground(): React.ReactElement {
   const canvasBackground = useUIStore((s) => s.canvasBackground)
 
   const stonePatternUrl = useMemo(() => buildStonePatternUrl(snapToGrid), [snapToGrid])
-  const stoneTileSize = STONE_TILE * canvasBackground.scale * Math.max(0.65, Math.min(1.6, viewport.scale))
+  const stoneTileSize = FLOOR_TILE * canvasBackground.scale * Math.max(0.75, Math.min(1.35, viewport.scale))
 
   if (canvasBackground.mode === 'none') return <></>
 
   if (canvasBackground.mode === 'custom' && canvasBackground.assetPath) {
-    const customTileSize = STONE_TILE * canvasBackground.scale * Math.max(0.65, Math.min(1.6, viewport.scale))
+    const customTileSize = FLOOR_TILE * canvasBackground.scale * Math.max(0.75, Math.min(1.35, viewport.scale))
     return (
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: '#050606',
+          backgroundColor: '#030506',
           backgroundImage: `url("${pathToUrl(canvasBackground.assetPath)}")`,
           backgroundRepeat: canvasBackground.repeat ? 'repeat' : 'no-repeat',
           backgroundSize: canvasBackground.repeat ? `${customTileSize}px auto` : 'cover',
@@ -98,7 +96,7 @@ export function CanvasBackground(): React.ReactElement {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: '#050606',
+        backgroundColor: '#030506',
         backgroundImage: stonePatternUrl,
         backgroundSize: `${stoneTileSize}px ${stoneTileSize}px`,
         backgroundPosition: `${viewport.x}px ${viewport.y}px`,
