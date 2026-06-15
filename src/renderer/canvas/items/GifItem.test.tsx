@@ -5,18 +5,39 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { clearAssetMetadataForTest, recordAssetMetadata } from '../../assets/assetMetadata'
+import { ensureThumbnail } from '../../assets/thumbnailPipeline'
 import { GifItem } from './GifItem'
 
 const stopGif = vi.fn()
 let frameCallback: ((ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => void) | null = null
+let lastImageProp: unknown = null
+
+const imageState = vi.hoisted(() => ({
+  image: { width: 256, height: 144, naturalWidth: 256, naturalHeight: 144 } as HTMLImageElement | null,
+  lastUrl: '' as string,
+}))
 
 vi.mock('gifler', () => ({}))
 
+vi.mock('use-image', () => ({
+  default: (url: string) => {
+    imageState.lastUrl = url
+    return [imageState.image]
+  },
+}))
+
+vi.mock('../../assets/thumbnailPipeline', () => ({
+  ensureThumbnail: vi.fn().mockResolvedValue(undefined),
+  generateGifFirstFrameThumbnail: vi.fn().mockResolvedValue('data:image/png;base64,gif'),
+}))
+
 vi.mock('react-konva', () => ({
   Image: React.forwardRef(function Image(
-    _props: unknown,
+    props: { image?: unknown },
     ref: React.ForwardedRef<{ getLayer: () => { batchDraw: () => void } }>,
   ) {
+    lastImageProp = props.image
     React.useImperativeHandle(ref, () => ({ getLayer: () => ({ batchDraw: vi.fn() }) }))
     return <div data-testid="gif-konva-image" />
   }),
@@ -44,7 +65,12 @@ const gifItem: CanvasItem = {
 
 beforeEach(() => {
   stopGif.mockReset()
+  vi.mocked(ensureThumbnail).mockClear()
+  clearAssetMetadataForTest()
   frameCallback = null
+  lastImageProp = null
+  imageState.lastUrl = ''
+  imageState.image = { width: 256, height: 144, naturalWidth: 256, naturalHeight: 144 } as HTMLImageElement
   Object.assign(window, {
     gifler: vi.fn(() => ({
       frames: vi.fn((_canvas: HTMLCanvasElement, callback: typeof frameCallback) => {
@@ -85,5 +111,26 @@ describe('GifItem animation lifecycle', () => {
 
     expect(stopGif).toHaveBeenCalledTimes(1)
     expect(drawImage).not.toHaveBeenCalled()
+  })
+})
+
+describe('GifItem thumbnail-first rendering', () => {
+  it('requests a first-frame thumbnail for local GIF relics', () => {
+    render(<GifItem item={gifItem} />)
+
+    expect(ensureThumbnail).toHaveBeenCalledWith(gifItem.src, expect.any(Function))
+  })
+
+  it('uses the cached first-frame thumbnail when small on screen', () => {
+    recordAssetMetadata({ src: 'C:/archive/memory.gif', exists: true, thumbnailPath: 'C:/cache/gif-thumb.png' })
+    useCanvasStore.setState((state) => ({
+      boards: state.boards.map((board) => ({ ...board, viewport: { x: 0, y: 0, scale: 0.5 } })),
+    }))
+
+    render(<GifItem item={gifItem} />)
+
+    expect(imageState.lastUrl).toBe('local:///C:/cache/gif-thumb.png')
+    expect(lastImageProp).toBe(imageState.image)
+    expect(window.gifler).not.toHaveBeenCalled()
   })
 })

@@ -53,21 +53,24 @@ Implemented performance decisions:
 - Thumbnails are content-addressed (`thumb-<hash>-<size>-<mtime>.png`) in `userData/preview-cache`; the legacy `pdf-cache` is read/cleaned only and new PDF page previews also land in `preview-cache`. Settings maintenance shows one unified "Preview cache".
 - Thumbnail generation is lazy (it runs on relic mount, which viewport virtualization already limits) through a concurrency-2 queue in `thumbnailPipeline.ensureThumbnail`; failures record `thumbnailPath: null` and fall back to the full source without retrying.
 - Missing image sources render a dark placeholder with the filename instead of disappearing, so relink keeps the relic's place in the chamber.
+- GIF relics now request first-frame thumbnails through the same preview pipeline; small unselected GIFs render cached static previews instead of waking gifler playback.
+- Video relics now request poster-frame thumbnails; small unselected videos render cached poster images instead of mounting a `<video>` element and its frame controls.
+- 3D relics now request static preview captures; small unselected models render cached preview images instead of creating an active Three.js renderer loop.
 
 Profiling notes:
 
 - Baseline profile: `docs/citadel-large-chamber-profile-2026-05-25.md`.
 - Binding endpoint profile: `docs/citadel-large-chamber-profile-2026-05-25-binding-endpoints.md`.
 - Binding reveal profile: `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`.
+- Media preview gate profile: `docs/citadel-large-chamber-profile-2026-06-15-media-previews.md`.
 
 Active next-step queue:
 
-1. Extend thumbnail-first media beyond images: GIF first frames, video poster frames, and 3D preview captures, reusing the `preview-cache` and `assetMetadata` paths.
-2. Profile thumbnail-first rendering against the large-chamber fixture (far-zoom sweep over a fresh chamber, then a warm cache) and record the result next to the existing profiles.
-3. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
-4. Preserve reduced-motion support for any future atmospheric animation.
-5. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
-6. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
+1. Run a real-media cold/warm preview-cache sweep in the app with local GIF, video, and 3D assets, then record wall-clock and Chamber Load observations next to the fixture-level media preview profile.
+2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
+3. Preserve reduced-motion support for any future atmospheric animation.
+4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
+5. Consider a `chamber:` search token and saved trails only after multi-chamber archives are in real use.
 
 ## Rendering Strategy
 
@@ -245,7 +248,7 @@ Verification:
 
 ### Phase 3: Asset Metadata And Thumbnails
 
-Status: first slice complete (images). Spec: `docs/superpowers/specs/2026-06-12-asset-metadata-thumbnails-design.md`.
+Status: second slice complete (images, GIF first frames, video posters, and 3D static previews). Spec: `docs/superpowers/specs/2026-06-12-asset-metadata-thumbnails-design.md`.
 
 Goals:
 
@@ -253,10 +256,12 @@ Goals:
 - generate and cache thumbnails — done for images (content-addressed `preview-cache`, lazy concurrency-2 generation)
 - use thumbnails for far and mid zoom — done for image relics (resolution-aware `preferThumbnail`)
 - unify PDF preview cache with broader asset preview cache — done (`cache:previewStats` / `cache:clearUnusedPreviews` span both dirs)
+- extend previews to heavier media — done for GIF first frames, video poster frames, and 3D static captures through the existing `assetMetadata` / `preview-cache` path
+- keep heavy media asleep when previewed — done for small unselected GIFs, videos, and 3D models
 
 Remaining:
 
-- video poster frames, 3D preview captures, GIF first-frame thumbnails
+- real-media cold/warm cache profiling with local GIF, video, and model files
 - move generation into a worker once volume justifies it
 - progressive text/label detail at far zoom
 
