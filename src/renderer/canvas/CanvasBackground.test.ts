@@ -3,6 +3,7 @@ import {
   DEFAULT_CANVAS_TEXTURE_TILE_SIZE,
   buildDefaultCanvasBackgroundStyle,
   defaultCanvasTextureUrl,
+  resolveEffectiveBackground,
 } from './CanvasBackground'
 
 describe('CanvasBackground', () => {
@@ -31,5 +32,18 @@ describe('CanvasBackground', () => {
     })
 
     expect(style.backgroundSize).toBe(`${DEFAULT_CANVAS_TEXTURE_TILE_SIZE * 1.5 * 1.35}px auto`)
+  })
+
+  it('lets a chamber texture override win over the global setting', () => {
+    const resolved = resolveEffectiveBackground(
+      { assetPath: 'C:/chamber-tile.png', opacity: 0.4, scale: 2, repeat: false },
+      { mode: 'stone', assetPath: null, opacity: 0.62, scale: 1, repeat: true },
+    )
+    expect(resolved).toEqual({ mode: 'custom', assetPath: 'C:/chamber-tile.png', opacity: 0.4, scale: 2, repeat: false })
+  })
+
+  it('falls back to the global setting when the chamber has no texture', () => {
+    const global = { mode: 'custom' as const, assetPath: 'C:/global.png', opacity: 0.5, scale: 1, repeat: true }
+    expect(resolveEffectiveBackground(undefined, global)).toEqual(global)
   })
 })
