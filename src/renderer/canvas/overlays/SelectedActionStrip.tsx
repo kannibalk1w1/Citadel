@@ -3,9 +3,9 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { Actions } from '../../keybinds/actions'
 import { resolver } from '../../keybinds/keybindResolver'
-import { selectedActionStripPosition } from './boardChromeViewModel'
+import { selectedActionStripPositionForSelection } from './boardChromeViewModel'
 
-function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 'copy' | 'front' | 'delete' }): React.ReactElement {
+function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 'copy' | 'front' | 'delete' | 'flipH' | 'flipV' }): React.ReactElement {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   switch (name) {
     case 'props':
@@ -24,6 +24,10 @@ function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 
       return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><rect x="3" y="6" width="7" height="7" rx="1" /><rect x="6" y="3" width="7" height="7" rx="1" /></svg>
     case 'delete':
       return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M3 4h10M6 4V3h4v1M5 6l.5 7h5L12 6" /></svg>
+    case 'flipH':
+      return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M8 2v12" strokeDasharray="2 2" /><path d="M6 5 3 8l3 3" /><path d="M10 5l3 3-3 3" /></svg>
+    case 'flipV':
+      return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M2 8h12" strokeDasharray="2 2" /><path d="M5 6 8 3l3 3" /><path d="M5 10l3 3 3-3" /></svg>
   }
 }
 
@@ -64,11 +68,15 @@ export function SelectedActionStrip(): React.ReactElement | null {
   const setToolMode = useUIStore((s) => s.setToolMode)
   const openPanel = useUIStore((s) => s.openPanel)
 
-  if (selectedIds.length !== 1) return null
-  const item = items.find((candidate) => candidate.id === selectedIds[0])
-  if (!item) return null
+  const selectedItems = items.filter((candidate) => selectedIds.includes(candidate.id))
+  if (selectedItems.length === 0) return null
+  const single = selectedItems.length === 1
+  const item = selectedItems[0]
 
-  const position = selectedActionStripPosition(item, viewport)
+  const position = selectedActionStripPositionForSelection(selectedItems, viewport)
+  if (!position) return null
+  const anyUnlocked = selectedItems.some((candidate) => !candidate.locked)
+  const flippable = selectedItems.some((candidate) => candidate.type === 'image' || candidate.type === 'gif')
   const startMode = (mode: 'connect' | 'link' | 'tag') => {
     setToolMode(mode)
     if (mode === 'connect') useUIStore.getState().setConnectFromId(item.id)
@@ -94,11 +102,13 @@ export function SelectedActionStrip(): React.ReactElement | null {
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <ActionButton title="Properties" icon="props" onClick={() => openPanel('itemProperties')} />
-      <ActionButton title="Connect" icon="connect" onClick={() => startMode('connect')} />
-      <ActionButton title="Link" icon="link" onClick={() => startMode('link')} />
-      <ActionButton title="Tag" icon="tag" onClick={() => startMode('tag')} />
-      <ActionButton title={item.locked ? 'Unlock' : 'Lock'} icon="lock" onClick={() => resolver.dispatch(Actions.TOGGLE_LOCK)} />
+      {single && <ActionButton title="Properties" icon="props" onClick={() => openPanel('itemProperties')} />}
+      {single && <ActionButton title="Connect" icon="connect" onClick={() => startMode('connect')} />}
+      {single && <ActionButton title="Link" icon="link" onClick={() => startMode('link')} />}
+      {single && <ActionButton title="Tag" icon="tag" onClick={() => startMode('tag')} />}
+      {flippable && <ActionButton title="Flip horizontal (Shift+H)" icon="flipH" onClick={() => resolver.dispatch(Actions.FLIP_H)} />}
+      {flippable && <ActionButton title="Flip vertical (Shift+V)" icon="flipV" onClick={() => resolver.dispatch(Actions.FLIP_V)} />}
+      <ActionButton title={anyUnlocked ? 'Lock' : 'Unlock'} icon="lock" onClick={() => resolver.dispatch(Actions.TOGGLE_LOCK)} />
       <ActionButton title="Duplicate" icon="copy" onClick={() => resolver.dispatch(Actions.DUPLICATE)} />
       <ActionButton title="Bring to front" icon="front" onClick={() => resolver.dispatch(Actions.BRING_FRONT)} />
       <ActionButton title="Delete" icon="delete" danger onClick={() => resolver.dispatch(Actions.DELETE)} />

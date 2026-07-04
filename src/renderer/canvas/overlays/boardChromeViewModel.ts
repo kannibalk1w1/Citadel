@@ -88,6 +88,20 @@ export function selectedActionStripPosition(item: CanvasItem, viewport: Viewport
   }
 }
 
+// Multi-selection variant: the strip floats above the gutter-padded union of
+// the selected relics; a single item degrades to the same placement rule.
+export function selectedActionStripPositionForSelection(items: CanvasItem[], viewport: Viewport): ScreenPosition | null {
+  const bounds = selectionBounds(items)
+  if (!bounds) return null
+  const centerX = (bounds.x + bounds.width / 2) * viewport.scale + viewport.x
+  const top = Math.max(ACTION_STRIP_TOP_MIN, bounds.y * viewport.scale + viewport.y - ACTION_STRIP_OFFSET)
+  return {
+    left: Math.round(centerX),
+    top: Math.round(top),
+    transform: 'translateX(-50%)',
+  }
+}
+
 export function itemTypeBadge(item: CanvasItem): string {
   switch (item.type) {
     case 'image': return 'IMG'
