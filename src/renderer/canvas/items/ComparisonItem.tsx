@@ -285,7 +285,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         {/* ── Divider line ── */}
         <Line
           points={[splitPx, 0, splitPx, item.height]}
-          stroke="#b99455"
+          stroke="#b8c2bd"
           strokeWidth={2}
           listening={false}
         />
@@ -295,7 +295,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
           x={splitPx}
           y={item.height / 2}
           radius={10}
-          fill="#b99455"
+          fill="#b8c2bd"
           listening={false}
         />
         <Text
@@ -333,7 +333,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#b99455"
+            stroke="#b8c2bd"
             strokeWidth={2}
             shadowEnabled
             shadowColor="rgba(185,148,85,0.7)"

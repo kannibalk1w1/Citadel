@@ -1,9 +1,12 @@
 // VideoItem renders as a DOM element synced to canvas coordinates.
 // The actual Konva layer renders a placeholder rect; the <video> is absolutely positioned.
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Rect } from 'react-konva'
 import { nanoid } from 'nanoid'
 import type { CanvasItem } from '../../../types'
+import { useAssetMetadata } from '../../assets/assetMetadata'
+import { preferThumbnail } from '../../assets/previewPolicy'
+import { ensureThumbnail, generateVideoPosterThumbnail } from '../../assets/thumbnailPipeline'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
@@ -17,10 +20,19 @@ type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function VideoItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const scale = useCanvasStore((s) => s.viewport().scale)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const toolMode = useUIStore((s) => s.toolMode)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [message, setMessage] = useState('')
+  const meta = useAssetMetadata(item.src)
+  const usePoster = preferThumbnail(item.width * scale, item.height * scale, isSelected) && !!meta?.thumbnailPath
+
+  useEffect(() => {
+    if (!item.src) return
+    void ensureThumbnail(item.src, generateVideoPosterThumbnail)
+  }, [item.src])
 
   const videoFrameDataUrl = (): string => {
     const video = videoRef.current
@@ -114,7 +126,13 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
           setSelection([item.id])
         }}
       >
-        {item.src ? (
+        {item.src && usePoster ? (
+          <img
+            src={pathToUrl(meta?.thumbnailPath ?? '')}
+            alt="Video poster"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000', display: 'block' }}
+          />
+        ) : item.src ? (
           <video
             ref={videoRef}
             src={pathToUrl(item.src)}
@@ -123,58 +141,62 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
             loop
           />
         ) : <MediaPlaceholder item={item} />}
-        <button
-          type="button"
-          onClick={(e) => { captureFrame(e).catch(console.error) }}
-          title="Capture current frame"
-          style={{
-            position: 'absolute',
-            top: 6,
-            right: 6,
-            width: 26,
-            height: 24,
-            border: '1px solid var(--border)',
-            borderRadius: 3,
-            background: 'var(--bg-panel)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: 0.88,
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
-            <path d="M2 5H4L5 3.5H10L11 5H13V12H2Z" />
-            <circle cx="7.5" cy="8.5" r="2.2" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={(e) => { copyFrame(e).catch(console.error) }}
-          title="Copy current frame"
-          style={{
-            position: 'absolute',
-            top: 6,
-            right: 38,
-            width: 26,
-            height: 24,
-            border: '1px solid var(--border)',
-            borderRadius: 3,
-            background: 'var(--bg-panel)',
-            color: 'var(--text-primary)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: 0.88,
-          }}
-        >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
-            <rect x="4" y="3" width="8" height="8" rx="1" />
-            <path d="M3 5H2V13H10V12" />
-          </svg>
-        </button>
+        {!usePoster && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => { captureFrame(e).catch(console.error) }}
+              title="Capture current frame"
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 6,
+                width: 26,
+                height: 24,
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                background: 'var(--bg-panel)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.88,
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
+                <path d="M2 5H4L5 3.5H10L11 5H13V12H2Z" />
+                <circle cx="7.5" cy="8.5" r="2.2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { copyFrame(e).catch(console.error) }}
+              title="Copy current frame"
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 38,
+                width: 26,
+                height: 24,
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                background: 'var(--bg-panel)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.88,
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.3">
+                <rect x="4" y="3" width="8" height="8" rx="1" />
+                <path d="M3 5H2V13H10V12" />
+              </svg>
+            </button>
+          </>
+        )}
         {message ? (
           <div style={{
             position: 'absolute',

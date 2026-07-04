@@ -5,6 +5,7 @@
 import type { ProjectFile } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
+import { parseProjectFile } from './projectSchema'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -104,7 +105,7 @@ function serialize(): string {
 }
 
 function deserialize(json: string): ProjectFile {
-  return JSON.parse(json) as ProjectFile
+  return parseProjectFile(json)
 }
 
 function applyProject(file: ProjectFile): void {
@@ -146,15 +147,15 @@ function recoveryProjectFingerprint(project: ProjectFile): string {
 export function parseRecoveryData(data: string): ParsedRecovery {
   const parsed = JSON.parse(data) as ProjectFile | RecoverySnapshot
   if ('kind' in parsed && parsed.kind === 'citadel-recovery') {
+    const project = parseProjectFile(JSON.stringify(parsed.project))
     return {
       savedAt: parsed.savedAt,
-      boardCount: parsed.boardCount,
-      itemCount: parsed.itemCount,
-      project: parsed.project,
+      ...projectStats(project),
+      project,
     }
   }
 
-  const project = parsed as ProjectFile
+  const project = parseProjectFile(data)
   return {
     savedAt: null,
     ...projectStats(project),

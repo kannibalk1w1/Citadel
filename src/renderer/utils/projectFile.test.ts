@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
-import { autoSave, clearRecoveryIfClean, resetRecoveryAutosaveCacheForTests } from './projectFile'
+import { autoSave, clearRecoveryIfClean, parseRecoveryData, resetRecoveryAutosaveCacheForTests } from './projectFile'
 
 const mockInvoke = vi.fn().mockResolvedValue({ ok: true })
 
@@ -68,5 +68,31 @@ describe('projectFile autosave recovery', () => {
 
     expect(mockInvoke).toHaveBeenCalledTimes(1)
     expect(mockInvoke).toHaveBeenCalledWith('recovery:clear')
+  })
+
+  it('migrates legacy recovery projects through the project schema', () => {
+    const recovery = parseRecoveryData(JSON.stringify({
+      boards: [{
+        id: 'legacy-board',
+        name: 'Legacy',
+        items: [{
+          id: 'item-1',
+          type: 'sticky',
+          x: 10,
+          y: 20,
+          width: 100,
+          height: 80,
+        }],
+      }],
+    }))
+
+    expect(recovery.project.version).toBe('1.0.0')
+    expect(recovery.project.activeBoardId).toBe('legacy-board')
+    expect(recovery.project.boards[0].items[0]).toMatchObject({
+      locked: false,
+      visible: true,
+      opacity: 1,
+      tags: [],
+    })
   })
 })

@@ -68,7 +68,7 @@ describe('handleConnectRelicClick', () => {
       fromAnchor: 'auto',
       toAnchor: 'auto',
       style: 'bezier',
-      color: '#b99455',
+      color: '#b8c2bd',
       width: 1.5,
       arrowHead: 'arrow',
       dashed: false,

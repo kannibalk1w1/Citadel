@@ -45,7 +45,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
   const isComment = item.meta?.kind === 'comment'
   const isAttachedComment = isComment && typeof item.meta?.attachedTo === 'string'
-  const strokeColor = isSelected ? '#b99455' : isComment ? '#5a4730' : undefined
+  const strokeColor = isSelected ? '#b8c2bd' : isComment ? '#5a4730' : undefined
   const textY = isComment ? 25 : 8
   const textHeight = item.height - (isComment ? 33 : 16)
 
@@ -143,7 +143,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
             item.x,
             item.y + item.height / 2,
           ]}
-          stroke={isSelected ? '#b99455' : '#5a4730'}
+          stroke={isSelected ? '#b8c2bd' : '#5a4730'}
           strokeWidth={isSelected ? 1.4 : 1}
           opacity={0.85}
           listening={false}
@@ -203,7 +203,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               y={7}
               width={6}
               height={6}
-              fill={isAttachedComment ? '#b99455' : '#505050'}
+              fill={isAttachedComment ? '#b8c2bd' : '#505050'}
               opacity={item.opacity}
               cornerRadius={3}
             />
@@ -213,7 +213,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               width={item.width - 28}
               height={12}
               text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
-              fill="#b99455"
+              fill="#b8c2bd"
               fontSize={8}
               fontFamily="var(--font-mono)"
               wrap="none"

@@ -6,6 +6,9 @@ import type { KonvaEventObject } from 'konva/lib/Node'
 // It does set window.gifler itself, so we use a side-effect import + window access.
 import 'gifler'
 import type { CanvasItem } from '../../../types'
+import { useAssetMetadata } from '../../assets/assetMetadata'
+import { preferThumbnail } from '../../assets/previewPolicy'
+import { ensureThumbnail, generateGifFirstFrameThumbnail } from '../../assets/thumbnailPipeline'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
@@ -14,6 +17,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { useStableImage } from './useStableImage'
 
 type GiflerFn = (src: string) => {
   frames(canvas: HTMLCanvasElement, fn: (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => void): void
@@ -30,11 +34,16 @@ export function GifItem({ item }: Props): React.ReactElement | null {
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number; rotation: number } | null>(null)
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const scale = useCanvasStore((s) => s.viewport().scale)
+  const meta = useAssetMetadata(item.src)
+  const useThumb = preferThumbnail(item.width * scale, item.height * scale, isSelected)
+  const thumbImage = useStableImage(useThumb && meta?.thumbnailPath ? pathToUrl(meta.thumbnailPath) : '')
   const setSelection = useCanvasStore((s) => s.setSelection)
   const updateItem = useCanvasStore((s) => s.updateItem)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const displayImage = useThumb && meta?.thumbnailPath && thumbImage ? thumbImage : canvasRef.current
 
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
@@ -45,6 +54,11 @@ export function GifItem({ item }: Props): React.ReactElement | null {
 
   useEffect(() => {
     if (!item.src) return
+    void ensureThumbnail(item.src, generateGifFirstFrameThumbnail)
+  }, [item.src])
+
+  useEffect(() => {
+    if (!item.src || (useThumb && meta?.thumbnailPath)) return
     let awake = true
     const anim = getGifler()(pathToUrl(item.src))
     anim.frames(canvasRef.current, (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => {
@@ -58,7 +72,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
       awake = false
       anim.stop?.()
     }
-  }, [item.src])
+  }, [item.src, meta?.thumbnailPath, useThumb])
 
   const handleTransformStart = () => {
     transformStart.current = {
@@ -94,14 +108,14 @@ export function GifItem({ item }: Props): React.ReactElement | null {
     <>
       <KonvaImage
         ref={imageRef}
-        image={canvasRef.current}
+        image={displayImage}
         x={item.x}
         y={item.y}
         width={item.width}
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity}
-        stroke={isSelected ? '#b99455' : undefined}
+        stroke={isSelected ? '#b8c2bd' : undefined}
         strokeWidth={isSelected ? 2 : 0}
         shadowEnabled={isSelected}
         shadowColor="rgba(185,148,85,0.7)"

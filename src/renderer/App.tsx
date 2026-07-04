@@ -7,6 +7,8 @@ let pasteOffset = 0
 import { CanvasStage } from './canvas/CanvasStage'
 import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
+import { ShellFrame } from './ui/shell/ShellFrame'
+import { shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
 import { Minimap } from './ui/Minimap'
@@ -38,11 +40,21 @@ import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
+import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 type MovePatch = { id: string; x: number; y: number }
+
+function itemEffectSource(items: CanvasItem[]): { x: number; y: number } | null {
+  if (items.length === 0) return null
+  const minX = Math.min(...items.map((item) => item.x))
+  const minY = Math.min(...items.map((item) => item.y))
+  const maxX = Math.max(...items.map((item) => item.x + item.width))
+  const maxY = Math.max(...items.map((item) => item.y + item.height))
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+}
 
 function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
   const moves = Array.isArray(patch) ? patch : [patch]
@@ -60,7 +72,7 @@ function fitActiveBoard(fullWidth = false): void {
   const minY = Math.min(...allItems.map((i) => i.y))
   const maxX = Math.max(...allItems.map((i) => i.x + i.width))
   const maxY = Math.max(...allItems.map((i) => i.y + i.height))
-  const sidebarW = fullWidth ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const sidebarW = fullWidth ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
   const canvasW = window.innerWidth - sidebarW
   const pad = fullWidth ? 80 : 60
   const scale = Math.min(
@@ -194,6 +206,19 @@ export default function App(): React.ReactElement {
       const zoomFactor = values['ui.zoomFactor']
       if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
     }).catch(() => {})
+
+    installMediaPreviewProfileHarness({
+      window,
+      isDev: import.meta.env.DEV,
+      ipc,
+      setProfileBoard: (board) => {
+        useCanvasStore.setState((state) => ({
+          boards: [...state.boards.filter((existing) => existing.id !== board.id), board],
+          activeBoardId: board.id,
+          selectedIds: [],
+        }))
+      },
+    })
   }, [])
 
   useEffect(() => {
@@ -284,7 +309,7 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
-      triggerEffect('crumble')
+      triggerEffect('crumble', undefined, itemEffectSource(toDelete))
       engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
     })
 
@@ -340,7 +365,7 @@ export default function App(): React.ReactElement {
       const viewport = canvas.viewport()
       const sidebarW = useUIStore.getState().presentationMode
         ? 0
-        : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+        : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
       const fallbackPoint = {
         x: (window.innerWidth - sidebarW) / 2 / viewport.scale - viewport.x / viewport.scale - 110,
         y: window.innerHeight / 2 / viewport.scale - viewport.y / viewport.scale - 48,
@@ -355,7 +380,7 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, comment)
       canvas.setSelection([comment.id])
       useUIStore.getState().setEditingItemId(comment.id)
-      triggerEffect('banner-raise')
+      triggerEffect('banner-raise', undefined, { x: comment.x + comment.width / 2, y: comment.y + comment.height / 2 })
     })
 
     // Zoom
@@ -749,9 +774,7 @@ export default function App(): React.ReactElement {
     triggerEffect('fracture')
   }
 
-  return (
-    <div className="app-root" style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--bg-canvas)' }}>
-      {recoveryData && (
+  const recoveryBanner = recoveryData && (
         <div style={{
           position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)',
           zIndex: 'var(--z-modal)' as unknown as number,
@@ -781,26 +804,9 @@ export default function App(): React.ReactElement {
             fontFamily: 'var(--font-body)', fontSize: 12,
           }}>Discard</button>
         </div>
-      )}
-      {!presentationMode && <BoardTabs />}
-      {!presentationMode && <BoardNavigator />}
-      {!presentationMode && <AssetLibrary />}
-      {!presentationMode && <Toolbar />}
-      {/* Canvas viewport — inset from the right sidebar */}
-      <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: presentationMode ? 0 : 'var(--sidebar-right-w)' }}>
-        <CanvasStage />
-      </div>
-      {!presentationMode && <RightSidebar />}
-      {!presentationMode && <Minimap />}
-      {!presentationMode && <RecordingBar />}
-      {!presentationMode && <TagSearch />}
-      {!presentationMode && <PresentationSequence />}
-      {!presentationMode && <ContextMenu />}
-      {!presentationMode && <ItemProperties />}
-      {!presentationMode && <ConnectionProperties />}
-      {!presentationMode && <KeybindSettings />}
-      {editingItem && !editingItem.locked && !presentationMode && <TextEditOverlay key={editingItem.id} item={editingItem} />}
-      {presentationMode && (
+  )
+
+  const presentationOverlay = presentationMode && (
         <div style={{
           position: 'absolute',
           top: 12,
@@ -871,9 +877,46 @@ export default function App(): React.ReactElement {
             Esc
           </button>
         </div>
+  )
+
+  return (
+    <ShellFrame
+      presentationMode={presentationMode}
+      topBar={(
+        <>
+          {recoveryBanner}
+          <BoardTabs />
+          <BoardNavigator />
+          <AssetLibrary />
+        </>
       )}
-      <YouSavedBanner />
-      <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
-    </div>
+      commandSpine={<Toolbar />}
+      canvas={(
+        <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode) }}>
+          <CanvasStage />
+        </div>
+      )}
+      archiveRail={<RightSidebar />}
+      contextDeck={(
+        <>
+          <Minimap />
+          <RecordingBar />
+          <TagSearch />
+          <PresentationSequence />
+          <ContextMenu />
+          <ItemProperties />
+          <ConnectionProperties />
+          <KeybindSettings />
+          {editingItem && !editingItem.locked && <TextEditOverlay key={editingItem.id} item={editingItem} />}
+        </>
+      )}
+      presentationOverlay={presentationOverlay}
+      globalOverlays={(
+        <>
+          <YouSavedBanner />
+          <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
+        </>
+      )}
+    />
   )
 }

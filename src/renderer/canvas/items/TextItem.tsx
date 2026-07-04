@@ -120,7 +120,7 @@ export function TextItem({ item }: Props): React.ReactElement {
           x={item.x - 4} y={item.y - 4}
           width={item.width + 8} height={item.height + 8}
           fill={undefined}
-          stroke="#b99455"
+          stroke="#b8c2bd"
           strokeWidth={1.5}
           shadowEnabled
           shadowColor="rgba(185,148,85,0.7)"

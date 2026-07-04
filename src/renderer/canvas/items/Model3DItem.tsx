@@ -5,8 +5,12 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import type { CanvasItem } from '../../../types'
+import { useAssetMetadata } from '../../assets/assetMetadata'
+import { preferThumbnail } from '../../assets/previewPolicy'
+import { ensureThumbnail, generateModel3DPreviewThumbnail } from '../../assets/thumbnailPipeline'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { pathToUrl } from '../../utils/pathToUrl'
 import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { DOMItem } from './DOMItem'
 import { MediaPlaceholder } from './MediaPlaceholder'
@@ -15,12 +19,21 @@ type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function Model3DItem({ item, domOnly = false }: Props): React.ReactElement {
   const setSelection = useCanvasStore((s) => s.setSelection)
+  const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const scale = useCanvasStore((s) => s.viewport().scale)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const toolMode = useUIStore((s) => s.toolMode)
   const mountRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const [loadError, setLoadError] = React.useState<string | null>(null)
+  const meta = useAssetMetadata(item.src)
+  const usePreview = preferThumbnail(item.width * scale, item.height * scale, isSelected) && !!meta?.thumbnailPath
+
+  useEffect(() => {
+    if (!item.src) return
+    void ensureThumbnail(item.src, generateModel3DPreviewThumbnail)
+  }, [item.src])
 
   const handleDomClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
@@ -54,7 +67,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
   }
 
   useEffect(() => {
-    if (!mountRef.current) return
+    if (!mountRef.current || usePreview) return
     const w = mountRef.current.clientWidth || item.width
     const h = mountRef.current.clientHeight || item.height
 
@@ -144,7 +157,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
       cameraRef.current = null
       if (renderer.domElement.parentElement) renderer.domElement.parentElement.removeChild(renderer.domElement)
     }
-  }, [item.src])
+  }, [item.src, usePreview])
 
   useLayoutEffect(() => {
     const mount = mountRef.current
@@ -174,8 +187,18 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
         editableFrame
         onClick={handleDomClick}
       >
-        <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
-        <MediaPlaceholder item={item} label={loadError} />
+        {usePreview ? (
+          <img
+            src={pathToUrl(meta?.thumbnailPath ?? '')}
+            alt="3D preview"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#070808', display: 'block' }}
+          />
+        ) : (
+          <>
+            <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+            <MediaPlaceholder item={item} label={loadError} />
+          </>
+        )}
       </DOMItem>
     </>
   )

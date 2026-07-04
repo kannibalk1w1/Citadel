@@ -329,15 +329,15 @@ function StatusLine(): React.ReactElement {
   const fmtTime = (ts: number | null) => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '6px 0', borderTop: '1px solid var(--border)' }}>
+    <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {[
         { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
         { label: 'State', val: needsSave ? 'unsaved' : 'saved', color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
         { label: 'Saved', val: fmtTime(saveActivity.lastManualSaveAt), color: 'var(--text-muted)' },
         { label: 'Autosave', val: fmtTime(saveActivity.lastRecoverySaveAt), color: 'var(--text-muted)' },
         { label: 'Snap', val: snapToGrid ? 'on' : 'off',  color: snapToGrid ? 'var(--accent)' : 'var(--text-muted)' },
-        { label: 'Undo', val: canUndo ? 'ready' : '—',    color: canUndo ? 'var(--text-secondary)' : 'var(--text-muted)' },
-        { label: 'Redo', val: canRedo ? 'ready' : '—',    color: canRedo ? 'var(--text-secondary)' : 'var(--text-muted)' },
+        { label: 'Undo', val: canUndo ? 'ready' : '-',    color: canUndo ? 'var(--text-secondary)' : 'var(--text-muted)' },
+        { label: 'Redo', val: canRedo ? 'ready' : '-',    color: canRedo ? 'var(--text-secondary)' : 'var(--text-muted)' },
         ...(isRecording ? [{ label: 'Rec', val: 'live', color: 'var(--accent-danger)' }] : []),
       ].map(({ label, val, color }) => (
         <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -371,8 +371,8 @@ function RecentProjects(): React.ReactElement | null {
   if (projects.length === 0) return null
 
   return (
-    <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-      <div style={{ ...statLabel, marginBottom: 5 }}>Recent</div>
+    <div className="citadel-sidebar-section">
+      <div className="citadel-sidebar-section-title">Recent</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {projects.map((project) => (
           <button
@@ -458,18 +458,33 @@ export function RightSidebar(): React.ReactElement {
       <div className="citadel-sidebar-rule" style={{ width: '100%', height: 1, background: 'var(--border)' }} />
 
       {/* Quick actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
-        <QuickBtn label="Import"     title="Open project file"              onClick={() => resolver.dispatch(Actions.OPEN)} />
-        <QuickBtn label="Boards"     title="Board navigator"                onClick={() => useUIStore.getState().togglePanel('boardNavigator')} />
-        <QuickBtn label="Assets"     title="Asset library"                  onClick={() => useUIStore.getState().togglePanel('assetLibrary')} />
-        <QuickBtn label="New board"  title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
-        <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
-        <QuickBtn label="Comment"    title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
-        <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
-        <QuickBtn label="Sequence"   title="Presentation sequence"          onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
-        <QuickBtn label="Export PDF" title="Export canvas as PDF"           onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
-        <QuickBtn label="Export PNG" title="Export canvas as image"         onClick={() => resolver.dispatch(Actions.EXPORT_IMAGE)} />
-        <QuickBtn label="Export ZIP" title="Bundle project as .citadelz"    onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
+      <div className="citadel-sidebar-section">
+        <div className="citadel-sidebar-section-title">Archive</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+          <QuickBtn label="Import" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
+          <QuickBtn label="Boards" title="Board navigator" onClick={() => useUIStore.getState().togglePanel('boardNavigator')} />
+          <QuickBtn label="Assets" title="Asset library" onClick={() => useUIStore.getState().togglePanel('assetLibrary')} />
+          <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
+          <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+        </div>
+      </div>
+
+      <div className="citadel-sidebar-section">
+        <div className="citadel-sidebar-section-title">Mark</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+          <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
+          <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
+          <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
+        </div>
+      </div>
+
+      <div className="citadel-sidebar-section">
+        <div className="citadel-sidebar-section-title">Export</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+          <QuickBtn label="Export PDF" title="Export canvas as PDF" onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
+          <QuickBtn label="Export PNG" title="Export canvas as image" onClick={() => resolver.dispatch(Actions.EXPORT_IMAGE)} />
+          <QuickBtn label="Export ZIP" title="Bundle project as .citadelz" onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
+        </div>
       </div>
 
       <RecentProjects />
@@ -484,6 +499,7 @@ export function RightSidebar(): React.ReactElement {
 
       {/* Keybinds link */}
       <button
+        className="citadel-keybind-link"
         onClick={() => resolver.dispatch(Actions.PANEL_KEYBINDS)}
         title="Keybind settings"
         style={{

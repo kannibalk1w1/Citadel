@@ -4,24 +4,28 @@
 
 :root {
   /* Backgrounds */
-  --bg-canvas:  #070808;
-  --bg-ui:      #0a0a09;
-  --bg-panel:   #11100e;
-  --bg-hover:   #191610;
+  --bg-canvas:  #070909;
+  --bg-ui:      #0a0d0d;
+  --bg-panel:   #101414;
+  --bg-hover:   #18201f;
+  --bg-elevated: #151b1a;
+  --bg-sunken:  #050707;
 
   /* Text */
-  --text-primary:   #e0d6c7;
-  --text-secondary: #b7aa97;
-  --text-muted:     #756858;
-  --text-accent:    #bd9652;
+  --text-primary:   #e3e8e4;
+  --text-secondary: #b2bdb8;
+  --text-muted:     #74817c;
+  --text-accent:    #c8d2ce;
 
   /* Accent */
-  --accent:        #bd9652;
-  --accent-danger: #6f1717;
+  --accent:        #b8c2bd;
+  --accent-soft:   rgba(184, 194, 189, 0.16);
+  --accent-danger: #7e1d1d;
 
   /* Borders */
-  --border:       #3a3020;
-  --border-muted: #211d17;
+  --border:       #31403c;
+  --border-muted: #1d2926;
+  --border-bright: rgba(227, 232, 228, 0.09);
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;
@@ -34,7 +38,10 @@
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Layout */
-  --sidebar-right-w: 164px;
+  --archive-rail-w: 228px;
+  --sidebar-right-w: 228px;
+  --command-spine-w: 54px;
+  --topbar-h: 40px;
 
   /* Z-index scale */
   --z-ui:     10;
@@ -42,11 +49,13 @@
   --z-modal:  100;
 
   /* Shadows */
-  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.62);
-  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.78);
+  --shadow-md: 0 12px 32px rgba(3, 5, 5, 0.66), 0 1px 0 rgba(184, 194, 189, 0.08);
+  --shadow-lg: 0 22px 58px rgba(2, 4, 4, 0.8), 0 1px 0 rgba(227, 232, 228, 0.06);
+  --shadow-inset: inset 0 1px 0 rgba(227, 232, 228, 0.045), inset 0 -1px 0 rgba(0, 0, 0, 0.46);
 
   /* Motion */
-  --transition-fast: 80ms ease;
+  --transition-fast: 140ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  --transition-med: 220ms cubic-bezier(0.22, 0.8, 0.2, 1);
 }
 
 /* ── Global Reset ──────────────────────────────────────────────────────────── */
@@ -68,6 +77,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 #root {
@@ -78,6 +88,37 @@ body {
 a {
   color: var(--text-accent);
   text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button:disabled,
+button[disabled] {
+  filter: saturate(0.72);
+}
+
+::selection {
+  background: rgba(184, 194, 189, 0.26);
+  color: var(--text-primary);
 }
 
 /* ── Scrollbars (Chromium / Electron) ─────────────────────────────────────── */
@@ -98,4 +139,15 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -18,6 +18,8 @@ import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
 import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
+import { CanvasEffectLayer } from './effects/CanvasEffectLayer'
+import { useCanvasEffectStore } from './effects/canvasEffectStore'
 import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
@@ -48,6 +50,7 @@ export function CanvasStage(): React.ReactElement {
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
+  const setLastCanvasPointer = useCanvasEffectStore((s) => s.setLastCanvasPointer)
 
   const CURSOR: Record<string, string> = dragonCursorEnabled
     ? {
@@ -149,7 +152,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'swatch' as const,
         x: cx - 150, y: cy - 40, width: 300, height: 80,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { colors: ['#070808', '#b99455', '#6f1717', '#d8d2c8', '#3f4a46'] },
+        tags: [], meta: { colors: ['#070909', '#b8c2bd', '#6f1717', '#d9e0dc', '#3f4a46'] },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
@@ -191,9 +194,17 @@ export function CanvasStage(): React.ReactElement {
 
   // Connect tool rubber-band — track cursor
   const handleMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
+    const stage = stageRef.current
+    const pointer = stage?.getPointerPosition()
+    if (pointer) {
+      setLastCanvasPointer({
+        x: (pointer.x - viewport.x) / viewport.scale,
+        y: (pointer.y - viewport.y) / viewport.scale,
+      })
+    }
     if (toolMode !== 'connect' || !connectFromId) { setCursorPos(null); return }
     setCursorPos({ x: e.evt.clientX, y: e.evt.clientY })
-  }, [toolMode, connectFromId])
+  }, [connectFromId, setLastCanvasPointer, toolMode, viewport])
 
   // ── Middle-mouse pan ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -235,9 +246,9 @@ export function CanvasStage(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // empty deps intentional: handlers read store imperatively via getState() to avoid stale closures
 
-  // Sidebar is 152px wide — canvas area excludes it
+  // Archive rail width is reserved from the canvas work area.
   const SIDEBAR_W = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164'
+    getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228'
   )
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
@@ -272,6 +283,7 @@ export function CanvasStage(): React.ReactElement {
       onDrop={handleDrop}
     >
       <CanvasBackground />
+      <CanvasEffectLayer viewport={viewport} width={width} height={height} />
       <Stage
         ref={stageRef}
         width={width}

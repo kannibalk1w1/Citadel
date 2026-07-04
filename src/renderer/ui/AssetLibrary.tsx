@@ -22,7 +22,7 @@ function assetItemFromEntry(entry: AssetLibraryEntry): CanvasItem | undefined {
 function focusAsset(entry: AssetLibraryEntry): void {
   const item = assetItemFromEntry(entry)
   if (!item) return
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
   const canvasW = window.innerWidth - sidebarW
   const canvas = useCanvasStore.getState()
   const viewport = canvas.viewport()
@@ -45,7 +45,7 @@ function placeAsset(entry: AssetLibraryEntry): void {
   const { activeBoardId, addItem, setSelection, viewport } = useCanvasStore.getState()
   if (!source || !activeBoardId) return
   const vp = viewport()
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '164')
+  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
   const canvasW = window.innerWidth - sidebarW
   const cx = (canvasW / 2 - vp.x) / vp.scale
   const cy = (window.innerHeight / 2 - vp.y) / vp.scale

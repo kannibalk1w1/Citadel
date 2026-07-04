@@ -14,7 +14,7 @@ const MAP_H = 112
 const SIDEBAR_W = 164
 
 function itemColour(type: string, selected: boolean, meta?: Record<string, unknown>): string {
-  if (selected) return '#b99455'
+  if (selected) return '#b8c2bd'
   switch (type) {
     case 'image':
     case 'gif':        return '#4a5260'
