@@ -8,6 +8,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { canvasToScreen } from '../../../types'
 import { chromeFrameStyle, connectedItemIds, frameVariant, frameVariantStyle, itemTypeBadge } from '../overlays/boardChromeViewModel'
+import { filenameInscription } from '../../assets/filenameLabel'
 
 type Props = {
   item: CanvasItem
@@ -55,6 +56,8 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const frame = chromeFrameStyle({ selected: isSelected || isConnectSource, locked: item.locked })
   const variant = frameVariantStyle(frameVariant(item))
   const badge = itemTypeBadge(item)
+  const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, viewport.scale)
 
   useLayoutEffect(() => {
     if (!ref.current) return
@@ -177,6 +180,26 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       >
         {badge}
       </div>
+      {filenameLabel && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: '100%',
+            marginTop: 4,
+            maxWidth: '100%',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            color: '#8a7a5c',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            pointerEvents: 'none',
+          }}
+        >
+          {filenameLabel}
+        </div>
+      )}
       <div style={{ position: 'absolute', inset: -3, pointerEvents: 'none', opacity: variant.lineOpacity }}>
         {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const).map((corner) => {
           const horizontal: React.CSSProperties = {
