@@ -58,6 +58,9 @@ Implemented performance decisions:
 - Video relics now request poster-frame thumbnails; small unselected videos render cached poster images instead of mounting a `<video>` element and its frame controls.
 - 3D relics now request static preview captures; small unselected models render cached preview images instead of creating an active Three.js renderer loop.
 - Text and sticky relics silhouette at far zoom: below a 5px on-screen font size (`textDetailPolicy.preferTextSilhouette`), unselected/unedited text relics render a dim rect and stickies skip glyph layout while keeping their chrome. Selection and editing always restore full text.
+- Chamber identity lives in `board.meta` and is normalized by `resolveChamberIdentity` (`src/renderer/canvas/chamberIdentity.ts`): mood preset (six ids; the original four are persisted in real projects and must not be renamed), accent override, ambience kind/intensity, vignette, glow, and optional floor-texture override. Identity edits push `BOARD_STYLE` events, so they undo/redo/record like any canvas mutation.
+- Chamber ambience is a fixed-budget DOM/CSS layer (`ChamberAmbience`, ≤14 motes or 2 fog bands plus static vignette/glow gradients) mounted between the canvas floor and the Konva stage. It never touches relics or viewport slices; reduced motion degrades it to a single static wash. Profiled at zero measurable cost on the 1,003-relic fixture (2026-07-04 ambience profile).
+- Chamber accent tones are exposed as `--chamber-accent`, `--chamber-accent-dim`, `--chamber-accent-glow` CSS variables scoped on the canvas stage container; new canvas-side ornament colours should consume these rather than hardcoding.
 
 Profiling notes:
 
@@ -67,10 +70,11 @@ Profiling notes:
 - Media preview gate profile: `docs/citadel-large-chamber-profile-2026-06-15-media-previews.md`.
 - Real-media sweep attempt: `docs/citadel-large-chamber-profile-2026-06-30-real-media-sweep-attempt.md`.
 - Real-media preview sweep (completed): `docs/citadel-large-chamber-profile-2026-07-04-real-media.md`.
+- Chamber ambience profile: `docs/citadel-large-chamber-profile-2026-07-04-ambience.md`.
 
 Active next-step queue:
 
-1. Phase 5 (Atmospheric Chambers) is next and is spec-first: draft the design spec and get user approval before any implementation. Phase 3 closed 2026-07-04: the real-media preview sweep completed (worker gate not met) and far-zoom text silhouettes landed.
+1. Phase 5 (Atmospheric Chambers) first slice landed 2026-07-04 (identity model, ambience/lighting layer, per-chamber floor texture, Chamber Rite controls, ambience profile clean). Candidate follow-ups: feature-gap scouting doc, chamber ambience variants only with a fixed budget + profile check.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
@@ -301,12 +305,14 @@ Suggested meanings:
 
 ### Phase 5: Atmospheric Chambers
 
+Status: first slice complete (2026-07-04). Spec: `docs/superpowers/specs/2026-07-04-atmospheric-chambers-design.md`.
+
 Goals:
 
-- evolve board moods into chamber identity
-- add optional chamber ambience
-- add lighting and texture controls
-- allow chamber-specific sigil palettes while keeping the core dark fantasy theme
+- evolve board moods into chamber identity — done (`resolveChamberIdentity` over `board.meta`, six mood presets, `BOARD_STYLE` undo)
+- add optional chamber ambience — done (motes/fog, fixed budget, reduced-motion static wash, profiled clean)
+- add lighting and texture controls — done (vignette + glow dials, per-chamber floor texture override; Chamber Rite section in the board navigator)
+- allow chamber-specific sigil palettes while keeping the core dark fantasy theme — done for accents (`--chamber-*` variables); richer per-chamber sigil palettes remain future work
 
 ## Long-Term Signature Features
 
