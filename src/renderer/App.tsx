@@ -22,6 +22,8 @@ import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
 import { TextEditOverlay } from './canvas/TextEditOverlay'
 import { YouSavedBanner } from './ui/YouSavedBanner'
+import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
+import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
 import { engine, lastMouse } from './arcade/HyperTypeEngine'
 import { getCaretScreenPos } from './arcade/caretPos'
@@ -492,12 +494,16 @@ export default function App(): React.ReactElement {
       const id = canvas.addBoard(`Board ${canvas.boards.length + 1}`)
       canvas.setActiveBoard(id)
       useHistoryStore.getState().markDirty()
+      inscribe('Chamber raised')
     })
     resolver.register(Actions.BOARD_DUPLICATE, () => {
       const canvas = useCanvasStore.getState()
       if (!canvas.activeBoardId) return
       const id = canvas.duplicateBoard(canvas.activeBoardId)
-      if (id) useHistoryStore.getState().markDirty()
+      if (id) {
+        useHistoryStore.getState().markDirty()
+        inscribe('Chamber cloned')
+      }
     })
     resolver.register(Actions.BOARD_NEXT, () => {
       const { boards, activeBoardId, setActiveBoard } = useCanvasStore.getState()
@@ -530,6 +536,7 @@ export default function App(): React.ReactElement {
       removeBoard(activeBoardId)
       useHistoryStore.getState().markDirty()
       if (next.length > 0) setActiveBoard(next[Math.min(idx, next.length - 1)].id)
+      inscribe('Chamber sealed away')
     })
     resolver.register(Actions.RECORD_PLAY, () => {
       // RecordingBar manages its own playback UI — no-op here
@@ -541,9 +548,9 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
 
     // Exports
-    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().catch(console.error) })
-    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().catch(console.error) })
-    resolver.register(Actions.EXPORT_ZIP,   () => { exportToZip().catch(console.error) })
+    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Export inscribed (image)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_ZIP,   () => { exportToZip().then(() => inscribe('Archive bundled (.citadelz)')).catch(console.error) })
 
     // File
     resolver.register(Actions.SAVE, () => {
@@ -551,6 +558,7 @@ export default function App(): React.ReactElement {
         if (!ok) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+        else inscribe('Archive sealed')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
@@ -558,10 +566,11 @@ export default function App(): React.ReactElement {
         if (!p) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+        else inscribe('Archive sealed')
       })
     })
-    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) triggerEffect('lightning-in') }) })
-    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) triggerEffect('rise-from-fog') })
+    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Archive opened') } }) })
+    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New archive founded') } })
 
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {
@@ -677,9 +686,11 @@ export default function App(): React.ReactElement {
         if (session) saveRecording(session)
         clearEffect('eye-open')
         trigger('eye-close')
+        inscribe('The eye closes')
       } else {
         startRecording(`Recording ${new Date().toLocaleTimeString()}`)
         trigger('eye-open')
+        inscribe('The eye opens')
       }
     })
   }, [])
@@ -937,6 +948,7 @@ export default function App(): React.ReactElement {
       globalOverlays={(
         <>
           <YouSavedBanner />
+          <InscriptionToasts />
           <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
         </>
       )}
