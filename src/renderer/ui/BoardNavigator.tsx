@@ -6,13 +6,55 @@ import { useUIStore } from '../store/uiStore'
 import { summarizeBoard } from './boardNavigatorModel'
 import { boardTemplates, createBoardTemplate, type BoardTemplateId } from './boardTemplates'
 import { boardMoodAccent, boardMoodId } from './boardMood'
+import { useMascotStore } from '../store/mascotStore'
+import {
+  CHAMBER_MOOD_PRESETS,
+  chamberIdentityEvent,
+  resolveChamberIdentity,
+  type ChamberIdentityPatch,
+  type ChamberMoodPreset,
+} from '../canvas/chamberIdentity'
 
-const BOARD_MOOD_PRESETS = [
-  { id: 'gothic', label: 'Gothic', accent: '#bd9652' },
-  { id: 'ember', label: 'Ember', accent: '#8a3d3d' },
-  { id: 'verdant', label: 'Verdant', accent: '#6f8a5f' },
-  { id: 'frost', label: 'Frost', accent: '#65798a' },
-] as const
+function RiteLabel({ text }: { text: string }): React.ReactElement {
+  return (
+    <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      {text}
+    </span>
+  )
+}
+
+// Commits on release (not every drag tick) so one adjustment = one undo step.
+function RiteSlider({
+  value,
+  disabled,
+  onCommit,
+}: {
+  value: number
+  disabled?: boolean
+  onCommit: (value: number) => void
+}): React.ReactElement {
+  const [draft, setDraft] = React.useState<number | null>(null)
+  return (
+    <input
+      type="range"
+      min={0}
+      max={1}
+      step={0.05}
+      disabled={disabled}
+      value={draft ?? value}
+      onChange={(e) => setDraft(Number(e.target.value))}
+      onMouseUp={() => {
+        if (draft !== null && draft !== value) onCommit(draft)
+        setDraft(null)
+      }}
+      onKeyUp={() => {
+        if (draft !== null && draft !== value) onCommit(draft)
+        setDraft(null)
+      }}
+      style={{ width: '100%', accentColor: 'var(--accent)', opacity: disabled ? 0.35 : 1 }}
+    />
+  )
+}
 
 function Stat({ label, value }: { label: string; value: number }): React.ReactElement {
   return (
@@ -84,6 +126,9 @@ export function BoardNavigator(): React.ReactElement | null {
 
   if (!isOpen) return null
 
+  const activeChamber = boards.find((b) => b.id === activeBoardId) ?? null
+  const activeIdentity = activeChamber ? resolveChamberIdentity(activeChamber) : resolveChamberIdentity({ id: '', name: '', items: [], connections: [], viewport: { x: 0, y: 0, scale: 1 } })
+
   const startRename = (id: string, name: string) => {
     setEditingId(id)
     setDraftName(name)
@@ -124,9 +169,27 @@ export function BoardNavigator(): React.ReactElement | null {
     markDirty()
   }
 
-  const setBoardMood = (id: string, preset: (typeof BOARD_MOOD_PRESETS)[number]) => {
-    updateBoardMeta(id, { mood: preset.id, accent: preset.accent })
+  const applyChamberPatch = (id: string, patch: ChamberIdentityPatch) => {
+    const board = boards.find((b) => b.id === id)
+    if (!board) return
+    const { before, after } = chamberIdentityEvent(board, patch)
+    useHistoryStore.getState().push('BOARD_STYLE', id, before, after)
+    updateBoardMeta(id, after)
     markDirty()
+  }
+
+  const setBoardMood = (id: string, preset: ChamberMoodPreset) => {
+    applyChamberPatch(id, { mood: preset.id, accent: preset.accent })
+    useMascotStore.getState().triggerEffect('rune-seal')
+  }
+
+  const pickChamberTexture = async (id: string) => {
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }).ipc
+    const result = (await ipc.invoke('file:openDialog', {
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+    })) as { path?: string | null } | null
+    if (!result?.path) return
+    applyChamberPatch(id, { texture: { assetPath: result.path, opacity: 0.62, scale: 1, repeat: true } })
   }
 
   return (
@@ -183,6 +246,95 @@ export function BoardNavigator(): React.ReactElement | null {
           </button>
         ))}
       </div>
+
+      {activeChamber && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, border: '1px solid var(--border)', borderRadius: 5, padding: 8 }}>
+          <div style={{ fontSize: 9, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Chamber Rite — {activeChamber.name}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'center' }}>
+            <RiteLabel text="Ambience" />
+            <select
+              value={activeIdentity.ambience}
+              onChange={(e) => applyChamberPatch(activeChamber.id, { ambience: e.target.value as 'none' | 'motes' | 'fog' })}
+              style={{
+                background: 'var(--bg-ui)',
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                padding: '2px 4px',
+              }}
+            >
+              <option value="none">Still</option>
+              <option value="motes">Motes</option>
+              <option value="fog">Fog</option>
+            </select>
+            <RiteLabel text="Presence" />
+            <RiteSlider
+              value={activeIdentity.ambienceIntensity}
+              disabled={activeIdentity.ambience === 'none'}
+              onCommit={(value) => applyChamberPatch(activeChamber.id, { ambienceIntensity: value })}
+            />
+            <RiteLabel text="Vignette" />
+            <RiteSlider
+              value={activeIdentity.vignette}
+              onCommit={(value) => applyChamberPatch(activeChamber.id, { vignette: value })}
+            />
+            <RiteLabel text="Glow" />
+            <RiteSlider
+              value={activeIdentity.glow}
+              onCommit={(value) => applyChamberPatch(activeChamber.id, { glow: value })}
+            />
+            <RiteLabel text="Floor" />
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                type="button"
+                title="Choose a floor texture for this chamber"
+                onClick={() => pickChamberTexture(activeChamber.id)}
+                style={{
+                  flex: 1,
+                  height: 20,
+                  background: 'var(--bg-ui)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 3,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {activeIdentity.texture ? activeIdentity.texture.assetPath.split(/[\\/]/).pop() : 'Inherit archive floor'}
+              </button>
+              {activeIdentity.texture && (
+                <button
+                  type="button"
+                  title="Return to the archive floor"
+                  onClick={() => applyChamberPatch(activeChamber.id, { texture: null })}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    background: 'var(--bg-ui)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 3,
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    padding: 0,
+                  }}
+                >
+                  x
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', paddingRight: 2 }}>
         {boards.map((board) => {
@@ -242,8 +394,8 @@ export function BoardNavigator(): React.ReactElement | null {
                     {board.name}
                   </div>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
-                  {BOARD_MOOD_PRESETS.map((preset) => {
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3 }}>
+                  {CHAMBER_MOOD_PRESETS.map((preset) => {
                     const selected = mood === preset.id
                     return (
                       <button
