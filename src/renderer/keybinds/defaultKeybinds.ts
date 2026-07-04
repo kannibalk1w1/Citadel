@@ -45,6 +45,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.PRESENTATION_TOGGLE]: ['f5'],
   [Actions.PRESENTATION_NEXT]: ['arrowright', 'pagedown'],
   [Actions.PRESENTATION_PREV]: ['arrowleft', 'pageup'],
+  [Actions.QUILL_TOGGLE]:      ['q'],
 
   // File
   [Actions.SAVE]:           ['ctrl+s', 'meta+s'],

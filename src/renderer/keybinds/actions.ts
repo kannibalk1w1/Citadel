@@ -43,6 +43,7 @@ export const Actions = {
   PRESENTATION_TOGGLE: 'viewport:presentationToggle',
   PRESENTATION_NEXT: 'presentation:next',
   PRESENTATION_PREV: 'presentation:prev',
+  QUILL_TOGGLE: 'presentation:quillToggle',
 
   // ── File ──────────────────────────────────────────────────────────────────
   SAVE: 'file:save',
