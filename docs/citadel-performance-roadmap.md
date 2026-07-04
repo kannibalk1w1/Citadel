@@ -77,7 +77,7 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Phase 5 (Atmospheric Chambers) first slice landed 2026-07-04 (identity model, ambience/lighting layer, per-chamber floor texture, Chamber Rite controls, ambience profile clean). Candidate follow-ups: feature-gap scouting doc, chamber ambience variants only with a fixed budget + profile check.
+1. Phase 5 (Atmospheric Chambers) first slice landed 2026-07-04 (identity model, ambience/lighting layer, per-chamber floor texture, Chamber Rite controls, ambience profile clean). Candidate follow-ups: feature-gap scouting doc (moved 2026-07-04 to the Obsidian vault: Knowledge/Research/Citadel Feature Scouting 2026-07-04.md), chamber ambience variants only with a fixed budget + profile check.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
