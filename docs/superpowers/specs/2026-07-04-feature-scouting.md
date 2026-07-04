@@ -6,7 +6,7 @@ Ref Flow (installed at `%LOCALAPPDATA%/Programs/Ref Flow`, an Electron app) was 
 
 ## What Ref Flow Does Better Today (polish gaps)
 
-1. **Floating selection action bar.** Selecting an item shows six large buttons directly above it: duplicate, annotate/edit, export-this-item, flip, rotate-reset, delete. Citadel buries these in the right-click menu and properties panel. This is the single biggest interaction-polish gap — common actions are one click, zero travel.
+1. **Floating selection action bar.** Selecting an item shows six large buttons directly above it: duplicate, annotate/edit, export-this-item, flip, rotate-reset, delete. (Correction: Citadel already has `SelectedActionStrip` for single selection — the real gaps were multi-select support and flip, both closed the same day.)
 2. **Status toasts.** Quiet bottom-center confirmations ("New project created", "1 sub-items selected"). Citadel's mascot/canvas effects are atmospheric but non-verbal; nothing tells the user *what* just happened in words. A themed "inscription toast" (parchment text, fades like the effect palette) would close this without breaking theme.
 3. **Presentation Focus Mode with live pen annotation.** In presentation mode Ref Flow offers a pen (colour, size), stroke undo, clear-all, and hold-to-record voice — presenter tools drawn *over* the canvas. Citadel has presentation mode and voice memos but no freehand annotation layer at all.
 4. **Filename labels toggle.** One button shows/hides filenames under every media item. Citadel only reveals a filename when an asset is missing.

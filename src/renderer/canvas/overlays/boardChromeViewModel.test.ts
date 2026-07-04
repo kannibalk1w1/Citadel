@@ -10,6 +10,7 @@ import {
   itemTypeBadge,
   mediaPlaceholderLabel,
   selectedActionStripPosition,
+  selectedActionStripPositionForSelection,
   selectionBounds,
 } from './boardChromeViewModel'
 
@@ -84,6 +85,27 @@ describe('board chrome view model', () => {
       width: 332,
       height: 192,
     })
+  })
+
+  it('positions the strip above the union bounds for a multi-selection', () => {
+    const second = { ...baseItem, id: 'item-2', x: 20, y: 200, width: 50, height: 60 }
+    const position = selectedActionStripPositionForSelection([baseItem, second], viewport)
+    // gutter bounds {x:14, y:74, w:332}: centered above the union top
+    expect(position).toEqual({
+      left: (14 + 332 / 2) * 2 + 20,
+      top: 74 * 2 + 30 - 22,
+      transform: 'translateX(-50%)',
+    })
+  })
+
+  it('multi-selection strip position matches the single-item strip for one item', () => {
+    expect(selectedActionStripPositionForSelection([baseItem], viewport)).toEqual(
+      selectedActionStripPosition({ ...baseItem, x: baseItem.x - 6, y: baseItem.y - 6, width: baseItem.width + 12, height: baseItem.height + 12 }, viewport),
+    )
+  })
+
+  it('returns null strip position for an empty selection', () => {
+    expect(selectedActionStripPositionForSelection([], viewport)).toBeNull()
   })
 
   it('returns compact item badges for scan-friendly token labels', () => {

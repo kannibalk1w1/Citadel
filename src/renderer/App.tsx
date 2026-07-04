@@ -361,6 +361,25 @@ export default function App(): React.ReactElement {
       })
     })
 
+    const flipSelected = (axis: 'flipX' | 'flipY') => {
+      const canvas = useCanvasStore.getState()
+      const { activeBoardId } = canvas
+      if (!activeBoardId) return
+      const targets = canvas.selectedUnlockedItems()
+      if (targets.length === 0) return
+      targets.forEach((item) => {
+        const beforeMeta = { ...item.meta }
+        const afterMeta = { ...item.meta, [axis]: item.meta?.[axis] !== true }
+        useHistoryStore.getState().push('ITEM_STYLE', activeBoardId,
+          { id: item.id, meta: beforeMeta },
+          { id: item.id, meta: afterMeta },
+        )
+        useCanvasStore.getState().updateItem(activeBoardId, item.id, { meta: afterMeta })
+      })
+    }
+    resolver.register(Actions.FLIP_H, () => flipSelected('flipX'))
+    resolver.register(Actions.FLIP_V, () => flipSelected('flipY'))
+
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas

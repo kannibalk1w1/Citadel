@@ -15,6 +15,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { imageCoverCrop, imageFitRect, type ImageFitMode } from './imageFit'
+import { flipProps, itemFlip } from './flipTransform'
 
 type Props = { item: CanvasItem }
 
@@ -140,6 +141,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const fitRect = fitMode === 'fit' ? imageFitRect(imageWidth, imageHeight, item.width, item.height) : null
   const cropRect = fitMode === 'fill' ? imageCoverCrop(imageWidth, imageHeight, item.width, item.height) : undefined
   const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing relic'
+  const { flipX, flipY } = itemFlip(item.meta)
 
   return (
     <>
@@ -208,6 +210,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
             crop={cropRect}
             opacity={item.opacity}
             listening={false}
+            {...flipProps(flipX, flipY, fitRect?.width ?? item.width, fitRect?.height ?? item.height)}
           />
         )}
         <Rect
