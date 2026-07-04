@@ -109,6 +109,7 @@ export type CanvasEventType =
   | 'BOARD_ADD'
   | 'BOARD_DELETE'
   | 'BOARD_RENAME'
+  | 'BOARD_STYLE'
   | 'SELECTION_CHANGE'
   | 'COMPARE_MERGE'
 

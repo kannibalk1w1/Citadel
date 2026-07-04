@@ -268,6 +268,8 @@ export default function App(): React.ReactElement {
         const merged = event.after as CanvasItem
         canvas.removeItems(event.boardId, [merged.id])
         originals.forEach((i) => canvas.addItem(event.boardId, i))
+      } else if (event.type === 'BOARD_STYLE') {
+        canvas.updateBoardMeta(event.boardId, event.before as Record<string, unknown>)
       }
       triggerEffect('rewind-swirl')
       engine.burst('↩', lastMouse.x, lastMouse.y)
@@ -294,6 +296,8 @@ export default function App(): React.ReactElement {
         const merged = event.after as CanvasItem
         canvas.removeItems(event.boardId, originals.map((i) => i.id))
         canvas.addItem(event.boardId, merged)
+      } else if (event.type === 'BOARD_STYLE') {
+        canvas.updateBoardMeta(event.boardId, event.after as Record<string, unknown>)
       }
       triggerEffect('forward-surge')
       engine.burst('↪', lastMouse.x, lastMouse.y)
