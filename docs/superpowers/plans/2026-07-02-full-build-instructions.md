@@ -107,21 +107,21 @@ This is the blocking evidence item. It **requires an interactive dev session** �
 **Interfaces:**
 - Consumes: `window.__citadelMediaPreviewProfile.run(...)` from Task 1.
 
-- [ ] **Step 1: Prepare local media inputs** (temporary profiling inputs, not product fixtures — put them in a temp dir, not the repo)
+- [x] **Step 1: Prepare local media inputs** (temporary profiling inputs, not product fixtures — put them in a temp dir, not the repo)
 
 - GIF: copy `node_modules/gifler/site/assets/gif/nyan.gif`
 - 3D: a small `.obj` (a hand-written pyramid is fine) — see the 2026-06-30 attempt doc
 - Video: any small `.webm` or `.mp4`
 
-- [ ] **Step 2: Clear the preview cache for the cold pass**
+- [x] **Step 2: Clear the preview cache for the cold pass**
 
 In the app: Settings → maintenance → "Preview cache" clear, or delete `%APPDATA%/citadel/preview-cache` contents while the app is closed. Record the starting count/bytes (the `cache:previewStats` IPC surfaces this in Settings).
 
-- [ ] **Step 3: Launch dev with the profile trigger**
+- [x] **Step 3: Launch dev with the profile trigger**
 
 Run: `npm run dev`, then in the opened window navigate/append `#profile-media-preview` (or start a URL containing `profile=media-preview`). Open devtools.
 
-- [ ] **Step 4: Cold pass**
+- [x] **Step 4: Cold pass**
 
 ```js
 await window.__citadelMediaPreviewProfile.run({
@@ -134,19 +134,19 @@ await window.__citadelMediaPreviewProfile.run({
 
 Record from the result (`window.__citadelProfileResult`): `cacheBefore`, `cacheAfterCold`, `chamberLoad`, `mediaPreviewLoad`, `durationMs`, `notes`. Also note the Chamber Load sigil text, far-zoom pan responsiveness, and any renderer console preview-generation failures.
 
-- [ ] **Step 5: Warm pass**
+- [x] **Step 5: Warm pass**
 
 Re-run the same `run(...)` call without clearing the cache. Record `cacheAfterWarm`, `durationMs`, Chamber Load text.
 
-- [ ] **Step 6: Write the profile doc**
+- [x] **Step 6: Write the profile doc**
 
 Create `docs/citadel-large-chamber-profile-2026-07-XX-real-media.md` following the structure of `docs/citadel-large-chamber-profile-2026-06-15-media-previews.md`: purpose, method, cold-pass numbers, warm-pass numbers, interpretation, and an explicit worker-generation verdict (see Task 4 gate).
 
-- [ ] **Step 7: Update the roadmap**
+- [x] **Step 7: Update the roadmap**
 
 In `docs/citadel-performance-roadmap.md`: mark queue item 1 complete (replace it with the next queue head), add the new profile to "Profiling notes", and tick "real-media cold/warm cache profiling" off Phase 3 "Remaining".
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add docs/citadel-large-chamber-profile-2026-07-XX-real-media.md docs/citadel-performance-roadmap.md

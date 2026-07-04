@@ -65,10 +65,11 @@ Profiling notes:
 - Binding reveal profile: `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`.
 - Media preview gate profile: `docs/citadel-large-chamber-profile-2026-06-15-media-previews.md`.
 - Real-media sweep attempt: `docs/citadel-large-chamber-profile-2026-06-30-real-media-sweep-attempt.md`.
+- Real-media preview sweep (completed): `docs/citadel-large-chamber-profile-2026-07-04-real-media.md`.
 
 Active next-step queue:
 
-1. Run the dev-only real-media preview profiling harness in the app with local GIF, video, and 3D assets, then record wall-clock, cache, media-preview, and Chamber Load observations next to the fixture-level media preview profile. The 2026-06-30 unattended attempt verified tests, production build, direct app startup, fixture preparation, and added the harness, but Playwright Electron attach failed in this environment before Chamber Load readings could be captured.
+1. Add progressive text/label detail at far zoom (silhouette policy for text and sticky relics), the last Phase 3 remaining item besides the gated worker move. The real-media preview sweep completed 2026-07-04: cold generation of GIF/video/3D previews finished within a 4s window, warm hits were 0.3ms, and the worker-generation gate was judged not met.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
@@ -265,8 +266,8 @@ Goals:
 
 Remaining:
 
-- real-media cold/warm cache profiling with local GIF, video, and model files
-- move generation into a worker once volume justifies it
+- real-media cold/warm cache profiling — done 2026-07-04 (`docs/citadel-large-chamber-profile-2026-07-04-real-media.md`); worker gate judged not met
+- move generation into a worker once volume justifies it (gate not met as of the 2026-07-04 profile)
 - progressive text/label detail at far zoom
 
 Verification:
