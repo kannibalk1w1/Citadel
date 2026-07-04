@@ -1,6 +1,6 @@
 # Atmospheric Chambers Design
 
-Status: **draft — awaiting user approval. Do not implement until approved.**
+Status: approved 2026-07-04. Plan: `docs/superpowers/plans/2026-07-04-atmospheric-chambers.md`.
 
 ## Problem
 
