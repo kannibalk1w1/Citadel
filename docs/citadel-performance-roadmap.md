@@ -64,10 +64,11 @@ Profiling notes:
 - Binding endpoint profile: `docs/citadel-large-chamber-profile-2026-05-25-binding-endpoints.md`.
 - Binding reveal profile: `docs/citadel-large-chamber-profile-2026-05-27-binding-reveal.md`.
 - Media preview gate profile: `docs/citadel-large-chamber-profile-2026-06-15-media-previews.md`.
+- Real-media sweep attempt: `docs/citadel-large-chamber-profile-2026-06-30-real-media-sweep-attempt.md`.
 
 Active next-step queue:
 
-1. Run a real-media cold/warm preview-cache sweep in the app with local GIF, video, and 3D assets, then record wall-clock and Chamber Load observations next to the fixture-level media preview profile.
+1. Run the dev-only real-media preview profiling harness in the app with local GIF, video, and 3D assets, then record wall-clock, cache, media-preview, and Chamber Load observations next to the fixture-level media preview profile. The 2026-06-30 unattended attempt verified tests, production build, direct app startup, fixture preparation, and added the harness, but Playwright Electron attach failed in this environment before Chamber Load readings could be captured.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.

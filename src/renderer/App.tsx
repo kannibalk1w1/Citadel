@@ -40,6 +40,7 @@ import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
+import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
@@ -205,6 +206,19 @@ export default function App(): React.ReactElement {
       const zoomFactor = values['ui.zoomFactor']
       if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
     }).catch(() => {})
+
+    installMediaPreviewProfileHarness({
+      window,
+      isDev: import.meta.env.DEV,
+      ipc,
+      setProfileBoard: (board) => {
+        useCanvasStore.setState((state) => ({
+          boards: [...state.boards.filter((existing) => existing.id !== board.id), board],
+          activeBoardId: board.id,
+          selectedIds: [],
+        }))
+      },
+    })
   }, [])
 
   useEffect(() => {
