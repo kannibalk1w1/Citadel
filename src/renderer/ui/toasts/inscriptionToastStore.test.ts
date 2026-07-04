@@ -1,0 +1,44 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TOAST_LIFETIME_MS, TOAST_MAX_STACK, useInscriptionToastStore } from './inscriptionToastStore'
+
+describe('inscriptionToastStore', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    useInscriptionToastStore.setState({ toasts: [] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('inscribes a toast with unique ids', () => {
+    const { inscribe } = useInscriptionToastStore.getState()
+    inscribe('Archive opened')
+    inscribe('Chamber raised')
+    const toasts = useInscriptionToastStore.getState().toasts
+    expect(toasts.map((t) => t.text)).toEqual(['Archive opened', 'Chamber raised'])
+    expect(new Set(toasts.map((t) => t.id)).size).toBe(2)
+  })
+
+  it('caps the stack by dropping the oldest', () => {
+    const { inscribe } = useInscriptionToastStore.getState()
+    for (let i = 0; i < TOAST_MAX_STACK + 2; i += 1) inscribe(`toast ${i}`)
+    const toasts = useInscriptionToastStore.getState().toasts
+    expect(toasts.length).toBe(TOAST_MAX_STACK)
+    expect(toasts[0].text).toBe('toast 2')
+  })
+
+  it('auto-dismisses after its lifetime', () => {
+    useInscriptionToastStore.getState().inscribe('Export inscribed (PDF)')
+    expect(useInscriptionToastStore.getState().toasts.length).toBe(1)
+    vi.advanceTimersByTime(TOAST_LIFETIME_MS + 50)
+    expect(useInscriptionToastStore.getState().toasts.length).toBe(0)
+  })
+
+  it('dismisses a toast by id', () => {
+    useInscriptionToastStore.getState().inscribe('The eye opens')
+    const id = useInscriptionToastStore.getState().toasts[0].id
+    useInscriptionToastStore.getState().dismiss(id)
+    expect(useInscriptionToastStore.getState().toasts.length).toBe(0)
+  })
+})
