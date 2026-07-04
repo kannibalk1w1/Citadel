@@ -46,6 +46,8 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.PRESENTATION_NEXT]: ['arrowright', 'pagedown'],
   [Actions.PRESENTATION_PREV]: ['arrowleft', 'pageup'],
   [Actions.QUILL_TOGGLE]:      ['q'],
+  [Actions.WAYSTONE_PLANT]:    ['alt+w'],
+  [Actions.WAYSTONE_NEXT]:     ['alt+]'],
 
   // File
   [Actions.SAVE]:           ['ctrl+s', 'meta+s'],

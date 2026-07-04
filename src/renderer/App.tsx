@@ -25,6 +25,7 @@ import { YouSavedBanner } from './ui/YouSavedBanner'
 import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { PresentationQuill } from './presentation/PresentationQuill'
+import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
@@ -388,6 +389,42 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.QUILL_TOGGLE, () => {
       if (!useUIStore.getState().presentationMode) return
       useQuillStore.getState().toggleActive()
+    })
+
+    resolver.register(Actions.WAYSTONE_PLANT, () => {
+      const canvas = useCanvasStore.getState()
+      const board = canvas.boards.find((b) => b.id === canvas.activeBoardId)
+      if (!board) return
+      const viewport = canvas.viewport()
+      const stones = resolveWaystones(board)
+      const event = plantWaystoneEvent(board, {
+        id: nanoid(),
+        name: `Waystone ${stones.length + 1}`,
+        x: viewport.x,
+        y: viewport.y,
+        scale: viewport.scale,
+      })
+      if (!event) {
+        inscribe('The chamber holds no more waystones')
+        return
+      }
+      useHistoryStore.getState().push('BOARD_STYLE', board.id, event.before, event.after)
+      canvas.updateBoardMeta(board.id, event.after)
+      useHistoryStore.getState().markDirty()
+      inscribe('Waystone planted')
+    })
+
+    let waystoneCursor = -1
+    resolver.register(Actions.WAYSTONE_NEXT, () => {
+      const canvas = useCanvasStore.getState()
+      const board = canvas.boards.find((b) => b.id === canvas.activeBoardId)
+      if (!board) return
+      const stones = resolveWaystones(board)
+      if (stones.length === 0) return
+      waystoneCursor = (waystoneCursor + 1) % stones.length
+      const stone = stones[waystoneCursor]
+      canvas.updateViewport({ x: stone.x, y: stone.y, scale: stone.scale })
+      inscribe(`Waystone: ${stone.name}`)
     })
 
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {

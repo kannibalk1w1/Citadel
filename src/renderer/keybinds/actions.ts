@@ -44,6 +44,8 @@ export const Actions = {
   PRESENTATION_NEXT: 'presentation:next',
   PRESENTATION_PREV: 'presentation:prev',
   QUILL_TOGGLE: 'presentation:quillToggle',
+  WAYSTONE_PLANT: 'waystone:plant',
+  WAYSTONE_NEXT: 'waystone:next',
 
   // ── File ──────────────────────────────────────────────────────────────────
   SAVE: 'file:save',
