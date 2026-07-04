@@ -2,6 +2,7 @@ import React from 'react'
 import type { Connection } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { useUIStore } from '../../store/uiStore'
 import { connectionQuickToolbarPosition } from './boardChromeViewModel'
 
@@ -62,9 +63,10 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
     useHistoryStore.getState().push('CONNECTION_STYLE', activeBoardId, { id: conn.id }, { id: conn.id, ...patch })
   }
   const editLabel = () => {
-    const label = window.prompt('Connector label', conn.label ?? '')
-    if (label === null) return
-    update({ label: label.trim() || undefined })
+    void askInscription('Thread inscription:', conn.label ?? '').then((label) => {
+      if (label === null) return
+      update({ label: label || undefined })
+    })
   }
   const remove = () => {
     removeConnection(activeBoardId, conn.id)

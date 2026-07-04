@@ -21,6 +21,9 @@ import {
   resolveWaystones,
 } from '../canvas/chamberWaystones'
 import { inscribe } from './toasts/inscriptionToastStore'
+import { stampRelicTemplate, type RelicTemplate } from './relicTemplates'
+import { askInscription } from './prompt/inscriptionPromptStore'
+import { useRelicTemplateStore } from './relicTemplateStore'
 
 function RiteLabel({ text }: { text: string }): React.ReactElement {
   return (
@@ -130,6 +133,11 @@ export function BoardNavigator(): React.ReactElement | null {
   const markDirty = useHistoryStore((s) => s.markDirty)
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [draftName, setDraftName] = React.useState('')
+  const relicTemplates = useRelicTemplateStore((s) => s.templates)
+
+  React.useEffect(() => {
+    if (isOpen) void useRelicTemplateStore.getState().load()
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -222,11 +230,35 @@ export function BoardNavigator(): React.ReactElement | null {
   }
 
   const renameWaystone = (boardId: string, id: string, currentName: string) => {
-    const board = boards.find((b) => b.id === boardId)
-    if (!board) return
-    const name = window.prompt('Rename waystone:', currentName)
-    if (!name || !name.trim()) return
-    pushWaystoneEvent(boardId, renameWaystoneEvent(board, id, name.trim()))
+    void askInscription('Rename waystone:', currentName).then((name) => {
+      if (!name) return
+      const board = useCanvasStore.getState().boards.find((b) => b.id === boardId)
+      if (!board) return
+      pushWaystoneEvent(boardId, renameWaystoneEvent(board, id, name))
+    })
+  }
+
+  const stampTemplate = (template: RelicTemplate) => {
+    if (!activeBoardId) return
+    const canvas = useCanvasStore.getState()
+    const viewport = canvas.viewport()
+    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const origin = {
+      x: ((window.innerWidth - sidebarW) / 2 - viewport.x) / viewport.scale,
+      y: (window.innerHeight / 2 - viewport.y) / viewport.scale,
+    }
+    const stamped = stampRelicTemplate(template, origin)
+    stamped.items.forEach((item) => {
+      canvas.addItem(activeBoardId, item)
+      useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
+    })
+    stamped.connections.forEach((connection) => {
+      canvas.addConnection(activeBoardId, connection)
+      useHistoryStore.getState().push('CONNECTION_ADD', activeBoardId, null, connection)
+    })
+    canvas.setSelection(stamped.items.map((item) => item.id))
+    markDirty()
+    inscribe(`Stamped: ${template.name}`)
   }
 
   const pickChamberTexture = async (id: string) => {
@@ -379,6 +411,42 @@ export function BoardNavigator(): React.ReactElement | null {
               )}
             </div>
           </div>
+
+          {relicTemplates.length > 0 && (
+            <>
+              <div style={{ marginTop: 2 }}>
+                <RiteLabel text="Relic Templates" />
+              </div>
+              {relicTemplates.map((template) => (
+                <div key={template.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button
+                    type="button"
+                    title={`Stamp "${template.name}" into this chamber (${template.items.length} relics)`}
+                    onClick={() => stampTemplate(template)}
+                    style={{
+                      flex: 1,
+                      height: 20,
+                      background: 'var(--bg-ui)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 3,
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      overflow: 'hidden',
+                      textAlign: 'left',
+                      paddingLeft: 8,
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {template.name} · {template.items.length}
+                  </button>
+                  <IconButton label="-" title="Forget template" danger onClick={() => useRelicTemplateStore.getState().removeTemplate(template.id)} />
+                </div>
+              ))}
+            </>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
             <RiteLabel text="Waystones" />
