@@ -9,6 +9,7 @@ type PanelState = {
   presentationSequence: boolean
   boardNavigator: boolean
   assetLibrary: boolean
+  indexLedger: boolean
 }
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
@@ -157,6 +158,7 @@ export const useUIStore = create<UIState>((set) => ({
     presentationSequence: false,
     boardNavigator: false,
     assetLibrary: false,
+    indexLedger: false,
   },
   openPanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: true } })),
   closePanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: false } })),
