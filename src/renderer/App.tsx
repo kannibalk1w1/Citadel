@@ -24,6 +24,9 @@ import { TextEditOverlay } from './canvas/TextEditOverlay'
 import { YouSavedBanner } from './ui/YouSavedBanner'
 import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
+import { PresentationQuill } from './presentation/PresentationQuill'
+import { QuillControls } from './presentation/QuillControls'
+import { useQuillStore } from './presentation/quillStore'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
 import { engine, lastMouse } from './arcade/HyperTypeEngine'
 import { getCaretScreenPos } from './arcade/caretPos'
@@ -382,6 +385,11 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.FLIP_H, () => flipSelected('flipX'))
     resolver.register(Actions.FLIP_V, () => flipSelected('flipY'))
 
+    resolver.register(Actions.QUILL_TOGGLE, () => {
+      if (!useUIStore.getState().presentationMode) return
+      useQuillStore.getState().toggleActive()
+    })
+
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
       useUIStore.getState().toggleFilenameLabels()
       inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames revealed' : 'Filenames veiled')
@@ -715,6 +723,11 @@ export default function App(): React.ReactElement {
       engine.keyStroke(e.key, spawnX, spawnY)
       if (useUIStore.getState().presentationMode && e.key === 'Escape') {
         e.preventDefault()
+        // Escape rests a raised quill before it exits the presentation.
+        if (useQuillStore.getState().active) {
+          useQuillStore.getState().toggleActive()
+          return
+        }
         useUIStore.getState().setPresentationMode(false)
         useUIStore.getState().setToolMode('select')
         return
@@ -880,6 +893,7 @@ export default function App(): React.ReactElement {
             Prev
           </button>
           <span style={{ color: 'var(--text-accent)' }}>{activeBoard?.name ?? 'Presentation'}</span>
+          <QuillControls />
           <button
             type="button"
             onClick={() => stepPresentation(1)}
@@ -933,6 +947,7 @@ export default function App(): React.ReactElement {
       canvas={(
         <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode) }}>
           <CanvasStage />
+          <PresentationQuill />
         </div>
       )}
       archiveRail={<RightSidebar />}
