@@ -1,8 +1,8 @@
-# Feature Scouting — Ref Flow Comparison and Gap Review — 2026-07-04
+# Feature Scouting — Ref Flow + Alkemion Comparison and Gap Review — 2026-07-04
 
 ## Method
 
-Ref Flow (installed at `%LOCALAPPDATA%/Programs/Ref Flow`, an Electron app) was launched with a CDP port and explored read-only: toolbar/button inventory, drag-drop image import, selection chrome, context behaviour, and its presentation "Focus Mode". No user projects were opened or saved. Citadel's action registry, context menu, and panels were audited against the findings.
+Ref Flow (installed at `%LOCALAPPDATA%/Programs/Ref Flow`, an Electron app) was launched with a CDP port and explored read-only: toolbar/button inventory, drag-drop image import, selection chrome, context behaviour, and its presentation "Focus Mode". No user projects were opened or saved. Alkemion Studio (web, TTRPG-oriented visual brainstorming) was researched from alkemion.com and third-party reviews. Citadel's action registry, context menu, and panels were audited against the findings.
 
 ## What Ref Flow Does Better Today (polish gaps)
 
@@ -14,6 +14,19 @@ Ref Flow (installed at `%LOCALAPPDATA%/Programs/Ref Flow`, an Electron app) was 
 6. **Per-item export.** "Download" on the selection bar saves that one item's media out. Citadel exports whole canvases only.
 7. **Project framerate control.** Global FPS (24/25/30/60) governing video/GIF playback — a video-reference workflow feature. Lower priority for Citadel's archive framing.
 8. **i18n.** Ref Flow ships multi-language UI. Citadel is English-only; fine for now, but hardcoded strings will make this expensive later — worth keeping strings centralized as the UI grows.
+
+## Alkemion Studio Findings (researched 2026-07-04)
+
+Alkemion is a node-board + writing hybrid for TTRPG prep (elements, styled connections, tags with icons, templates, table view, exports). It overlaps Citadel's Binding/Sigil territory more than Ref Flow does. Worth stealing, translated to archive language:
+
+1. **Named workspace shortcuts** — Alkemion saves named board-area viewpoints for one-click jumps. Citadel equivalent: **Waystones** — per-chamber saved viewport anchors (name + x/y/scale in `board.meta`), listed in the board navigator, keybindable next/previous. Small, high value on large chambers; complements the minimap.
+2. **In-text element references** — wiki-style links from prose to elements, kept navigable. Citadel equivalent: inscription text that references another relic (`[[relic]]`-style) becomes a navigable link and surfaces in the Living Index as an implicit thread. Larger; spec-first (touches text editing, search index, and maybe save format).
+3. **Table view** — a sortable/filterable table of all content as an alternative lens. Citadel equivalent: an **Index Ledger** panel over the existing archive index (all relics/threads across chambers, sortable by type/chamber/sigils, click-to-travel). Medium; the data layer already exists (`getArchiveIndexResults`).
+4. **Element templates** — turn any board selection into a reusable template. Citadel has board templates only; **relic-set templates** (selection → named template → stamp into any chamber) would serve reference workflows (e.g. a recurring comparison rig). Medium.
+5. **Interactive maps** — pins on an image linking to other content. Citadel equivalent: **Waymarks** — anchor points at image-relic coordinates that bind to other relics, riding the existing Binding path. Medium-large; spec-first.
+6. **Markdown/HTML export with Obsidian round-trip** — validates the roadmap's existing "Obsidian and Markdown import and export" long-term item; Alkemion demonstrates users care about this bridge.
+
+Not a fit: random tables, TTRPG icon/content libraries, web/mobile cross-device, share links — all outside Citadel's local-first archive framing.
 
 ## Where Citadel Is Already Ahead
 
