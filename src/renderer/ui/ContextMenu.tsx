@@ -5,6 +5,10 @@ import { useMascotStore } from '../store/mascotStore'
 import { useHistoryStore } from '../store/historyStore'
 import { nanoid } from 'nanoid'
 import { copyImageSrcToClipboard } from '../utils/clipboardImage'
+import { createRelicTemplate } from './relicTemplates'
+import { useRelicTemplateStore } from './relicTemplateStore'
+import { inscribe } from './toasts/inscriptionToastStore'
+import { askInscription } from './prompt/inscriptionPromptStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 
@@ -75,6 +79,23 @@ export function ContextMenu(): React.ReactElement | null {
           })
           canvas.setSelection(copies.map((c) => c.id))
           closeContextMenu()
+        },
+      },
+      {
+        label: 'Seal as template…',
+        action: () => {
+          const canvas = useCanvasStore.getState()
+          const chosen = canvas.items().filter((i) => selectedIds.includes(i.id) && !i.locked)
+          if (chosen.length === 0) return
+          const connections = canvas.connections()
+          closeContextMenu()
+          void askInscription('Name this template:', 'Relic set').then((name) => {
+            if (!name) return
+            const template = createRelicTemplate(name, chosen, connections)
+            useRelicTemplateStore.getState().saveTemplate(template)
+            triggerEffect('banner-raise')
+            inscribe(`Template sealed: ${template.name}`)
+          })
         },
       },
       {

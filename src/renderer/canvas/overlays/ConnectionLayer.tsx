@@ -2,6 +2,7 @@ import React from 'react'
 import type { CanvasItem, Connection, Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { useUIStore } from '../../store/uiStore'
 import { bindingEndpointMarks, connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 import { visibleConnectionIds } from './overlayVisibility'
@@ -107,16 +108,17 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
 
   const editLabel = (conn: Connection) => {
     if (!activeBoardId) return
-    const label = window.prompt('Connector label', conn.label ?? '')
-    if (label === null) return
-    const nextLabel = label.trim() || undefined
-    updateConnection(activeBoardId, conn.id, { label: nextLabel })
-    useHistoryStore.getState().push(
-      'CONNECTION_STYLE',
-      activeBoardId,
-      { id: conn.id, label: conn.label },
-      { id: conn.id, label: nextLabel },
-    )
+    void askInscription('Thread inscription:', conn.label ?? '').then((label) => {
+      if (label === null) return
+      const nextLabel = label || undefined
+      updateConnection(activeBoardId, conn.id, { label: nextLabel })
+      useHistoryStore.getState().push(
+        'CONNECTION_STYLE',
+        activeBoardId,
+        { id: conn.id, label: conn.label },
+        { id: conn.id, label: nextLabel },
+      )
+    })
   }
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import type { CanvasItem } from '../types'
+import type { CanvasItem, Connection } from '../types'
 
 // Module-level clipboard (persists across renders, not across restarts)
 let clipboard: CanvasItem[] = []
@@ -27,6 +27,8 @@ import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { PresentationQuill } from './presentation/PresentationQuill'
 import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { IndexLedger } from './ui/IndexLedger'
+import { InscriptionPrompt } from './ui/prompt/InscriptionPrompt'
+import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
@@ -277,6 +279,9 @@ export default function App(): React.ReactElement {
         originals.forEach((i) => canvas.addItem(event.boardId, i))
       } else if (event.type === 'BOARD_STYLE') {
         canvas.updateBoardMeta(event.boardId, event.before as Record<string, unknown>)
+      } else if (event.type === 'CONNECTION_ADD') {
+        const connection = event.after as Connection
+        canvas.removeConnection(event.boardId, connection.id)
       }
       triggerEffect('rewind-swirl')
       engine.burst('↩', lastMouse.x, lastMouse.y)
@@ -305,6 +310,8 @@ export default function App(): React.ReactElement {
         canvas.addItem(event.boardId, merged)
       } else if (event.type === 'BOARD_STYLE') {
         canvas.updateBoardMeta(event.boardId, event.after as Record<string, unknown>)
+      } else if (event.type === 'CONNECTION_ADD') {
+        canvas.addConnection(event.boardId, event.after as Connection)
       }
       triggerEffect('forward-surge')
       engine.burst('↪', lastMouse.x, lastMouse.y)
@@ -569,14 +576,14 @@ export default function App(): React.ReactElement {
       setActiveBoard(boards[(idx - 1 + boards.length) % boards.length].id)
     })
     resolver.register(Actions.BOARD_RENAME, () => {
-      const { boards, activeBoardId, renameBoard } = useCanvasStore.getState()
+      const { boards, activeBoardId } = useCanvasStore.getState()
       const board = boards.find((b) => b.id === activeBoardId)
       if (!board || !activeBoardId) return
-      const name = window.prompt('Rename board:', board.name)
-      if (name && name.trim()) {
-        renameBoard(activeBoardId, name.trim())
+      void askInscription('Rename chamber:', board.name).then((name) => {
+        if (!name) return
+        useCanvasStore.getState().renameBoard(activeBoardId, name)
         useHistoryStore.getState().markDirty()
-      }
+      })
     })
     resolver.register(Actions.BOARD_DELETE, () => {
       const canvas = useCanvasStore.getState()
@@ -1008,6 +1015,7 @@ export default function App(): React.ReactElement {
         <>
           <YouSavedBanner />
           <InscriptionToasts />
+          <InscriptionPrompt />
           <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
         </>
       )}
