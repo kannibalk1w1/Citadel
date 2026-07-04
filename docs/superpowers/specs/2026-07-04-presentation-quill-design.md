@@ -1,6 +1,6 @@
 # Presentation Quill Design
 
-Status: **draft — awaiting user approval. Do not implement until approved.**
+Status: approved 2026-07-04 — screen-space strokes chosen by user. Plan: `docs/superpowers/plans/2026-07-04-presentation-quill.md`.
 
 ## Problem
 
@@ -26,6 +26,6 @@ Ref Flow's presentation mode ships live presenter tools: a pen with colour and s
 - Stroke undo/clear are quill-store-local (NOT `historyStore` — they are not canvas mutations, must not pollute project undo or recordings).
 - Controls join the existing presentation bar: quill toggle, colour (3 swatches), width (2), undo, clear. Voice memo already exists and stays where it is.
 
-## Open Question For Approval
+## Resolved Question
 
-Screen-space ephemeral strokes (recommended, above) vs canvas-space strokes that pan/zoom with the chamber. Screen-space is simpler and presenter-shaped; canvas-space would let a presenter annotate one relic and keep the mark while moving — but edges toward the persistent-annotation feature explicitly out of scope.
+Screen-space ephemeral strokes (recommended, above) vs canvas-space strokes that pan/zoom with the chamber. User chose screen-space (2026-07-04). Screen-space is simpler and presenter-shaped; canvas-space would let a presenter annotate one relic and keep the mark while moving — but edges toward the persistent-annotation feature explicitly out of scope.
