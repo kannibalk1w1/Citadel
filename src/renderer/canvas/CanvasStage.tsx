@@ -18,6 +18,8 @@ import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
 import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
+import { ChamberAmbience } from './ChamberAmbience'
+import { chamberAccentVariables, resolveChamberIdentity } from './chamberIdentity'
 import { CanvasEffectLayer } from './effects/CanvasEffectLayer'
 import { useCanvasEffectStore } from './effects/canvasEffectStore'
 import { useFileDrop } from './useFileDrop'
@@ -47,6 +49,8 @@ export function CanvasStage(): React.ReactElement {
   const setConnectFromId = useUIStore((s) => s.setConnectFromId)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const activeBoard = useCanvasStore((s) => s.boards.find((b) => b.id === s.activeBoardId) ?? null)
+  const chamberVariables = activeBoard ? chamberAccentVariables(resolveChamberIdentity(activeBoard)) : {}
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
@@ -278,11 +282,13 @@ export function CanvasStage(): React.ReactElement {
         inset: 0,
         cursor: CURSOR[toolMode] ?? CURSOR.default,
         zIndex: 0,
+        ...chamberVariables,
       }}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       <CanvasBackground />
+      <ChamberAmbience />
       <CanvasEffectLayer viewport={viewport} width={width} height={height} />
       <Stage
         ref={stageRef}
