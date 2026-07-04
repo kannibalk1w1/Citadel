@@ -1,6 +1,6 @@
 # Waystones Design (Saved Viewport Anchors)
 
-Status: **draft — awaiting user approval. Do not implement until approved.**
+Status: approved and built 2026-07-04.
 
 ## Problem
 

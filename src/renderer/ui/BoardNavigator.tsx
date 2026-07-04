@@ -14,6 +14,13 @@ import {
   type ChamberIdentityPatch,
   type ChamberMoodPreset,
 } from '../canvas/chamberIdentity'
+import {
+  plantWaystoneEvent,
+  removeWaystoneEvent,
+  renameWaystoneEvent,
+  resolveWaystones,
+} from '../canvas/chamberWaystones'
+import { inscribe } from './toasts/inscriptionToastStore'
 
 function RiteLabel({ text }: { text: string }): React.ReactElement {
   return (
@@ -183,6 +190,45 @@ export function BoardNavigator(): React.ReactElement | null {
     useMascotStore.getState().triggerEffect('rune-seal')
   }
 
+  const pushWaystoneEvent = (boardId: string, event: { before: Record<string, unknown>; after: Record<string, unknown> } | null) => {
+    if (!event) return
+    useHistoryStore.getState().push('BOARD_STYLE', boardId, event.before, event.after)
+    updateBoardMeta(boardId, event.after)
+    markDirty()
+  }
+
+  const plantWaystone = (boardId: string) => {
+    const board = boards.find((b) => b.id === boardId)
+    if (!board) return
+    const viewport = useCanvasStore.getState().viewport()
+    const stones = resolveWaystones(board)
+    const event = plantWaystoneEvent(board, {
+      id: nanoid(),
+      name: `Waystone ${stones.length + 1}`,
+      x: viewport.x,
+      y: viewport.y,
+      scale: viewport.scale,
+    })
+    if (!event) {
+      inscribe('The chamber holds no more waystones')
+      return
+    }
+    pushWaystoneEvent(boardId, event)
+    inscribe('Waystone planted')
+  }
+
+  const jumpToWaystone = (stone: { x: number; y: number; scale: number }) => {
+    useCanvasStore.getState().updateViewport({ x: stone.x, y: stone.y, scale: stone.scale })
+  }
+
+  const renameWaystone = (boardId: string, id: string, currentName: string) => {
+    const board = boards.find((b) => b.id === boardId)
+    if (!board) return
+    const name = window.prompt('Rename waystone:', currentName)
+    if (!name || !name.trim()) return
+    pushWaystoneEvent(boardId, renameWaystoneEvent(board, id, name.trim()))
+  }
+
   const pickChamberTexture = async (id: string) => {
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }).ipc
     const result = (await ipc.invoke('file:openDialog', {
@@ -333,6 +379,40 @@ export function BoardNavigator(): React.ReactElement | null {
               )}
             </div>
           </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+            <RiteLabel text="Waystones" />
+            <IconButton label="+" title="Plant a waystone at the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
+          </div>
+          {resolveWaystones(activeChamber).map((stone) => (
+            <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button
+                type="button"
+                title={`Travel to ${stone.name} (Alt+])`}
+                onClick={() => jumpToWaystone(stone)}
+                style={{
+                  flex: 1,
+                  height: 20,
+                  background: 'var(--bg-ui)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 3,
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  overflow: 'hidden',
+                  textAlign: 'left',
+                  paddingLeft: 8,
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {stone.name}
+              </button>
+              <IconButton label="r" title="Rename waystone" onClick={() => renameWaystone(activeChamber.id, stone.id, stone.name)} />
+              <IconButton label="-" title="Remove waystone" danger onClick={() => pushWaystoneEvent(activeChamber.id, removeWaystoneEvent(activeChamber, stone.id))} />
+            </div>
+          ))}
         </div>
       )}
 
