@@ -4,8 +4,9 @@ import { useUIStore } from '../../store/uiStore'
 import { Actions } from '../../keybinds/actions'
 import { resolver } from '../../keybinds/keybindResolver'
 import { selectedActionStripPositionForSelection } from './boardChromeViewModel'
+import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 
-function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 'copy' | 'front' | 'delete' | 'flipH' | 'flipV' }): React.ReactElement {
+function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 'copy' | 'front' | 'delete' | 'flipH' | 'flipV' | 'export' }): React.ReactElement {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   switch (name) {
     case 'props':
@@ -28,6 +29,8 @@ function Icon({ name }: { name: 'props' | 'link' | 'tag' | 'connect' | 'lock' | 
       return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M8 2v12" strokeDasharray="2 2" /><path d="M6 5 3 8l3 3" /><path d="M10 5l3 3-3 3" /></svg>
     case 'flipV':
       return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M2 8h12" strokeDasharray="2 2" /><path d="M5 6 8 3l3 3" /><path d="M5 10l3 3 3-3" /></svg>
+    case 'export':
+      return <svg width="15" height="15" viewBox="0 0 16 16" {...common}><path d="M8 2v8" /><path d="M5 7l3 3 3-3" /><path d="M3 13h10" /></svg>
   }
 }
 
@@ -82,6 +85,20 @@ export function SelectedActionStrip(): React.ReactElement | null {
     if (mode === 'connect') useUIStore.getState().setConnectFromId(item.id)
   }
 
+  const exportRelic = async () => {
+    if (!item.src) return
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }).ipc
+    const name = item.src.split(/[\\/]/).pop() ?? 'relic'
+    const extension = name.includes('.') ? name.split('.').pop()! : '*'
+    const picked = (await ipc.invoke('file:saveDialog', {
+      defaultName: name,
+      filters: [{ name: 'Relic source', extensions: [extension] }],
+    })) as { path?: string | null }
+    if (!picked?.path) return
+    const result = (await ipc.invoke('assets:exportCopy', { sourcePath: item.src, targetPath: picked.path })) as { ok?: boolean }
+    if (result?.ok) inscribe('Relic copied out')
+  }
+
   return (
     <div
       className="citadel-action-strip"
@@ -109,6 +126,7 @@ export function SelectedActionStrip(): React.ReactElement | null {
       {flippable && <ActionButton title="Flip horizontal (Shift+H)" icon="flipH" onClick={() => resolver.dispatch(Actions.FLIP_H)} />}
       {flippable && <ActionButton title="Flip vertical (Shift+V)" icon="flipV" onClick={() => resolver.dispatch(Actions.FLIP_V)} />}
       <ActionButton title={anyUnlocked ? 'Lock' : 'Unlock'} icon="lock" onClick={() => resolver.dispatch(Actions.TOGGLE_LOCK)} />
+      {single && item.src && <ActionButton title="Export this relic's source file" icon="export" onClick={() => { void exportRelic() }} />}
       <ActionButton title="Duplicate" icon="copy" onClick={() => resolver.dispatch(Actions.DUPLICATE)} />
       <ActionButton title="Bring to front" icon="front" onClick={() => resolver.dispatch(Actions.BRING_FRONT)} />
       <ActionButton title="Delete" icon="delete" danger onClick={() => resolver.dispatch(Actions.DELETE)} />
