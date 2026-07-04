@@ -7,6 +7,9 @@ type HarnessWindow = Window & {
     run: (args: { gifPath: string; videoPath: string; modelPath: string; timeoutMs?: number }) => Promise<unknown>
   }
   __citadelProfileResult?: unknown
+  __citadelLargeChamber?: {
+    mount: (options?: { itemCount?: number; columns?: number }) => { boardId: string; itemCount: number }
+  }
 }
 
 const windowLike = (): HarnessWindow => ({
@@ -32,6 +35,28 @@ describe('media preview profile harness', () => {
 
     expect(target.__citadelMediaPreviewProfile).toBeUndefined()
     expect(target.__citadelProfileResult).toBeUndefined()
+    expect(target.__citadelLargeChamber).toBeUndefined()
+  })
+
+  it('mounts the large-chamber fixture board when active', () => {
+    const target = windowLike()
+    target.location = { search: '?profile=media-preview', hash: '' } as Location
+    const setProfileBoard = vi.fn()
+
+    installMediaPreviewProfileHarness({
+      window: target,
+      isDev: true,
+      now: () => 1,
+      ipc: { invoke: vi.fn() },
+      setProfileBoard,
+      wait: vi.fn(),
+    })
+
+    const result = target.__citadelLargeChamber!.mount({ itemCount: 50, columns: 10 })
+    expect(result.itemCount).toBe(50)
+    const board = setProfileBoard.mock.calls[0][0] as CanvasBoard
+    expect(board.items.length).toBe(50)
+    expect(board.id).toBe(result.boardId)
   })
 
   it('runs a cold and warm preview-cache sweep when active', async () => {
