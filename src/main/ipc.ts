@@ -218,15 +218,26 @@ export function registerIpcHandlers(): void {
   })
 
   // ── file:saveDialog ────────────────────────────────────────────────────────
-  ipcMain.handle('file:saveDialog', async (_e, { defaultName = 'untitled.citadel' } = {}) => {
+  ipcMain.handle('file:saveDialog', async (_e, { defaultName = 'untitled.citadel', filters }: { defaultName?: string; filters?: Electron.FileFilter[] } = {}) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: defaultName,
-      filters: [
+      filters: filters ?? [
         { name: 'Citadel Project', extensions: ['citadel'] },
         { name: 'Citadel Archive', extensions: ['citadelz'] },
       ],
     })
     return { path: canceled ? null : filePath }
+  })
+
+  // ── assets:exportCopy ─ copy a relic's source file to a user-chosen path ───
+  ipcMain.handle('assets:exportCopy', async (_e, { sourcePath, targetPath }: { sourcePath: string; targetPath: string }) => {
+    if (!sourcePath || !targetPath || !existsSync(sourcePath)) return { ok: false }
+    try {
+      copyFileSync(sourcePath, targetPath)
+      return { ok: true }
+    } catch {
+      return { ok: false }
+    }
   })
 
   // ── file:openDialog ────────────────────────────────────────────────────────

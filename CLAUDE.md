@@ -290,8 +290,8 @@ Key tokens:
 |---|---|---|
 | `file:save` | r→m | `{ path, data }` |
 | `file:load` | r→m | `{ path }` → `{ data }` |
-| `file:saveDialog` | r→m | → `{ path \| null }` |
-| `file:openDialog` | r→m | → `{ path \| null }` |
+| `file:saveDialog` | r→m | `{ defaultName?, filters? }` → `{ path \| null }` |
+| `file:openDialog` | r→m | `{ filters? }` → `{ path \| null }` |
 | `file:saveRecovery` | r→m | `{ data }` |
 | `export:pdf` | r→m | `{ imageData, filename }` |
 | `export:image` | r→m | `{ imageData, filename, format, quality }` |
@@ -302,6 +302,7 @@ Key tokens:
 | `settings:set` | r→m | `{ key, value }` |
 | `assets:getThumbnail` | r→m | `{ path }` → `{ exists, size?, mtimeMs?, thumbnailPath \| null }` |
 | `assets:cacheThumbnail` | r→m | `{ path, imageData }` → `{ thumbnailPath }` |
+| `assets:exportCopy` | r→m | `{ sourcePath, targetPath }` → `{ ok }` — copies a relic source out |
 | `cache:previewStats` | r→m | → `{ count, bytes }` across `preview-cache` + legacy `pdf-cache` |
 | `cache:clearUnusedPreviews` | r→m | `{ preservePaths, assetPaths }` — keeps referenced previews + live-asset thumbnails |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
