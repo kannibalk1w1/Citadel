@@ -16,6 +16,7 @@ import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { imageCoverCrop, imageFitRect, type ImageFitMode } from './imageFit'
 import { flipProps, itemFlip } from './flipTransform'
+import { FILENAME_LABEL_FONT_PX, filenameInscription } from '../../assets/filenameLabel'
 
 type Props = { item: CanvasItem }
 
@@ -33,6 +34,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
   const isConnectSource = useUIStore((s) => s.connectFromId === item.id)
+  const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
   const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
@@ -142,6 +144,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const cropRect = fitMode === 'fill' ? imageCoverCrop(imageWidth, imageHeight, item.width, item.height) : undefined
   const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing relic'
   const { flipX, flipY } = itemFlip(item.meta)
+  const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, scale)
 
   return (
     <>
@@ -227,6 +230,20 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           shadowOpacity={0.8}
           listening={false}
         />
+        {filenameLabel && (
+          <Text
+            x={0}
+            y={item.height + 4}
+            width={item.width}
+            text={filenameLabel}
+            fontSize={FILENAME_LABEL_FONT_PX}
+            fontFamily="JetBrains Mono, monospace"
+            fill="#8a7a5c"
+            ellipsis
+            wrap="none"
+            listening={false}
+          />
+        )}
       </Group>
       {isSelected && !item.locked && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
     </>

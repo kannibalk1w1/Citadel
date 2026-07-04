@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react'
-import { Image as KonvaImage, Transformer } from 'react-konva'
+import { Image as KonvaImage, Text as KonvaText, Transformer } from 'react-konva'
 import type Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
+import { FILENAME_LABEL_FONT_PX, filenameInscription } from '../../assets/filenameLabel'
 // gifler is a browserify bundle — it has no ESM default export.
 // It does set window.gifler itself, so we use a side-effect import + window access.
 import 'gifler'
@@ -43,6 +44,8 @@ export function GifItem({ item }: Props): React.ReactElement | null {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, scale)
   const displayImage = useThumb && meta?.thumbnailPath && thumbImage ? thumbImage : canvasRef.current
 
   useEffect(() => {
@@ -171,6 +174,20 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
       />
+      {filenameLabel && (
+        <KonvaText
+          x={item.x}
+          y={item.y + item.height + 4}
+          width={item.width}
+          text={filenameLabel}
+          fontSize={FILENAME_LABEL_FONT_PX}
+          fontFamily="JetBrains Mono, monospace"
+          fill="#8a7a5c"
+          ellipsis
+          wrap="none"
+          listening={false}
+        />
+      )}
       {isSelected && !item.locked && (
         <Transformer ref={trRef} keepRatio={false} rotateEnabled />
       )}

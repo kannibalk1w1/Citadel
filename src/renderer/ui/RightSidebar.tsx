@@ -413,6 +413,7 @@ function RecentProjects(): React.ReactElement | null {
 export function RightSidebar(): React.ReactElement {
   const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
+  const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
 
   return (
     <div
@@ -474,6 +475,7 @@ export function RightSidebar(): React.ReactElement {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
+          <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media relics (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
         </div>
       </div>

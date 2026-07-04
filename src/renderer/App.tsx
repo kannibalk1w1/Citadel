@@ -382,6 +382,11 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.FLIP_H, () => flipSelected('flipX'))
     resolver.register(Actions.FLIP_V, () => flipSelected('flipY'))
 
+    resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
+      useUIStore.getState().toggleFilenameLabels()
+      inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames revealed' : 'Filenames veiled')
+    })
+
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas

@@ -136,6 +136,10 @@ type UIState = {
   commentPinsVisible: boolean
   setCommentPinsVisible: (enabled: boolean) => void
   toggleCommentPinsVisible: () => void
+
+  // Filename inscriptions under media relics
+  filenameLabelsVisible: boolean
+  toggleFilenameLabels: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -271,4 +275,7 @@ export const useUIStore = create<UIState>((set) => ({
   commentPinsVisible: true,
   setCommentPinsVisible: (enabled) => set({ commentPinsVisible: enabled }),
   toggleCommentPinsVisible: () => set((s) => ({ commentPinsVisible: !s.commentPinsVisible })),
+
+  filenameLabelsVisible: false,
+  toggleFilenameLabels: () => set((s) => ({ filenameLabelsVisible: !s.filenameLabelsVisible })),
 }))

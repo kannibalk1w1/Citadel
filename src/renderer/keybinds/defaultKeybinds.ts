@@ -28,6 +28,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.TOGGLE_LOCK]:    ['ctrl+l', 'meta+l'],
   [Actions.FLIP_H]:         ['shift+h'],
   [Actions.FLIP_V]:         ['shift+v'],
+  [Actions.FILENAME_LABELS_TOGGLE]: ['shift+f'],
   [Actions.COMMENT_PIN_ADD]: ['ctrl+shift+m', 'meta+shift+m'],
 
   // Item ordering

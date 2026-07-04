@@ -26,6 +26,7 @@ export const Actions = {
   TOGGLE_LOCK: 'item:toggleLock',
   FLIP_H: 'item:flipH',
   FLIP_V: 'item:flipV',
+  FILENAME_LABELS_TOGGLE: 'view:filenameLabels',
   COMMENT_PIN_ADD: 'annotation:commentPinAdd',
 
   // ── Item ordering ─────────────────────────────────────────────────────────
