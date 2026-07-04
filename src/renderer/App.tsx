@@ -26,6 +26,7 @@ import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { PresentationQuill } from './presentation/PresentationQuill'
 import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
+import { IndexLedger } from './ui/IndexLedger'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
@@ -991,6 +992,7 @@ export default function App(): React.ReactElement {
       contextDeck={(
         <>
           <Minimap />
+          <IndexLedger />
           <RecordingBar />
           <TagSearch />
           <PresentationSequence />
