@@ -170,7 +170,7 @@ Text and sticky relics currently render full Konva `Text` nodes at every zoom. A
 - Produces: `preferTextSilhouette(fontSize: number, viewportScale: number, isSelected: boolean, isEditing: boolean): boolean` and `TEXT_SILHOUETTE_MIN_SCREEN_FONT_PX = 5` from `src/renderer/assets/textDetailPolicy.ts`.
 - Consumes: `useCanvasStore((s) => s.viewport().scale)` (the reactive scale pattern already used in `ImageItem.tsx:23`), `useUIStore((s) => s.editingItemId)` (`uiStore.ts:85`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/renderer/assets/textDetailPolicy.test.ts`:
 
@@ -203,12 +203,12 @@ describe('preferTextSilhouette', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- --run src/renderer/assets/textDetailPolicy.test.ts`
 Expected: FAIL — cannot resolve `./textDetailPolicy`.
 
-- [ ] **Step 3: Implement the policy**
+- [x] **Step 3: Implement the policy**
 
 Create `src/renderer/assets/textDetailPolicy.ts`:
 
@@ -229,12 +229,12 @@ export function preferTextSilhouette(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- --run src/renderer/assets/textDetailPolicy.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Wire into TextItem**
+- [x] **Step 5: Wire into TextItem**
 
 In `src/renderer/canvas/items/TextItem.tsx`, add imports and the policy check, and short-circuit to a silhouette. Add after the existing store hooks (near `TextItem.tsx:22`):
 
@@ -273,7 +273,7 @@ if (preferTextSilhouette(fontSize, scale, isSelected, isEditing)) {
 
 Note: the early return must come after all hook calls (React rules of hooks) but the handlers are plain consts defined above the JSX, so place the `if` just before the main `return`.
 
-- [ ] **Step 6: Wire into StickyItem**
+- [x] **Step 6: Wire into StickyItem**
 
 In `src/renderer/canvas/items/StickyItem.tsx`, add the same two hooks and import. Stickies keep their background `Rect` (it *is* the silhouette) and skip only the glyph work: wrap the body `Text` node (`StickyItem.tsx:223-234`) and the comment-header `Text` (`StickyItem.tsx:210-220`):
 
@@ -302,16 +302,16 @@ const silhouette = preferTextSilhouette(fontSize, scale, isSelected, isEditing)
 
 (Apply the same `{!silhouette && ...}` guard to the `COMMENT` header `Text`; leave both `Rect`s untouched so the comment chrome survives far zoom.)
 
-- [ ] **Step 7: Run the item tests and typecheck**
+- [x] **Step 7: Run the item tests and typecheck**
 
 Run: `npm test -- --run src/renderer/assets/textDetailPolicy.test.ts && npm run typecheck`
 Expected: PASS / exit 0. Also run the full suite once: `npm test -- --run` — no regressions.
 
-- [ ] **Step 8: Verify in the app**
+- [x] **Step 8: Verify in the app**
 
 Run `npm run dev`, create a text relic and a sticky, zoom far out: both degrade to dim blocks; zooming in, selecting, or double-click-editing restores full text. Check with the large-board fixture chamber that far-zoom pan feels no worse.
 
-- [ ] **Step 9: Update the roadmap and commit**
+- [x] **Step 9: Update the roadmap and commit**
 
 Tick "progressive text/label detail at far zoom" off Phase 3 "Remaining" in `docs/citadel-performance-roadmap.md`.
 

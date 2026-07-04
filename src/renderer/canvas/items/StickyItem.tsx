@@ -5,6 +5,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { preferTextSilhouette } from '../../assets/textDetailPolicy'
 import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
@@ -25,6 +26,8 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const setEditingItemId = useUIStore((s) => s.setEditingItemId)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
   const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
+  const scale = useCanvasStore((s) => s.viewport().scale)
+  const isEditing = useUIStore((s) => s.editingItemId === item.id)
 
   const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
@@ -48,6 +51,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const strokeColor = isSelected ? '#b8c2bd' : isComment ? '#5a4730' : undefined
   const textY = isComment ? 25 : 8
   const textHeight = item.height - (isComment ? 33 : 16)
+  const silhouette = preferTextSilhouette(fontSize, scale, isSelected, isEditing)
 
   if (isComment && !commentPinsVisible) return <></>
 
@@ -207,31 +211,35 @@ export function StickyItem({ item }: Props): React.ReactElement {
               opacity={item.opacity}
               cornerRadius={3}
             />
-            <Text
-              x={20}
-              y={4}
-              width={item.width - 28}
-              height={12}
-              text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
-              fill="#b8c2bd"
-              fontSize={8}
-              fontFamily="var(--font-mono)"
-              wrap="none"
-            />
+            {!silhouette && (
+              <Text
+                x={20}
+                y={4}
+                width={item.width - 28}
+                height={12}
+                text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
+                fill="#b8c2bd"
+                fontSize={8}
+                fontFamily="var(--font-mono)"
+                wrap="none"
+              />
+            )}
           </>
         )}
-        <Text
-          x={8} y={textY}
-          width={item.width - 16}
-          height={textHeight}
-          text={content || 'Double-click to edit…'}
-          fill={content ? 'var(--text-primary)' : '#675f54'}
-          fontSize={fontSize}
-          fontStyle={fontStyle}
-          fontFamily="var(--font-body)"
-          align={align}
-          wrap="word"
-        />
+        {!silhouette && (
+          <Text
+            x={8} y={textY}
+            width={item.width - 16}
+            height={textHeight}
+            text={content || 'Double-click to edit…'}
+            fill={content ? 'var(--text-primary)' : '#675f54'}
+            fontSize={fontSize}
+            fontStyle={fontStyle}
+            fontFamily="var(--font-body)"
+            align={align}
+            wrap="word"
+          />
+        )}
       </Group>
       {isSelected && !item.locked && (
         <Transformer
