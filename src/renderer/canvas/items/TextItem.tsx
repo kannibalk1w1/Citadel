@@ -5,6 +5,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { preferTextSilhouette } from '../../assets/textDetailPolicy'
 import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
@@ -20,6 +21,8 @@ export function TextItem({ item }: Props): React.ReactElement {
   const toolMode = useUIStore((s) => s.toolMode)
   const setEditingItemId = useUIStore((s) => s.setEditingItemId)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const scale = useCanvasStore((s) => s.viewport().scale)
+  const isEditing = useUIStore((s) => s.editingItemId === item.id)
 
   const textRef = useRef<import('konva/lib/shapes/Text').Text>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
@@ -111,6 +114,26 @@ export function TextItem({ item }: Props): React.ReactElement {
       )
       transformStart.current = null
     }
+  }
+
+  if (preferTextSilhouette(fontSize, scale, isSelected, isEditing)) {
+    return (
+      <Rect
+        x={item.x}
+        y={item.y}
+        width={item.width}
+        height={item.height}
+        rotation={item.rotation}
+        opacity={item.opacity * 0.6}
+        fill="#675f54"
+        cornerRadius={2}
+        draggable={toolMode === 'select' && !item.locked}
+        onClick={handleClick}
+        onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEnd}
+      />
+    )
   }
 
   return (

@@ -57,6 +57,7 @@ Implemented performance decisions:
 - GIF relics now request first-frame thumbnails through the same preview pipeline; small unselected GIFs render cached static previews instead of waking gifler playback.
 - Video relics now request poster-frame thumbnails; small unselected videos render cached poster images instead of mounting a `<video>` element and its frame controls.
 - 3D relics now request static preview captures; small unselected models render cached preview images instead of creating an active Three.js renderer loop.
+- Text and sticky relics silhouette at far zoom: below a 5px on-screen font size (`textDetailPolicy.preferTextSilhouette`), unselected/unedited text relics render a dim rect and stickies skip glyph layout while keeping their chrome. Selection and editing always restore full text.
 
 Profiling notes:
 
@@ -69,7 +70,7 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Add progressive text/label detail at far zoom (silhouette policy for text and sticky relics), the last Phase 3 remaining item besides the gated worker move. The real-media preview sweep completed 2026-07-04: cold generation of GIF/video/3D previews finished within a 4s window, warm hits were 0.3ms, and the worker-generation gate was judged not met.
+1. Phase 5 (Atmospheric Chambers) is next and is spec-first: draft the design spec and get user approval before any implementation. Phase 3 closed 2026-07-04: the real-media preview sweep completed (worker gate not met) and far-zoom text silhouettes landed.
 2. Keep new Index marks capped and visibility-aware, following the Binding overlay discipline.
 3. Preserve reduced-motion support for any future atmospheric animation.
 4. Do not add more persistent SVG ornamentation without a profile check against the large-chamber fixture.
@@ -268,7 +269,7 @@ Remaining:
 
 - real-media cold/warm cache profiling — done 2026-07-04 (`docs/citadel-large-chamber-profile-2026-07-04-real-media.md`); worker gate judged not met
 - move generation into a worker once volume justifies it (gate not met as of the 2026-07-04 profile)
-- progressive text/label detail at far zoom
+- progressive text/label detail at far zoom — done 2026-07-04 (`textDetailPolicy` silhouettes for text and sticky relics)
 
 Verification:
 
