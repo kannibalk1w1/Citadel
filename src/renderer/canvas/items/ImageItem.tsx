@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
-import { Group, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva'
+import { Circle, Group, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva'
+import { nanoid } from 'nanoid'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { CanvasItem } from '../../../types'
 import { useAssetMetadata } from '../../assets/assetMetadata'
@@ -17,6 +18,8 @@ import { snapLines } from '../overlays/SnapGuides'
 import { imageCoverCrop, imageFitRect, type ImageFitMode } from './imageFit'
 import { flipProps, itemFlip } from './flipTransform'
 import { FILENAME_LABEL_FONT_PX, filenameInscription } from '../../assets/filenameLabel'
+import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPatch, type Waymark } from './waymarks'
+import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 
 type Props = { item: CanvasItem }
 
@@ -49,8 +52,39 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
 
   useEffect(() => { void ensureThumbnail(item.src) }, [item.src])
 
+  const applyWaymarkPatch = (patch: { before: { id: string; meta: Record<string, unknown> }; after: { id: string; meta: Record<string, unknown> } } | null) => {
+    if (!patch) return
+    useHistoryStore.getState().push('ITEM_STYLE', activeBoardId, patch.before, patch.after)
+    updateItem(activeBoardId, item.id, { meta: patch.after.meta })
+  }
+
+  const handleWaymarkClick = (mark: Waymark) => {
+    void askInscription('Waymark inscription (clear to remove):', mark.label).then((label) => {
+      if (label === null) return
+      const current = useCanvasStore.getState().items().find((i) => i.id === item.id)
+      if (!current) return
+      applyWaymarkPatch(label ? setWaymarkLabelPatch(current, mark.id, label) : removeWaymarkPatch(current, mark.id))
+    })
+  }
+
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
+
+    if (toolMode === 'select' && e.evt.altKey) {
+      const pointer = e.target.getStage()?.getPointerPosition()
+      if (pointer) {
+        const viewport = useCanvasStore.getState().viewport()
+        const u = Math.max(0, Math.min(1, ((pointer.x - viewport.x) / viewport.scale - item.x) / item.width))
+        const v = Math.max(0, Math.min(1, ((pointer.y - viewport.y) / viewport.scale - item.y) / item.height))
+        void askInscription('Waymark inscription:').then((label) => {
+          if (!label) return
+          const current = useCanvasStore.getState().items().find((i) => i.id === item.id)
+          if (!current) return
+          applyWaymarkPatch(addWaymarkPatch(current, { id: nanoid(), u, v, label }))
+        })
+      }
+      return
+    }
 
     if (toolMode === 'connect') {
       handleConnectRelicClick(activeBoardId, item.id)
@@ -145,6 +179,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing relic'
   const { flipX, flipY } = itemFlip(item.meta)
   const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, scale)
+  const waymarks = resolveWaymarks(item)
 
   return (
     <>
@@ -244,6 +279,37 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
             listening={false}
           />
         )}
+        {isSelected && waymarks.map((mark) => (
+          <React.Fragment key={mark.id}>
+            <Circle
+              x={mark.u * item.width}
+              y={mark.v * item.height}
+              radius={5}
+              fill="#0f0d0b"
+              stroke="#bd9652"
+              strokeWidth={1.5}
+              shadowEnabled
+              shadowColor="rgba(189,150,82,0.7)"
+              shadowBlur={8}
+              onClick={(e) => {
+                e.cancelBubble = true
+                if (toolMode === 'select') handleWaymarkClick(mark)
+              }}
+            />
+            <Text
+              x={mark.u * item.width + 9}
+              y={mark.v * item.height - 5}
+              text={mark.label}
+              fontSize={10}
+              fontFamily="JetBrains Mono, monospace"
+              fill="#e8ddd0"
+              shadowEnabled
+              shadowColor="#0f0d0b"
+              shadowBlur={4}
+              listening={false}
+            />
+          </React.Fragment>
+        ))}
       </Group>
       {isSelected && !item.locked && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
     </>
