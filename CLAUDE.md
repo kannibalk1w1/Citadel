@@ -303,6 +303,7 @@ Key tokens:
 | `assets:getThumbnail` | r→m | `{ path }` → `{ exists, size?, mtimeMs?, thumbnailPath \| null }` |
 | `assets:cacheThumbnail` | r→m | `{ path, imageData }` → `{ thumbnailPath }` |
 | `assets:exportCopy` | r→m | `{ sourcePath, targetPath }` → `{ ok }` — copies a relic source out |
+| `assets:scanFolder` | r→m | → `{ folder \| null, files }` — directory picker + recursive media scan (depth 3, cap 500) |
 | `cache:previewStats` | r→m | → `{ count, bytes }` across `preview-cache` + legacy `pdf-cache` |
 | `cache:clearUnusedPreviews` | r→m | `{ preservePaths, assetPaths }` — keeps referenced previews + live-asset thumbnails |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |

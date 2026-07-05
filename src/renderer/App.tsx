@@ -27,6 +27,7 @@ import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { PresentationQuill } from './presentation/PresentationQuill'
 import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { IndexLedger } from './ui/IndexLedger'
+import { ArchiveWorkbench } from './archive/ArchiveWorkbench'
 import { InscriptionPrompt } from './ui/prompt/InscriptionPrompt'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
@@ -1000,6 +1001,7 @@ export default function App(): React.ReactElement {
         <>
           <Minimap />
           <IndexLedger />
+          <ArchiveWorkbench />
           <RecordingBar />
           <TagSearch />
           <PresentationSequence />

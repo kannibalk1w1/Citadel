@@ -466,6 +466,7 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label="Boards" title="Board navigator" onClick={() => useUIStore.getState().togglePanel('boardNavigator')} />
           <QuickBtn label="Assets" title="Asset library" onClick={() => useUIStore.getState().togglePanel('assetLibrary')} />
           <QuickBtn label="Ledger" title="Open the archive ledger (all relics and threads)" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
+          <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
           <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
           <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
         </div>

@@ -10,6 +10,7 @@ type PanelState = {
   boardNavigator: boolean
   assetLibrary: boolean
   indexLedger: boolean
+  archiveWorkbench: boolean
 }
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
@@ -159,6 +160,7 @@ export const useUIStore = create<UIState>((set) => ({
     boardNavigator: false,
     assetLibrary: false,
     indexLedger: false,
+    archiveWorkbench: false,
   },
   openPanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: true } })),
   closePanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: false } })),
