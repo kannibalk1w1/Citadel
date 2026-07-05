@@ -1,4 +1,5 @@
 import type { CanvasBoard, CanvasItem, Connection } from '../../types'
+import { itemInscriptionRefs } from './inscriptionRefs'
 
 export type ChamberRef = {
   id: string
@@ -114,6 +115,7 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
   const isComment = isCommentItem(item)
   const hasSource = hasRelicSource(item)
   const hasText = hasInscription(item)
+  const refs = itemInscriptionRefs(item)
 
   const label =
     content ||
@@ -133,6 +135,7 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
     srcAName ? `A: ${srcAName}` : '',
     srcBName ? `B: ${srcBName}` : '',
     swatches ? `colors: ${swatches}` : '',
+    refs.length ? `refs: ${refs.join(', ')}` : '',
   ].filter(Boolean)
 
   const detail = detailParts.join('  |  ')
@@ -149,6 +152,7 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
     textValue(item.meta?.srcA),
     textValue(item.meta?.srcB),
     swatches,
+    refs.length ? `reference references ${refs.join(' ')}` : '',
   ].join(' ').toLowerCase()
 
   return { id: item.id, kind: 'item', item, label, detail, haystack }

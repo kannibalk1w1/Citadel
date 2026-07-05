@@ -1,6 +1,8 @@
 import React from 'react'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { useUIStore } from '../../store/uiStore'
+import { itemInscriptionRefs } from '../inscriptionRefs'
 import { resolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
 import type { CanvasItem } from '../../../types'
@@ -611,6 +613,38 @@ export function ItemProperties(): React.ReactElement | null {
           <option value="evidence">Evidence</option>
         </select>
       </Field>
+
+      {/* ── Inscription references ── */}
+      {itemInscriptionRefs(item).length > 0 && (
+        <>
+          <Divider label="References" />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {itemInscriptionRefs(item).map((ref) => (
+              <button
+                key={ref}
+                type="button"
+                title={`Chase "${ref}" through the Living Index`}
+                onClick={() => {
+                  useUIStore.getState().setSearchQuery(ref)
+                  useUIStore.getState().openPanel('tagSearch')
+                }}
+                style={{
+                  background: 'var(--bg-ui)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 3,
+                  color: 'var(--text-accent)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  padding: '2px 8px',
+                }}
+              >
+                ⟶ {ref}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* ── Tint ── */}
       {!['video', 'youtube', 'audio', 'model3d'].includes(item.type) && (
