@@ -229,6 +229,45 @@ export function registerIpcHandlers(): void {
     return { path: canceled ? null : filePath }
   })
 
+  // ── assets:scanFolder ─ pick a folder and list its media files ─────────────
+  const MEDIA_EXTENSIONS = new Set([
+    'png', 'jpg', 'jpeg', 'webp', 'bmp', 'svg', 'gif',
+    'mp4', 'webm', 'mov', 'mkv', 'mp3', 'wav', 'ogg', 'flac',
+    'glb', 'gltf', 'obj',
+  ])
+  const SCAN_MAX_FILES = 500
+  const SCAN_MAX_DEPTH = 3
+  ipcMain.handle('assets:scanFolder', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    if (canceled || filePaths.length === 0) return { folder: null, files: [] }
+    const folder = filePaths[0]
+    const files: string[] = []
+    const visit = (dir: string, depth: number): void => {
+      if (files.length >= SCAN_MAX_FILES || depth > SCAN_MAX_DEPTH) return
+      let entries: string[] = []
+      try {
+        entries = readdirSync(dir)
+      } catch {
+        return
+      }
+      for (const entry of entries) {
+        if (files.length >= SCAN_MAX_FILES) return
+        const path = join(dir, entry)
+        try {
+          const stat = statSync(path)
+          if (stat.isDirectory()) {
+            visit(path, depth + 1)
+          } else if (stat.isFile()) {
+            const extension = extname(entry).slice(1).toLowerCase()
+            if (MEDIA_EXTENSIONS.has(extension)) files.push(path)
+          }
+        } catch { /* skip unreadable entries */ }
+      }
+    }
+    visit(folder, 0)
+    return { folder, files }
+  })
+
   // ── assets:exportCopy ─ copy a relic's source file to a user-chosen path ───
   ipcMain.handle('assets:exportCopy', async (_e, { sourcePath, targetPath }: { sourcePath: string; targetPath: string }) => {
     if (!sourcePath || !targetPath || !existsSync(sourcePath)) return { ok: false }
