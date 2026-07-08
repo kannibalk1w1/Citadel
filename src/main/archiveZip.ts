@@ -1,4 +1,5 @@
-import { isAbsolute, join, relative, resolve } from 'path'
+import { promises as fsp } from 'fs'
+import { dirname, isAbsolute, join, relative, resolve } from 'path'
 import type JSZip from 'jszip'
 
 export type ArchiveZipLimits = {
@@ -85,4 +86,68 @@ export function inspectCitadelZip(zip: JSZip, limits: ArchiveZipLimits = {}): Ar
 
   if (!project) throw new Error('Archive is missing project.citadel')
   return { project, assets, totalBytes }
+}
+
+export type ExtractProgress = { done: number; total: number; bytes: number }
+
+export type ExtractOptions = {
+  limits?: ArchiveZipLimits
+  onProgress?: (progress: ExtractProgress) => void
+  concurrency?: number
+}
+
+export async function extractCitadelZip(
+  manifest: ArchiveZipManifest,
+  assetDir: string,
+  options: ExtractOptions = {},
+): Promise<void> {
+  const effective = { ...DEFAULT_LIMITS, ...options.limits }
+  const total = manifest.assets.length
+  const queue = [...manifest.assets]
+  const written: string[] = []
+  let done = 0
+  let bytes = 0
+  let failed = false
+
+  const worker = async (): Promise<void> => {
+    while (!failed) {
+      const file = queue.shift()
+      if (!file) return
+      const outPath = resolveSafeAssetOutputPath(assetDir, file.name)
+      // Enforce limits on actual decompressed bytes — headers can lie.
+      const buf = await file.async('nodebuffer')
+      if (buf.length > effective.maxEntryBytes) throw new Error(`Archive entry too large: ${file.name}`)
+      bytes += buf.length
+      if (bytes > effective.maxTotalBytes) throw new Error('Archive is too large')
+      await fsp.mkdir(dirname(outPath), { recursive: true })
+      await fsp.writeFile(outPath, buf)
+      written.push(outPath)
+      done += 1
+      options.onProgress?.({ done, total, bytes })
+    }
+  }
+
+  const workerCount = Math.max(1, Math.min(options.concurrency ?? 4, total))
+  const results = await Promise.allSettled(
+    Array.from({ length: workerCount }, () => worker().catch((error) => { failed = true; throw error })),
+  )
+  const failure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+  if (failure) {
+    // A poisoned archive must not leave partial assets behind.
+    await Promise.allSettled(written.map((path) => fsp.unlink(path)))
+    throw failure.reason
+  }
+}
+
+export function createProgressThrottle(
+  send: (percent: number) => void,
+  minIntervalMs = 50,
+): (percent: number) => void {
+  let lastSentAt = -Infinity
+  return (percent) => {
+    const now = Date.now()
+    if (percent < 100 && now - lastSentAt < minIntervalMs) return
+    lastSentAt = now
+    send(percent)
+  }
 }

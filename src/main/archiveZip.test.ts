@@ -1,7 +1,13 @@
+import { existsSync, mkdtempSync, readdirSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 import JSZip from 'jszip'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { JSZip as JSZipType } from 'jszip'
 import {
   assertSafeZipPath,
+  createProgressThrottle,
+  extractCitadelZip,
   inspectCitadelZip,
   resolveSafeAssetOutputPath,
 } from './archiveZip'
@@ -76,5 +82,84 @@ describe('inspectCitadelZip', () => {
 
     expect(manifest.project.name).toBe('project.citadel')
     expect(manifest.assets.map((asset) => asset.name)).toEqual(['assets/relic.png'])
+  })
+})
+
+function fakeEntry(name: string, content: Buffer, claimedSize?: number): JSZipType.JSZipObject {
+  return {
+    name,
+    dir: false,
+    _data: { uncompressedSize: claimedSize ?? content.length },
+    async: () => Promise.resolve(content),
+  } as unknown as JSZipType.JSZipObject
+}
+
+function fakeManifest(assets: JSZipType.JSZipObject[]): Parameters<typeof extractCitadelZip>[0] {
+  return { project: fakeEntry('project.citadel', Buffer.from('{}')), assets, totalBytes: 0 }
+}
+
+describe('extractCitadelZip', () => {
+  const dirs: string[] = []
+  const tempDir = (): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'citadel-extract-'))
+    dirs.push(dir)
+    return dir
+  }
+
+  it('writes assets and reports monotonic progress ending at done === total', async () => {
+    const assetDir = tempDir()
+    const calls: { done: number; total: number; bytes: number }[] = []
+    await extractCitadelZip(
+      fakeManifest([
+        fakeEntry('assets/a.png', Buffer.from('aaaa')),
+        fakeEntry('assets/b.png', Buffer.from('bb')),
+      ]),
+      assetDir,
+      { onProgress: (p) => calls.push(p), concurrency: 1 },
+    )
+    expect(existsSync(join(assetDir, 'a.png'))).toBe(true)
+    expect(existsSync(join(assetDir, 'b.png'))).toBe(true)
+    expect(calls.map((c) => c.done)).toEqual([1, 2])
+    expect(calls.at(-1)).toEqual({ done: 2, total: 2, bytes: 6 })
+  })
+
+  it('rejects an entry whose real bytes exceed maxEntryBytes even when its header lies', async () => {
+    const assetDir = tempDir()
+    const liar = fakeEntry('assets/liar.bin', Buffer.alloc(64), 4)  // claims 4 bytes, is 64
+    await expect(
+      extractCitadelZip(fakeManifest([liar]), assetDir, { limits: { maxEntryBytes: 32 } }),
+    ).rejects.toThrow(/too large/i)
+  })
+
+  it('rejects when real total bytes exceed maxTotalBytes and cleans up written files', async () => {
+    const assetDir = tempDir()
+    await expect(
+      extractCitadelZip(
+        fakeManifest([
+          fakeEntry('assets/first.bin', Buffer.alloc(30)),
+          fakeEntry('assets/second.bin', Buffer.alloc(30)),
+        ]),
+        assetDir,
+        { limits: { maxTotalBytes: 40 }, concurrency: 1 },
+      ),
+    ).rejects.toThrow(/too large/i)
+    expect(readdirSync(assetDir)).toEqual([])  // first.bin was unlinked
+  })
+})
+
+describe('createProgressThrottle', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('drops events inside the interval but always lets 100 through', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(0)
+    const sent: number[] = []
+    const send = createProgressThrottle((p) => sent.push(p), 50)
+    send(1)                       // first always sends
+    send(2)                       // dropped (0ms later)
+    vi.setSystemTime(60)
+    send(3)                       // sent (60ms later)
+    send(100)                     // 100 always sends
+    expect(sent).toEqual([1, 3, 100])
   })
 })
