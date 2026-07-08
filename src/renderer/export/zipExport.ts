@@ -31,6 +31,7 @@ export async function exportToZip(filename = 'citadel-archive.citadelz'): Promis
       { ok: boolean; reason?: string }
     if (result.ok) {
       mascot.triggerEffect('lightning-out')
+      inscribe('Archive bundled (.citadelz)')
     } else if (result.reason) {
       // reason absent = user cancelled the save dialog; stay silent then.
       inscribe(`The archive resisted: ${result.reason}`, { tone: 'danger' })

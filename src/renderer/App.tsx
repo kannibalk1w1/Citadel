@@ -613,7 +613,7 @@ export default function App(): React.ReactElement {
     // Exports
     resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
     resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Export inscribed (image)')).catch(console.error) })
-    resolver.register(Actions.EXPORT_ZIP,   () => { exportToZip().then(() => inscribe('Archive bundled (.citadelz)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_ZIP,   () => { void exportToZip().catch(console.error) })
 
     // File
     resolver.register(Actions.SAVE, () => {
