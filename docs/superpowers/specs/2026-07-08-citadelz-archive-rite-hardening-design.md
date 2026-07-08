@@ -161,8 +161,23 @@ Manual verification:
   assets remain.
 - Export the fixture as `.citadelz`: sealing overlay with progress.
 
+## Known limitation: decompression-bomb residual risk
+
+The per-entry and total byte caps are enforced on the *actual* decompressed
+`buf.length`, which closes the lying-header bypass for the caps themselves.
+But JSZip's `file.async('nodebuffer')` materializes the entire decompressed
+buffer in memory *before* our size check can run — it exposes no streaming
+size limit. So an entry whose header under-reports its size can still allocate
+a very large buffer (and potentially OOM the main process) during that single
+`async()` call, before extraction rejects it. `inspectCitadelZip`'s
+header-based pre-check still catches *honest* oversized entries before
+decompression; only the deliberately-lying case reaches allocation. Fully
+closing this requires a streaming zip reader (yauzl) — rejected here to stay on
+the sanctioned stack. Treat the byte caps as integrity/quota enforcement, not
+as complete decompression-bomb protection.
+
 ## Out of scope
 
 - Cancellable import/export (protocol allows adding it later).
 - Worker-thread extraction (revisit if profiling gates are met).
-- Streaming zip parsing (yauzl et al.).
+- Streaming zip parsing (yauzl et al.) — see the decompression-bomb note above.

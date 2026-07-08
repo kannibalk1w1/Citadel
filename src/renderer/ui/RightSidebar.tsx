@@ -6,6 +6,7 @@ import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 import { getCurrentFilePath, getRecentProjects, getSaveActivity, openRecentProject, type RecentProject, type SaveActivity } from '../utils/projectFile'
+import { inscribe } from './toasts/inscriptionToastStore'
 
 // ── Effect → CSS class map ─────────────────────────────────────────────────────
 // These apply to the <img> element itself via filter/transform.
@@ -380,8 +381,10 @@ function RecentProjects(): React.ReactElement | null {
             title={project.path}
             onClick={() => {
               openRecentProject(project.path).then((ok) => {
-                if (ok) triggerEffect('lightning-in')
-                else triggerEffect('fracture')
+                if (ok) {
+                  triggerEffect('lightning-in')
+                  inscribe('Archive opened')
+                }
               })
             }}
             style={{

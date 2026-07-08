@@ -1,8 +1,8 @@
 import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
 import JSZip from 'jszip'
-import { inspectCitadelZip, resolveSafeAssetOutputPath } from './archiveZip'
+import { createProgressThrottle, extractCitadelZip, inspectCitadelZip } from './archiveZip'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 
@@ -141,7 +141,12 @@ function prepareZipProject(projectJson: string, assetPaths: string[]): { project
   return { projectJson: JSON.stringify(project, null, 2), assets }
 }
 
-async function writeZipProject(filePath: string, projectJson: string, assetPaths: string[]): Promise<void> {
+async function writeZipProject(
+  filePath: string,
+  projectJson: string,
+  assetPaths: string[],
+  onPercent?: (percent: number) => void,
+): Promise<void> {
   const prepared = prepareZipProject(projectJson, assetPaths)
   const zip = new JSZip()
   zip.file('project.citadel', prepared.projectJson)
@@ -150,8 +155,11 @@ async function writeZipProject(filePath: string, projectJson: string, assetPaths
       zip.file(asset.zipPath, readFileSync(asset.sourcePath))
     } catch { /* skip missing */ }
   }
-  const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
-  writeFileSync(filePath, buf)
+  const buf = await zip.generateAsync(
+    { type: 'nodebuffer', compression: 'DEFLATE' },
+    (meta) => onPercent?.(meta.percent),
+  )
+  await fsp.writeFile(filePath, buf)
 }
 
 function collectProjectAssetPaths(projectJson: string): string[] {
@@ -405,37 +413,47 @@ export function registerIpcHandlers(): void {
     return { ok: true }
   })
 
-  ipcMain.handle('export:zip', async (_e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
+  ipcMain.handle('export:zip', async (e, { projectJson, assetPaths, filename }: { projectJson: string; assetPaths: string[]; filename: string }) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: filename,
       filters: [{ name: 'Citadel Archive', extensions: ['citadelz'] }],
     })
     if (canceled || !filePath) return { ok: false }
 
-    await writeZipProject(filePath, projectJson, assetPaths)
-    return { ok: true, path: filePath }
+    try {
+      const sendProgress = createProgressThrottle((percent) => {
+        e.sender.send('archive:progress', { op: 'export', percent })
+      })
+      await writeZipProject(filePath, projectJson, assetPaths, sendProgress)
+      sendProgress(100)
+      return { ok: true, path: filePath }
+    } catch (error) {
+      return { ok: false, reason: error instanceof Error ? error.message : String(error) }
+    }
   })
 
   // ── import:zip ─────────────────────────────────────────────────────────────
-  ipcMain.handle('import:zip', async (_e, { zipPath }: { zipPath: string }) => {
-    const buf = readFileSync(zipPath)
-    const zip = await JSZip.loadAsync(buf)
-    const manifest = inspectCitadelZip(zip)
-    const rawProjectJson = await manifest.project.async('string')
+  ipcMain.handle('import:zip', async (e, { zipPath }: { zipPath: string }) => {
+    try {
+      const buf = await fsp.readFile(zipPath)
+      const zip = await JSZip.loadAsync(buf)
+      const manifest = inspectCitadelZip(zip)
+      const rawProjectJson = await manifest.project.async('string')
+      if (Buffer.byteLength(rawProjectJson) > 512 * 1024 * 1024) throw new Error('Archive project entry too large')
 
-    const assetDir = join(dirname(zipPath), '_citadel_assets')
-    if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true })
-
-    const writes = manifest.assets.map((file) => {
-      const outPath = resolveSafeAssetOutputPath(assetDir, file.name)
-      return file.async('nodebuffer').then((buf) => {
-        mkdirSync(dirname(outPath), { recursive: true })
-        writeFileSync(outPath, buf)
+      const assetDir = join(dirname(zipPath), '_citadel_assets')
+      const sendProgress = createProgressThrottle((percent) => {
+        e.sender.send('archive:progress', { op: 'import', percent })
       })
-    })
-    await Promise.all(writes)
+      await extractCitadelZip(manifest, assetDir, {
+        onProgress: ({ done, total }) => sendProgress(Math.round((done / Math.max(1, total)) * 100)),
+      })
+      sendProgress(100)
 
-    return { projectJson: resolveImportedZipProject(rawProjectJson, assetDir), assetDir }
+      return { ok: true, projectJson: resolveImportedZipProject(rawProjectJson, assetDir), assetDir }
+    } catch (error) {
+      return { ok: false, reason: error instanceof Error ? error.message : String(error) }
+    }
   })
 
   // ── shell:openURL ──────────────────────────────────────────────────────────

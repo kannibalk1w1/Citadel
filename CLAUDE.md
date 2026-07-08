@@ -295,8 +295,9 @@ Key tokens:
 | `file:saveRecovery` | r→m | `{ data }` |
 | `export:pdf` | r→m | `{ imageData, filename }` |
 | `export:image` | r→m | `{ imageData, filename, format, quality }` |
-| `export:zip` | r→m | `{ projectJson, assetPaths, filename }` |
-| `import:zip` | r→m | `{ zipPath }` → `{ projectJson, assetDir }` |
+| `export:zip` | r→m | `{ projectJson, assetPaths, filename }` → `{ ok, path? \| reason? }` |
+| `import:zip` | r→m | `{ zipPath }` → `{ ok, projectJson?, assetDir? \| reason? }` |
+| `archive:progress` | m→r | `{ op: 'import' \| 'export', percent }` — throttled push during zip rites |
 | `shell:openURL` | r→m | `{ url }` |
 | `settings:get` | r→m | `{ key }` → `{ value }` |
 | `settings:set` | r→m | `{ key, value }` |

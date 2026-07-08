@@ -24,6 +24,8 @@ import { TextEditOverlay } from './canvas/TextEditOverlay'
 import { YouSavedBanner } from './ui/YouSavedBanner'
 import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
+import { ArchiveRiteOverlay } from './ui/ArchiveRiteOverlay'
+import { registerArchiveProgressListener } from './ui/archiveProgressStore'
 import { PresentationQuill } from './presentation/PresentationQuill'
 import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { IndexLedger } from './ui/IndexLedger'
@@ -238,6 +240,8 @@ export default function App(): React.ReactElement {
     window.addEventListener('beforeunload', clearRecoveryOnCleanUnload)
     return () => window.removeEventListener('beforeunload', clearRecoveryOnCleanUnload)
   }, [])
+
+  useEffect(() => registerArchiveProgressListener(), [])
 
   // ── Wire keybind actions once ───────────────────────────────────────────────
   useEffect(() => {
@@ -609,7 +613,7 @@ export default function App(): React.ReactElement {
     // Exports
     resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
     resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Export inscribed (image)')).catch(console.error) })
-    resolver.register(Actions.EXPORT_ZIP,   () => { exportToZip().then(() => inscribe('Archive bundled (.citadelz)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_ZIP,   () => { void exportToZip().catch(console.error) })
 
     // File
     resolver.register(Actions.SAVE, () => {
@@ -1017,6 +1021,7 @@ export default function App(): React.ReactElement {
         <>
           <YouSavedBanner />
           <InscriptionToasts />
+          <ArchiveRiteOverlay />
           <InscriptionPrompt />
           <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
         </>

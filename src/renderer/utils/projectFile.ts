@@ -6,6 +6,9 @@ import type { ProjectFile } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { parseProjectFile } from './projectSchema'
+import { useArchiveProgressStore } from '../ui/archiveProgressStore'
+import { inscribe } from '../ui/toasts/inscriptionToastStore'
+import { useMascotStore } from '../store/mascotStore'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -196,10 +199,22 @@ async function rememberRecentProject(path: string): Promise<void> {
 }
 
 async function loadProjectFromPath(path: string): Promise<boolean> {
-  const loaded = path.toLowerCase().endsWith('.citadelz')
-    ? await ipc().invoke('import:zip', { zipPath: path }) as { projectJson: string }
-    : await ipc().invoke('file:load', { path }) as { data: string }
-  const file = deserialize('projectJson' in loaded ? loaded.projectJson : loaded.data)
+  let json: string
+  if (path.toLowerCase().endsWith('.citadelz')) {
+    useArchiveProgressStore.getState().beginRite('import')
+    try {
+      const result = await ipc().invoke('import:zip', { zipPath: path }) as
+        { ok: true; projectJson: string } | { ok: false; reason: string }
+      if (!result.ok) throw new Error(result.reason)
+      json = result.projectJson
+    } finally {
+      useArchiveProgressStore.getState().endRite()
+    }
+  } else {
+    const loaded = await ipc().invoke('file:load', { path }) as { data: string }
+    json = loaded.data
+  }
+  const file = deserialize(json)
   applyProject(file)
   currentFilePath = path
   resetSaveActivity()
@@ -237,13 +252,20 @@ export async function saveCurrentOrAs(): Promise<boolean> {
   return path !== null
 }
 
+function surfaceOpenFailure(error: unknown): void {
+  const reason = error instanceof Error ? error.message : String(error)
+  inscribe(`The archive resisted: ${reason}`, { tone: 'danger' })
+  useMascotStore.getState().triggerEffect('fracture')
+}
+
 export async function openProject(): Promise<boolean> {
   if (!confirmDiscardUnsaved()) return false
   const result = await ipc().invoke('file:openDialog') as { path: string | null }
   if (!result.path) return false
   try {
     return await loadProjectFromPath(result.path)
-  } catch {
+  } catch (error) {
+    surfaceOpenFailure(error)
     return false
   }
 }
@@ -252,7 +274,8 @@ export async function openRecentProject(path: string): Promise<boolean> {
   if (!confirmDiscardUnsaved()) return false
   try {
     return await loadProjectFromPath(path)
-  } catch {
+  } catch (error) {
+    surfaceOpenFailure(error)
     return false
   }
 }

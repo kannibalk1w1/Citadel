@@ -47,15 +47,28 @@ export const useMascotStore = create<MascotState>((set, get) => ({
   triggerEffect: (name, progress, source) => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const effectName = reducedMotion ? 'brightness-pulse' : name
-    const canvasEffect = canvasEffectForMascotEffect(effectName)
+
+    // progress-fill (and its reduced-motion substitute brightness-pulse) is a
+    // continuous value: a fast producer (e.g. archive export progress) can fire
+    // dozens of ticks per second. Appending each tick to the queue unboundedly
+    // grows it and can overflow React's nested-update limit in the queue
+    // consumers. When the last queued entry is the same continuous effect,
+    // replace it in place instead of appending, and skip firing another canvas
+    // flare for that tick.
+    const isPersistent = effectName === 'eye-open' || effectName === 'ember-drift'
+    const coalesced = (effectName === 'progress-fill' || effectName === 'brightness-pulse')
+      && get().effectQueue.at(-1)?.name === effectName
 
     useCanvasEffectStore.getState().setReducedMotion(reducedMotion)
-    if (canvasEffect) useCanvasEffectStore.getState().triggerCanvasEffect(canvasEffect.kind, source)
-
-    const isPersistent = effectName === 'eye-open' || effectName === 'ember-drift'
+    if (!coalesced) {
+      const canvasEffect = canvasEffectForMascotEffect(effectName)
+      if (canvasEffect) useCanvasEffectStore.getState().triggerCanvasEffect(canvasEffect.kind, source)
+    }
 
     if (isPersistent) {
       set((s) => ({ persistentEffects: new Set([...s.persistentEffects, effectName]) }))
+    } else if (coalesced) {
+      set((s) => ({ effectQueue: [...s.effectQueue.slice(0, -1), { name: effectName, progress }] }))
     } else {
       set((s) => ({ effectQueue: [...s.effectQueue, { name: effectName, progress }] }))
     }

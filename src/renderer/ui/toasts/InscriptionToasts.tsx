@@ -30,7 +30,9 @@ export function InscriptionToasts(): React.ReactElement | null {
           to   { opacity: 0; }
         }
         .citadel-inscription-toast {
-          animation: inscription-rise 2600ms ease-out forwards;
+          animation-name: inscription-rise;
+          animation-timing-function: ease-out;
+          animation-fill-mode: forwards;
         }
         @media (prefers-reduced-motion: reduce) {
           @keyframes inscription-rise {
@@ -46,8 +48,9 @@ export function InscriptionToasts(): React.ReactElement | null {
           key={toast.id}
           className="citadel-inscription-toast"
           style={{
+            animationDuration: `${toast.lifetimeMs}ms`,
             background: 'color-mix(in srgb, var(--bg-panel) 94%, transparent)',
-            border: '1px solid var(--border)',
+            border: toast.tone === 'danger' ? '1px solid var(--accent-danger)' : '1px solid var(--border)',
             borderRadius: 4,
             boxShadow: 'var(--shadow-md)',
             color: 'var(--text-primary)',
@@ -57,7 +60,7 @@ export function InscriptionToasts(): React.ReactElement | null {
             padding: '6px 14px',
           }}
         >
-          <span style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', marginRight: 6 }}>❧</span>
+          <span style={{ color: toast.tone === 'danger' ? 'var(--accent-danger)' : 'var(--text-accent)', fontFamily: 'var(--font-display)', marginRight: 6 }}>❧</span>
           {toast.text}
         </div>
       ))}
