@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { TOAST_LIFETIME_MS, TOAST_MAX_STACK, useInscriptionToastStore } from './inscriptionToastStore'
+import {
+  inscribe,
+  TOAST_DANGER_LIFETIME_MS,
+  TOAST_LIFETIME_MS,
+  TOAST_MAX_STACK,
+  useInscriptionToastStore,
+} from './inscriptionToastStore'
 
 describe('inscriptionToastStore', () => {
   beforeEach(() => {
@@ -40,5 +46,34 @@ describe('inscriptionToastStore', () => {
     const id = useInscriptionToastStore.getState().toasts[0].id
     useInscriptionToastStore.getState().dismiss(id)
     expect(useInscriptionToastStore.getState().toasts.length).toBe(0)
+  })
+})
+
+describe('inscribe tones', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    useInscriptionToastStore.setState({ toasts: [] })
+  })
+
+  it('defaults to the default tone and standard lifetime', () => {
+    vi.useFakeTimers()
+    inscribe('Archive opened')
+    const toast = useInscriptionToastStore.getState().toasts[0]
+    expect(toast.tone).toBe('default')
+    expect(toast.lifetimeMs).toBe(TOAST_LIFETIME_MS)
+    vi.advanceTimersByTime(TOAST_LIFETIME_MS + 1)
+    expect(useInscriptionToastStore.getState().toasts).toEqual([])
+  })
+
+  it('danger tone lives longer and records its tone', () => {
+    vi.useFakeTimers()
+    inscribe('The archive resisted: too large', { tone: 'danger' })
+    const toast = useInscriptionToastStore.getState().toasts[0]
+    expect(toast.tone).toBe('danger')
+    expect(toast.lifetimeMs).toBe(TOAST_DANGER_LIFETIME_MS)
+    vi.advanceTimersByTime(TOAST_LIFETIME_MS + 1)
+    expect(useInscriptionToastStore.getState().toasts).toHaveLength(1)
+    vi.advanceTimersByTime(TOAST_DANGER_LIFETIME_MS)
+    expect(useInscriptionToastStore.getState().toasts).toEqual([])
   })
 })
