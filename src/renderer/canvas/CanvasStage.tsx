@@ -33,6 +33,32 @@ const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 const VIEWPORT_OVERSCAN_PX = 240
 
+const DRAGON_CURSORS: Record<string, string> = {
+  select:     DS_NORMAL,
+  pan:        'grab',
+  lasso:      DS_WHIP,
+  connect:    DS_CROSS,
+  text:       DS_NORMAL,
+  sticky:     DS_NORMAL,
+  link:       DS_HAND,
+  tag:        DS_NORMAL,
+  swatch:     DS_NORMAL,
+  comparison: DS_NORMAL,
+  record:     DS_NORMAL,
+  default:    DS_NORMAL,
+}
+
+const STANDARD_CURSORS: Record<string, string> = {
+  pan:        'grab',
+  connect:    'crosshair',
+  text:       'text',
+  sticky:     'cell',
+  swatch:     'cell',
+  comparison: 'cell',
+  lasso:      'crosshair',
+  default:    'default',
+}
+
 export function CanvasStage(): React.ReactElement {
   const stageRef = useRef<Konva.Stage>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -50,37 +76,20 @@ export function CanvasStage(): React.ReactElement {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const activeBoard = useCanvasStore((s) => s.boards.find((b) => b.id === s.activeBoardId) ?? null)
-  const chamberVariables = activeBoard ? chamberAccentVariables(resolveChamberIdentity(activeBoard)) : {}
+  const boardMeta = activeBoard?.meta
+  const chamberVariables = useMemo(
+    () => (activeBoard ? chamberAccentVariables(resolveChamberIdentity(activeBoard)) : {}),
+    // Identity derives solely from board meta; viewport updates recreate the
+    // board object every pan frame but never touch meta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [boardMeta]
+  )
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
   const setLastCanvasPointer = useCanvasEffectStore((s) => s.setLastCanvasPointer)
 
-  const CURSOR: Record<string, string> = dragonCursorEnabled
-    ? {
-        select:     DS_NORMAL,
-        pan:        'grab',
-        lasso:      DS_WHIP,
-        connect:    DS_CROSS,
-        text:       DS_NORMAL,
-        sticky:     DS_NORMAL,
-        link:       DS_HAND,
-        tag:        DS_NORMAL,
-        swatch:     DS_NORMAL,
-        comparison: DS_NORMAL,
-        record:     DS_NORMAL,
-        default:    DS_NORMAL,
-      }
-    : {
-        pan:        'grab',
-        connect:    'crosshair',
-        text:       'text',
-        sticky:     'cell',
-        swatch:     'cell',
-        comparison: 'cell',
-        lasso:      'crosshair',
-        default:    'default',
-      }
+  const CURSOR = dragonCursorEnabled ? DRAGON_CURSORS : STANDARD_CURSORS
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 
@@ -250,10 +259,11 @@ export function CanvasStage(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // empty deps intentional: handlers read store imperatively via getState() to avoid stale closures
 
-  // Archive rail width is reserved from the canvas work area.
-  const SIDEBAR_W = parseInt(
+  // Archive rail width is reserved from the canvas work area. Read once —
+  // getComputedStyle forces a style recalc and this renders every pan frame.
+  const SIDEBAR_W = useMemo(() => parseInt(
     getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228'
-  )
+  ), [])
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])

@@ -53,7 +53,11 @@ function FlameArcs(): React.ReactElement {
 
 export function CanvasEffectLayer({ viewport, width, height }: CanvasEffectLayerProps): React.ReactElement {
   const activeEffects = useCanvasEffectStore((state) => state.activeEffects)
-  const lastCanvasPointer = useCanvasEffectStore((state) => state.lastCanvasPointer)
+  // Pointer moves update the store constantly; only re-render for them while
+  // effects are actually on screen.
+  const lastCanvasPointer = useCanvasEffectStore((state) =>
+    state.activeEffects.length === 0 ? null : state.lastCanvasPointer
+  )
   const pruneExpired = useCanvasEffectStore((state) => state.pruneExpired)
 
   useEffect(() => {

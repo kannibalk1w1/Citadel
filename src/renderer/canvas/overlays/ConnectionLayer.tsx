@@ -64,8 +64,11 @@ function elbowPath(from: { x: number; y: number }, to: { x: number; y: number })
   return `M ${from.x} ${from.y} L ${mx} ${from.y} L ${mx} ${to.y} L ${to.x} ${to.y}`
 }
 
+// Cache the MediaQueryList — this component re-renders every pan/zoom frame.
+const reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+
 function prefersReducedMotion(): boolean {
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  return reducedMotionQuery?.matches ?? false
 }
 
 export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }: Props): React.ReactElement {
@@ -92,7 +95,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
     return () => window.clearInterval(interval)
   }, [bindingPulse, clearBindingPulse, reducedMotion])
 
-  const itemMap = new Map(items.map((i) => [i.id, i]))
+  const itemMap = React.useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
   const renderConnectionIds = visibleItemIds
     ? visibleConnectionIds(connections, visibleItemIds, {
         activeConnectionId,

@@ -39,8 +39,10 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
   }
 }
 
-export function ItemRenderer({ item }: Props): React.ReactElement | null {
-  const viewport = useCanvasStore((s) => s.viewport())
+export const ItemRenderer = React.memo(function ItemRenderer({ item }: Props): React.ReactElement | null {
+  // Scale only sizes the lock marker; unlocked items don't need viewport at all,
+  // so pan/zoom frames skip re-rendering them (Stage transform handles position).
+  const scale = useCanvasStore((s) => (item.locked ? s.viewport().scale : 1))
   if (!item.visible) return null
   if (isDOMLayerItem(item)) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem
@@ -56,14 +58,14 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
   ) : null
   const lockMarker = item.locked ? (
     <Text
-      x={item.x + item.width - 18 / viewport.scale}
-      y={item.y + 4 / viewport.scale}
+      x={item.x + item.width - 18 / scale}
+      y={item.y + 4 / scale}
       text="🔒"
-      fontSize={14 / viewport.scale}
+      fontSize={14 / scale}
       fill="#b8c2bd"
       shadowEnabled
       shadowColor="rgba(0,0,0,0.85)"
-      shadowBlur={4 / viewport.scale}
+      shadowBlur={4 / scale}
       listening={false}
     />
   ) : null
@@ -76,9 +78,9 @@ export function ItemRenderer({ item }: Props): React.ReactElement | null {
       </Group>
     </ItemErrorBoundary>
   )
-}
+})
 
-export function DOMLayerItemRenderer({ item }: Props): React.ReactElement | null {
+export const DOMLayerItemRenderer = React.memo(function DOMLayerItemRenderer({ item }: Props): React.ReactElement | null {
   if (!item.visible || !isDOMLayerItem(item)) return null
   return <Inner item={item} domOnly />
-}
+})

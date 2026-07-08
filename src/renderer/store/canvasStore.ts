@@ -264,9 +264,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setSelection: (ids) => {
     const allItems = get().items()
+    const itemsById = new Map(allItems.map((i) => [i.id, i]))
     const groupIds = new Set(
       ids.flatMap((id) => {
-        const item = allItems.find((i) => i.id === id)
+        const item = itemsById.get(id)
         return item?.groupId ? [item.groupId] : []
       })
     )
