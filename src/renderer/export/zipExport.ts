@@ -1,11 +1,11 @@
 import { useMascotStore } from '../store/mascotStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
+import { useArchiveProgressStore } from '../ui/archiveProgressStore'
+import { inscribe } from '../ui/toasts/inscriptionToastStore'
 
 export async function exportToZip(filename = 'citadel-archive.citadelz'): Promise<void> {
   const mascot = useMascotStore.getState()
-  mascot.triggerEffect('progress-fill', 0)
-
   const canvas = useCanvasStore.getState()
   const history = useHistoryStore.getState()
 
@@ -24,9 +24,19 @@ export async function exportToZip(filename = 'citadel-archive.citadelz'): Promis
     .map((i) => i.src)
     .filter((s): s is string => !!s && !s.startsWith('http'))
 
-  mascot.triggerEffect('progress-fill', 0.5)
-
-  await window.ipc.invoke('export:zip', { projectJson, assetPaths, filename })
-
-  mascot.triggerEffect('lightning-out')
+  useArchiveProgressStore.getState().beginRite('export')
+  mascot.triggerEffect('progress-fill', 0)
+  try {
+    const result = await window.ipc.invoke('export:zip', { projectJson, assetPaths, filename }) as
+      { ok: boolean; reason?: string }
+    if (result.ok) {
+      mascot.triggerEffect('lightning-out')
+    } else if (result.reason) {
+      // reason absent = user cancelled the save dialog; stay silent then.
+      inscribe(`The archive resisted: ${result.reason}`, { tone: 'danger' })
+      mascot.triggerEffect('fracture')
+    }
+  } finally {
+    useArchiveProgressStore.getState().endRite()
+  }
 }
