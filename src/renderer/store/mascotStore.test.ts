@@ -31,4 +31,21 @@ describe('mascotStore progress-fill coalescing', () => {
     const names = useMascotStore.getState().effectQueue.map((e) => e.name)
     expect(names).toEqual(['progress-fill', 'lightning-out', 'progress-fill'])
   })
+
+  it('coalesces the reduced-motion substitute too (same flood vector)', () => {
+    // Under reduced motion, every trigger resolves to 'brightness-pulse'; a
+    // rapid producer must not grow the queue through that path either.
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+
+    for (let i = 0; i <= 100; i++) {
+      useMascotStore.getState().triggerEffect('progress-fill', i / 100)
+    }
+
+    const { effectQueue } = useMascotStore.getState()
+    expect(effectQueue).toHaveLength(1)
+    expect(effectQueue[0]).toEqual({ name: 'brightness-pulse', progress: 1 })
+
+    const { activeEffects } = useCanvasEffectStore.getState()
+    expect(activeEffects).toHaveLength(1)
+  })
 })
