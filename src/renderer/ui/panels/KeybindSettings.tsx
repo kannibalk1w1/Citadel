@@ -1,7 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useUIStore } from '../../store/uiStore'
-import type { ExportArea } from '../../store/uiStore'
-import { exportPresets, type ExportPreset } from '../../store/uiStore'
+import {
+  useUIStore,
+  exportPresets,
+  themeOverrideKeys,
+  themePresetColors,
+  themePresetLabels,
+  themePresets,
+  type ExportArea,
+  type ExportPreset,
+  type ThemeOverrideKey,
+  type ThemePreset,
+} from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
@@ -50,10 +59,23 @@ const exportAreas: { area: ExportArea; label: string }[] = [
   { area: 'board', label: 'Chamber' },
 ]
 
+const themeOverrideLabels: Record<ThemeOverrideKey, string> = {
+  canvas: 'Canvas',
+  ui: 'Chrome',
+  panel: 'Panels',
+  text: 'Text',
+  accent: 'Accent',
+}
+
 export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const togglePanel = useUIStore((s) => s.togglePanel)
   const [filter, setFilter] = useState('')
+  const theme = useUIStore((s) => s.theme)
+  const setTheme = useUIStore((s) => s.setTheme)
+  const themeOverrides = useUIStore((s) => s.themeOverrides)
+  const setThemeOverrides = useUIStore((s) => s.setThemeOverrides)
+  const resetThemeOverrides = useUIStore((s) => s.resetThemeOverrides)
   const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
   const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
@@ -221,6 +243,46 @@ export function KeybindSettings(): React.ReactElement | null {
         <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Appearance
         </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 148px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+          <div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              Interface theme
+            </div>
+            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
+              Select a starting palette, then tune its core colours below.
+            </div>
+          </div>
+          <select
+            value={theme}
+            onChange={(event) => setTheme(event.target.value as ThemePreset)}
+            aria-label="Interface theme"
+            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-primary)', padding: '5px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}
+          >
+            {themePresets.map((preset) => <option key={preset} value={preset}>{themePresetLabels[preset]}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'end', gap: 8, marginBottom: 12 }}>
+          {themeOverrideKeys.map((key) => (
+            <label key={key} title={`${themeOverrideLabels[key]} colour`} style={{ display: 'grid', gap: 3, color: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+              {themeOverrideLabels[key]}
+              <input
+                type="color"
+                value={themeOverrides[key] ?? themePresetColors[theme][key]}
+                onChange={(event) => setThemeOverrides({ [key]: event.target.value })}
+                aria-label={`${themeOverrideLabels[key]} colour`}
+                style={{ width: 28, height: 24, padding: 1, background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 3, cursor: 'pointer' }}
+              />
+            </label>
+          ))}
+          <button
+            type="button"
+            onClick={resetThemeOverrides}
+            disabled={Object.keys(themeOverrides).length === 0}
+            style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 10, padding: '4px 6px', fontFamily: 'var(--font-body)' }}
+          >
+            Reset colours
+          </button>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>

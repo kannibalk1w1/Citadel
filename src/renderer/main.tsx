@@ -1,10 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { ThemeProvider } from './theme/ThemeProvider'
 import './theme/dark.css'
 import './theme/light.css'
 import './theme/gothicChrome.css'
 import './theme/cleanArchive.css'
+import './theme/refFlow.css'
 
 class RootErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -42,7 +44,9 @@ class RootErrorBoundary extends React.Component<
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RootErrorBoundary>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </RootErrorBoundary>
   </React.StrictMode>
 )

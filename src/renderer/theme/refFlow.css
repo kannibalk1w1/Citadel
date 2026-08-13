@@ -1,0 +1,31 @@
+/* Ref Flow-inspired minimal canvas preset. It is intentionally neutral so the
+   work on the canvas remains the source of colour and hierarchy. */
+[data-theme="ref-flow"] {
+  --bg-canvas: #111214;
+  --bg-ui: #181a1e;
+  --bg-panel: #202329;
+  --bg-hover: #2a2e35;
+  --bg-elevated: #282c33;
+  --bg-sunken: #0c0d0f;
+  --text-primary: #f1f2f4;
+  --text-secondary: #b8bdc6;
+  --text-muted: #7d8591;
+  --text-accent: #d8dce2;
+  --accent: #d8dce2;
+  --accent-soft: rgba(216, 220, 226, 0.16);
+  --accent-danger: #b54b4b;
+  --border: #363b44;
+  --border-muted: #282c33;
+  --border-bright: rgba(241, 242, 244, 0.1);
+  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 18px 38px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="ref-flow"] .app-root {
+  background: var(--bg-canvas);
+}
+
+[data-theme="ref-flow"] .app-root::before {
+  opacity: 0.05;
+  background-size: 72px 72px;
+}

@@ -42,7 +42,7 @@ import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
-import { normalizeCanvasBackground } from './store/uiStore'
+import { normalizeCanvasBackground, normalizeThemeOverrides } from './store/uiStore'
 import { resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
@@ -165,16 +165,14 @@ export default function App(): React.ReactElement {
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
+  const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    return useUIStore.subscribe(
-      (s) => s.hyperTypeEnabled,
-      (enabled) => engine.setEnabled(enabled)
-    )
-  }, [])
+    engine.setEnabled(hyperTypeEnabled)
+  }, [hyperTypeEnabled])
 
   useEffect(() => {
     initBoard()
@@ -191,6 +189,8 @@ export default function App(): React.ReactElement {
       keys: [
         'ui.youSavedEnabled',
         'ui.hyperTypeEnabled',
+        'ui.theme',
+        'ui.themeOverrides',
         'ui.dragonCursorEnabled',
         'ui.archiveRailCollapsed',
         'ui.zoomFactor',
@@ -205,8 +205,10 @@ export default function App(): React.ReactElement {
       if (values['ui.youSavedEnabled'] === true) nextState.youSavedEnabled = true
       if (values['ui.hyperTypeEnabled'] === true) {
         nextState.hyperTypeEnabled = true
-        engine.setEnabled(true)
       }
+      const theme = values['ui.theme']
+      if (theme === 'citadel' || theme === 'ref-flow' || theme === 'light') nextState.theme = theme
+      nextState.themeOverrides = normalizeThemeOverrides(values['ui.themeOverrides'])
       if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
       if (typeof values['ui.archiveRailCollapsed'] === 'boolean') nextState.archiveRailCollapsed = values['ui.archiveRailCollapsed']
       if (typeof values['export.scale'] === 'number') {

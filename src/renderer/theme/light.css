@@ -1,1 +1,21 @@
-/* Light theme — reserved for future use */
+/* Parchment light preset. */
+[data-theme="light"] {
+  --bg-canvas: #f3eee5;
+  --bg-ui: #e7dfd3;
+  --bg-panel: #fbf8f2;
+  --bg-hover: #ede3d5;
+  --bg-elevated: #fffdf8;
+  --bg-sunken: #ddd3c4;
+  --text-primary: #2b2620;
+  --text-secondary: #5f554a;
+  --text-muted: #877b6d;
+  --text-accent: #765526;
+  --accent: #8a6432;
+  --accent-soft: rgba(138, 100, 50, 0.17);
+  --accent-danger: #9d3d3d;
+  --border: #cfc2af;
+  --border-muted: #dfd4c5;
+  --border-bright: rgba(43, 38, 32, 0.1);
+  --shadow-md: 0 10px 24px rgba(62, 47, 28, 0.16);
+  --shadow-lg: 0 18px 38px rgba(62, 47, 28, 0.2);
+}

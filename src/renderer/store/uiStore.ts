@@ -13,6 +13,38 @@ type PanelState = {
   archiveWorkbench: boolean
 }
 
+export const themePresets = ['citadel', 'ref-flow', 'light'] as const
+export type ThemePreset = typeof themePresets[number]
+
+export const themePresetLabels: Record<ThemePreset, string> = {
+  citadel: 'Citadel',
+  'ref-flow': 'Ref Flow',
+  light: 'Parchment light',
+}
+
+export const themeOverrideKeys = ['canvas', 'ui', 'panel', 'text', 'accent'] as const
+export type ThemeOverrideKey = typeof themeOverrideKeys[number]
+export type ThemeOverrides = Partial<Record<ThemeOverrideKey, string>>
+
+export const themePresetColors: Record<ThemePreset, Record<ThemeOverrideKey, string>> = {
+  citadel: { canvas: '#0f0d0b', ui: '#17130f', panel: '#1d1813', text: '#e8ddd0', accent: '#c8a96e' },
+  'ref-flow': { canvas: '#111214', ui: '#181a1e', panel: '#202329', text: '#f1f2f4', accent: '#d8dce2' },
+  light: { canvas: '#f3eee5', ui: '#e7dfd3', panel: '#fbf8f2', text: '#2b2620', accent: '#8a6432' },
+}
+
+const isThemeColor = (value: unknown): value is string => (
+  typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)
+)
+
+export function normalizeThemeOverrides(value: unknown): ThemeOverrides {
+  if (!value || typeof value !== 'object') return {}
+  return themeOverrideKeys.reduce<ThemeOverrides>((overrides, key) => {
+    const candidate = (value as Record<string, unknown>)[key]
+    if (isThemeColor(candidate)) overrides[key] = candidate
+    return overrides
+  }, {})
+}
+
 export type ExportArea = 'viewport' | 'board' | 'selection'
 export type ExportPreset = 'draft' | 'clean' | 'high-res'
 export type CanvasBackgroundMode = 'stone' | 'custom' | 'none'
@@ -56,8 +88,11 @@ type UIState = {
   toolMode: ToolMode
   setToolMode: (mode: ToolMode) => void
 
-  theme: 'dark' | 'light'
-  setTheme: (theme: 'dark' | 'light') => void
+  theme: ThemePreset
+  setTheme: (theme: ThemePreset) => void
+  themeOverrides: ThemeOverrides
+  setThemeOverrides: (overrides: Partial<ThemeOverrides>) => void
+  resetThemeOverrides: () => void
 
   // Shell density
   archiveRailCollapsed: boolean
@@ -152,8 +187,26 @@ export const useUIStore = create<UIState>((set) => ({
   toolMode: 'select',
   setToolMode: (mode) => set({ toolMode: mode }),
 
-  theme: 'dark',
-  setTheme: (theme) => set({ theme }),
+  theme: 'citadel',
+  setTheme: (theme) => {
+    set({ theme })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.theme', value: theme }).catch(console.error)
+  },
+  themeOverrides: {},
+  setThemeOverrides: (overrides) => {
+    set((state) => {
+      const themeOverrides = normalizeThemeOverrides({ ...state.themeOverrides, ...overrides })
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:set', { key: 'ui.themeOverrides', value: themeOverrides }).catch(console.error)
+      return { themeOverrides }
+    })
+  },
+  resetThemeOverrides: () => {
+    set({ themeOverrides: {} })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.themeOverrides', value: {} }).catch(console.error)
+  },
 
   archiveRailCollapsed: true,
   toggleArchiveRail: () => {

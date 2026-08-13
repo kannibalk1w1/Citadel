@@ -44,8 +44,6 @@ export function Toolbar(): React.ReactElement {
   const saveRecording = useHistoryStore((s) => s.saveRecording)
   const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const clearEffect = useMascotStore((s) => s.clearEffect)
-  const theme = useUIStore((s) => s.theme)
-  const setTheme = useUIStore((s) => s.setTheme)
   const snapToGrid = useUIStore((s) => s.snapToGrid)
   const toggleSnapToGrid = useUIStore((s) => s.toggleSnapToGrid)
 
@@ -516,8 +514,8 @@ export function Toolbar(): React.ReactElement {
       <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
-        title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        title="Appearance settings"
+        onClick={() => useUIStore.getState().openPanel('keybindSettings')}
         style={{
           width: 36,
           height: 36,

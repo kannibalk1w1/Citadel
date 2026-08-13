@@ -42,6 +42,7 @@ class HyperTypeEngine {
   private _enterBuffer: AudioBuffer | null = null
   private _sliceBuffer: AudioBuffer | null = null
   private _audioLoaded = false
+  private _audioLoading: Promise<void> | null = null
 
   private _pitchLevel = 0
   private _pitchTimer: ReturnType<typeof setTimeout> | null = null
@@ -51,7 +52,13 @@ class HyperTypeEngine {
 
   setEnabled(v: boolean): void {
     this._enabled = v
-    if (v && !this._audioLoaded) this._loadAudio().catch(console.error)
+    if (v && !this._audioLoaded && !this._audioLoading) {
+      this._audioLoading = this._loadAudio()
+        .catch((error) => {
+          console.error('HyperType audio unavailable:', error)
+        })
+        .finally(() => { this._audioLoading = null })
+    }
   }
 
   private async _loadAudio(): Promise<void> {
@@ -74,6 +81,7 @@ class HyperTypeEngine {
 
   private _play(buffer: AudioBuffer | null, pitch: number): void {
     if (!this._ctx || !buffer) return
+    if (this._ctx.state === 'suspended') this._ctx.resume().catch(() => {})
     const src = this._ctx.createBufferSource()
     src.buffer = buffer
     src.detune.value = 1200 * Math.log2(pitch)

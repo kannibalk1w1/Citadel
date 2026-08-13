@@ -16,6 +16,8 @@ beforeEach(() => {
     presentationMode: false,
     commentPinsVisible: true,
     includeCommentsInExport: true,
+    theme: 'citadel',
+    themeOverrides: {},
     canvasBackground: { mode: 'stone', assetPath: null, opacity: 0.62, scale: 1, repeat: true },
   })
 })
@@ -41,6 +43,28 @@ describe('uiStore - archive rail', () => {
       key: 'ui.archiveRailCollapsed',
       value: true,
     })
+  })
+})
+
+describe('uiStore - themes', () => {
+  it('persists the selected theme preset', () => {
+    useUIStore.getState().setTheme('ref-flow')
+
+    expect(useUIStore.getState().theme).toBe('ref-flow')
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'ui.theme', value: 'ref-flow' })
+  })
+
+  it('persists only valid custom theme colours and can reset them', () => {
+    useUIStore.getState().setThemeOverrides({ canvas: '#123456', accent: 'not-a-colour' })
+
+    expect(useUIStore.getState().themeOverrides).toEqual({ canvas: '#123456' })
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', {
+      key: 'ui.themeOverrides',
+      value: { canvas: '#123456' },
+    })
+
+    useUIStore.getState().resetThemeOverrides()
+    expect(useUIStore.getState().themeOverrides).toEqual({})
   })
 })
 
