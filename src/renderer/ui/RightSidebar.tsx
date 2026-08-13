@@ -418,6 +418,7 @@ export function RightSidebar(): React.ReactElement {
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
+  const [archiveToolsOpen, setArchiveToolsOpen] = useState(false)
 
   if (archiveRailCollapsed) {
     return (
@@ -493,11 +494,23 @@ export function RightSidebar(): React.ReactElement {
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Archive</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
-          <QuickBtn label="Import" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
-          <QuickBtn label="Ledger" title="Open the archive ledger (all relics and threads)" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
-          <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
+          <QuickBtn label="Open project" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
           <QuickBtn label="New chamber" title="Add a new chamber (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
-          <QuickBtn label="Clone chamber" title="Duplicate active chamber (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+          <button
+            type="button"
+            className="citadel-sidebar-disclosure"
+            aria-expanded={archiveToolsOpen}
+            onClick={() => setArchiveToolsOpen((open) => !open)}
+          >
+            Archive tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
+          </button>
+          {archiveToolsOpen && (
+            <div className="citadel-sidebar-disclosure-content">
+              <QuickBtn label="Index" title="Browse all relics and threads" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
+              <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
+              <QuickBtn label="Clone chamber" title="Duplicate active chamber (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+            </div>
+          )}
         </div>
       </div>
 

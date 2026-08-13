@@ -251,6 +251,35 @@
   color: var(--chrome-text-muted) !important;
 }
 
+.citadel-sidebar-disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 5px 2px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--chrome-text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.citadel-sidebar-disclosure:hover {
+  color: var(--chrome-accent);
+}
+
+.citadel-sidebar-disclosure-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 2px 0 1px 7px;
+  border-left: 1px solid var(--chrome-edge-muted);
+}
+
 /* The archive is available at a glance, but no longer has to occupy the canvas. */
 .citadel-archive-rail-peek {
   position: fixed;
