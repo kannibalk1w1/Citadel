@@ -1,0 +1,155 @@
+/*
+ * Clean Archive baseline
+ *
+ * Keep the canvas and its relics as the visual focus. The archival character is
+ * carried by a warm material palette and restrained detail, rather than by
+ * permanent ornamental chrome.
+ */
+
+:root {
+  --chrome-face: var(--bg-ui);
+  --chrome-face-raised: var(--bg-elevated);
+  --chrome-face-sunk: var(--bg-sunken);
+  --chrome-edge: var(--border);
+  --chrome-edge-muted: var(--border-muted);
+  --chrome-accent: var(--accent);
+  --chrome-text: var(--text-secondary);
+  --chrome-text-muted: var(--text-muted);
+  --chrome-highlight: rgba(232, 221, 208, 0.05);
+  --chrome-veil: rgba(10, 9, 7, 0.72);
+  --chrome-radius: 5px;
+}
+
+.app-root {
+  background: radial-gradient(circle at 50% -20%, rgba(200, 169, 110, 0.045), transparent 45%), var(--bg-canvas);
+}
+
+.app-root::before {
+  opacity: 0.08;
+  background-image:
+    linear-gradient(rgba(232, 221, 208, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 221, 208, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.citadel-board-tabs {
+  background: var(--chrome-face) !important;
+  border-bottom-color: var(--chrome-edge) !important;
+  box-shadow: none !important;
+}
+
+.citadel-board-tab {
+  border-right-color: var(--chrome-edge-muted) !important;
+}
+
+.citadel-board-tab-active {
+  background: var(--bg-elevated) !important;
+  box-shadow: inset 0 -2px 0 var(--chrome-accent) !important;
+}
+
+.citadel-toolbar {
+  background: var(--chrome-face) !important;
+  border-color: var(--chrome-edge) !important;
+  border-radius: var(--chrome-radius) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.citadel-toolbar button,
+.citadel-sidebar button,
+.citadel-panel-button {
+  box-shadow: none !important;
+}
+
+.citadel-toolbar button:hover,
+.citadel-sidebar button:hover,
+.citadel-action-strip button:hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--chrome-accent) !important;
+  color: var(--chrome-accent) !important;
+  box-shadow: 0 0 0 1px var(--accent-soft) !important;
+}
+
+.citadel-action-strip {
+  backdrop-filter: blur(3px);
+}
+
+.citadel-action-strip::before {
+  display: none;
+}
+
+.citadel-sidebar {
+  background: var(--chrome-face) !important;
+  border-left-color: var(--chrome-edge) !important;
+  box-shadow: -10px 0 26px rgba(6, 4, 2, 0.22) !important;
+}
+
+.citadel-sidebar-title {
+  color: var(--chrome-accent) !important;
+  text-shadow: none !important;
+}
+
+.citadel-sidebar-rule {
+  background: var(--chrome-edge) !important;
+}
+
+.citadel-sidebar button {
+  background: transparent !important;
+  border-color: var(--chrome-edge-muted) !important;
+  border-radius: 4px !important;
+  color: var(--chrome-text) !important;
+}
+
+.citadel-floating-panel,
+.citadel-minimap {
+  background: var(--bg-panel) !important;
+  border-color: var(--chrome-edge) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.citadel-floating-panel input,
+.citadel-floating-panel select,
+.citadel-floating-panel textarea,
+.citadel-floating-panel kbd {
+  background: var(--bg-sunken) !important;
+  border-color: var(--chrome-edge-muted) !important;
+  box-shadow: none !important;
+}
+
+.citadel-floating-panel button:not([aria-pressed="true"]):hover,
+.citadel-context-menu button:hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--chrome-edge) !important;
+  color: var(--chrome-accent) !important;
+}
+
+.citadel-context-menu {
+  background: var(--bg-panel) !important;
+  border-color: var(--chrome-edge) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.citadel-list-row {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.citadel-list-row:hover {
+  background: var(--bg-hover) !important;
+  box-shadow: inset 0 0 0 1px var(--accent-soft) !important;
+}
+
+.citadel-sidebar-section {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.citadel-status-strip {
+  border-top-color: var(--chrome-edge-muted) !important;
+  border-bottom-color: var(--chrome-edge-muted) !important;
+}
+
+.citadel-sidebar-section-title {
+  color: var(--chrome-text-muted) !important;
+}

@@ -4,28 +4,28 @@
 
 :root {
   /* Backgrounds */
-  --bg-canvas:  #070909;
-  --bg-ui:      #0a0d0d;
-  --bg-panel:   #101414;
-  --bg-hover:   #18201f;
-  --bg-elevated: #151b1a;
-  --bg-sunken:  #050707;
+  --bg-canvas:   #0f0d0b;
+  --bg-ui:       #17130f;
+  --bg-panel:    #1d1813;
+  --bg-hover:    #282017;
+  --bg-elevated: #241e17;
+  --bg-sunken:   #0a0907;
 
   /* Text */
-  --text-primary:   #e3e8e4;
-  --text-secondary: #b2bdb8;
-  --text-muted:     #74817c;
-  --text-accent:    #c8d2ce;
+  --text-primary:   #e8ddd0;
+  --text-secondary: #b9ad9f;
+  --text-muted:     #81766a;
+  --text-accent:    #d2b47c;
 
   /* Accent */
-  --accent:        #b8c2bd;
-  --accent-soft:   rgba(184, 194, 189, 0.16);
-  --accent-danger: #7e1d1d;
+  --accent:        #c8a96e;
+  --accent-soft:   rgba(200, 169, 110, 0.16);
+  --accent-danger: #8b2020;
 
   /* Borders */
-  --border:       #31403c;
-  --border-muted: #1d2926;
-  --border-bright: rgba(227, 232, 228, 0.09);
+  --border:        #3a3025;
+  --border-muted:  #292117;
+  --border-bright: rgba(232, 221, 208, 0.10);
 
   /* Effect palette — mascot animations only, never used in UI chrome */
   --effect-primary: #ffffff;
@@ -38,8 +38,8 @@
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Layout */
-  --archive-rail-w: 228px;
-  --sidebar-right-w: 228px;
+  --archive-rail-w: 208px;
+  --sidebar-right-w: 208px;
   --command-spine-w: 54px;
   --topbar-h: 40px;
 
@@ -49,9 +49,9 @@
   --z-modal:  100;
 
   /* Shadows */
-  --shadow-md: 0 12px 32px rgba(3, 5, 5, 0.66), 0 1px 0 rgba(184, 194, 189, 0.08);
-  --shadow-lg: 0 22px 58px rgba(2, 4, 4, 0.8), 0 1px 0 rgba(227, 232, 228, 0.06);
-  --shadow-inset: inset 0 1px 0 rgba(227, 232, 228, 0.045), inset 0 -1px 0 rgba(0, 0, 0, 0.46);
+  --shadow-md: 0 12px 28px rgba(6, 4, 2, 0.42);
+  --shadow-lg: 0 20px 48px rgba(6, 4, 2, 0.56);
+  --shadow-inset: inset 0 1px 0 rgba(255, 246, 231, 0.035);
 
   /* Motion */
   --transition-fast: 140ms cubic-bezier(0.22, 0.8, 0.2, 1);
