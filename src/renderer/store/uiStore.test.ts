@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useUIStore } from './uiStore'
+import { normalizeThemePaletteFile, useUIStore } from './uiStore'
 
 const mockInvoke = vi.fn().mockResolvedValue({ ok: true })
 
@@ -18,6 +18,7 @@ beforeEach(() => {
     includeCommentsInExport: true,
     theme: 'citadel',
     themeOverrides: {},
+    savedThemePalettes: [],
     canvasBackground: { mode: 'stone', assetPath: null, opacity: 0.62, scale: 1, repeat: true },
   })
 })
@@ -48,10 +49,10 @@ describe('uiStore - archive rail', () => {
 
 describe('uiStore - themes', () => {
   it('persists the selected theme preset', () => {
-    useUIStore.getState().setTheme('ref-flow')
+    useUIStore.getState().setTheme('graphite')
 
-    expect(useUIStore.getState().theme).toBe('ref-flow')
-    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'ui.theme', value: 'ref-flow' })
+    expect(useUIStore.getState().theme).toBe('graphite')
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'ui.theme', value: 'graphite' })
   })
 
   it('persists only valid custom theme colours and can reset them', () => {
@@ -65,6 +66,27 @@ describe('uiStore - themes', () => {
 
     useUIStore.getState().resetThemeOverrides()
     expect(useUIStore.getState().themeOverrides).toEqual({})
+  })
+
+  it('saves and reapplies named palettes', () => {
+    useUIStore.getState().setTheme('graphite')
+    useUIStore.getState().setThemeOverrides({ canvas: '#123456' })
+
+    expect(useUIStore.getState().saveThemePalette('Night study')).toBe(true)
+    const [palette] = useUIStore.getState().savedThemePalettes
+    expect(palette).toMatchObject({ name: 'Night study', theme: 'graphite', overrides: { canvas: '#123456' } })
+
+    useUIStore.setState({ theme: 'citadel', themeOverrides: {} })
+    useUIStore.getState().applyThemePalette(palette.id)
+    expect(useUIStore.getState().theme).toBe('graphite')
+    expect(useUIStore.getState().themeOverrides).toEqual({ canvas: '#123456' })
+  })
+
+  it('accepts only valid theme palette files', () => {
+    expect(normalizeThemePaletteFile({
+      format: 'citadel-theme', version: 1, name: 'Fog', theme: 'light', overrides: { accent: '#abcdef' },
+    })).toEqual({ name: 'Fog', theme: 'light', overrides: { accent: '#abcdef' } })
+    expect(normalizeThemePaletteFile({ format: 'citadel-theme', version: 2, name: 'Fog', theme: 'light' })).toBeNull()
   })
 })
 

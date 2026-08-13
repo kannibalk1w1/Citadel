@@ -17,11 +17,11 @@ describe('ThemeProvider', () => {
   afterEach(cleanup)
 
   it('applies the selected preset and its custom token overrides', () => {
-    useUIStore.setState({ theme: 'ref-flow', themeOverrides: { canvas: '#123456', accent: '#abcdef' } })
+    useUIStore.setState({ theme: 'graphite', themeOverrides: { canvas: '#123456', accent: '#abcdef' } })
 
     render(<ThemeProvider><div>canvas</div></ThemeProvider>)
 
-    expect(document.documentElement.getAttribute('data-theme')).toBe('ref-flow')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('graphite')
     expect(document.documentElement.style.getPropertyValue('--bg-canvas')).toBe('#123456')
     expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#abcdef')
   })

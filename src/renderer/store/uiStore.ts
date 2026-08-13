@@ -13,12 +13,12 @@ type PanelState = {
   archiveWorkbench: boolean
 }
 
-export const themePresets = ['citadel', 'ref-flow', 'light'] as const
+export const themePresets = ['citadel', 'graphite', 'light'] as const
 export type ThemePreset = typeof themePresets[number]
 
 export const themePresetLabels: Record<ThemePreset, string> = {
   citadel: 'Citadel',
-  'ref-flow': 'Ref Flow',
+  graphite: 'Graphite',
   light: 'Parchment light',
 }
 
@@ -28,7 +28,7 @@ export type ThemeOverrides = Partial<Record<ThemeOverrideKey, string>>
 
 export const themePresetColors: Record<ThemePreset, Record<ThemeOverrideKey, string>> = {
   citadel: { canvas: '#0f0d0b', ui: '#17130f', panel: '#1d1813', text: '#e8ddd0', accent: '#c8a96e' },
-  'ref-flow': { canvas: '#111214', ui: '#181a1e', panel: '#202329', text: '#f1f2f4', accent: '#d8dce2' },
+  graphite: { canvas: '#111214', ui: '#181a1e', panel: '#202329', text: '#f1f2f4', accent: '#d8dce2' },
   light: { canvas: '#f3eee5', ui: '#e7dfd3', panel: '#fbf8f2', text: '#2b2620', accent: '#8a6432' },
 }
 
@@ -43,6 +43,51 @@ export function normalizeThemeOverrides(value: unknown): ThemeOverrides {
     if (isThemeColor(candidate)) overrides[key] = candidate
     return overrides
   }, {})
+}
+
+export type SavedThemePalette = {
+  id: string
+  name: string
+  theme: ThemePreset
+  overrides: ThemeOverrides
+}
+
+export type ThemePaletteFile = {
+  format: 'citadel-theme'
+  version: 1
+  name: string
+  theme: ThemePreset
+  overrides: ThemeOverrides
+}
+
+const isThemePreset = (value: unknown): value is ThemePreset => (
+  value === 'citadel' || value === 'graphite' || value === 'light'
+)
+
+const normalizeThemeName = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const name = value.trim().replace(/\s+/g, ' ')
+  return name.length > 0 && name.length <= 48 ? name : null
+}
+
+export function normalizeThemePaletteFile(value: unknown): Omit<SavedThemePalette, 'id'> | null {
+  if (!value || typeof value !== 'object') return null
+  const record = value as Record<string, unknown>
+  const name = normalizeThemeName(record.name)
+  if (record.format !== 'citadel-theme' || record.version !== 1 || !name || !isThemePreset(record.theme)) return null
+  return { name, theme: record.theme, overrides: normalizeThemeOverrides(record.overrides) }
+}
+
+export function normalizeSavedThemePalettes(value: unknown): SavedThemePalette[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((candidate, index) => {
+    if (!candidate || typeof candidate !== 'object') return []
+    const record = candidate as Record<string, unknown>
+    const normalized = normalizeThemePaletteFile({ ...record, format: 'citadel-theme', version: 1 })
+    if (!normalized) return []
+    const id = typeof record.id === 'string' && record.id ? record.id : `palette-${index}`
+    return [{ id, ...normalized }]
+  })
 }
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
@@ -93,6 +138,11 @@ type UIState = {
   themeOverrides: ThemeOverrides
   setThemeOverrides: (overrides: Partial<ThemeOverrides>) => void
   resetThemeOverrides: () => void
+  savedThemePalettes: SavedThemePalette[]
+  saveThemePalette: (name: string) => boolean
+  applyThemePalette: (id: string) => void
+  removeThemePalette: (id: string) => void
+  importThemePalette: (palette: Omit<SavedThemePalette, 'id'>) => void
 
   // Shell density
   archiveRailCollapsed: boolean
@@ -206,6 +256,57 @@ export const useUIStore = create<UIState>((set) => ({
     set({ themeOverrides: {} })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
     ipc.invoke('settings:set', { key: 'ui.themeOverrides', value: {} }).catch(console.error)
+  },
+  savedThemePalettes: [],
+  saveThemePalette: (name) => {
+    const normalizedName = normalizeThemeName(name)
+    if (!normalizedName) return false
+    set((state) => {
+      const palette: SavedThemePalette = {
+        id: `palette-${Date.now().toString(36)}`,
+        name: normalizedName,
+        theme: state.theme,
+        overrides: state.themeOverrides,
+      }
+      const savedThemePalettes = [...state.savedThemePalettes, palette]
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:set', { key: 'ui.savedThemePalettes', value: savedThemePalettes }).catch(console.error)
+      return { savedThemePalettes }
+    })
+    return true
+  },
+  applyThemePalette: (id) => {
+    set((state) => {
+      const palette = state.savedThemePalettes.find((candidate) => candidate.id === id)
+      if (!palette) return {}
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:setMany', {
+        values: { 'ui.theme': palette.theme, 'ui.themeOverrides': palette.overrides },
+      }).catch(console.error)
+      return { theme: palette.theme, themeOverrides: palette.overrides }
+    })
+  },
+  removeThemePalette: (id) => {
+    set((state) => {
+      const savedThemePalettes = state.savedThemePalettes.filter((palette) => palette.id !== id)
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:set', { key: 'ui.savedThemePalettes', value: savedThemePalettes }).catch(console.error)
+      return { savedThemePalettes }
+    })
+  },
+  importThemePalette: (palette) => {
+    set((state) => {
+      const savedThemePalettes = [...state.savedThemePalettes, { id: `palette-${Date.now().toString(36)}`, ...palette }]
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:setMany', {
+        values: {
+          'ui.theme': palette.theme,
+          'ui.themeOverrides': palette.overrides,
+          'ui.savedThemePalettes': savedThemePalettes,
+        },
+      }).catch(console.error)
+      return { theme: palette.theme, themeOverrides: palette.overrides, savedThemePalettes }
+    })
   },
 
   archiveRailCollapsed: true,

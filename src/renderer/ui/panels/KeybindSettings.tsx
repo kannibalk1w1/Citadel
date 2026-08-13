@@ -8,8 +8,10 @@ import {
   themePresets,
   type ExportArea,
   type ExportPreset,
+  type ThemePaletteFile,
   type ThemeOverrideKey,
   type ThemePreset,
+  normalizeThemePaletteFile,
 } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
@@ -29,6 +31,17 @@ const btnStyle: React.CSSProperties = {
   fontFamily: 'var(--font-mono)',
   padding: 0,
   lineHeight: 1,
+}
+
+const paletteButtonStyle: React.CSSProperties = {
+  background: 'transparent',
+  border: '1px solid var(--border)',
+  borderRadius: 3,
+  color: 'var(--text-secondary)',
+  cursor: 'pointer',
+  fontSize: 10,
+  padding: '4px 7px',
+  fontFamily: 'var(--font-body)',
 }
 
 type PreviewCacheStats = {
@@ -71,11 +84,18 @@ export function KeybindSettings(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.keybindSettings)
   const togglePanel = useUIStore((s) => s.togglePanel)
   const [filter, setFilter] = useState('')
+  const [paletteName, setPaletteName] = useState('')
+  const [paletteMessage, setPaletteMessage] = useState('')
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
   const themeOverrides = useUIStore((s) => s.themeOverrides)
   const setThemeOverrides = useUIStore((s) => s.setThemeOverrides)
   const resetThemeOverrides = useUIStore((s) => s.resetThemeOverrides)
+  const savedThemePalettes = useUIStore((s) => s.savedThemePalettes)
+  const saveThemePalette = useUIStore((s) => s.saveThemePalette)
+  const applyThemePalette = useUIStore((s) => s.applyThemePalette)
+  const removeThemePalette = useUIStore((s) => s.removeThemePalette)
+  const importThemePalette = useUIStore((s) => s.importThemePalette)
   const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
   const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
@@ -190,6 +210,47 @@ export function KeybindSettings(): React.ReactElement | null {
     }
   }
 
+  const saveCurrentPalette = (): void => {
+    if (saveThemePalette(paletteName)) {
+      setPaletteName('')
+      setPaletteMessage('palette saved locally')
+    } else {
+      setPaletteMessage('name the palette first')
+    }
+  }
+
+  const exportCurrentPalette = async (): Promise<void> => {
+    const name = paletteName.trim() || 'Citadel palette'
+    const filename = name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'citadel-palette'
+    const result = await getIpc().invoke('file:saveDialog', {
+      defaultName: `${filename}.citadel-theme.json`,
+      filters: [{ name: 'Citadel Theme', extensions: ['citadel-theme.json', 'json'] }],
+    }) as { path?: string | null }
+    if (!result?.path) return
+    const palette: ThemePaletteFile = { format: 'citadel-theme', version: 1, name, theme, overrides: themeOverrides }
+    const saved = await getIpc().invoke('file:save', { path: result.path, data: JSON.stringify(palette, null, 2) }) as { ok?: boolean }
+    setPaletteMessage(saved?.ok ? 'palette exported' : 'could not export palette')
+  }
+
+  const importPalette = async (): Promise<void> => {
+    const result = await getIpc().invoke('file:openDialog', {
+      filters: [{ name: 'Citadel Theme', extensions: ['citadel-theme.json', 'json'] }],
+    }) as { path?: string | null }
+    if (!result?.path) return
+    try {
+      const loaded = await getIpc().invoke('file:load', { path: result.path }) as { data?: string }
+      const palette = normalizeThemePaletteFile(loaded.data ? JSON.parse(loaded.data) : null)
+      if (!palette) {
+        setPaletteMessage('not a valid Citadel theme')
+        return
+      }
+      importThemePalette(palette)
+      setPaletteMessage(`applied ${palette.name}`)
+    } catch {
+      setPaletteMessage('could not import palette')
+    }
+  }
+
   const generateExportPreview = async (): Promise<void> => {
     setExportPreviewBusy(true)
     setExportPreviewError('')
@@ -283,6 +344,33 @@ export function KeybindSettings(): React.ReactElement | null {
             Reset colours
           </button>
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) auto auto auto', gap: 6, alignItems: 'center', marginBottom: savedThemePalettes.length > 0 ? 8 : 12 }}>
+          <input
+            value={paletteName}
+            onChange={(event) => { setPaletteName(event.target.value); setPaletteMessage('') }}
+            onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); saveCurrentPalette() } }}
+            placeholder="Palette name"
+            aria-label="Palette name"
+            maxLength={48}
+            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-primary)', padding: '5px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}
+          />
+          <button type="button" onClick={saveCurrentPalette} style={paletteButtonStyle}>Save</button>
+          <button type="button" onClick={() => exportCurrentPalette().catch(console.error)} style={paletteButtonStyle}>Export…</button>
+          <button type="button" onClick={() => importPalette().catch(console.error)} style={paletteButtonStyle}>Import…</button>
+        </div>
+        {paletteMessage && <div style={{ margin: '-4px 0 8px', color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}>{paletteMessage}</div>}
+        {savedThemePalettes.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
+            {savedThemePalettes.map((palette) => (
+              <div key={palette.id} style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                <button type="button" onClick={() => { applyThemePalette(palette.id); setPaletteMessage(`applied ${palette.name}`) }} style={{ ...paletteButtonStyle, border: 0, borderRadius: 0 }}>
+                  {palette.name}
+                </button>
+                <button type="button" aria-label={`Delete ${palette.name}`} title={`Delete ${palette.name}`} onClick={() => removeThemePalette(palette.id)} style={{ ...paletteButtonStyle, border: 0, borderLeft: '1px solid var(--border)', borderRadius: 0, padding: '4px 6px', color: 'var(--text-muted)' }}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>

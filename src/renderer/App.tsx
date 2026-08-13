@@ -42,7 +42,7 @@ import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
-import { normalizeCanvasBackground, normalizeThemeOverrides } from './store/uiStore'
+import { normalizeCanvasBackground, normalizeSavedThemePalettes, normalizeThemeOverrides } from './store/uiStore'
 import { resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
@@ -191,6 +191,7 @@ export default function App(): React.ReactElement {
         'ui.hyperTypeEnabled',
         'ui.theme',
         'ui.themeOverrides',
+        'ui.savedThemePalettes',
         'ui.dragonCursorEnabled',
         'ui.archiveRailCollapsed',
         'ui.zoomFactor',
@@ -207,8 +208,10 @@ export default function App(): React.ReactElement {
         nextState.hyperTypeEnabled = true
       }
       const theme = values['ui.theme']
-      if (theme === 'citadel' || theme === 'ref-flow' || theme === 'light') nextState.theme = theme
+      if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
+      if (theme === 'ref-flow') nextState.theme = 'graphite'
       nextState.themeOverrides = normalizeThemeOverrides(values['ui.themeOverrides'])
+      nextState.savedThemePalettes = normalizeSavedThemePalettes(values['ui.savedThemePalettes'])
       if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
       if (typeof values['ui.archiveRailCollapsed'] === 'boolean') nextState.archiveRailCollapsed = values['ui.archiveRailCollapsed']
       if (typeof values['export.scale'] === 'number') {

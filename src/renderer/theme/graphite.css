@@ -1,6 +1,5 @@
-/* Ref Flow-inspired minimal canvas preset. It is intentionally neutral so the
-   work on the canvas remains the source of colour and hierarchy. */
-[data-theme="ref-flow"] {
+/* A quiet neutral preset that lets the canvas content provide the colour. */
+[data-theme="graphite"] {
   --bg-canvas: #111214;
   --bg-ui: #181a1e;
   --bg-panel: #202329;
@@ -21,11 +20,11 @@
   --shadow-lg: 0 18px 38px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="ref-flow"] .app-root {
+[data-theme="graphite"] .app-root {
   background: var(--bg-canvas);
 }
 
-[data-theme="ref-flow"] .app-root::before {
+[data-theme="graphite"] .app-root::before {
   opacity: 0.05;
   background-size: 72px 72px;
 }
