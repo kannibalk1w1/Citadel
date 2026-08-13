@@ -70,6 +70,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.PANEL_PROPERTIES]: ['ctrl+p', 'meta+p'],
   [Actions.PANEL_KEYBINDS]:   [],
   [Actions.PANEL_SEARCH]:     ['ctrl+f', 'meta+f'],
+  [Actions.PANEL_ARCHIVE_RAIL_TOGGLE]: [],
 
   // Recording
   [Actions.RECORD_TOGGLE]:  ['ctrl+r', 'meta+r'],

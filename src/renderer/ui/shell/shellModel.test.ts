@@ -20,6 +20,7 @@ describe('shellModel', () => {
 
   it('keeps the canvas inset tied to the shell rail width', () => {
     expect(shellCanvasInset(false)).toBe('var(--archive-rail-w)')
+    expect(shellCanvasInset(false, true)).toBe('34px')
     expect(shellCanvasInset(true)).toBe('0px')
   })
 })

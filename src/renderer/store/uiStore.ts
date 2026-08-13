@@ -59,6 +59,10 @@ type UIState = {
   theme: 'dark' | 'light'
   setTheme: (theme: 'dark' | 'light') => void
 
+  // Shell density
+  archiveRailCollapsed: boolean
+  toggleArchiveRail: () => void
+
   panels: PanelState
   openPanel: (panel: keyof PanelState) => void
   closePanel: (panel: keyof PanelState) => void
@@ -150,6 +154,16 @@ export const useUIStore = create<UIState>((set) => ({
 
   theme: 'dark',
   setTheme: (theme) => set({ theme }),
+
+  archiveRailCollapsed: true,
+  toggleArchiveRail: () => {
+    set((state) => {
+      const archiveRailCollapsed = !state.archiveRailCollapsed
+      const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+      ipc.invoke('settings:set', { key: 'ui.archiveRailCollapsed', value: archiveRailCollapsed }).catch(console.error)
+      return { archiveRailCollapsed }
+    })
+  },
 
   panels: {
     itemProperties: false,

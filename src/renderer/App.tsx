@@ -160,6 +160,7 @@ export default function App(): React.ReactElement {
   const editingItemId = useUIStore((s) => s.editingItemId)
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
   const presentationMode = useUIStore((s) => s.presentationMode)
+  const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
@@ -187,6 +188,7 @@ export default function App(): React.ReactElement {
         'ui.youSavedEnabled',
         'ui.hyperTypeEnabled',
         'ui.dragonCursorEnabled',
+        'ui.archiveRailCollapsed',
         'ui.zoomFactor',
         'export.scale',
         'export.area',
@@ -202,6 +204,7 @@ export default function App(): React.ReactElement {
         engine.setEnabled(true)
       }
       if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
+      if (typeof values['ui.archiveRailCollapsed'] === 'boolean') nextState.archiveRailCollapsed = values['ui.archiveRailCollapsed']
       if (typeof values['export.scale'] === 'number') {
         nextState.exportScale = Math.min(3, Math.max(1, Math.round(values['export.scale'])))
       }
@@ -609,6 +612,7 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.PANEL_PROPERTIES, () => useUIStore.getState().togglePanel('itemProperties'))
     resolver.register(Actions.PANEL_SEARCH,     () => useUIStore.getState().togglePanel('tagSearch'))
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
+    resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())
 
     // Exports
     resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
@@ -995,7 +999,7 @@ export default function App(): React.ReactElement {
       )}
       commandSpine={<Toolbar />}
       canvas={(
-        <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode) }}>
+        <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode, archiveRailCollapsed) }}>
           <CanvasStage />
           <PresentationQuill />
         </div>

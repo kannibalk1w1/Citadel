@@ -115,6 +115,7 @@ export const archiveRailSections: ShellSection[] = [
   },
 ]
 
-export function shellCanvasInset(presentationMode: boolean): string {
-  return presentationMode ? '0px' : 'var(--archive-rail-w)'
+export function shellCanvasInset(presentationMode: boolean, archiveRailCollapsed = false): string {
+  if (presentationMode) return '0px'
+  return archiveRailCollapsed ? '34px' : 'var(--archive-rail-w)'
 }

@@ -11,6 +11,7 @@ beforeEach(() => {
   mockInvoke.mockClear()
   useUIStore.setState({
     uiScale: 1.0,
+    archiveRailCollapsed: false,
     exportArea: 'viewport',
     presentationMode: false,
     commentPinsVisible: true,
@@ -28,6 +29,18 @@ describe('uiStore - binding pulse', () => {
 
     useUIStore.getState().clearBindingPulse()
     expect(useUIStore.getState().bindingPulse).toBeNull()
+  })
+})
+
+describe('uiStore - archive rail', () => {
+  it('collapses the persistent rail and persists the preference', () => {
+    useUIStore.getState().toggleArchiveRail()
+
+    expect(useUIStore.getState().archiveRailCollapsed).toBe(true)
+    expect(mockInvoke).toHaveBeenCalledWith('settings:set', {
+      key: 'ui.archiveRailCollapsed',
+      value: true,
+    })
   })
 })
 

@@ -153,3 +153,64 @@
 .citadel-sidebar-section-title {
   color: var(--chrome-text-muted) !important;
 }
+
+/* The archive is available at a glance, but no longer has to occupy the canvas. */
+.citadel-archive-rail-peek {
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-ui);
+  width: 34px;
+  padding: 6px 4px;
+  background: var(--chrome-face);
+  border-left: 1px solid var(--chrome-edge);
+}
+
+.citadel-archive-rail-reveal {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  padding: 7px 0;
+  border: 1px solid var(--chrome-edge-muted);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+}
+
+.citadel-archive-rail-reveal span:first-child {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 0.7;
+}
+
+.citadel-archive-rail-reveal:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.citadel-archive-rail-collapse {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 1;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--chrome-edge-muted) !important;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+}

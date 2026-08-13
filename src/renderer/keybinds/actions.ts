@@ -68,6 +68,7 @@ export const Actions = {
   PANEL_PROPERTIES: 'panel:properties',
   PANEL_KEYBINDS: 'panel:keybinds',
   PANEL_SEARCH: 'panel:search',
+  PANEL_ARCHIVE_RAIL_TOGGLE: 'panel:archiveRailToggle',
 
   // ── Recording ─────────────────────────────────────────────────────────────
   RECORD_TOGGLE: 'record:toggle',

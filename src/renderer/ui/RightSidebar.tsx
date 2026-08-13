@@ -417,6 +417,24 @@ export function RightSidebar(): React.ReactElement {
   const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
+
+  if (archiveRailCollapsed) {
+    return (
+      <aside className="citadel-archive-rail-peek">
+        <button
+          type="button"
+          className="citadel-archive-rail-reveal"
+          onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
+          title="Open archive rail"
+          aria-label="Open archive rail"
+        >
+          <span aria-hidden="true">‹</span>
+          <span>Archive</span>
+        </button>
+      </aside>
+    )
+  }
 
   return (
     <div
@@ -439,6 +457,16 @@ export function RightSidebar(): React.ReactElement {
         overflowX: 'hidden',
       }}
     >
+      <button
+        type="button"
+        className="citadel-archive-rail-collapse"
+        onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
+        title="Collapse archive rail"
+        aria-label="Collapse archive rail"
+      >
+        ›
+      </button>
+
       {/* Mascot */}
       <MascotPNG />
 
