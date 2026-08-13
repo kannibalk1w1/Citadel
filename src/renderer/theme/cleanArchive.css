@@ -126,6 +126,25 @@
   box-shadow: var(--shadow-md) !important;
 }
 
+.citadel-toolbar-overflow {
+  position: relative;
+}
+
+.citadel-toolbar-overflow-menu {
+  position: absolute;
+  top: 0;
+  left: 44px;
+  display: grid;
+  grid-template-columns: repeat(2, 36px);
+  gap: 4px;
+  width: max-content;
+  padding: 6px;
+  border: 1px solid var(--chrome-edge);
+  border-radius: var(--chrome-radius);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-lg);
+}
+
 .citadel-toolbar button,
 .citadel-sidebar button,
 .citadel-panel-button {

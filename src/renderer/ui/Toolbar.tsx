@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
@@ -8,20 +8,25 @@ import type { CanvasItem, ToolMode } from '../../types'
 import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
 import { ToolIcon, type ToolIconName } from './icons/ToolIcon'
+import { activeArchiveRailWidth } from './shell/shellModel'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: ToolIconName }
 
-function archiveRailWidth(): number {
-  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--archive-rail-w') || '228')
+function contextRailWidth(): number {
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  return activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
 }
 
-const TOOLS: ToolDef[] = [
+const PRIMARY_TOOLS: ToolDef[] = [
   { mode: 'select', label: 'Select', key: 'V', icon: 'select' },
   { mode: 'pan', label: 'Pan', key: 'H', icon: 'pan' },
   { mode: 'lasso', label: 'Lasso', key: 'L', icon: 'lasso' },
-  { mode: 'connect', label: 'Connect', key: 'C', icon: 'connect' },
+  { mode: 'connect', label: 'Bind', key: 'C', icon: 'connect' },
   { mode: 'text', label: 'Text', key: 'T', icon: 'text' },
-  { mode: 'sticky', label: 'Sticky', key: 'N', icon: 'sticky' },
+  { mode: 'sticky', label: 'Note', key: 'N', icon: 'sticky' },
+]
+
+const SPECIALIST_TOOLS: ToolDef[] = [
   { mode: 'link', label: 'Link', key: 'K', icon: 'link' },
   { mode: 'swatch', label: 'Swatch', key: 'W', icon: 'swatch' },
   { mode: 'tag', label: 'Tag', key: 'G', icon: 'tag' },
@@ -48,6 +53,8 @@ export function Toolbar(): React.ReactElement {
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [youtubeShake, setYoutubeShake] = useState(false)
   const [voiceRecording, setVoiceRecording] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const toolbarRef = useRef<HTMLDivElement>(null)
   const voiceRecorderRef = useRef<MediaRecorder | null>(null)
   const voiceStreamRef = useRef<MediaStream | null>(null)
   const voiceChunksRef = useRef<Blob[]>([])
@@ -60,6 +67,16 @@ export function Toolbar(): React.ReactElement {
     setYoutubeUrl('')
   }
 
+  useEffect(() => {
+    if (!moreOpen) return
+    const closeOnOutsidePress = (event: MouseEvent) => {
+      if (toolbarRef.current?.contains(event.target as Node)) return
+      setMoreOpen(false)
+    }
+    window.addEventListener('mousedown', closeOnOutsidePress)
+    return () => window.removeEventListener('mousedown', closeOnOutsidePress)
+  }, [moreOpen])
+
   const placeYouTube = () => {
     const url = youtubeUrl.trim()
     if (!url) return
@@ -69,7 +86,7 @@ export function Toolbar(): React.ReactElement {
       return
     }
     const vp = useCanvasStore.getState().viewport()
-    const sidebarW = archiveRailWidth()
+    const sidebarW = contextRailWidth()
     const canvasW = window.innerWidth - sidebarW
     const cx = (canvasW / 2 - vp.x) / vp.scale
     const cy = (window.innerHeight / 2 - vp.y) / vp.scale
@@ -90,6 +107,7 @@ export function Toolbar(): React.ReactElement {
     useUIStore.getState().setToolMode('select')
     triggerEffect('lightning-in', undefined, { x: item.x + item.width / 2, y: item.y + item.height / 2 })
     closeYouTube()
+    setMoreOpen(false)
   }
 
   const blobToDataUrl = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -111,7 +129,7 @@ export function Toolbar(): React.ReactElement {
     if (!result.path) return
 
     const vp = useCanvasStore.getState().viewport()
-    const sidebarW = archiveRailWidth()
+    const sidebarW = contextRailWidth()
     const canvasW = window.innerWidth - sidebarW
     const cx = (canvasW / 2 - vp.x) / vp.scale
     const cy = (window.innerHeight / 2 - vp.y) / vp.scale
@@ -199,6 +217,7 @@ export function Toolbar(): React.ReactElement {
   const canMergeToCompare = selectedIds.length === 2 &&
     allItems.filter((i) => selectedIds.includes(i.id)).every((i) => SRC_TYPES.has(i.type) && !!i.src)
   const canAutoArrange = allItems.filter((item) => selectedIds.includes(item.id) && !item.locked).length >= 2
+  const hasSpecialistToolActive = SPECIALIST_TOOLS.some((tool) => tool.mode === toolMode)
 
   const handleRecord = () => {
     if (isRecording) {
@@ -215,6 +234,7 @@ export function Toolbar(): React.ReactElement {
   return (
     <div
       className="citadel-toolbar"
+      ref={toolbarRef}
       style={{
         position: 'absolute',
         top: 48,
@@ -230,13 +250,17 @@ export function Toolbar(): React.ReactElement {
         boxShadow: 'var(--shadow-md)',
       }}
     >
-      {TOOLS.map(({ mode, label, key, icon }) => {
+      {PRIMARY_TOOLS.map(({ mode, label, key, icon }) => {
         const isMergeMode = mode === 'comparison' && canMergeToCompare
         return (
         <button
           key={mode}
           title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
-          onClick={() => isMergeMode ? mergeSelectedToCompare() : setToolMode(mode)}
+          onClick={() => {
+            if (isMergeMode) mergeSelectedToCompare()
+            else setToolMode(mode)
+            setMoreOpen(false)
+          }}
           style={{
             width: 36,
             height: 36,
@@ -255,6 +279,64 @@ export function Toolbar(): React.ReactElement {
         </button>
         )
       })}
+
+      <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+
+      <div className="citadel-toolbar-overflow">
+        <button
+          type="button"
+          className="citadel-toolbar-overflow-trigger"
+          title="More tools"
+          aria-label="More tools"
+          aria-expanded={moreOpen}
+          onClick={() => setMoreOpen((open) => !open)}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 4,
+            border: hasSpecialistToolActive || moreOpen ? '1px solid var(--accent)' : 'none',
+            cursor: 'pointer',
+            background: moreOpen ? 'var(--bg-hover)' : 'transparent',
+            color: hasSpecialistToolActive || moreOpen ? 'var(--accent)' : 'var(--text-secondary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 16,
+            lineHeight: 1,
+          }}
+        >
+          ···
+        </button>
+
+        {moreOpen && (
+          <div className="citadel-toolbar-overflow-menu">
+            {SPECIALIST_TOOLS.map(({ mode, label, key, icon }) => {
+              const isMergeMode = mode === 'comparison' && canMergeToCompare
+              return (
+                <button
+                  key={mode}
+                  title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+                  onClick={() => {
+                    if (isMergeMode) mergeSelectedToCompare()
+                    else setToolMode(mode)
+                    setMoreOpen(false)
+                  }}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 4,
+                    border: isMergeMode ? '1.5px solid var(--accent)' : 'none',
+                    cursor: 'pointer',
+                    background: toolMode === mode ? 'var(--accent)' : 'transparent',
+                    color: toolMode === mode ? 'var(--bg-ui)' : isMergeMode ? 'var(--accent)' : 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'var(--transition-fast)',
+                  }}
+                >
+                  <ToolIcon name={icon} />
+                </button>
+              )
+            })}
 
       {/* ── YouTube ── */}
       <style>{`
@@ -288,7 +370,7 @@ export function Toolbar(): React.ReactElement {
       </button>
 
       {youtubeOpen && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 2px 4px' }}>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 2px 4px' }}>
           <input
             autoFocus
             value={youtubeUrl}
@@ -360,7 +442,7 @@ export function Toolbar(): React.ReactElement {
         <ToolIcon name="autoArrange" />
       </button>
 
-      <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+      <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
         title={isRecording ? 'Stop Recording' : 'Start Recording (R)'}
@@ -409,7 +491,7 @@ export function Toolbar(): React.ReactElement {
         <ToolIcon name="voice" />
       </button>
 
-      <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+      <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
         title="Presentation Mode (F5)"
@@ -431,7 +513,7 @@ export function Toolbar(): React.ReactElement {
         <ToolIcon name="presentation" />
       </button>
 
-      <div style={{ height: 1, background: 'var(--border)', margin: '2px 4px' }} />
+      <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
         title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
@@ -452,6 +534,9 @@ export function Toolbar(): React.ReactElement {
       >
         <ToolIcon name="theme" />
       </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
