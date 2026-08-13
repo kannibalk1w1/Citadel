@@ -614,7 +614,10 @@ export default function App(): React.ReactElement {
     })
 
     // Panels
-    resolver.register(Actions.PANEL_PROPERTIES, () => useUIStore.getState().togglePanel('itemProperties'))
+    resolver.register(Actions.PANEL_PROPERTIES, () => {
+      const inspector = document.querySelector<HTMLElement>('.citadel-item-properties')
+      inspector?.querySelector<HTMLElement>('input, select, textarea, button')?.focus()
+    })
     resolver.register(Actions.PANEL_SEARCH,     () => useUIStore.getState().togglePanel('tagSearch'))
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
     resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())

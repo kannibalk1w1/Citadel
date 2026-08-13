@@ -101,12 +101,12 @@ const panelChrome: React.CSSProperties = {
   top: 48,
   right: 'calc(var(--context-rail-w) + 8px)',
   width: 236,
-  background: 'linear-gradient(180deg, #17130f 0%, #0b0a09 100%)',
+  background: 'var(--bg-panel)',
   border: '1px solid var(--border)',
   borderRadius: 4,
   padding: 12,
   zIndex: 'var(--z-panels)',
-  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.018), 0 14px 34px rgba(0,0,0,0.76)',
+  boxShadow: 'var(--shadow-lg)',
   display: 'flex',
   flexDirection: 'column',
   gap: 10,
@@ -233,7 +233,7 @@ function AlignPanel(): React.ReactElement {
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   return (
     <div
-      className="citadel-floating-panel"
+      className="citadel-floating-panel citadel-context-inspector"
       style={panelChrome}
     >
       <PanelTitle title="Align" subtitle={`${selectedIds.length} items selected`} />
@@ -498,7 +498,7 @@ function CommentAttachPanel({
 
   return (
     <div
-      className="citadel-floating-panel"
+      className="citadel-floating-panel citadel-context-inspector"
       style={panelChrome}
     >
       <PanelTitle title="Comment Link" subtitle="Attach note to item" />
@@ -576,10 +576,10 @@ export function ItemProperties(): React.ReactElement | null {
 
   return (
     <div
-      className="citadel-floating-panel citadel-item-properties"
+      className="citadel-floating-panel citadel-context-inspector citadel-item-properties"
       style={panelChrome}
     >
-      <PanelTitle title="Codex" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
+      <PanelTitle title="Relic" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         <Field label="X"><NumInput value={item.x} onChange={(v) => update({ x: v })} /></Field>

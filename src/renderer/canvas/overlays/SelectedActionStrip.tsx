@@ -69,7 +69,6 @@ export function SelectedActionStrip(): React.ReactElement | null {
   const items = useCanvasStore((s) => s.items())
   const viewport = useCanvasStore((s) => s.viewport())
   const setToolMode = useUIStore((s) => s.setToolMode)
-  const openPanel = useUIStore((s) => s.openPanel)
 
   const selectedItems = items.filter((candidate) => selectedIds.includes(candidate.id))
   if (selectedItems.length === 0) return null
@@ -119,7 +118,6 @@ export function SelectedActionStrip(): React.ReactElement | null {
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      {single && <ActionButton title="Properties" icon="props" onClick={() => openPanel('itemProperties')} />}
       {single && <ActionButton title="Connect" icon="connect" onClick={() => startMode('connect')} />}
       {single && <ActionButton title="Link" icon="link" onClick={() => startMode('link')} />}
       {single && <ActionButton title="Tag" icon="tag" onClick={() => startMode('tag')} />}
@@ -133,4 +131,3 @@ export function SelectedActionStrip(): React.ReactElement | null {
     </div>
   )
 }
-

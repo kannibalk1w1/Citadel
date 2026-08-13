@@ -19,7 +19,7 @@ export function ConnectionProperties(): React.ReactElement | null {
     updateConnection(activeBoardId, conn.id, patch)
 
   return (
-    <div className="citadel-floating-panel" style={panelStyle}>
+    <div className="citadel-floating-panel citadel-context-inspector" style={panelStyle}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Thread

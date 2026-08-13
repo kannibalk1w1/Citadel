@@ -197,6 +197,12 @@
   box-shadow: var(--shadow-lg) !important;
 }
 
+/* Context follows the current relic or thread instead of becoming another dock. */
+.citadel-context-inspector {
+  max-height: calc(100vh - var(--topbar-h) - 16px);
+  overflow-y: auto;
+}
+
 .citadel-floating-panel input,
 .citadel-floating-panel select,
 .citadel-floating-panel textarea,
