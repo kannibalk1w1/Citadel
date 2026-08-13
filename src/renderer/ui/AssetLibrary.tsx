@@ -6,6 +6,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { buildAssetLibrary, type AssetLibraryEntry } from './assetLibraryModel'
+import { activeArchiveRailWidth } from './shell/shellModel'
 
 const previewTypes = new Set(['image', 'gif'])
 
@@ -22,7 +23,8 @@ function assetItemFromEntry(entry: AssetLibraryEntry): CanvasItem | undefined {
 function focusAsset(entry: AssetLibraryEntry): void {
   const item = assetItemFromEntry(entry)
   if (!item) return
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const canvas = useCanvasStore.getState()
   const viewport = canvas.viewport()
@@ -45,7 +47,8 @@ function placeAsset(entry: AssetLibraryEntry): void {
   const { activeBoardId, addItem, setSelection, viewport } = useCanvasStore.getState()
   if (!source || !activeBoardId) return
   const vp = viewport()
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const cx = (canvasW / 2 - vp.x) / vp.scale
   const cy = (window.innerHeight / 2 - vp.y) / vp.scale
@@ -76,7 +79,7 @@ export function AssetLibrary(): React.ReactElement | null {
       style={{
         position: 'absolute',
         top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: 340,
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',

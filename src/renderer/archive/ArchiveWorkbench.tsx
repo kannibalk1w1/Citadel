@@ -6,6 +6,7 @@ import { useUIStore } from '../store/uiStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { buildArchiveWorkbenchModel, type ArchiveWorkbenchRelic } from './archiveWorkbenchModel'
 import { buildIngestItems } from './workbenchIngest'
+import { activeArchiveRailWidth } from '../ui/shell/shellModel'
 
 type IpcWindow = Window & { ipc?: { invoke: (channel: string, args?: unknown) => Promise<unknown> } }
 
@@ -70,7 +71,8 @@ export function ArchiveWorkbench(): React.ReactElement | null {
     if (chamberId !== canvas.activeBoardId) canvas.setActiveBoard(chamberId)
     const item = canvas.boards.find((b) => b.id === chamberId)?.items.find((i: CanvasItem) => i.id === itemId)
     if (!item) return
-    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
     const scale = canvas.viewport().scale
     canvas.updateViewport({
       x: (window.innerWidth - sidebarW) / 2 - (item.x + item.width / 2) * scale,
@@ -90,7 +92,8 @@ export function ArchiveWorkbench(): React.ReactElement | null {
       return
     }
     const viewport = canvas.viewport()
-    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
     const origin = {
       x: ((window.innerWidth - sidebarW) / 2 - viewport.x) / viewport.scale,
       y: (window.innerHeight / 2 - viewport.y) / viewport.scale,
@@ -111,7 +114,7 @@ export function ArchiveWorkbench(): React.ReactElement | null {
       style={{
         position: 'absolute',
         top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: 480,
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',

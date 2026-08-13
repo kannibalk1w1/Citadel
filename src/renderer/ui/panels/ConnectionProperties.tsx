@@ -110,7 +110,7 @@ export function ConnectionProperties(): React.ReactElement | null {
 const panelStyle: React.CSSProperties = {
   position: 'absolute',
   top: 48,
-  right: 'calc(var(--sidebar-right-w) + 8px)',
+  right: 'calc(var(--context-rail-w) + 8px)',
   width: 248,
   background: 'var(--bg-panel)',
   border: '1px solid var(--border)',

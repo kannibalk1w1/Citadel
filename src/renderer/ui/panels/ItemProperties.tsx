@@ -6,6 +6,7 @@ import { itemInscriptionRefs } from '../inscriptionRefs'
 import { resolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
 import type { CanvasItem } from '../../../types'
+import { activeArchiveRailWidth } from '../shell/shellModel'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,8 @@ function itemLabel(item: CanvasItem | undefined): string {
 }
 
 function centerViewportOnItem(item: CanvasItem): void {
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const viewport = useCanvasStore.getState().viewport()
   useCanvasStore.getState().setSelection([item.id])
@@ -97,7 +99,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const panelChrome: React.CSSProperties = {
   position: 'absolute',
   top: 48,
-  right: 'calc(var(--sidebar-right-w) + 8px)',
+  right: 'calc(var(--context-rail-w) + 8px)',
   width: 236,
   background: 'linear-gradient(180deg, #17130f 0%, #0b0a09 100%)',
   border: '1px solid var(--border)',

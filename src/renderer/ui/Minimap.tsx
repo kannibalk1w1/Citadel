@@ -164,7 +164,7 @@ export function Minimap(): React.ReactElement | null {
       style={{
         position: 'absolute',
         bottom: 12,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: MAP_W,
         height: MAP_H,
         border: '1px solid rgba(185,148,85,0.25)',

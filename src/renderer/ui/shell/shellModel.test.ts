@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { archiveRailSections, commandSpineSections, shellCanvasInset } from './shellModel'
+import { activeArchiveRailWidth, archiveRailSections, commandSpineSections, shellCanvasInset } from './shellModel'
 
 describe('shellModel', () => {
   it('groups command spine actions by work mode', () => {
@@ -22,5 +22,10 @@ describe('shellModel', () => {
     expect(shellCanvasInset(false)).toBe('var(--archive-rail-w)')
     expect(shellCanvasInset(false, true)).toBe('34px')
     expect(shellCanvasInset(true)).toBe('0px')
+  })
+
+  it('uses the compact rail width only when the rail is collapsed', () => {
+    expect(activeArchiveRailWidth(false, 208)).toBe(208)
+    expect(activeArchiveRailWidth(true, 208)).toBe(34)
   })
 })

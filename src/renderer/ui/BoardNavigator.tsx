@@ -24,6 +24,7 @@ import { inscribe } from './toasts/inscriptionToastStore'
 import { stampRelicTemplate, type RelicTemplate } from './relicTemplates'
 import { askInscription } from './prompt/inscriptionPromptStore'
 import { useRelicTemplateStore } from './relicTemplateStore'
+import { activeArchiveRailWidth } from './shell/shellModel'
 
 function RiteLabel({ text }: { text: string }): React.ReactElement {
   return (
@@ -242,7 +243,8 @@ export function BoardNavigator(): React.ReactElement | null {
     if (!activeBoardId) return
     const canvas = useCanvasStore.getState()
     const viewport = canvas.viewport()
-    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
     const origin = {
       x: ((window.innerWidth - sidebarW) / 2 - viewport.x) / viewport.scale,
       y: (window.innerHeight / 2 - viewport.y) / viewport.scale,
@@ -276,7 +278,7 @@ export function BoardNavigator(): React.ReactElement | null {
       style={{
         position: 'absolute',
         top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: 360,
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',

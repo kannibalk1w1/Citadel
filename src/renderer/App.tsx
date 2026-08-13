@@ -7,8 +7,9 @@ let pasteOffset = 0
 import { CanvasStage } from './canvas/CanvasStage'
 import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
+import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
-import { shellCanvasInset } from './ui/shell/shellModel'
+import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
 import { Minimap } from './ui/Minimap'
@@ -84,7 +85,10 @@ function fitActiveBoard(fullWidth = false): void {
   const minY = Math.min(...allItems.map((i) => i.y))
   const maxX = Math.max(...allItems.map((i) => i.x + i.width))
   const maxY = Math.max(...allItems.map((i) => i.y + i.height))
-  const sidebarW = fullWidth ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const sidebarW = fullWidth
+    ? 0
+    : activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const pad = fullWidth ? 80 : 60
   const scale = Math.min(
@@ -454,9 +458,10 @@ export default function App(): React.ReactElement {
       if (!activeBoardId) return
       const target = canvas.selectedItems()[0] ?? null
       const viewport = canvas.viewport()
+      const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
       const sidebarW = useUIStore.getState().presentationMode
         ? 0
-        : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+        : activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
       const fallbackPoint = {
         x: (window.innerWidth - sidebarW) / 2 / viewport.scale - viewport.x / viewport.scale - 110,
         y: window.innerHeight / 2 / viewport.scale - viewport.y / viewport.scale - 48,
@@ -989,12 +994,12 @@ export default function App(): React.ReactElement {
   return (
     <ShellFrame
       presentationMode={presentationMode}
+      archiveRailCollapsed={archiveRailCollapsed}
       topBar={(
         <>
           {recoveryBanner}
           <BoardTabs />
-          <BoardNavigator />
-          <AssetLibrary />
+          <ProjectMenu />
         </>
       )}
       commandSpine={<Toolbar />}
@@ -1008,6 +1013,8 @@ export default function App(): React.ReactElement {
       contextDeck={(
         <>
           <Minimap />
+          <BoardNavigator />
+          <AssetLibrary />
           <IndexLedger />
           <ArchiveWorkbench />
           <RecordingBar />

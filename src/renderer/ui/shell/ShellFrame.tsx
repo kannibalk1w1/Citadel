@@ -2,6 +2,7 @@ import React from 'react'
 
 type ShellFrameProps = {
   presentationMode: boolean
+  archiveRailCollapsed: boolean
   topBar?: React.ReactNode
   commandSpine?: React.ReactNode
   canvas: React.ReactNode
@@ -13,6 +14,7 @@ type ShellFrameProps = {
 
 export function ShellFrame({
   presentationMode,
+  archiveRailCollapsed,
   topBar,
   commandSpine,
   canvas,
@@ -25,6 +27,7 @@ export function ShellFrame({
     <div
       className={presentationMode ? 'app-root citadel-shell citadel-shell-presentation' : 'app-root citadel-shell'}
       data-shell-mode={presentationMode ? 'presentation' : 'workbench'}
+      data-archive-rail-collapsed={archiveRailCollapsed}
     >
       <div className="citadel-shell-canvas">{canvas}</div>
       {!presentationMode && topBar && <div className="citadel-shell-topbar">{topBar}</div>}

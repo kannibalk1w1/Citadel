@@ -4,6 +4,7 @@ import { orderedPresentationItems } from '../presentation/presentationNavigation
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
+import { activeArchiveRailWidth } from './shell/shellModel'
 
 function itemLabel(item: CanvasItem): string {
   const content = typeof item.meta?.content === 'string' ? item.meta.content.trim().replace(/\s+/g, ' ') : ''
@@ -12,7 +13,8 @@ function itemLabel(item: CanvasItem): string {
 }
 
 function focusItem(item: CanvasItem): void {
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+  const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const canvas = useCanvasStore.getState()
   const viewport = canvas.viewport()
@@ -67,7 +69,7 @@ export function PresentationSequence(): React.ReactElement | null {
       style={{
         position: 'absolute',
         top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: 280,
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',

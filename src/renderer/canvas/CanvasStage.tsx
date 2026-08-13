@@ -26,6 +26,7 @@ import { useFileDrop } from './useFileDrop'
 import { engine } from '../arcade/HyperTypeEngine'
 import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
 import { visibleItemIds } from './visibility/viewportVisibility'
+import { activeArchiveRailWidth } from '../ui/shell/shellModel'
 import { canvasRuntimeStats } from '../performance/canvasRuntimeStats'
 
 const ZOOM_FACTOR = 1.1
@@ -87,6 +88,7 @@ export function CanvasStage(): React.ReactElement {
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
+  const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
   const setLastCanvasPointer = useCanvasEffectStore((s) => s.setLastCanvasPointer)
 
   const CURSOR = dragonCursorEnabled ? DRAGON_CURSORS : STANDARD_CURSORS
@@ -261,9 +263,10 @@ export function CanvasStage(): React.ReactElement {
 
   // Archive rail width is reserved from the canvas work area. Read once —
   // getComputedStyle forces a style recalc and this renders every pan frame.
-  const SIDEBAR_W = useMemo(() => parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228'
-  ), [])
+  const SIDEBAR_W = useMemo(() => {
+    const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    return activeArchiveRailWidth(archiveRailCollapsed, expandedRailWidth)
+  }, [archiveRailCollapsed])
   const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
   const height = window.innerHeight
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])

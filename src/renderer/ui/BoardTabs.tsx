@@ -137,7 +137,7 @@ export function BoardTabs(): React.ReactElement {
         background: 'var(--bg-ui)',
         borderBottom: '1px solid var(--border)',
         zIndex: 20,
-        paddingLeft: 4,
+        padding: '0 96px 0 4px',
         gap: 2,
         overflow: 'hidden',
       }}

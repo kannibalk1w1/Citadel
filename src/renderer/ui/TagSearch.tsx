@@ -1,6 +1,7 @@
 import React from 'react'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
+import { activeArchiveRailWidth } from './shell/shellModel'
 import {
   getArchiveIndexResults,
   getCommentResults,
@@ -64,7 +65,8 @@ export function TagSearch(): React.ReactElement | null {
   }
 
   const focusPoint = (x: number, y: number) => {
-    const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
+    const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
     const canvasW = window.innerWidth - sidebarW
     const scale = useCanvasStore.getState().viewport().scale
 
@@ -148,7 +150,7 @@ export function TagSearch(): React.ReactElement | null {
       style={{
         position: 'absolute',
         top: 48,
-        right: 'calc(var(--sidebar-right-w) + 8px)',
+        right: 'calc(var(--context-rail-w) + 8px)',
         width: 320,
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',

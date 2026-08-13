@@ -24,6 +24,14 @@
   background: radial-gradient(circle at 50% -20%, rgba(200, 169, 110, 0.045), transparent 45%), var(--bg-canvas);
 }
 
+.citadel-shell {
+  --context-rail-w: var(--sidebar-right-w);
+}
+
+.citadel-shell[data-archive-rail-collapsed="true"] {
+  --context-rail-w: 34px;
+}
+
 .app-root::before {
   opacity: 0.08;
   background-image:
@@ -45,6 +53,70 @@
 .citadel-board-tab-active {
   background: var(--bg-elevated) !important;
   box-shadow: inset 0 -2px 0 var(--chrome-accent) !important;
+}
+
+.citadel-project-menu {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: calc(var(--z-ui) + 1);
+}
+
+.citadel-project-menu-trigger,
+.citadel-project-menu-popover button {
+  border: 1px solid var(--chrome-edge-muted);
+  border-radius: 4px;
+  background: var(--bg-ui);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.citadel-project-menu-trigger {
+  height: 28px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+.citadel-project-menu-trigger span {
+  margin-left: 4px;
+  color: var(--text-muted);
+}
+
+.citadel-project-menu-trigger:hover,
+.citadel-project-menu-popover button:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+.citadel-project-menu-popover {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  display: grid;
+  min-width: 156px;
+  padding: 5px;
+  border: 1px solid var(--chrome-edge);
+  border-radius: var(--chrome-radius);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-lg);
+}
+
+.citadel-project-menu-popover button {
+  width: 100%;
+  padding: 7px 8px;
+  border-color: transparent;
+  border-radius: 3px;
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+}
+
+.citadel-project-menu-divider {
+  height: 1px;
+  margin: 4px 3px;
+  background: var(--chrome-edge-muted);
 }
 
 .citadel-toolbar {

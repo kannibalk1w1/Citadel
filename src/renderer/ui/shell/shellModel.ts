@@ -115,7 +115,13 @@ export const archiveRailSections: ShellSection[] = [
   },
 ]
 
+export const COLLAPSED_ARCHIVE_RAIL_WIDTH = 34
+
+export function activeArchiveRailWidth(archiveRailCollapsed: boolean, expandedWidth: number): number {
+  return archiveRailCollapsed ? COLLAPSED_ARCHIVE_RAIL_WIDTH : expandedWidth
+}
+
 export function shellCanvasInset(presentationMode: boolean, archiveRailCollapsed = false): string {
   if (presentationMode) return '0px'
-  return archiveRailCollapsed ? '34px' : 'var(--archive-rail-w)'
+  return archiveRailCollapsed ? `${COLLAPSED_ARCHIVE_RAIL_WIDTH}px` : 'var(--archive-rail-w)'
 }
