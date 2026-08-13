@@ -96,7 +96,7 @@ export function AssetLibrary(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Assets
+          Relics
         </h3>
         <button
           onClick={() => closePanel('assetLibrary')}
@@ -109,7 +109,7 @@ export function AssetLibrary(): React.ReactElement | null {
 
       {assets.length === 0 ? (
         <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)' }}>
-          No imported assets yet
+          No imported relics yet
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', paddingRight: 2 }}>

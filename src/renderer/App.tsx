@@ -562,7 +562,7 @@ export default function App(): React.ReactElement {
     // Boards
     resolver.register(Actions.BOARD_NEW, () => {
       const canvas = useCanvasStore.getState()
-      const id = canvas.addBoard(`Board ${canvas.boards.length + 1}`)
+      const id = canvas.addBoard(`Chamber ${canvas.boards.length + 1}`)
       canvas.setActiveBoard(id)
       useHistoryStore.getState().markDirty()
       inscribe('Chamber raised')

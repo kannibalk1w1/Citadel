@@ -496,8 +496,8 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label="Import" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
           <QuickBtn label="Ledger" title="Open the archive ledger (all relics and threads)" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
           <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
-          <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
-          <QuickBtn label="Clone board" title="Duplicate active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+          <QuickBtn label="New chamber" title="Add a new chamber (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
+          <QuickBtn label="Clone chamber" title="Duplicate active chamber (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
         </div>
       </div>
 

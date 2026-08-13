@@ -205,7 +205,7 @@ export function BoardTabs(): React.ReactElement {
       ))}
       <button
         onClick={() => {
-          const id = addBoard(`Board ${boards.length + 1}`)
+          const id = addBoard(`Chamber ${boards.length + 1}`)
           setActiveBoard(id)
           markDirty()
         }}
@@ -218,7 +218,7 @@ export function BoardTabs(): React.ReactElement {
           cursor: 'pointer',
           lineHeight: 1,
         }}
-        title="New board (Ctrl+Shift+N)"
+        title="New chamber (Ctrl+Shift+N)"
       >
         +
       </button>

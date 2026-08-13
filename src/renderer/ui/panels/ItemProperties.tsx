@@ -501,9 +501,9 @@ function CommentAttachPanel({
       className="citadel-floating-panel citadel-context-inspector"
       style={panelChrome}
     >
-      <PanelTitle title="Comment Link" subtitle="Attach note to item" />
+      <PanelTitle title="Bind inscription" subtitle="Bind note to relic" />
       <div style={{ fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-        Attach <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
+        Bind <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
       </div>
       <button
         onClick={attach}
@@ -518,7 +518,7 @@ function CommentAttachPanel({
           fontFamily: 'var(--font-mono)',
         }}
       >
-        Attach comment
+        Bind inscription
       </button>
     </div>
   )

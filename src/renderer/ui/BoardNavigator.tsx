@@ -159,7 +159,7 @@ export function BoardNavigator(): React.ReactElement | null {
   }
 
   const createBoard = () => {
-    const id = addBoard(`Board ${boards.length + 1}`)
+    const id = addBoard(`Chamber ${boards.length + 1}`)
     setActiveBoard(id)
     markDirty()
   }
@@ -295,10 +295,10 @@ export function BoardNavigator(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Boards
+          Chambers
         </h3>
         <div style={{ display: 'flex', gap: 4 }}>
-          <IconButton label="+" title="New board" onClick={createBoard} />
+          <IconButton label="+" title="New chamber" onClick={createBoard} />
           <IconButton label="x" title="Close" onClick={() => closePanel('boardNavigator')} />
         </div>
       </div>

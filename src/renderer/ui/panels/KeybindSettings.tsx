@@ -47,7 +47,7 @@ const getIpc = (): { invoke: (ch: string, args?: unknown) => Promise<unknown> } 
 const exportAreas: { area: ExportArea; label: string }[] = [
   { area: 'viewport', label: 'Viewport' },
   { area: 'selection', label: 'Selection' },
-  { area: 'board', label: 'Board' },
+  { area: 'board', label: 'Chamber' },
 ]
 
 export function KeybindSettings(): React.ReactElement | null {
