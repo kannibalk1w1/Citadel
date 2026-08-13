@@ -306,8 +306,6 @@ function QuickBtn({
 // ── Status strip ───────────────────────────────────────────────────────────────
 function StatusLine(): React.ReactElement {
   const isRecording = useHistoryStore((s) => s.isRecording)
-  const canUndo = useHistoryStore((s) => s.canUndo())
-  const canRedo = useHistoryStore((s) => s.canRedo())
   const isDirty = useHistoryStore((s) => s.isDirty())
   const snapToGrid = useUIStore((s) => s.snapToGrid)
   const [projectPath, setProjectPath] = useState(getCurrentFilePath())
@@ -327,18 +325,15 @@ function StatusLine(): React.ReactElement {
 
   const projectName = projectPath?.split(/[\\/]/).pop() ?? 'Unsaved'
   const needsSave = isDirty || !projectPath
-  const fmtTime = (ts: number | null) => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'
+  const fmtTime = (ts: number | null) => ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'not yet'
+  const stateLabel = needsSave ? 'needs saving' : `saved ${fmtTime(saveActivity.lastManualSaveAt)}`
 
   return (
     <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {[
         { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
-        { label: 'State', val: needsSave ? 'unsaved' : 'saved', color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
-        { label: 'Saved', val: fmtTime(saveActivity.lastManualSaveAt), color: 'var(--text-muted)' },
-        { label: 'Autosave', val: fmtTime(saveActivity.lastRecoverySaveAt), color: 'var(--text-muted)' },
+        { label: 'State', val: stateLabel, color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
         { label: 'Snap', val: snapToGrid ? 'on' : 'off',  color: snapToGrid ? 'var(--accent)' : 'var(--text-muted)' },
-        { label: 'Undo', val: canUndo ? 'ready' : '-',    color: canUndo ? 'var(--text-secondary)' : 'var(--text-muted)' },
-        { label: 'Redo', val: canRedo ? 'ready' : '-',    color: canRedo ? 'var(--text-secondary)' : 'var(--text-muted)' },
         ...(isRecording ? [{ label: 'Rec', val: 'live', color: 'var(--accent-danger)' }] : []),
       ].map(({ label, val, color }) => (
         <div key={label} style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -359,7 +354,7 @@ function RecentProjects(): React.ReactElement | null {
 
   const refresh = () => {
     getRecentProjects()
-      .then((next) => setProjects(next.slice(0, 5)))
+      .then((next) => setProjects(next.slice(0, 3)))
       .catch(() => setProjects([]))
   }
 
