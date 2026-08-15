@@ -199,6 +199,7 @@ export default function App(): React.ReactElement {
         'export.area',
         'export.includeComments',
         'ui.canvasBackground',
+        'ui.canvasFlatMigrated',
         'ui.alwaysOnTop',
         'ui.windowOpacity',
       ],
@@ -227,6 +228,17 @@ export default function App(): React.ReactElement {
       const canvasBackground = values['ui.canvasBackground']
       if (canvasBackground && typeof canvasBackground === 'object') {
         nextState.canvasBackground = normalizeCanvasBackground(canvasBackground)
+      }
+      // One-time move to the flat canvas. Stone was never chosen by anyone — it
+      // was simply the only default — so an install still carrying it is moved
+      // across once. Picking stone again afterwards sticks, because the marker
+      // is written either way.
+      if (values['ui.canvasFlatMigrated'] !== true) {
+        if (nextState.canvasBackground?.mode === 'stone') {
+          nextState.canvasBackground = { ...nextState.canvasBackground, mode: 'flat' }
+          ipc.invoke('settings:set', { key: 'ui.canvasBackground', value: nextState.canvasBackground }).catch(() => {})
+        }
+        ipc.invoke('settings:set', { key: 'ui.canvasFlatMigrated', value: true }).catch(() => {})
       }
       if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
       // Re-apply through main so the window actually adopts the stored mode.
