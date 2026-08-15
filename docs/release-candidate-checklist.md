@@ -48,6 +48,10 @@ None of the remaining items is large. They are listed in priority order in
 - **Crash recovery.** Dirty work is written to a recovery snapshot and offered
   back on the next launch.
 - **Test suite.** `npm test -- --run` is fully green on Linux and Windows.
+- **Typecheck.** `npm run typecheck` is green *and real* as of 2026-08-15. It
+  previously ran `tsc --noEmit` against a root config of `"files": []`, which
+  checked nothing and always exited 0; the build gate below was a false green
+  for as long as it existed. It now runs `tsc --build` across both projects.
 
 ---
 
