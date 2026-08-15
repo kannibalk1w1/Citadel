@@ -454,7 +454,7 @@ export default function App(): React.ReactElement {
 
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
       useUIStore.getState().toggleFilenameLabels()
-      inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames revealed' : 'Filenames veiled')
+      inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames shown' : 'Filenames hidden')
     })
 
     resolver.register(Actions.COMMENT_PIN_ADD, () => {

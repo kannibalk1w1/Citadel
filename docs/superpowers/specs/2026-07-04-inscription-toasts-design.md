@@ -2,6 +2,10 @@
 
 Status: approved direction via 2026-07-04 feature scouting (queue item 2); built same session.
 
+> **Superseded in part, 2026-08-15.** The toast *system* is as described. The archival
+> phrasing below ("Archive opened", "Chamber raised", "The eye opens") was replaced with
+> plain wording — see [UI Vocabulary](../../citadel-ui-vocabulary.md). Do not restore it.
+
 ## Problem
 
 Citadel's feedback is atmospheric (mascot + canvas effects) but non-verbal. Nothing tells the user in words that an archive opened, an export finished, or a recording started. Ref Flow's quiet bottom-center toasts close that gap; Citadel only has the bespoke `YouSavedBanner` (saves) and the crash-recovery banner.
