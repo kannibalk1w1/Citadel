@@ -387,6 +387,21 @@ export function KeybindSettings(): React.ReactElement | null {
           </div>
           <button
             type="button"
+            onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'dots' })}
+            aria-pressed={canvasBackground.mode === 'dots'}
+            style={{
+              ...btnStyle,
+              width: 'auto',
+              padding: '0 8px',
+              fontSize: 'var(--text-md)',
+              background: canvasBackground.mode === 'dots' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: canvasBackground.mode === 'dots' ? 'var(--bg-ui)' : 'var(--text-primary)',
+            }}
+          >
+            Dots
+          </button>
+          <button
+            type="button"
             onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'flat' })}
             aria-pressed={canvasBackground.mode === 'flat'}
             style={{

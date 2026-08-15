@@ -110,22 +110,24 @@ describe('uiStore - comment pins', () => {
 })
 
 describe('uiStore - canvas background', () => {
-  it('defaults to a flat neutral canvas', () => {
+  it('defaults to a dot grid on the neutral canvas', () => {
     // Asserted through normalize rather than the seeded store state: the
     // previous version of this test checked a value its own beforeEach had
     // just written, so it would have passed whatever the default became.
     expect(normalizeCanvasBackground(undefined)).toEqual({
-      mode: 'flat',
+      mode: 'dots',
       assetPath: null,
       opacity: 0.62,
       scale: 1,
       repeat: true,
     })
-    expect(useUIStore.getState().canvasBackground.mode).toBe('flat')
+    expect(useUIStore.getState().canvasBackground.mode).toBe('dots')
   })
 
-  it('still accepts the stone texture as an explicit choice', () => {
+  it('still accepts the other grounds as explicit choices', () => {
     expect(normalizeCanvasBackground({ mode: 'stone' }).mode).toBe('stone')
+    expect(normalizeCanvasBackground({ mode: 'flat' }).mode).toBe('flat')
+    expect(normalizeCanvasBackground({ mode: 'none' }).mode).toBe('none')
   })
 
   it('persists custom background settings with clamped values', () => {

@@ -92,7 +92,7 @@ export function normalizeSavedThemePalettes(value: unknown): SavedThemePalette[]
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
 export type ExportPreset = 'draft' | 'clean' | 'high-res'
-export type CanvasBackgroundMode = 'flat' | 'stone' | 'custom' | 'none'
+export type CanvasBackgroundMode = 'dots' | 'flat' | 'stone' | 'custom' | 'none'
 
 export type CanvasBackgroundSettings = {
   mode: CanvasBackgroundMode
@@ -103,9 +103,10 @@ export type CanvasBackgroundSettings = {
 }
 
 const DEFAULT_CANVAS_BACKGROUND: CanvasBackgroundSettings = {
-  // Flat and neutral by default. The stone tile is still available, but a
-  // textured, blue-cast floor competes with the references sitting on it.
-  mode: 'flat',
+  // A dot grid on the neutral ground: it reads as a workspace, gives the eye
+  // something to judge alignment against, and stays out of the way of the
+  // references sitting on it.
+  mode: 'dots',
   assetPath: null,
   opacity: 0.62,
   scale: 1,
@@ -119,7 +120,7 @@ export const exportPresets: Record<ExportPreset, { label: string; area: ExportAr
 }
 
 export function normalizeCanvasBackground(settings: Partial<CanvasBackgroundSettings> | null | undefined): CanvasBackgroundSettings {
-  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone' || settings?.mode === 'flat'
+  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone' || settings?.mode === 'flat' || settings?.mode === 'dots'
     ? settings.mode
     : DEFAULT_CANVAS_BACKGROUND.mode
   return {
