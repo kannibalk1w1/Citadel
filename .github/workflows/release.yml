@@ -1,0 +1,113 @@
+name: Release
+
+# Builds the Windows x64 artifacts for a tagged release and attaches them to a
+# draft GitHub Release. Nothing is published automatically: the draft is the
+# owner's last chance to check the installer before a buyer can download it.
+#
+# Signing is wired in but optional — see docs/release-signing.md. Without the
+# certificate secrets the build still succeeds and produces unsigned artifacts,
+# and the summary says so in as many words.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish_draft:
+        description: 'Attach artifacts to a draft GitHub Release (tag builds always do)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Confirm the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          $pkg = (Get-Content package.json | ConvertFrom-Json).version
+          if ($tag -ne $pkg) {
+            Write-Error "Tag $tag does not match package.json version $pkg. Bump the version, commit, and retag."
+            exit 1
+          }
+          Write-Host "Building Citadel $pkg"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Report signing configuration
+        shell: pwsh
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CERT_BASE64 }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:CSC_LINK)) {
+            Write-Warning "No signing certificate configured - artifacts will be UNSIGNED and SmartScreen will warn on install."
+            "### :warning: Unsigned build`n`nNo ``WINDOWS_CERT_BASE64`` secret is set, so the installer and portable exe are unsigned. See ``docs/release-signing.md``." >> $env:GITHUB_STEP_SUMMARY
+          } else {
+            Write-Host "Signing certificate present."
+            "### Signed build`n`nArtifacts were signed with the repository certificate." >> $env:GITHUB_STEP_SUMMARY
+          }
+
+      - name: Package
+        shell: pwsh
+        env:
+          # Consumed directly by electron-builder. Empty when the secrets are
+          # unset, which is the unsigned path.
+          CSC_LINK: ${{ secrets.WINDOWS_CERT_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        # `--publish never` keeps electron-builder out of the release: the upload
+        # below is explicit, and no latest.yml is generated because no update
+        # feed exists yet (release-candidate-checklist.md, item 3).
+        run: npm run package -- --win --x64 --publish never
+
+      - name: List artifacts
+        shell: pwsh
+        run: Get-ChildItem dist -Filter *.exe | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: citadel-windows-x64
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attach to draft release
+        if: github.ref_type == 'tag' && (github.event_name == 'push' || inputs.publish_draft)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag > $null 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --draft --generate-notes --title "Citadel $tag"
+          }
+          $files = Get-ChildItem dist -Filter *.exe | ForEach-Object { $_.FullName }
+          gh release upload $tag $files --clobber
+          "`n:package: Artifacts attached to the **draft** release ``$tag``. Review and publish it by hand." >> $env:GITHUB_STEP_SUMMARY

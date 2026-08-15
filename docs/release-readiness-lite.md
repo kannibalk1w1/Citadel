@@ -68,11 +68,11 @@ Optional checks:
 
 ## Known Alpha Limitations
 
-- Builds are unsigned unless code signing is added later.
-- GitHub release automation is not part of this slice.
+- Builds are unsigned until a certificate is added — see [Release Signing](./release-signing.md).
+- Tagged release automation lives in `.github/workflows/release.yml`; this local path is the manual alternative to it.
 - Auto-update publishing is not part of this slice.
 - Manual smoke testing is required before sharing artifacts.
-- Packaged artifact names are controlled by Electron Builder defaults unless customized later.
+- Artifacts are named `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
 
 ## Troubleshooting
 

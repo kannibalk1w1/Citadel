@@ -19,9 +19,11 @@ Last reviewed: 2026-08-15.
 Not yet shippable as a paid build. The archive itself is in good order — the
 save/open path is covered by tests, the `.citadelz` rites are hardened, and the
 interface no longer depends on the network. What is missing is the apparatus
-around it: nothing is signed, nothing is published, an update check runs against
-a host that does not exist, the licence is undeclared, and a first-run buyer
-lands in an empty chamber with nothing to look at.
+around it: nothing is signed, an update check runs against a host that does not
+exist, the licence is undeclared, and a first-run buyer lands in an empty chamber
+with nothing to look at. A tag now builds and drafts a release on its own
+(item 4), which leaves the certificate as the only thing standing between the
+current pipeline and a downloadable artifact that does not frighten anyone.
 
 None of the remaining items is large. They are listed in priority order in
 [Blocking work](#blocking-work).
@@ -73,9 +75,15 @@ that ships with v1 is the licence buyers keep.
 Builds are unsigned. Windows SmartScreen will warn on every install and portable
 launch, and an unsigned paid download reads as malware to a first-time buyer.
 
-Obtain an OV or EV code-signing certificate, add it to the electron-builder
-`win` config, and keep the credentials out of the repository (CI secrets only).
-Re-verify SmartScreen behaviour on a machine that has never seen the app.
+The release workflow is now signing-ready: it passes `CSC_LINK` and
+`CSC_KEY_PASSWORD` through to electron-builder from the `WINDOWS_CERT_BASE64`
+and `WINDOWS_CERT_PASSWORD` repository secrets, and warns loudly in the job
+summary when they are absent. **What remains is a purchase, not code.**
+
+Obtain an OV or EV code-signing certificate — the choice changes the workflow's
+shape, so read [Release Signing](./release-signing.md#which-certificate) first —
+add the two secrets, set `win.publisherName` to the certificate subject, and
+re-verify SmartScreen behaviour on a machine that has never seen the app.
 
 ### 3. Update path
 
@@ -94,15 +102,20 @@ Choose one:
 
 The current middle state is the only unacceptable one.
 
-### 4. Release automation
+### 4. Release automation — done
 
-There is no CI. Builds are produced by hand on one machine, which makes the
-artifact unreproducible and the release notes ad hoc.
+`.github/workflows/release.yml` runs on `v*` tags and on manual dispatch. It
+installs with `npm ci`, refuses a tag that disagrees with `package.json`'s
+version, runs `npm run typecheck` and `npm test -- --run`, packages for Windows
+x64, and attaches `Citadel-<version>-setup.exe` and
+`Citadel-<version>-portable.exe` to a **draft** GitHub Release. Signing (item 2)
+plugs into the same workflow through repository secrets.
 
-Add a GitHub Actions workflow triggered on `v*` tags that runs `npm run
-typecheck`, `npm test -- --run`, and `npm run package` on `windows-latest`, then
-uploads the NSIS installer and portable `.exe` to the GitHub Release. Signing
-(item 2) plugs into the same workflow.
+The draft is deliberate — publishing stays a human act, after the manual smoke
+pass below. Full detail in [Release Signing](./release-signing.md).
+
+Untested against GitHub's runners: the first tag push is the real proof, and
+should be a throwaway version on a scratch tag rather than the first paid one.
 
 ### 5. First-run experience
 
@@ -186,7 +199,8 @@ before publishing any paid artifact.
 - [ ] `npm run typecheck` exits 0.
 - [ ] `npm test -- --run` exits 0.
 - [ ] `npm run build` exits 0.
-- [ ] `npm run package` exits 0 and `dist/` holds both the NSIS installer and the portable `.exe`.
+- [ ] `npm run package` exits 0 and `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
+- [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds both executables.
 
 ### Install and launch
 
@@ -246,7 +260,7 @@ Settle before the store listing, not after:
 
 ## Next steps after this release
 
-- GitHub Actions release workflow with signing (items 2 and 4 together).
-- Playwright suite against the packaged app (item 6).
+- Signing certificate purchased and wired into the existing release workflow (item 2).
+- Playwright suite against the packaged app (item 6), added as a job to that workflow.
 - Linux packaging once the Windows loop is boring.
 - Release-notes generation from tags.
