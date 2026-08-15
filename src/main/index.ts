@@ -21,7 +21,8 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 600,
     show: false,
-    autoHideMenuBar: false,
+    // Hidden by default; the renderer reveals it on hover, and Alt still works.
+    autoHideMenuBar: true,
     frame: true,
     backgroundColor: '#0f0d0b',
     webPreferences: {

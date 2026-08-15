@@ -471,6 +471,16 @@ export function registerIpcHandlers(): void {
     return { ok: true, mode: windowMode }
   })
 
+  // ── window:setMenuBarVisible ───────────────────────────────────────────────
+  // Driven by the hover strip in the renderer. Auto-hide stays on underneath,
+  // so Alt reveals the menu whether or not the pointer is anywhere near it.
+  ipcMain.handle('window:setMenuBarVisible', async (e, { visible }: { visible: boolean }) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return { ok: false }
+    win.setMenuBarVisibility(Boolean(visible))
+    return { ok: true }
+  })
+
   // ── recovery:get ──────────────────────────────────────────────────────────
   ipcMain.handle('recovery:get', async () => {
     const recoveryPath = join(app.getPath('userData'), 'recovery.citadel')

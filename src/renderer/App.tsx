@@ -9,6 +9,7 @@ import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
 import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
+import { MenuBarHover } from './ui/shell/MenuBarHover'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
@@ -1061,6 +1062,7 @@ export default function App(): React.ReactElement {
       archiveRailCollapsed={archiveRailCollapsed}
       topBar={(
         <>
+          {!presentationMode && <MenuBarHover />}
           {recoveryBanner}
           <BoardTabs />
           <ProjectMenu />
