@@ -25,12 +25,26 @@ and clicks pass straight through to the app underneath.
 `setIgnoreMouseEvents`, no global shortcut, no tray. Citadel is a window you
 switch to; PureRef is a window you work *through*.
 
-For a tool aimed at people drawing and modelling, this is the largest single
+For a tool aimed at people drawing and modelling, this was the largest single
 feature gap in this document — larger than anything in the Ref Flow comparison.
-It is also unusually cheap: all three capabilities are one Electron main-process
-call each, and the app already has an IPC bridge, an action registry, and a
-keybind system to hang them on. The design work is the interface for it, not the
-mechanism.
+
+**Built 2026-08-15** (`737739d`). Always-on-top, opacity (floored at 30%), and
+click-through, reachable from the View menu, a Window section in the project
+rail, and keybinds. The rules live in `src/main/windowModes.ts`, free of electron
+and unit tested, because they are what keeps the window recoverable:
+
+- Click-through implies always-on-top; dropping always-on-top drops
+  click-through with it.
+- Opacity cannot be taken to zero.
+- Click-through registers `Ctrl+Alt+C` as a *global* shortcut while it is
+  active — by definition no click can reach the window to turn it off — and
+  unregisters it the moment it is not, so it never steals the combination
+  otherwise.
+- Click-through is not persisted. Always-on-top and opacity are. Relaunching
+  into a window that ignores the mouse would be a trap.
+
+Still absent from PureRef's list: "always on top of…" a *specific* application,
+"always on bottom", and "lock window".
 
 ---
 
@@ -114,9 +128,7 @@ Worth knowing, because these are the things a store listing should lead with:
 
 ## Suggested order
 
-1. **Always on top, opacity, click-through.** The category's defining workflow
-   feature, absent here, and cheap in Electron. Nothing else on this list moves
-   the needle as far.
+1. ~~Always on top, opacity, click-through.~~ Done, `737739d`.
 2. **Grayscale toggle.** Small, and artists use it daily.
 3. **Eyedropper into a swatch.** Completes a feature that is currently half
    present.
