@@ -140,7 +140,7 @@ export function parseProjectFile(json: string): ProjectFile {
     throw new Error(`Invalid Citadel project: ${validation.errors.join('; ')}`)
   }
   if (validation.project.boards.length === 0) {
-    throw new Error('Invalid Citadel project: boards must contain at least one chamber')
+    throw new Error('Invalid Citadel project: it must contain at least one board')
   }
   return validation.project
 }

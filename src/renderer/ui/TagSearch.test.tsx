@@ -92,7 +92,7 @@ describe('TagSearch keyboard interactions', () => {
   it('focuses the active Index result and closes on Enter', async () => {
     render(<TagSearch />)
 
-    const input = screen.getByPlaceholderText('Search the Index...')
+    const input = screen.getByPlaceholderText('Search boards, items, notes, tags…')
     await waitFor(() => expect(screen.getByText('1 / 2')).toBeTruthy())
 
     fireEvent.keyDown(input, { key: 'Enter' })
@@ -105,14 +105,14 @@ describe('TagSearch keyboard interactions', () => {
   it('focuses the active Index result and stays open on Ctrl+Enter', async () => {
     render(<TagSearch />)
 
-    const input = screen.getByPlaceholderText('Search the Index...')
+    const input = screen.getByPlaceholderText('Search boards, items, notes, tags…')
     await waitFor(() => expect(screen.getByText('1 / 2')).toBeTruthy())
 
     fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
 
     expect(useCanvasStore.getState().selectedIds).toEqual(['gate-relic'])
     expect(useUIStore.getState().panels.tagSearch).toBe(true)
-    expect(screen.getByPlaceholderText('Search the Index...')).toBeTruthy()
+    expect(screen.getByPlaceholderText('Search boards, items, notes, tags…')).toBeTruthy()
   })
 
   it('travels to a dormant chamber when focusing its result', async () => {
@@ -153,7 +153,7 @@ describe('TagSearch keyboard interactions', () => {
     expect(vault.viewport.y).toBe(800 / 2 - (2000 + 120 / 2) * 2)
   })
 
-  it('reveals a directly related Binding when focusing a relic result', async () => {
+  it('reveals a directly related connection when focusing an item result', async () => {
     useCanvasStore.setState((state) => ({
       boards: state.boards.map((board) => ({
         ...board,
@@ -163,7 +163,7 @@ describe('TagSearch keyboard interactions', () => {
 
     render(<TagSearch />)
 
-    const input = screen.getByPlaceholderText('Search the Index...')
+    const input = screen.getByPlaceholderText('Search boards, items, notes, tags…')
     await waitFor(() => expect(screen.getByText('1 / 3')).toBeTruthy())
 
     fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })

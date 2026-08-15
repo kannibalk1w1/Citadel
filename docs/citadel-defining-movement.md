@@ -33,7 +33,11 @@ The app must remain useful before the theme is noticed. The atmosphere should de
 
 Use broad archival language before niche worldbuilding language.
 
-Preferred vocabulary:
+**This is conceptual language, not interface language.** Since 2026-08-15 the
+interface names controls in plain words — board, item, connection, tag, note —
+because a user should never have to translate a word to find a button. See
+[UI Vocabulary](./citadel-ui-vocabulary.md), which is the authority for any
+string a user reads. The concepts below still describe what Citadel is:
 
 - **Relic**: an imported file, reference, image, note, PDF, audio clip, video, model, capture, or memory fragment.
 - **Inscription**: an annotation, note, comment, or written mark attached to a relic, thread, or chamber.

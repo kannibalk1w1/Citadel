@@ -22,7 +22,7 @@ function normalizeWaystone(value: unknown): Waystone | null {
   if (typeof stone.x !== 'number' || typeof stone.y !== 'number') return null
   return {
     id: stone.id,
-    name: typeof stone.name === 'string' && stone.name ? stone.name : 'Waystone',
+    name: typeof stone.name === 'string' && stone.name ? stone.name : 'Bookmark',
     x: stone.x,
     y: stone.y,
     scale: Math.max(0.05, Math.min(8, typeof stone.scale === 'number' ? stone.scale : 1)),

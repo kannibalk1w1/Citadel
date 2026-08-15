@@ -17,6 +17,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { Actions } from '../../keybinds/actions'
+import { actionLabel } from '../../keybinds/actionLabels'
 import { prepareExportCanvas } from '../../export/exportCanvas'
 import { describeExportPreview } from '../../export/exportPreviewModel'
 
@@ -69,7 +70,7 @@ const getIpc = (): { invoke: (ch: string, args?: unknown) => Promise<unknown> } 
 const exportAreas: { area: ExportArea; label: string }[] = [
   { area: 'viewport', label: 'Viewport' },
   { area: 'selection', label: 'Selection' },
-  { area: 'board', label: 'Chamber' },
+  { area: 'board', label: 'Board' },
 ]
 
 const themeOverrideLabels: Record<ThemeOverrideKey, string> = {
@@ -278,9 +279,12 @@ export function KeybindSettings(): React.ReactElement | null {
 
   if (!isOpen) return null
 
-  const entries = Object.entries(defaultKeybinds).filter(([action]) =>
-    !filter || action.toLowerCase().includes(filter.toLowerCase())
-  )
+  const entries = Object.entries(defaultKeybinds).filter(([action]) => {
+    if (!filter) return true
+    const needle = filter.toLowerCase()
+    // Match the plain name the user reads and the identifier they may know.
+    return action.toLowerCase().includes(needle) || actionLabel(action).toLowerCase().includes(needle)
+  })
 
   return (
     <div className="citadel-floating-panel" style={{ position: 'fixed', inset: '60px 20px 20px', background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, zIndex: 'var(--z-modal)', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
@@ -768,7 +772,10 @@ export function KeybindSettings(): React.ReactElement | null {
         <tbody>
           {entries.map(([action, keys]) => (
             <tr key={action} style={{ borderBottom: '1px solid var(--border-muted)' }}>
-              <td style={{ padding: '5px 8px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{action}</td>
+              <td style={{ padding: '5px 8px', color: 'var(--text-secondary)' }}>
+                <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>{actionLabel(action)}</span>
+                <span style={{ marginLeft: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>{action}</span>
+              </td>
               <td style={{ padding: '5px 8px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                 {(keys as string[]).map((k) => (
                   <kbd key={k} style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, padding: '1px 5px', marginRight: 4, fontSize: 10 }}>

@@ -21,7 +21,7 @@ const PRIMARY_TOOLS: ToolDef[] = [
   { mode: 'select', label: 'Select', key: 'V', icon: 'select' },
   { mode: 'pan', label: 'Pan', key: 'H', icon: 'pan' },
   { mode: 'lasso', label: 'Lasso', key: 'L', icon: 'lasso' },
-  { mode: 'connect', label: 'Bind', key: 'C', icon: 'connect' },
+  { mode: 'connect', label: 'Connect', key: 'C', icon: 'connect' },
   { mode: 'text', label: 'Text', key: 'T', icon: 'text' },
   { mode: 'sticky', label: 'Note', key: 'N', icon: 'sticky' },
 ]

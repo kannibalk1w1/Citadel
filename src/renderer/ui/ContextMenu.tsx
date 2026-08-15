@@ -82,19 +82,19 @@ export function ContextMenu(): React.ReactElement | null {
         },
       },
       {
-        label: 'Seal as template…',
+        label: 'Save as template…',
         action: () => {
           const canvas = useCanvasStore.getState()
           const chosen = canvas.items().filter((i) => selectedIds.includes(i.id) && !i.locked)
           if (chosen.length === 0) return
           const connections = canvas.connections()
           closeContextMenu()
-          void askInscription('Name this template:', 'Relic set').then((name) => {
+          void askInscription('Name this template:', 'Item set').then((name) => {
             if (!name) return
             const template = createRelicTemplate(name, chosen, connections)
             useRelicTemplateStore.getState().saveTemplate(template)
             triggerEffect('banner-raise')
-            inscribe(`Template sealed: ${template.name}`)
+            inscribe(`Template saved: ${template.name}`)
           })
         },
       },

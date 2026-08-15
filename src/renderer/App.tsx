@@ -424,19 +424,19 @@ export default function App(): React.ReactElement {
       const stones = resolveWaystones(board)
       const event = plantWaystoneEvent(board, {
         id: nanoid(),
-        name: `Waystone ${stones.length + 1}`,
+        name: `Bookmark ${stones.length + 1}`,
         x: viewport.x,
         y: viewport.y,
         scale: viewport.scale,
       })
       if (!event) {
-        inscribe('The chamber holds no more waystones')
+        inscribe('This board holds no more bookmarks')
         return
       }
       useHistoryStore.getState().push('BOARD_STYLE', board.id, event.before, event.after)
       canvas.updateBoardMeta(board.id, event.after)
       useHistoryStore.getState().markDirty()
-      inscribe('Waystone planted')
+      inscribe('Bookmark added')
     })
 
     let waystoneCursor = -1
@@ -449,7 +449,7 @@ export default function App(): React.ReactElement {
       waystoneCursor = (waystoneCursor + 1) % stones.length
       const stone = stones[waystoneCursor]
       canvas.updateViewport({ x: stone.x, y: stone.y, scale: stone.scale })
-      inscribe(`Waystone: ${stone.name}`)
+      inscribe(`Bookmark: ${stone.name}`)
     })
 
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
@@ -567,10 +567,10 @@ export default function App(): React.ReactElement {
     // Boards
     resolver.register(Actions.BOARD_NEW, () => {
       const canvas = useCanvasStore.getState()
-      const id = canvas.addBoard(`Chamber ${canvas.boards.length + 1}`)
+      const id = canvas.addBoard(`Board ${canvas.boards.length + 1}`)
       canvas.setActiveBoard(id)
       useHistoryStore.getState().markDirty()
-      inscribe('Chamber raised')
+      inscribe('Board created')
     })
     resolver.register(Actions.BOARD_DUPLICATE, () => {
       const canvas = useCanvasStore.getState()
@@ -578,7 +578,7 @@ export default function App(): React.ReactElement {
       const id = canvas.duplicateBoard(canvas.activeBoardId)
       if (id) {
         useHistoryStore.getState().markDirty()
-        inscribe('Chamber cloned')
+        inscribe('Board duplicated')
       }
     })
     resolver.register(Actions.BOARD_NEXT, () => {
@@ -597,7 +597,7 @@ export default function App(): React.ReactElement {
       const { boards, activeBoardId } = useCanvasStore.getState()
       const board = boards.find((b) => b.id === activeBoardId)
       if (!board || !activeBoardId) return
-      void askInscription('Rename chamber:', board.name).then((name) => {
+      void askInscription('Rename board:', board.name).then((name) => {
         if (!name) return
         useCanvasStore.getState().renameBoard(activeBoardId, name)
         useHistoryStore.getState().markDirty()
@@ -612,7 +612,7 @@ export default function App(): React.ReactElement {
       removeBoard(activeBoardId)
       useHistoryStore.getState().markDirty()
       if (next.length > 0) setActiveBoard(next[Math.min(idx, next.length - 1)].id)
-      inscribe('Chamber sealed away')
+      inscribe('Board deleted')
     })
     resolver.register(Actions.RECORD_PLAY, () => {
       // RecordingBar manages its own playback UI — no-op here
@@ -628,8 +628,8 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())
 
     // Exports
-    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
-    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Export inscribed (image)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('PDF exported')).catch(console.error) })
+    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Image exported')).catch(console.error) })
     resolver.register(Actions.EXPORT_ZIP,   () => { void exportToZip().catch(console.error) })
 
     // File
@@ -638,7 +638,7 @@ export default function App(): React.ReactElement {
         if (!ok) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Archive sealed')
+        else inscribe('Project saved')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
@@ -646,11 +646,11 @@ export default function App(): React.ReactElement {
         if (!p) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Archive sealed')
+        else inscribe('Project saved')
       })
     })
-    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Archive opened') } }) })
-    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New archive founded') } })
+    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Project opened') } }) })
+    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New project created') } })
 
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {
@@ -766,11 +766,11 @@ export default function App(): React.ReactElement {
         if (session) saveRecording(session)
         clearEffect('eye-open')
         trigger('eye-close')
-        inscribe('The eye closes')
+        inscribe('Recording stopped')
       } else {
         startRecording(`Recording ${new Date().toLocaleTimeString()}`)
         trigger('eye-open')
-        inscribe('The eye opens')
+        inscribe('Recording started')
       }
     })
   }, [])

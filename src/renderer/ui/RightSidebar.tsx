@@ -378,7 +378,7 @@ function RecentProjects(): React.ReactElement | null {
               openRecentProject(project.path).then((ok) => {
                 if (ok) {
                   triggerEffect('lightning-in')
-                  inscribe('Archive opened')
+                  inscribe('Project opened')
                 }
               })
             }}
@@ -422,11 +422,11 @@ export function RightSidebar(): React.ReactElement {
           type="button"
           className="citadel-archive-rail-reveal"
           onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
-          title="Open archive rail"
-          aria-label="Open archive rail"
+          title="Open project rail"
+          aria-label="Open project rail"
         >
           <span aria-hidden="true">‹</span>
-          <span>Archive</span>
+          <span>Project</span>
         </button>
       </aside>
     )
@@ -457,8 +457,8 @@ export function RightSidebar(): React.ReactElement {
         type="button"
         className="citadel-archive-rail-collapse"
         onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
-        title="Collapse archive rail"
-        aria-label="Collapse archive rail"
+        title="Collapse project rail"
+        aria-label="Collapse project rail"
       >
         ›
       </button>
@@ -487,23 +487,23 @@ export function RightSidebar(): React.ReactElement {
 
       {/* Quick actions */}
       <div className="citadel-sidebar-section">
-        <div className="citadel-sidebar-section-title">Archive</div>
+        <div className="citadel-sidebar-section-title">Project</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           <QuickBtn label="Open project" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
-          <QuickBtn label="New chamber" title="Add a new chamber (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
+          <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
           <button
             type="button"
             className="citadel-sidebar-disclosure"
             aria-expanded={archiveToolsOpen}
             onClick={() => setArchiveToolsOpen((open) => !open)}
           >
-            Archive tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
+            Project tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
           </button>
           {archiveToolsOpen && (
             <div className="citadel-sidebar-disclosure-content">
-              <QuickBtn label="Index" title="Browse all relics and threads" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
-              <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
-              <QuickBtn label="Clone chamber" title="Duplicate active chamber (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+              <QuickBtn label="Index" title="Browse all items and connections" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
+              <QuickBtn label="Media review" title="Review untagged and missing files, or import a folder" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
+              <QuickBtn label="Duplicate board" title="Duplicate the active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
             </div>
           )}
         </div>
@@ -514,7 +514,7 @@ export function RightSidebar(): React.ReactElement {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
-          <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media relics (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
+          <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
         </div>
       </div>

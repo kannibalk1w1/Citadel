@@ -59,7 +59,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   }
 
   const handleWaymarkClick = (mark: Waymark) => {
-    void askInscription('Waymark inscription (clear to remove):', mark.label).then((label) => {
+    void askInscription('Marker label (clear to remove):', mark.label).then((label) => {
       if (label === null) return
       const current = useCanvasStore.getState().items().find((i) => i.id === item.id)
       if (!current) return
@@ -76,7 +76,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         const viewport = useCanvasStore.getState().viewport()
         const u = Math.max(0, Math.min(1, ((pointer.x - viewport.x) / viewport.scale - item.x) / item.width))
         const v = Math.max(0, Math.min(1, ((pointer.y - viewport.y) / viewport.scale - item.y) / item.height))
-        void askInscription('Waymark inscription:').then((label) => {
+        void askInscription('Marker label:').then((label) => {
           if (!label) return
           const current = useCanvasStore.getState().items().find((i) => i.id === item.id)
           if (!current) return
@@ -176,7 +176,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const imageHeight = image ? (image.naturalHeight || image.height) : item.height
   const fitRect = fitMode === 'fit' ? imageFitRect(imageWidth, imageHeight, item.width, item.height) : null
   const cropRect = fitMode === 'fill' ? imageCoverCrop(imageWidth, imageHeight, item.width, item.height) : undefined
-  const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing relic'
+  const missingLabel = item.src?.split(/[\\/]/).pop() ?? 'missing file'
   const { flipX, flipY } = itemFlip(item.meta)
   const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, scale)
   const waymarks = resolveWaymarks(item)

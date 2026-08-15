@@ -63,7 +63,7 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
     useHistoryStore.getState().push('CONNECTION_STYLE', activeBoardId, { id: conn.id }, { id: conn.id, ...patch })
   }
   const editLabel = () => {
-    void askInscription('Thread inscription:', conn.label ?? '').then((label) => {
+    void askInscription('Connection label:', conn.label ?? '').then((label) => {
       if (label === null) return
       update({ label: label || undefined })
     })

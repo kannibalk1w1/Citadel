@@ -13,7 +13,7 @@ export function buildMenu(): void {
         { type: 'separator' },
         { label: 'Export PDF…', click: () => send('menu:exportPdf') },
         { label: 'Export Image…', click: () => send('menu:exportImage') },
-        { label: 'Export Archive…', click: () => send('menu:exportZip') },
+        { label: 'Export Archive (.citadelz)…', click: () => send('menu:exportZip') },
         { type: 'separator' },
         { role: 'quit' },
       ],

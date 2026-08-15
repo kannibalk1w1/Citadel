@@ -127,9 +127,9 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
     `${item.type} ${item.id.slice(0, 6)}`
 
   const detailParts = [
-    isComment ? 'inscription: comment' : hasSource ? `relic: ${item.type}` : hasText ? `inscription: ${item.type}` : `relic: ${item.type}`,
+    isComment ? 'note: comment' : hasSource ? `item: ${item.type}` : hasText ? `note: ${item.type}` : `item: ${item.type}`,
     isComment && item.meta?.attachedTo ? 'attached' : '',
-    item.tags.length ? `sigils: ${formatSigils(item.tags)}` : '',
+    item.tags.length ? `tags: ${formatSigils(item.tags)}` : '',
     item.src ? `source: ${srcName || item.src}` : '',
     item.link ? `link: ${item.link}` : '',
     srcAName ? `A: ${srcAName}` : '',
@@ -142,7 +142,7 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
   const haystack = [
     item.type,
     isComment ? 'comment annotation note' : '',
-    item.tags.length ? 'sigil sigils' : '',
+    item.tags.length ? 'tag tags sigil sigils' : '',
     item.id,
     item.tags.join(' '),
     formatSigils(item.tags),
@@ -165,19 +165,19 @@ export function buildThreadSearchResult(
   const fromItem = itemMap.get(thread.fromId)
   const toItem = itemMap.get(thread.toId)
   const meaningLabel = thread.meaning ? titleCase(thread.meaning) : ''
-  const label = textValue(thread.label) || (meaningLabel ? `${meaningLabel} Binding` : `thread ${thread.id.slice(0, 6)}`)
+  const label = textValue(thread.label) || (meaningLabel ? `${meaningLabel} connection` : `connection ${thread.id.slice(0, 6)}`)
   const fromLabel = fromItem ? buildSearchResult(fromItem).label : thread.fromId
   const toLabel = toItem ? buildSearchResult(toItem).label : thread.toId
   const detail = [
-    'Binding',
+    'Connection',
     meaningLabel ? `meaning: ${meaningLabel}` : '',
-    thread.label ? `inscription: ${thread.label}` : '',
+    thread.label ? `label: ${thread.label}` : '',
     `${fromLabel} -> ${toLabel}`,
     `shape: ${threadStyleLabel(thread.style)}`,
     thread.dashed ? 'dashed' : '',
   ].filter(Boolean).join('  |  ')
   const haystack = [
-    'thread connection link binding',
+    'connection thread link binding arrow',
     thread.id,
     thread.label ?? '',
     thread.meaning ?? '',
@@ -212,7 +212,7 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
     else if (prefix === 'is') parsed.states.push(value)
     else if (prefix === 'has') parsed.assets.push(value)
     else if (prefix === 'meaning') parsed.meanings.push(value)
-    else if (prefix === 'chamber') parsed.chambers.push(normalizeToken(value))
+    else if (prefix === 'chamber' || prefix === 'board') parsed.chambers.push(normalizeToken(value))
     else text.push(token)
   })
 
@@ -251,7 +251,7 @@ function matchesItemSearchQuery(result: ItemSearchResult, parsed: ParsedSearchQu
 
 function matchesThreadSearchQuery(result: ThreadSearchResult, parsed: ParsedSearchQuery): boolean {
   if (parsed.text && !result.haystack.includes(parsed.text)) return false
-  if (parsed.types.length && !parsed.types.includes('thread')) return false
+  if (parsed.types.length && !parsed.types.some((type) => type === 'thread' || type === 'connection')) return false
   if (parsed.tags.length && !parsed.tags.every((tag) => (
     result.fromItem?.tags.some((itemTag) => itemTag.toLowerCase() === tag) ||
     result.toItem?.tags.some((itemTag) => itemTag.toLowerCase() === tag)
@@ -261,7 +261,7 @@ function matchesThreadSearchQuery(result: ThreadSearchResult, parsed: ParsedSear
   if (!parsed.assets.every((asset) => {
     if (asset === 'label') return Boolean(result.thread.label)
     if (asset === 'meaning') return Boolean(result.thread.meaning)
-    return asset === 'thread'
+    return asset === 'thread' || asset === 'connection'
   })) return false
   return true
 }
@@ -278,7 +278,7 @@ function boardMatchesChamberTokens(board: CanvasBoard, chambers: string[]): bool
 }
 
 function stripArchiveOnlyTokens(query: string): string {
-  return query.trim().split(/\s+/).filter((token) => !token.toLowerCase().startsWith('chamber:')).join(' ')
+  return query.trim().split(/\s+/).filter((token) => { const low = token.toLowerCase(); return !low.startsWith('chamber:') && !low.startsWith('board:') }).join(' ')
 }
 
 function getAllIndexResults(items: CanvasItem[], connections: Connection[], limit: number): SearchResult[] {
@@ -349,22 +349,22 @@ export function groupSearchResults(results: SearchResult[]): SearchResultGroup[]
   return [
     {
       id: 'relics',
-      title: 'Relics',
+      title: 'Items',
       results: results.filter((result) => isItemSearchResult(result) && hasRelicSource(result.item)),
     },
     {
       id: 'inscriptions',
-      title: 'Inscriptions',
+      title: 'Notes',
       results: results.filter((result) => isItemSearchResult(result) && hasInscription(result.item)),
     },
     {
       id: 'sigils',
-      title: 'Sigils',
+      title: 'Tags',
       results: results.filter((result) => isItemSearchResult(result) && result.item.tags.length > 0),
     },
     {
       id: 'threads',
-      title: 'Threads',
+      title: 'Connections',
       results: results.filter(isThreadSearchResult),
     },
   ]
@@ -396,8 +396,8 @@ export function firstRelatedThread(itemId: string, connections: Connection[]): C
 }
 
 export function resultBadgeLabel(result: SearchResult): string {
-  if (isThreadSearchResult(result)) return result.thread.meaning ? result.thread.meaning : 'thread'
+  if (isThreadSearchResult(result)) return result.thread.meaning ? result.thread.meaning : 'connection'
   if (isCommentItem(result.item)) return 'comment'
-  if (result.item.tags.length > 0) return result.item.tags.length === 1 ? '1 sigil' : `${result.item.tags.length} sigils`
+  if (result.item.tags.length > 0) return result.item.tags.length === 1 ? '1 tag' : `${result.item.tags.length} tags`
   return result.item.type
 }

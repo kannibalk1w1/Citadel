@@ -21,7 +21,9 @@ Core direction:
 
 > Citadel is a dark archival canvas for collecting files, memories, research, fragments, and thoughts, then marking, arranging, and binding them into visible patterns.
 
-Preferred product language:
+Preferred product language — **for how the product thinks, not for what the interface says.**
+Controls use plain words; see [UI Vocabulary](./docs/citadel-ui-vocabulary.md), which is the
+authority for any string a user reads. The concepts below stay:
 
 - **Relic:** any imported file, capture, note, memory, reference, PDF, audio, video, model, or fragment.
 - **Inscription:** an annotation, note, comment, or written mark.
@@ -33,7 +35,7 @@ Preferred product language:
 
 Avoid making default first-class concepts like Character, Place, Clue, Event, or Faction. Those can exist as user-created sigils/templates, but the foundation is archival, reflective, and research-oriented.
 
-See `docs/citadel-defining-movement.md` for the full direction and `docs/citadel-performance-roadmap.md` for the medium-term performance strategy.
+See `docs/citadel-ui-vocabulary.md` for the plain-word interface map, `docs/citadel-defining-movement.md` for the full direction and `docs/citadel-performance-roadmap.md` for the medium-term performance strategy.
 
 Current implementation decisions and the active next-step queue live in `docs/citadel-performance-roadmap.md` under **Current Decisions From Recent Sessions**. Large-chamber profiling notes live beside it in `docs/citadel-large-chamber-profile-*.md`.
 

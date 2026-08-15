@@ -16,17 +16,17 @@ describe('ArchiveRiteOverlay', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('shows the unsealing header and percent while importing', () => {
+  it('shows the importing header and percent while importing', () => {
     useArchiveProgressStore.setState({ rite: { op: 'import', percent: 37 } })
     render(<ArchiveRiteOverlay />)
     expect(screen.getByRole('dialog')).toBeTruthy()
-    expect(screen.getByText(/unsealing the archive/i)).toBeTruthy()
+    expect(screen.getByText(/importing archive/i)).toBeTruthy()
     expect(screen.getByText('37%')).toBeTruthy()
   })
 
-  it('shows the sealing header while exporting', () => {
+  it('shows the exporting header while exporting', () => {
     useArchiveProgressStore.setState({ rite: { op: 'export', percent: 80 } })
     render(<ArchiveRiteOverlay />)
-    expect(screen.getByText(/sealing the archive/i)).toBeTruthy()
+    expect(screen.getByText(/exporting archive/i)).toBeTruthy()
   })
 })

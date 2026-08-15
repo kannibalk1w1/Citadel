@@ -131,7 +131,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => { console.error('GLTFLoader error', err); setLoadError('3D relic failed') })
+        }, undefined, (err) => { console.error('GLTFLoader error', err); setLoadError('3D file failed') })
       } else if (ext === 'obj') {
         const loader = new OBJLoader()
         loader.load(url, (obj) => {
@@ -146,7 +146,7 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
           camera.far = size * 100
           camera.updateProjectionMatrix()
           scene.add(pivotObj)
-        }, undefined, (err) => { console.error('OBJLoader error', err); setLoadError('3D relic failed') })
+        }, undefined, (err) => { console.error('OBJLoader error', err); setLoadError('3D file failed') })
       }
     }
 

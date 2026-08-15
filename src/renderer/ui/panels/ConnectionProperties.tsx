@@ -37,12 +37,12 @@ export function ConnectionProperties(): React.ReactElement | null {
         </button>
       </div>
 
-      <label style={labelStyle}>Inscription
+      <label style={labelStyle}>Label
         <input
           value={conn.label ?? ''}
           onChange={(e) => update({ label: e.target.value || undefined })}
           style={inputStyle}
-          placeholder="names the binding"
+          placeholder="names the connection"
         />
       </label>
 
@@ -52,18 +52,18 @@ export function ConnectionProperties(): React.ReactElement | null {
           onChange={(e) => update({ meaning: normalizeThreadMeaning(e.target.value) })}
           style={selectStyle}
         >
-          <option value="">Unmarked thread</option>
+          <option value="">Unlabelled</option>
           {threadMeaningOptions.map((meaning) => (
             <option key={meaning.value} value={meaning.value}>{meaning.label}</option>
           ))}
         </select>
       </label>
 
-      <label style={labelStyle}>Thread Shape
+      <label style={labelStyle}>Shape
         <select value={conn.style} onChange={(e) => update({ style: e.target.value as never })} style={selectStyle}>
-          <option value="bezier">Curved thread</option>
-          <option value="elbow">Elbow thread</option>
-          <option value="straight">Straight link</option>
+          <option value="bezier">Curved</option>
+          <option value="elbow">Elbow</option>
+          <option value="straight">Straight</option>
         </select>
       </label>
 

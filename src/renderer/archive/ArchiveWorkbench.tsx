@@ -105,7 +105,7 @@ export function ArchiveWorkbench(): React.ReactElement | null {
     })
     canvas.setSelection(items.map((item) => item.id))
     useHistoryStore.getState().markDirty()
-    inscribe(`Ingested ${items.length} relics`)
+    inscribe(`Imported ${items.length} files`)
   }
 
   return (
@@ -130,16 +130,16 @@ export function ArchiveWorkbench(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Workbench
+          Media review
         </h3>
         <div style={{ display: 'flex', gap: 4 }}>
           <button
             type="button"
-            title="Ingest a folder of media as relics in this chamber"
+            title="Import a folder of media into this board"
             onClick={() => { void ingestFolder() }}
             style={{ height: 22, background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 3, color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 10, padding: '0 8px' }}
           >
-            Ingest folder…
+            Import folder…
           </button>
           <button
             type="button"
@@ -153,14 +153,14 @@ export function ArchiveWorkbench(): React.ReactElement | null {
       </div>
 
       <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
-        {model.summary.uncategorized} uncategorized · {model.summary.missingAssets} missing
+        {model.summary.uncategorized} untagged · {model.summary.missingAssets} missing
       </div>
 
       <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {sectionTitle('Uncategorized relics')}
+        {sectionTitle('Untagged items')}
         {model.uncategorizedRelics.length === 0 && (
           <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11 }}>
-            Every relic bears a sigil or inscription.
+            Every item has a tag or a note.
           </span>
         )}
         {model.uncategorizedRelics.map((relic) => (
@@ -168,7 +168,7 @@ export function ArchiveWorkbench(): React.ReactElement | null {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
               <button
                 type="button"
-                title={`Travel to ${relic.filename} in ${relic.chamberName}`}
+                title={`Go to ${relic.filename} in ${relic.chamberName}`}
                 onClick={() => travelTo(relic.chamberId, relic.itemId)}
                 style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 11, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
               >
@@ -183,7 +183,7 @@ export function ArchiveWorkbench(): React.ReactElement | null {
                 <button
                   key={sigil}
                   type="button"
-                  title={`Apply sigil "${sigil}"`}
+                  title={`Apply tag "${sigil}"`}
                   onClick={() => applySigil(relic, sigil)}
                   style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 9, padding: '1px 7px' }}
                 >
@@ -194,10 +194,10 @@ export function ArchiveWorkbench(): React.ReactElement | null {
           </div>
         ))}
 
-        {sectionTitle('Missing relics')}
+        {sectionTitle('Missing files')}
         {model.missingRelics.length === 0 && (
           <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11 }}>
-            No relics are missing from disk.
+            No files are missing from disk.
           </span>
         )}
         {model.missingRelics.map((missing) => (

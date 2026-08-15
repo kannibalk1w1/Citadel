@@ -12,10 +12,10 @@ import {
 } from './indexLedgerModel'
 
 const COLUMNS: { key: LedgerSortKey; title: string; width: string }[] = [
-  { key: 'label', title: 'Relic / Thread', width: '38%' },
+  { key: 'label', title: 'Item / Connection', width: '38%' },
   { key: 'type', title: 'Type', width: '16%' },
-  { key: 'chamber', title: 'Chamber', width: '20%' },
-  { key: 'sigils', title: 'Sigils', width: '26%' },
+  { key: 'chamber', title: 'Board', width: '20%' },
+  { key: 'sigils', title: 'Tags', width: '26%' },
 ]
 
 // The Ledger: a structured table lens over every chamber in the archive.
@@ -82,7 +82,7 @@ export function IndexLedger(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Ledger
+          Index
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
@@ -106,7 +106,7 @@ export function IndexLedger(): React.ReactElement | null {
       <input
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        placeholder="Sift the ledger…"
+        placeholder="Filter the index…"
         style={{
           background: 'var(--bg-ui)',
           border: '1px solid var(--border)',

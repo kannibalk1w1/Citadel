@@ -8,7 +8,7 @@ type Props = {
 export function RuntimeStatsSigil({ stats }: Props): React.ReactElement {
   return (
     <aside
-      aria-label="Chamber runtime load"
+      aria-label="Board runtime load"
       className="citadel-floating-panel"
       style={{
         position: 'absolute',

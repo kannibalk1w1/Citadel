@@ -501,9 +501,9 @@ function CommentAttachPanel({
       className="citadel-floating-panel citadel-context-inspector"
       style={panelChrome}
     >
-      <PanelTitle title="Bind inscription" subtitle="Bind note to relic" />
+      <PanelTitle title="Attach comment" subtitle="Attach this comment to an item" />
       <div style={{ fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-        Bind <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
+        Attach <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
       </div>
       <button
         onClick={attach}
@@ -579,7 +579,7 @@ export function ItemProperties(): React.ReactElement | null {
       className="citadel-floating-panel citadel-context-inspector citadel-item-properties"
       style={panelChrome}
     >
-      <PanelTitle title="Relic" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
+      <PanelTitle title="Item" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         <Field label="X"><NumInput value={item.x} onChange={(v) => update({ x: v })} /></Field>

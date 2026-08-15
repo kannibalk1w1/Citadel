@@ -219,11 +219,11 @@ export function BoardNavigator(): React.ReactElement | null {
       scale: viewport.scale,
     })
     if (!event) {
-      inscribe('The chamber holds no more waystones')
+      inscribe('This board holds no more bookmarks')
       return
     }
     pushWaystoneEvent(boardId, event)
-    inscribe('Waystone planted')
+    inscribe('Bookmark added')
   }
 
   const jumpToWaystone = (stone: { x: number; y: number; scale: number }) => {
@@ -231,7 +231,7 @@ export function BoardNavigator(): React.ReactElement | null {
   }
 
   const renameWaystone = (boardId: string, id: string, currentName: string) => {
-    void askInscription('Rename waystone:', currentName).then((name) => {
+    void askInscription('Rename bookmark:', currentName).then((name) => {
       if (!name) return
       const board = useCanvasStore.getState().boards.find((b) => b.id === boardId)
       if (!board) return
@@ -260,7 +260,7 @@ export function BoardNavigator(): React.ReactElement | null {
     })
     canvas.setSelection(stamped.items.map((item) => item.id))
     markDirty()
-    inscribe(`Stamped: ${template.name}`)
+    inscribe(`Template applied: ${template.name}`)
   }
 
   const pickChamberTexture = async (id: string) => {
@@ -295,10 +295,10 @@ export function BoardNavigator(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Chambers
+          Boards
         </h3>
         <div style={{ display: 'flex', gap: 4 }}>
-          <IconButton label="+" title="New chamber" onClick={createBoard} />
+          <IconButton label="+" title="New board" onClick={createBoard} />
           <IconButton label="x" title="Close" onClick={() => closePanel('boardNavigator')} />
         </div>
       </div>
@@ -330,7 +330,7 @@ export function BoardNavigator(): React.ReactElement | null {
       {activeChamber && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, border: '1px solid var(--border)', borderRadius: 5, padding: 8 }}>
           <div style={{ fontSize: 9, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Chamber Rite — {activeChamber.name}
+            Appearance — {activeChamber.name}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'center' }}>
             <RiteLabel text="Ambience" />
@@ -371,7 +371,7 @@ export function BoardNavigator(): React.ReactElement | null {
             <div style={{ display: 'flex', gap: 4 }}>
               <button
                 type="button"
-                title="Choose a floor texture for this chamber"
+                title="Choose a floor texture for this board"
                 onClick={() => pickChamberTexture(activeChamber.id)}
                 style={{
                   flex: 1,
@@ -388,12 +388,12 @@ export function BoardNavigator(): React.ReactElement | null {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {activeIdentity.texture ? activeIdentity.texture.assetPath.split(/[\\/]/).pop() : 'Inherit archive floor'}
+                {activeIdentity.texture ? activeIdentity.texture.assetPath.split(/[\\/]/).pop() : 'Inherit project floor'}
               </button>
               {activeIdentity.texture && (
                 <button
                   type="button"
-                  title="Return to the archive floor"
+                  title="Return to the project floor"
                   onClick={() => applyChamberPatch(activeChamber.id, { texture: null })}
                   style={{
                     width: 20,
@@ -417,13 +417,13 @@ export function BoardNavigator(): React.ReactElement | null {
           {relicTemplates.length > 0 && (
             <>
               <div style={{ marginTop: 2 }}>
-                <RiteLabel text="Relic Templates" />
+                <RiteLabel text="Item templates" />
               </div>
               {relicTemplates.map((template) => (
                 <div key={template.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <button
                     type="button"
-                    title={`Stamp "${template.name}" into this chamber (${template.items.length} relics)`}
+                    title={`Add "${template.name}" to this board (${template.items.length} items)`}
                     onClick={() => stampTemplate(template)}
                     style={{
                       flex: 1,
@@ -444,15 +444,15 @@ export function BoardNavigator(): React.ReactElement | null {
                   >
                     {template.name} · {template.items.length}
                   </button>
-                  <IconButton label="-" title="Forget template" danger onClick={() => useRelicTemplateStore.getState().removeTemplate(template.id)} />
+                  <IconButton label="-" title="Remove template" danger onClick={() => useRelicTemplateStore.getState().removeTemplate(template.id)} />
                 </div>
               ))}
             </>
           )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-            <RiteLabel text="Waystones" />
-            <IconButton label="+" title="Plant a waystone at the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
+            <RiteLabel text="Bookmarks" />
+            <IconButton label="+" title="Bookmark the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
           </div>
           {resolveWaystones(activeChamber).map((stone) => (
             <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -479,8 +479,8 @@ export function BoardNavigator(): React.ReactElement | null {
               >
                 {stone.name}
               </button>
-              <IconButton label="r" title="Rename waystone" onClick={() => renameWaystone(activeChamber.id, stone.id, stone.name)} />
-              <IconButton label="-" title="Remove waystone" danger onClick={() => pushWaystoneEvent(activeChamber.id, removeWaystoneEvent(activeChamber, stone.id))} />
+              <IconButton label="r" title="Rename bookmark" onClick={() => renameWaystone(activeChamber.id, stone.id, stone.name)} />
+              <IconButton label="-" title="Remove bookmark" danger onClick={() => pushWaystoneEvent(activeChamber.id, removeWaystoneEvent(activeChamber, stone.id))} />
             </div>
           ))}
         </div>

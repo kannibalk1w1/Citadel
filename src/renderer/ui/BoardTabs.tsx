@@ -218,7 +218,7 @@ export function BoardTabs(): React.ReactElement {
           cursor: 'pointer',
           lineHeight: 1,
         }}
-        title="New chamber (Ctrl+Shift+N)"
+        title="New board (Ctrl+Shift+N)"
       >
         +
       </button>

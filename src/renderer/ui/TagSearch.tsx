@@ -22,9 +22,9 @@ const SEARCH_CHIPS = [
   { label: 'Hidden', token: 'is:hidden' },
   { label: 'Locked', token: 'is:locked' },
   { label: 'Linked', token: 'has:link' },
-  { label: 'Relics', token: 'has:src' },
-  { label: 'Sigils', token: 'has:tag' },
-  { label: 'Threads', token: 'type:thread' },
+  { label: 'Files', token: 'has:src' },
+  { label: 'Tagged', token: 'has:tag' },
+  { label: 'Connections', token: 'type:connection' },
   { label: 'Meanings', token: 'has:meaning' },
   { label: 'Memory', token: 'meaning:memory' },
   { label: 'Questions', token: 'meaning:question' },
@@ -166,7 +166,7 @@ export function TagSearch(): React.ReactElement | null {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleIndexKeyDown}
-          placeholder="Search the Index..."
+          placeholder="Search boards, items, notes, tags…"
           style={{
             flex: 1,
             background: 'var(--bg-ui)',

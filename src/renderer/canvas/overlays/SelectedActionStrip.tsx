@@ -87,15 +87,15 @@ export function SelectedActionStrip(): React.ReactElement | null {
   const exportRelic = async () => {
     if (!item.src) return
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args?: unknown) => Promise<unknown> } }).ipc
-    const name = item.src.split(/[\\/]/).pop() ?? 'relic'
+    const name = item.src.split(/[\\/]/).pop() ?? 'file'
     const extension = name.includes('.') ? name.split('.').pop()! : '*'
     const picked = (await ipc.invoke('file:saveDialog', {
       defaultName: name,
-      filters: [{ name: 'Relic source', extensions: [extension] }],
+      filters: [{ name: 'Source file', extensions: [extension] }],
     })) as { path?: string | null }
     if (!picked?.path) return
     const result = (await ipc.invoke('assets:exportCopy', { sourcePath: item.src, targetPath: picked.path })) as { ok?: boolean }
-    if (result?.ok) inscribe('Relic copied out')
+    if (result?.ok) inscribe('Source file exported')
   }
 
   return (
@@ -124,7 +124,7 @@ export function SelectedActionStrip(): React.ReactElement | null {
       {flippable && <ActionButton title="Flip horizontal (Shift+H)" icon="flipH" onClick={() => resolver.dispatch(Actions.FLIP_H)} />}
       {flippable && <ActionButton title="Flip vertical (Shift+V)" icon="flipV" onClick={() => resolver.dispatch(Actions.FLIP_V)} />}
       <ActionButton title={anyUnlocked ? 'Lock' : 'Unlock'} icon="lock" onClick={() => resolver.dispatch(Actions.TOGGLE_LOCK)} />
-      {single && item.src && <ActionButton title="Export this relic's source file" icon="export" onClick={() => { void exportRelic() }} />}
+      {single && item.src && <ActionButton title="Export this item's source file" icon="export" onClick={() => { void exportRelic() }} />}
       <ActionButton title="Duplicate" icon="copy" onClick={() => resolver.dispatch(Actions.DUPLICATE)} />
       <ActionButton title="Bring to front" icon="front" onClick={() => resolver.dispatch(Actions.BRING_FRONT)} />
       <ActionButton title="Delete" icon="delete" danger onClick={() => resolver.dispatch(Actions.DELETE)} />

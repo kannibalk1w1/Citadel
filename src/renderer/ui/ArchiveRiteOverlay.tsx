@@ -7,7 +7,7 @@ export function ArchiveRiteOverlay(): React.ReactElement | null {
   const rite = useArchiveProgressStore((s) => s.rite)
   if (!rite) return null
 
-  const title = rite.op === 'import' ? 'Unsealing the archive…' : 'Sealing the archive…'
+  const title = rite.op === 'import' ? 'Importing archive…' : 'Exporting archive…'
 
   return (
     <div

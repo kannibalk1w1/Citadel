@@ -111,7 +111,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
 
   const editLabel = (conn: Connection) => {
     if (!activeBoardId) return
-    void askInscription('Thread inscription:', conn.label ?? '').then((label) => {
+    void askInscription('Connection label:', conn.label ?? '').then((label) => {
       if (label === null) return
       const nextLabel = label || undefined
       updateConnection(activeBoardId, conn.id, { label: nextLabel })
@@ -178,7 +178,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
         const markerEnd = conn.arrowHead !== 'none' ? `url(#${conn.arrowHead})` : undefined
         const isActive = conn.id === activeConnectionId
         const labelText = conn.label?.trim()
-        const plaqueText = labelText || (conn.meaning ? 'Thread' : '')
+        const plaqueText = labelText || (conn.meaning ? 'Connection' : '')
         const plaque = plaqueText ? connectionLabelPlaque(from, to, plaqueText, conn.meaning) : null
         const pulse = bindingPulse?.connectionId === conn.id
           ? connectionBindingPulse(bindingPulse.startedAt, pulseNow, { reducedMotion })

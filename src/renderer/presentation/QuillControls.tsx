@@ -1,7 +1,7 @@
 import React from 'react'
 import { QUILL_COLORS, QUILL_WIDTHS, useQuillStore } from './quillStore'
 
-const SWATCH_LABELS = ['Chamber accent', 'White', 'Grey']
+const SWATCH_LABELS = ['Board accent', 'White', 'Grey']
 
 function ControlButton({ label, title, engaged, onClick }: {
   label: string
@@ -39,7 +39,7 @@ export function QuillControls(): React.ReactElement {
 
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <ControlButton label="Quill" title="Raise or rest the quill (Q)" engaged={active} onClick={() => useQuillStore.getState().toggleActive()} />
+      <ControlButton label="Pen" title="Turn the presentation pen on or off (Q)" engaged={active} onClick={() => useQuillStore.getState().toggleActive()} />
       {active && (
         <>
           {QUILL_COLORS.map((swatch, index) => (
