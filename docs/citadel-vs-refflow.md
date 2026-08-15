@@ -18,10 +18,12 @@ weight.**
 
 On features, Citadel matches Ref Flow's advertised list almost item for item and
 goes past it in several places. The gaps that would cost a sale are narrower and
-less flattering: snapping silently does nothing on the media item types Ref Flow
-charges Pro for, the smart guides do not measure anything, the app speaks one
+less flattering: the smart guides do not measure anything, the app speaks one
 language against Ref Flow's six, and Ref Flow's $29 lifetime price sets a ceiling
 Citadel must be visibly worth clearing.
+
+The worst of them — media items that could not be moved at all, and did not snap
+when they could — was found and closed during this review (items 1 below).
 
 ---
 
@@ -56,12 +58,16 @@ be selected, and repositioned only by auto-arrange or the align actions. The
 snapping fix makes dragging correct wherever it is reachable; for video, YouTube
 and audio it is not yet reachable.
 
-The obvious fix — passing `editableFrame` — would regress playback, because the
-move overlay covers the whole item (`inset: 0`) and would swallow clicks on the
-native `<video>`/`<audio>` controls and the YouTube `<webview>`. A grab bar is
-the usual answer, but every edge is already occupied: controls sit at the bottom
-of video and audio, and `VideoItem` puts its frame-capture buttons at `top: 6`.
-**This needs a UX decision, not just a wiring change.**
+**Also fixed 2026-08-15** (`2c1f7c5`), with a title bar. Passing `editableFrame`
+alone would have regressed playback — the move overlay covered the whole item
+(`inset: 0`) and would have swallowed clicks on the native `<video>`/`<audio>`
+transport, the YouTube `<webview>`, and `VideoItem`'s own capture buttons at
+`top: 6`. Instead the type badge above a selected item grows into a title bar and
+becomes the drag target. It sits outside the frame, so it covers no content, and
+all four DOM-layer types now share one affordance — the full-surface overlay is
+gone from 3D with it.
+
+Both halves are now closed: media items can be moved, and they snap when moved.
 
 ### 2. Smart guides do not show distances
 
@@ -185,8 +191,7 @@ substance sits behind a first run that shows none of it.
 ## Suggested order
 
 1. ~~Route `DOMItem` drags through the snap engine.~~ Done, `277a243`.
-2. **Give video, YouTube and audio a move affordance** — see item 1 above; this
-   is now the real gap, and it needs a decision on where the grab area lives.
+2. ~~Give video, YouTube and audio a move affordance.~~ Done, `2c1f7c5`.
 3. **Measure and label non-zero gaps** in the snap guides.
 4. **Give snap and fit single-key defaults.**
 5. **Measure the packaged size** on the first CI build; decide listing vs code.
