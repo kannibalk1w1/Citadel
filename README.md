@@ -44,17 +44,40 @@ npm install
 npm run dev       # Vite + Electron with HMR
 npm run build     # Production build
 npm run package   # Production build + Windows installer/portable artifacts
-npm run test      # Unit tests (Vitest)
-npm run e2e       # End-to-end tests (Playwright)
+npm run test      # Unit and integration tests (Vitest)
+npm run e2e       # Playwright — no suite committed yet, see the checklist below
 ```
 
 For local alpha packaging and smoke testing, see [Citadel Release Readiness Lite](docs/release-readiness-lite.md).
+For the state of the paid early-access release, see the
+[release-candidate checklist](docs/release-candidate-checklist.md).
 
 ## Project file format
 
 - `.citadel` — JSON project file, assets referenced by relative path
 - `.citadelz` — zip archive with project JSON + bundled assets
 
+## Privacy and network use
+
+Your archive is yours. Citadel stores everything on your own disk: `.citadel`
+projects, `.citadelz` bundles, settings, preview caches, and crash recovery all
+live in local files. Nothing you place on the canvas is uploaded anywhere, and
+there is no account, no telemetry, and no analytics.
+
+Citadel reaches the network in exactly three cases, all of them visible to you:
+
+| What | When | Notes |
+|---|---|---|
+| Update check | Once, ~5 seconds after launch | Asks the release host whether a newer version exists. No project data is sent. |
+| YouTube relics | Only if you place one | The embed loads from YouTube in an isolated webview. |
+| Remote sources | Only if you point a relic at a URL | Loads whatever address you gave it. |
+
+Typefaces are bundled with the app, so the interface renders identically with the
+machine offline. Third-party works shipped inside Citadel are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## License
 
-MIT
+Citadel's source is intended to be MIT. A `LICENSE` file has not been added yet —
+see [the release-candidate checklist](docs/release-candidate-checklist.md) for the
+open licensing decision.
