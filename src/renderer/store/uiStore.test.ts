@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { normalizeThemePaletteFile, useUIStore } from './uiStore'
+import { normalizeCanvasBackground, normalizeThemePaletteFile, useUIStore } from './uiStore'
 
 const mockInvoke = vi.fn().mockResolvedValue({ ok: true })
 
@@ -19,7 +19,7 @@ beforeEach(() => {
     theme: 'citadel',
     themeOverrides: {},
     savedThemePalettes: [],
-    canvasBackground: { mode: 'stone', assetPath: null, opacity: 0.62, scale: 1, repeat: true },
+    canvasBackground: normalizeCanvasBackground(undefined),
   })
 })
 
@@ -110,14 +110,22 @@ describe('uiStore - comment pins', () => {
 })
 
 describe('uiStore - canvas background', () => {
-  it('defaults to the built-in stone background', () => {
-    expect(useUIStore.getState().canvasBackground).toEqual({
-      mode: 'stone',
+  it('defaults to a flat neutral canvas', () => {
+    // Asserted through normalize rather than the seeded store state: the
+    // previous version of this test checked a value its own beforeEach had
+    // just written, so it would have passed whatever the default became.
+    expect(normalizeCanvasBackground(undefined)).toEqual({
+      mode: 'flat',
       assetPath: null,
       opacity: 0.62,
       scale: 1,
       repeat: true,
     })
+    expect(useUIStore.getState().canvasBackground.mode).toBe('flat')
+  })
+
+  it('still accepts the stone texture as an explicit choice', () => {
+    expect(normalizeCanvasBackground({ mode: 'stone' }).mode).toBe('stone')
   })
 
   it('persists custom background settings with clamped values', () => {

@@ -27,7 +27,7 @@ export function buildDefaultCanvasBackgroundStyle(input: DefaultCanvasBackground
   return {
     position: 'absolute',
     inset: 0,
-    backgroundColor: '#030506',
+    backgroundColor: 'var(--canvas-flat)',
     backgroundImage: `url("${defaultCanvasTextureUrl}")`,
     backgroundRepeat: 'repeat',
     backgroundSize: `${tileSize}px auto`,
@@ -38,7 +38,7 @@ export function buildDefaultCanvasBackgroundStyle(input: DefaultCanvasBackground
 }
 
 type EffectiveBackground = {
-  mode: 'stone' | 'custom' | 'none'
+  mode: 'flat' | 'stone' | 'custom' | 'none'
   assetPath: string | null
   opacity: number
   scale: number
@@ -79,6 +79,20 @@ export function CanvasBackground(): React.ReactElement {
 
   if (canvasBackground.mode === 'none') return <></>
 
+  // Flat: a plain neutral ground, the way reference tools present a canvas.
+  if (canvasBackground.mode === 'flat') {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'var(--canvas-flat)',
+          pointerEvents: 'none',
+        }}
+      />
+    )
+  }
+
   if (canvasBackground.mode === 'custom' && canvasBackground.assetPath) {
     const customTileSize = DEFAULT_CANVAS_TEXTURE_TILE_SIZE * canvasBackground.scale * clampTextureViewportScale(viewport.scale)
     return (
@@ -86,7 +100,7 @@ export function CanvasBackground(): React.ReactElement {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: '#030506',
+          backgroundColor: 'var(--canvas-flat)',
           backgroundImage: `url("${pathToUrl(canvasBackground.assetPath)}")`,
           backgroundRepeat: canvasBackground.repeat ? 'repeat' : 'no-repeat',
           backgroundSize: canvasBackground.repeat ? `${customTileSize}px auto` : 'cover',

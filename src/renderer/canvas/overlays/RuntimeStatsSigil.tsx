@@ -36,7 +36,7 @@ export function RuntimeStatsSigil({ stats }: Props): React.ReactElement {
           textTransform: 'uppercase',
         }}
       >
-        Chamber Load
+        Board Load
       </div>
       <RuntimeStat label="Mounted" value={`${stats.mountedRelics} / ${stats.totalRelics}`} />
       <RuntimeStat label="DOM" value={String(stats.awakeDOMMedia)} />

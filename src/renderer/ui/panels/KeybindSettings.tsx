@@ -387,6 +387,21 @@ export function KeybindSettings(): React.ReactElement | null {
           </div>
           <button
             type="button"
+            onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'flat' })}
+            aria-pressed={canvasBackground.mode === 'flat'}
+            style={{
+              ...btnStyle,
+              width: 'auto',
+              padding: '0 8px',
+              fontSize: 'var(--text-md)',
+              background: canvasBackground.mode === 'flat' ? 'var(--accent)' : 'var(--bg-canvas)',
+              color: canvasBackground.mode === 'flat' ? 'var(--bg-ui)' : 'var(--text-primary)',
+            }}
+          >
+            Flat
+          </button>
+          <button
+            type="button"
             onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'stone' })}
             aria-pressed={canvasBackground.mode === 'stone'}
             style={{
@@ -398,7 +413,7 @@ export function KeybindSettings(): React.ReactElement | null {
               color: canvasBackground.mode === 'stone' ? 'var(--bg-ui)' : 'var(--text-primary)',
             }}
           >
-            Built-in
+            Stone
           </button>
           <button
             type="button"

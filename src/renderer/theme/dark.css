@@ -10,6 +10,9 @@
   --bg-hover:    #282017;
   --bg-elevated: #241e17;
   --bg-sunken:   #0a0907;
+  /* Flat canvas ground. Neutral on purpose: a warm or cool cast here shifts
+     how every reference image on the board reads. */
+  --canvas-flat: #1b1b1b;
 
   /* Text */
   --text-primary:   #e8ddd0;
