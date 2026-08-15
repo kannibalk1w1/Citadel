@@ -21,7 +21,7 @@ const PRIMARY_TOOLS: ToolDef[] = [
   { mode: 'select', label: 'Select', key: 'V', icon: 'select' },
   { mode: 'pan', label: 'Pan', key: 'H', icon: 'pan' },
   { mode: 'lasso', label: 'Lasso', key: 'L', icon: 'lasso' },
-  { mode: 'connect', label: 'Bind', key: 'C', icon: 'connect' },
+  { mode: 'connect', label: 'Connect', key: 'C', icon: 'connect' },
   { mode: 'text', label: 'Text', key: 'T', icon: 'text' },
   { mode: 'sticky', label: 'Note', key: 'N', icon: 'sticky' },
 ]
@@ -239,10 +239,10 @@ export function Toolbar(): React.ReactElement {
         left: 12,
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 'var(--space-2)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: '6px 4px',
         zIndex: 'var(--z-ui)',
         boxShadow: 'var(--shadow-md)',
@@ -262,7 +262,7 @@ export function Toolbar(): React.ReactElement {
           style={{
             width: 36,
             height: 36,
-            borderRadius: 4,
+            borderRadius: 'var(--radius-sm)',
             border: isMergeMode ? '1.5px solid var(--accent)' : 'none',
             cursor: 'pointer',
             background: toolMode === mode ? 'var(--accent)' : 'transparent',
@@ -291,13 +291,13 @@ export function Toolbar(): React.ReactElement {
           style={{
             width: 36,
             height: 36,
-            borderRadius: 4,
+            borderRadius: 'var(--radius-sm)',
             border: hasSpecialistToolActive || moreOpen ? '1px solid var(--accent)' : 'none',
             cursor: 'pointer',
             background: moreOpen ? 'var(--bg-hover)' : 'transparent',
             color: hasSpecialistToolActive || moreOpen ? 'var(--accent)' : 'var(--text-secondary)',
             fontFamily: 'var(--font-mono)',
-            fontSize: 16,
+            fontSize: 'var(--text-xl)',
             lineHeight: 1,
           }}
         >
@@ -320,7 +320,7 @@ export function Toolbar(): React.ReactElement {
                   style={{
                     width: 36,
                     height: 36,
-                    borderRadius: 4,
+                    borderRadius: 'var(--radius-sm)',
                     border: isMergeMode ? '1.5px solid var(--accent)' : 'none',
                     cursor: 'pointer',
                     background: toolMode === mode ? 'var(--accent)' : 'transparent',
@@ -353,7 +353,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: youtubeOpen ? 'var(--accent)' : 'transparent',
@@ -368,7 +368,7 @@ export function Toolbar(): React.ReactElement {
       </button>
 
       {youtubeOpen && (
-        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 2px 4px' }}>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: '2px 2px 4px' }}>
           <input
             autoFocus
             value={youtubeUrl}
@@ -382,17 +382,17 @@ export function Toolbar(): React.ReactElement {
               width: 148,
               background: 'var(--bg-ui)',
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--text-primary)',
               fontFamily: 'var(--font-mono)',
-              fontSize: 9,
+              fontSize: 'var(--text-xs)',
               padding: '4px 6px',
               outline: 'none',
               boxSizing: 'border-box',
               animation: youtubeShake ? 'ytShake 0.35s ease' : 'none',
             }}
           />
-          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
             Enter to place · Esc to cancel
           </span>
         </div>
@@ -404,7 +404,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: snapToGrid ? 'var(--accent)' : 'transparent',
@@ -425,7 +425,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: canAutoArrange ? 'pointer' : 'not-allowed',
           background: 'transparent',
@@ -448,7 +448,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: isRecording ? 'rgba(139,32,32,0.25)' : 'transparent',
@@ -475,7 +475,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: voiceRecording ? 'rgba(139,32,32,0.25)' : 'transparent',
@@ -497,7 +497,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: 'transparent',
@@ -519,7 +519,7 @@ export function Toolbar(): React.ReactElement {
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: 'none',
           cursor: 'pointer',
           background: 'transparent',

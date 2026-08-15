@@ -17,7 +17,7 @@ export function InscriptionToasts(): React.ReactElement | null {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 6,
+        gap: 'var(--space-3)',
         zIndex: 'var(--z-panels)',
         pointerEvents: 'none',
       }}
@@ -51,11 +51,11 @@ export function InscriptionToasts(): React.ReactElement | null {
             animationDuration: `${toast.lifetimeMs}ms`,
             background: 'color-mix(in srgb, var(--bg-panel) 94%, transparent)',
             border: toast.tone === 'danger' ? '1px solid var(--accent-danger)' : '1px solid var(--border)',
-            borderRadius: 4,
+            borderRadius: 'var(--radius-sm)',
             boxShadow: 'var(--shadow-md)',
             color: 'var(--text-primary)',
             fontFamily: 'var(--font-body)',
-            fontSize: 12,
+            fontSize: 'var(--text-base)',
             letterSpacing: '0.02em',
             padding: '6px 14px',
           }}

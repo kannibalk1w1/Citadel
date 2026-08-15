@@ -92,7 +92,7 @@ export function normalizeSavedThemePalettes(value: unknown): SavedThemePalette[]
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
 export type ExportPreset = 'draft' | 'clean' | 'high-res'
-export type CanvasBackgroundMode = 'stone' | 'custom' | 'none'
+export type CanvasBackgroundMode = 'dots' | 'flat' | 'stone' | 'custom' | 'none'
 
 export type CanvasBackgroundSettings = {
   mode: CanvasBackgroundMode
@@ -103,7 +103,10 @@ export type CanvasBackgroundSettings = {
 }
 
 const DEFAULT_CANVAS_BACKGROUND: CanvasBackgroundSettings = {
-  mode: 'stone',
+  // A dot grid on the neutral ground: it reads as a workspace, gives the eye
+  // something to judge alignment against, and stays out of the way of the
+  // references sitting on it.
+  mode: 'dots',
   assetPath: null,
   opacity: 0.62,
   scale: 1,
@@ -117,7 +120,7 @@ export const exportPresets: Record<ExportPreset, { label: string; area: ExportAr
 }
 
 export function normalizeCanvasBackground(settings: Partial<CanvasBackgroundSettings> | null | undefined): CanvasBackgroundSettings {
-  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone'
+  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone' || settings?.mode === 'flat' || settings?.mode === 'dots'
     ? settings.mode
     : DEFAULT_CANVAS_BACKGROUND.mode
   return {
@@ -230,10 +233,15 @@ type UIState = {
 
   // Filename inscriptions under media relics
   filenameLabelsVisible: boolean
+  windowAlwaysOnTop: boolean
+  windowOpacity: number
+  windowClickThrough: boolean
+  applyWindowMode: (request: { alwaysOnTop?: boolean; opacity?: number; clickThrough?: boolean }) => void
+  setWindowModeFromMain: (mode: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }) => void
   toggleFilenameLabels: () => void
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   toolMode: 'select',
   setToolMode: (mode) => set({ toolMode: mode }),
 
@@ -450,4 +458,23 @@ export const useUIStore = create<UIState>((set) => ({
 
   filenameLabelsVisible: false,
   toggleFilenameLabels: () => set((s) => ({ filenameLabelsVisible: !s.filenameLabelsVisible })),
+
+  // Window modes live in the main process; the renderer mirrors what it is told.
+  // Main owns the invariants (click-through implies always-on-top, opacity has a
+  // floor), so the store takes the applied mode back rather than assuming it.
+  windowAlwaysOnTop: false,
+  windowOpacity: 1,
+  windowClickThrough: false,
+  applyWindowMode: (request) => {
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('window:setMode', request).then((res) => {
+      const { mode } = (res ?? {}) as { mode?: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean } }
+      if (mode) get().setWindowModeFromMain(mode)
+    }).catch(console.error)
+  },
+  setWindowModeFromMain: (mode) => set({
+    windowAlwaysOnTop: mode.alwaysOnTop,
+    windowOpacity: mode.opacity,
+    windowClickThrough: mode.clickThrough,
+  }),
 }))

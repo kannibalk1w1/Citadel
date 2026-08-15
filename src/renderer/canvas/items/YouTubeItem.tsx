@@ -27,6 +27,7 @@ export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElemen
       )}
       <DOMItem
         item={item}
+        editableFrame
         onClick={(e) => {
           e.stopPropagation()
           if (toolMode === 'connect') {

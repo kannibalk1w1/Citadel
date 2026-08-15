@@ -74,6 +74,16 @@ describe('VideoItem poster-first rendering', () => {
     expect(document.querySelector('video')).toBeNull()
   })
 
+  it('offers a drag handle when selected, without covering the video', () => {
+    useCanvasStore.setState({ selectedIds: [videoItem.id] })
+
+    render(<VideoItem item={videoItem} />)
+
+    // Video items had no move affordance at all until 2026-08-15.
+    expect(screen.getByTitle('Move')).toBeTruthy()
+    expect(document.querySelector('video')).toBeTruthy()
+  })
+
   it('renders the full video for selected relics even when small on screen', () => {
     recordAssetMetadata({ src: 'C:/archive/memory.mp4', exists: true, thumbnailPath: 'C:/cache/video-poster.png' })
     useCanvasStore.setState((state) => ({

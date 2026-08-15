@@ -9,6 +9,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -20,7 +21,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
 
-  const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
+  const groupRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
@@ -32,7 +33,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
     }
   }, [isSelected])
 
-  const colors = (item.meta?.colors as string[]) ?? ['#b8c2bd']
+  const colors = (item.meta?.colors as string[]) ?? [canvasColor("accent")]
   // Compute pixel-perfect tile boundaries to avoid sub-pixel gaps
   const n = Math.max(1, colors.length)
   const swatchX = (i: number) => Math.round((item.width * i) / n)
@@ -61,7 +62,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
     const node = e.target
     const dragged = { ...item, x: node.x(), y: node.y() }
     const viewport = useCanvasStore.getState().viewport()
-    const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
+    const snapped = snapItem(dragged, viewport, { invertSnap: e.evt.ctrlKey })
     node.x(snapped.x)
     node.y(snapped.y)
     useUIStore.getState().bumpSnap()
@@ -162,7 +163,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#b8c2bd"
+            stroke={canvasColor("accent")}
             strokeWidth={1.5}
             shadowEnabled
             shadowColor="rgba(185,148,85,0.7)"

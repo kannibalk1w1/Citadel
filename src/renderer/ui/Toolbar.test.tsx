@@ -16,7 +16,7 @@ describe('Toolbar', () => {
     render(<Toolbar />)
 
     expect(screen.getByTitle('Select (V)')).toBeTruthy()
-    expect(screen.getByTitle('Bind (C)')).toBeTruthy()
+    expect(screen.getByTitle('Connect (C)')).toBeTruthy()
     expect(screen.getByTitle('Note (N)')).toBeTruthy()
     expect(screen.queryByTitle('Link (K)')).toBeNull()
 

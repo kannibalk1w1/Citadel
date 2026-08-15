@@ -1,8 +1,12 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
   "include": ["src/renderer/**/*", "src/types/**/*"],
+  "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "composite": true,
+    "outDir": "node_modules/.cache/tsc/web",
+    "tsBuildInfoFile": "node_modules/.cache/tsc/web.tsbuildinfo",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/renderer/*"],
       "@store/*": ["src/renderer/store/*"],

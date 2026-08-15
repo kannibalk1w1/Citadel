@@ -13,6 +13,7 @@ import { StickyItem } from './items/StickyItem'
 import { TextItem } from './items/TextItem'
 import { SwatchItem } from './items/SwatchItem'
 import { ComparisonItem } from './items/ComparisonItem'
+import { canvasColor } from '../theme/canvasColors'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
 
@@ -62,7 +63,7 @@ export const ItemRenderer = React.memo(function ItemRenderer({ item }: Props): R
       y={item.y + 4 / scale}
       text="🔒"
       fontSize={14 / scale}
-      fill="#b8c2bd"
+      fill={canvasColor("accent")}
       shadowEnabled
       shadowColor="rgba(0,0,0,0.85)"
       shadowBlur={4 / scale}

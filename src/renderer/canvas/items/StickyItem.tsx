@@ -10,6 +10,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -29,7 +30,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const scale = useCanvasStore((s) => s.viewport().scale)
   const isEditing = useUIStore((s) => s.editingItemId === item.id)
 
-  const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
+  const groupRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
@@ -48,7 +49,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
   const isComment = item.meta?.kind === 'comment'
   const isAttachedComment = isComment && typeof item.meta?.attachedTo === 'string'
-  const strokeColor = isSelected ? '#b8c2bd' : isComment ? '#5a4730' : undefined
+  const strokeColor = isSelected ? canvasColor("accent") : isComment ? '#5a4730' : undefined
   const textY = isComment ? 25 : 8
   const textHeight = item.height - (isComment ? 33 : 16)
   const silhouette = preferTextSilhouette(fontSize, scale, isSelected, isEditing)
@@ -90,7 +91,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
     const node = e.target
     const dragged = { ...item, x: node.x(), y: node.y() }
     const viewport = useCanvasStore.getState().viewport()
-    const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
+    const snapped = snapItem(dragged, viewport, { invertSnap: e.evt.ctrlKey })
     node.x(snapped.x)
     node.y(snapped.y)
     useUIStore.getState().bumpSnap()
@@ -147,7 +148,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
             item.x,
             item.y + item.height / 2,
           ]}
-          stroke={isSelected ? '#b8c2bd' : '#5a4730'}
+          stroke={isSelected ? canvasColor("accent") : '#5a4730'}
           strokeWidth={isSelected ? 1.4 : 1}
           opacity={0.85}
           listening={false}
@@ -207,7 +208,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
               y={7}
               width={6}
               height={6}
-              fill={isAttachedComment ? '#b8c2bd' : '#505050'}
+              fill={isAttachedComment ? canvasColor("accent") : '#505050'}
               opacity={item.opacity}
               cornerRadius={3}
             />
@@ -218,7 +219,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
                 width={item.width - 28}
                 height={12}
                 text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
-                fill="#b8c2bd"
+                fill={canvasColor("accent")}
                 fontSize={8}
                 fontFamily="var(--font-mono)"
                 wrap="none"

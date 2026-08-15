@@ -1,5 +1,6 @@
 import React from 'react'
 import { useUIStore } from '../store/uiStore'
+import { canvasColor } from '../theme/canvasColors'
 
 const STYLE = `
 @keyframes youSavedAnim {
@@ -38,7 +39,7 @@ export function YouSavedBanner(): React.ReactElement | null {
             fontFamily: "'Cinzel', serif",
             fontWeight: 900,
             fontSize: 52,
-            color: '#b8c2bd',
+            color: canvasColor("accent"),
             letterSpacing: '0.18em',
             textShadow: '0 0 40px rgba(185,148,85,0.55), 0 0 80px rgba(185,148,85,0.25)',
             userSelect: 'none',

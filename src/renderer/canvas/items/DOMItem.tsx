@@ -9,6 +9,10 @@ import { useUIStore } from '../../store/uiStore'
 import { canvasToScreen } from '../../../types'
 import { chromeFrameStyle, connectedItemIds, frameVariant, frameVariantStyle, itemTypeBadge } from '../overlays/boardChromeViewModel'
 import { filenameInscription } from '../../assets/filenameLabel'
+import { snapItem } from '../snapping/snapEngine'
+import { spatialIndex } from '../snapping/spatialIndex'
+import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = {
   item: CanvasItem
@@ -87,6 +91,9 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       clientY: event.clientY,
       item: { x: item.x, y: item.y, width: item.width, height: item.height },
     }
+    // Same contract as the Konva drag handlers: the snap engine reads nearby
+    // items from the spatial index, so it has to be current before the move.
+    if (mode === 'move') spatialIndex.rebuild(useCanvasStore.getState().items())
   }
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -96,10 +103,12 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
     const dx = (event.clientX - start.clientX) / viewport.scale
     const dy = (event.clientY - start.clientY) / viewport.scale
     if (start.mode === 'move') {
-      useCanvasStore.getState().updateItem(activeBoardId, item.id, {
-        x: start.item.x + dx,
-        y: start.item.y + dy,
-      })
+      const canvas = useCanvasStore.getState()
+      const dragged = { ...item, ...start.item, x: start.item.x + dx, y: start.item.y + dy }
+      // Ctrl inverts the snap setting mid-drag, exactly as it does on the Konva layer.
+      const snapped = snapItem(dragged, canvas.viewport(), { invertSnap: event.ctrlKey })
+      canvas.updateItem(activeBoardId, item.id, { x: snapped.x, y: snapped.y })
+      useUIStore.getState().bumpSnap()
       return
     }
     useCanvasStore.getState().updateItem(activeBoardId, item.id, {
@@ -119,6 +128,10 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       }
     }
     pointerStart.current = null
+    if (start.mode === 'move') {
+      snapLines.length = 0
+      useUIStore.getState().bumpSnap()
+    }
     const after = useCanvasStore.getState().items().find((candidate) => candidate.id === item.id)
     if (!after) return
     const before = { id: item.id, ...start.item }
@@ -151,7 +164,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
           position: 'absolute',
           inset: -2,
           border: `${frame.strokeWidth}px ${frame.dash ? 'dashed' : 'solid'} ${isConnectSource ? 'var(--text-primary)' : frame.stroke}`,
-          borderRadius: 3,
+          borderRadius: 'var(--radius-sm)',
           boxShadow: isRelated && !isSelected
             ? '0 0 18px rgba(189,150,82,0.18)'
             : isConnectSource ? '0 0 22px rgba(232,221,208,0.28)' : frame.glowOpacity > 0 ? `0 0 18px rgba(189,150,82,${frame.glowOpacity})` : 'none',
@@ -159,27 +172,65 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
           pointerEvents: 'none',
         }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          left: 6,
-          top: -13,
-          minWidth: 26,
-          height: 14,
-          padding: '1px 5px',
-          border: `1px solid ${frame.stroke}`,
-          borderRadius: 2,
-          background: variant.badgeFill,
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: 8,
-          lineHeight: '11px',
-          opacity: 0.94,
-          pointerEvents: 'none',
-        }}
-      >
-        {badge}
-      </div>
+      {canEdit ? (
+        // Selected and editable: the badge grows into a title bar that is the
+        // drag target. It sits above the frame so it never covers the item's
+        // own controls — native video/audio transport, the YouTube webview, or
+        // VideoItem's capture buttons at top: 6.
+        <div
+          onPointerDown={(event) => beginPointerAction(event, 'move')}
+          title="Move"
+          style={{
+            position: 'absolute',
+            left: -2,
+            right: -2,
+            top: -17,
+            height: 15,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 5px',
+            border: `1px solid ${frame.stroke}`,
+            borderBottom: 'none',
+            borderRadius: '3px 3px 0 0',
+            background: variant.badgeFill,
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            lineHeight: '13px',
+            opacity: 0.94,
+            cursor: 'move',
+            pointerEvents: 'auto',
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
+        >
+          <span>{badge}</span>
+          <span aria-hidden="true" style={{ letterSpacing: 1, opacity: 0.5 }}>⋮⋮</span>
+        </div>
+      ) : (
+        <div
+          style={{
+            position: 'absolute',
+            left: 6,
+            top: -13,
+            minWidth: 26,
+            height: 14,
+            padding: '1px 5px',
+            border: `1px solid ${frame.stroke}`,
+            borderRadius: 'var(--radius-sm)',
+            background: variant.badgeFill,
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            lineHeight: '11px',
+            opacity: 0.94,
+            pointerEvents: 'none',
+          }}
+        >
+          {badge}
+        </div>
+      )}
       {filenameLabel && (
         <div
           style={{
@@ -193,7 +244,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
             whiteSpace: 'nowrap',
             color: '#8a7a5c',
             fontFamily: 'var(--font-mono)',
-            fontSize: 10,
+            fontSize: 'var(--text-sm)',
             pointerEvents: 'none',
           }}
         >
@@ -223,16 +274,8 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       </div>
       {canEdit && (
         <>
-          <div
-            onPointerDown={(event) => beginPointerAction(event, 'move')}
-            title="Move"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              cursor: 'move',
-              pointerEvents: 'auto',
-            }}
-          />
+          {/* Moving is the title bar's job — see above. A full-surface overlay
+              here would swallow every click the item's own content needs. */}
           <div
             onPointerDown={(event) => beginPointerAction(event, 'resize-se')}
             title="Resize"
@@ -264,8 +307,8 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
             position: 'absolute',
             top: 4,
             right: 4,
-            color: '#b8c2bd',
-            fontSize: 14,
+            color: canvasColor("accent"),
+            fontSize: 'var(--text-lg)',
             lineHeight: 1,
             textShadow: '0 1px 4px rgba(0,0,0,0.85)',
             pointerEvents: 'none',

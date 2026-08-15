@@ -70,6 +70,12 @@ export const Actions = {
   PANEL_SEARCH: 'panel:search',
   PANEL_ARCHIVE_RAIL_TOGGLE: 'panel:archiveRailToggle',
 
+  // ── Window modes ──────────────────────────────────────────────────────────
+  WINDOW_ALWAYS_ON_TOP_TOGGLE: 'window:alwaysOnTopToggle',
+  WINDOW_CLICK_THROUGH_TOGGLE: 'window:clickThroughToggle',
+  WINDOW_OPACITY_DOWN: 'window:opacityDown',
+  WINDOW_OPACITY_UP: 'window:opacityUp',
+
   // ── Recording ─────────────────────────────────────────────────────────────
   RECORD_TOGGLE: 'record:toggle',
   RECORD_PLAY: 'record:play',

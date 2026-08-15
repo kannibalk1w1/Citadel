@@ -10,6 +10,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -65,7 +66,7 @@ export function TextItem({ item }: Props): React.ReactElement {
     const node = e.target
     const dragged = { ...item, x: node.x(), y: node.y() }
     const viewport = useCanvasStore.getState().viewport()
-    const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
+    const snapped = snapItem(dragged, viewport, { invertSnap: e.evt.ctrlKey })
     node.x(snapped.x)
     node.y(snapped.y)
     useUIStore.getState().bumpSnap()
@@ -143,7 +144,7 @@ export function TextItem({ item }: Props): React.ReactElement {
           x={item.x - 4} y={item.y - 4}
           width={item.width + 8} height={item.height + 8}
           fill={undefined}
-          stroke="#b8c2bd"
+          stroke={canvasColor("accent")}
           strokeWidth={1.5}
           shadowEnabled
           shadowColor="rgba(185,148,85,0.7)"

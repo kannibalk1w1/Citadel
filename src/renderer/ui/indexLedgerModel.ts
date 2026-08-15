@@ -52,7 +52,7 @@ export function buildLedgerRows(boards: CanvasBoard[]): LedgerRow[] {
         chamberId: board.id,
         chamberName: board.name,
         label: result.label,
-        type: thread.meaning ?? 'thread',
+        type: thread.meaning ?? 'connection',
         sigils: '',
         detail: result.detail,
         haystack: `${result.haystack} ${board.name.toLowerCase()}`,

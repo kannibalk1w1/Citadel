@@ -7,7 +7,7 @@ export function ArchiveRiteOverlay(): React.ReactElement | null {
   const rite = useArchiveProgressStore((s) => s.rite)
   if (!rite) return null
 
-  const title = rite.op === 'import' ? 'Unsealing the archive…' : 'Sealing the archive…'
+  const title = rite.op === 'import' ? 'Importing archive…' : 'Exporting archive…'
 
   return (
     <div
@@ -44,23 +44,23 @@ export function ArchiveRiteOverlay(): React.ReactElement | null {
         style={{
           background: 'var(--bg-panel)',
           border: '1px solid var(--border)',
-          borderRadius: 6,
+          borderRadius: 'var(--radius-md)',
           boxShadow: 'var(--shadow-md)',
           minWidth: 320,
           padding: '22px 28px',
           textAlign: 'center',
         }}
       >
-        <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', fontSize: 16, letterSpacing: '0.06em', marginBottom: 14 }}>
+        <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', letterSpacing: '0.06em', marginBottom: 14 }}>
           {title}
         </div>
-        <div style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, height: 8, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', height: 8, overflow: 'hidden' }}>
           <div
             className="archive-rite-bar-fill"
             style={{ background: 'var(--text-accent)', height: '100%', transition: 'width 120ms linear', width: `${rite.percent}%` }}
           />
         </div>
-        <div style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 11, marginTop: 10, opacity: 0.8 }}>
+        <div style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', marginTop: 10, opacity: 0.8 }}>
           {rite.percent}%{rite.label ? ` — ${rite.label}` : ''}
         </div>
       </div>

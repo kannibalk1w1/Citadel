@@ -1,15 +1,7 @@
 /// <reference types="vite/client" />
 
-declare module '*.mp3' {
-  const src: string
-  export default src
-}
-
-declare module '*.cur' {
-  const src: string
-  export default src
-}
-
+// Asset module declarations live in src/types/assets.d.ts — this file is a
+// module, so ambient declarations here would not be global.
 import type { IPC } from '../preload/index'
 
 declare global {

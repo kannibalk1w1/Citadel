@@ -169,7 +169,7 @@ export function measureBindingOverlayLoad(
   const activeOrPulsing = new Set([
     options.activeConnectionId,
     options.pulsingConnectionId,
-  ].filter((id): id is string => Boolean(id) && renderedConnectionIds.has(id)))
+  ].filter((id): id is string => typeof id === 'string' && renderedConnectionIds.has(id)))
 
   return {
     renderedConnections: renderedConnectionIds.size,

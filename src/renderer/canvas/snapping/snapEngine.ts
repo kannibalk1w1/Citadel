@@ -16,13 +16,25 @@ type SnapCandidate = {
   targetEdge: EdgeName
 }
 
-function isGaplessDock(draggedEdge: EdgeName, targetEdge: EdgeName): boolean {
-  return (
-    (draggedEdge === 'left' && targetEdge === 'right') ||
-    (draggedEdge === 'right' && targetEdge === 'left') ||
-    (draggedEdge === 'top' && targetEdge === 'bottom') ||
-    (draggedEdge === 'bottom' && targetEdge === 'top')
+// Clear space between two items on one axis: 0 when they touch or overlap.
+function gapOnAxis(a: CanvasItem, b: CanvasItem, axis: 'x' | 'y'): number {
+  const aStart = axis === 'x' ? a.x : a.y
+  const aEnd = aStart + (axis === 'x' ? a.width : a.height)
+  const bStart = axis === 'x' ? b.x : b.y
+  const bEnd = bStart + (axis === 'x' ? b.width : b.height)
+  if (bStart >= aEnd) return bStart - aEnd
+  if (aStart >= bEnd) return aStart - bEnd
+  return 0
+}
+
+// What a guide reports: how far apart these two items actually are. Items that
+// touch on one axis and overlap on the other read "0 px" — the gapless dock.
+function separationLabel(dragged: CanvasItem, candidate: SnapCandidate): string {
+  const gap = Math.max(
+    gapOnAxis(dragged, candidate.target, 'x'),
+    gapOnAxis(dragged, candidate.target, 'y')
   )
+  return `${Math.round(gap)} px`
 }
 
 function pickClosest(current: SnapCandidate | null, candidate: SnapCandidate, threshold: number): SnapCandidate | null {
@@ -38,7 +50,8 @@ function verticalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLine 
     x2: candidate.value,
     y2: Math.max(dragged.y + dragged.height, candidate.target.y + candidate.target.height) + 20,
     orientation: 'vertical',
-    label: isGaplessDock(candidate.draggedEdge, candidate.targetEdge) ? '0 px' : undefined,
+    // Measured where the item will land, not where the pointer left it.
+    label: separationLabel({ ...dragged, x: dragged.x + candidate.delta }, candidate),
     labelX: candidate.value + 6,
     labelY: Math.min(dragged.y, candidate.target.y) - 16,
   }
@@ -51,15 +64,16 @@ function horizontalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLin
     x2: Math.max(dragged.x + dragged.width, candidate.target.x + candidate.target.width) + 20,
     y2: candidate.value,
     orientation: 'horizontal',
-    label: isGaplessDock(candidate.draggedEdge, candidate.targetEdge) ? '0 px' : undefined,
+    label: separationLabel({ ...dragged, y: dragged.y + candidate.delta }, candidate),
     labelX: Math.min(dragged.x, candidate.target.x) - 16,
     labelY: candidate.value + 6,
   }
 }
 
+// Candidates come from the spatial index, which the drag handlers rebuild on
+// drag start — this never needed the full item list.
 export function snapItem(
   dragged: CanvasItem,
-  allItems: CanvasItem[],
   viewport: Viewport,
   options: SnapOptions = {}
 ): SnapResult {

@@ -145,7 +145,7 @@ describe('board chrome view model', () => {
   })
 
   it('returns gothic placeholders for empty or failed media items', () => {
-    expect(mediaPlaceholderLabel({ ...baseItem, type: 'model3d', src: undefined })).toBe('3D relic missing')
+    expect(mediaPlaceholderLabel({ ...baseItem, type: 'model3d', src: undefined })).toBe('3D file missing')
     expect(mediaPlaceholderLabel({ ...baseItem, type: 'audio', src: undefined })).toBe('Audio source missing')
   })
 })

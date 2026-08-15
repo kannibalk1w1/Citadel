@@ -82,19 +82,19 @@ export function ContextMenu(): React.ReactElement | null {
         },
       },
       {
-        label: 'Seal as template…',
+        label: 'Save as template…',
         action: () => {
           const canvas = useCanvasStore.getState()
           const chosen = canvas.items().filter((i) => selectedIds.includes(i.id) && !i.locked)
           if (chosen.length === 0) return
           const connections = canvas.connections()
           closeContextMenu()
-          void askInscription('Name this template:', 'Relic set').then((name) => {
+          void askInscription('Name this template:', 'Item set').then((name) => {
             if (!name) return
             const template = createRelicTemplate(name, chosen, connections)
             useRelicTemplateStore.getState().saveTemplate(template)
             triggerEffect('banner-raise')
-            inscribe(`Template sealed: ${template.name}`)
+            inscribe(`Template saved: ${template.name}`)
           })
         },
       },
@@ -221,7 +221,7 @@ export function ContextMenu(): React.ReactElement | null {
         zIndex: 100,
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: '4px 0',
         minWidth: 160,
         boxShadow: 'var(--shadow-lg)',
@@ -242,7 +242,7 @@ export function ContextMenu(): React.ReactElement | null {
               background: 'transparent',
               border: 'none',
               textAlign: 'left',
-              fontSize: 12,
+              fontSize: 'var(--text-base)',
               fontFamily: 'var(--font-body)',
               color: item.danger ? 'var(--accent-danger)' : 'var(--text-primary)',
               cursor: 'pointer',

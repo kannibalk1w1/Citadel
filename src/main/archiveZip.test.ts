@@ -1,9 +1,8 @@
 import { existsSync, mkdtempSync, readdirSync } from 'fs'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { JSZip as JSZipType } from 'jszip'
 import {
   assertSafeZipPath,
   createProgressThrottle,
@@ -36,8 +35,21 @@ describe('archiveZip path safety', () => {
   })
 
   it('keeps extracted asset paths inside the asset directory', () => {
-    expect(resolveSafeAssetOutputPath('C:/tmp/_citadel_assets', 'assets/folder/relic.png')).toBe('C:\\tmp\\_citadel_assets\\folder\\relic.png')
-    expect(() => resolveSafeAssetOutputPath('C:/tmp/_citadel_assets', '../escape.png')).toThrow(/unsafe/i)
+    // Built with the host separator so the guarantee is asserted on Windows and POSIX alike.
+    const assetDir = resolve(tmpdir(), '_citadel_assets')
+
+    expect(resolveSafeAssetOutputPath(assetDir, 'assets/folder/relic.png'))
+      .toBe(join(assetDir, 'folder', 'relic.png'))
+
+    for (const escape of [
+      '../escape.png',
+      'assets/../../escape.png',
+      'assets\\..\\..\\escape.png',
+      '/etc/passwd',
+      'C:/Windows/system32/escape.png',
+    ]) {
+      expect(() => resolveSafeAssetOutputPath(assetDir, escape)).toThrow(/unsafe|unexpected/i)
+    }
   })
 })
 
@@ -85,16 +97,16 @@ describe('inspectCitadelZip', () => {
   })
 })
 
-function fakeEntry(name: string, content: Buffer, claimedSize?: number): JSZipType.JSZipObject {
+function fakeEntry(name: string, content: Buffer, claimedSize?: number): JSZip.JSZipObject {
   return {
     name,
     dir: false,
     _data: { uncompressedSize: claimedSize ?? content.length },
     async: () => Promise.resolve(content),
-  } as unknown as JSZipType.JSZipObject
+  } as unknown as JSZip.JSZipObject
 }
 
-function fakeManifest(assets: JSZipType.JSZipObject[]): Parameters<typeof extractCitadelZip>[0] {
+function fakeManifest(assets: JSZip.JSZipObject[]): Parameters<typeof extractCitadelZip>[0] {
   return { project: fakeEntry('project.citadel', Buffer.from('{}')), assets, totalBytes: 0 }
 }
 
@@ -148,7 +160,7 @@ describe('extractCitadelZip', () => {
 })
 
 describe('createProgressThrottle', () => {
-  afterEach(() => vi.useRealTimers())
+  afterEach(() => { vi.useRealTimers() })
 
   it('drops events inside the interval but always lets 100 through', () => {
     vi.useFakeTimers()

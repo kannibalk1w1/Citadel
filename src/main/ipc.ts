@@ -1,10 +1,30 @@
-import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
+import { ipcMain, dialog, shell, app, clipboard, nativeImage, BrowserWindow, globalShortcut } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
-import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import JSZip from 'jszip'
 import { createProgressThrottle, extractCitadelZip, inspectCitadelZip } from './archiveZip'
+import type { PortableProject } from './projectPersistence'
+import {
+  isCitadelArchivePath,
+  isUrlLikeSrc,
+  readCitadelProject,
+  toJsonPath,
+  uniqueAssetPath,
+  walkProjectItems,
+  writeCitadelProject,
+} from './projectPersistence'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
+import {
+  CLICK_THROUGH_SHORTCUT,
+  defaultWindowMode,
+  nextWindowMode,
+  type WindowModeRequest,
+  type WindowModeState,
+} from './windowModes'
+
+// Live window mode. Click-through is deliberately absent from settings.json.
+let windowMode: WindowModeState = { ...defaultWindowMode }
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
@@ -41,83 +61,7 @@ function scanFilesByBasename(root: string): { byName: Map<string, string>; scann
   return { byName, scanned }
 }
 
-type PortableItem = { src?: string; [key: string]: unknown }
-type PortableBoard = { items?: PortableItem[]; [key: string]: unknown }
-type PortableProject = { boards?: PortableBoard[]; [key: string]: unknown }
 type ZipAsset = { sourcePath: string; zipPath: string }
-
-const URL_SRC_RE = /^(https?|data:|blob:|local:|file:)/i
-
-function isUrlLikeSrc(src: string): boolean {
-  return URL_SRC_RE.test(src)
-}
-
-function toJsonPath(path: string): string {
-  return path.replace(/\\/g, '/')
-}
-
-function isInside(parent: string, child: string): boolean {
-  const rel = relative(resolve(parent), resolve(child))
-  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
-}
-
-function uniqueAssetPath(assetsDir: string, used: Set<string>, sourcePath: string, checkExisting = true): { filename: string; path: string } {
-  const parsedExt = extname(sourcePath)
-  const rawName = basename(sourcePath, parsedExt).replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'asset'
-  const ext = parsedExt || '.bin'
-  let filename = `${rawName}${ext}`
-  let index = 2
-  while (used.has(filename.toLowerCase()) || (checkExisting && assetsDir !== '' && existsSync(join(assetsDir, filename)))) {
-    filename = `${rawName}-${index}${ext}`
-    index += 1
-  }
-  used.add(filename.toLowerCase())
-  return { filename, path: join(assetsDir, filename) }
-}
-
-function walkProjectItems(project: PortableProject, visit: (item: PortableItem) => void): void {
-  project.boards?.forEach((board) => board.items?.forEach(visit))
-}
-
-function makeCitadelProjectPortable(data: string, projectPath: string): string {
-  const project = JSON.parse(data) as PortableProject
-  const projectDir = dirname(projectPath)
-  const assetsDir = join(projectDir, 'assets')
-  const used = new Set<string>()
-
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src)) return
-
-    const sourcePath = isAbsolute(src) ? src : resolve(projectDir, src)
-    if (!existsSync(sourcePath)) return
-
-    if (isInside(projectDir, sourcePath)) {
-      item.src = toJsonPath(relative(projectDir, sourcePath))
-      return
-    }
-
-    if (!existsSync(assetsDir)) mkdirSync(assetsDir, { recursive: true })
-    const asset = uniqueAssetPath(assetsDir, used, sourcePath, false)
-    copyFileSync(sourcePath, asset.path)
-    item.src = toJsonPath(relative(projectDir, asset.path))
-  })
-
-  return JSON.stringify(project, null, 2)
-}
-
-function resolveCitadelProjectAssets(data: string, projectPath: string): string {
-  const project = JSON.parse(data) as PortableProject
-  const projectDir = dirname(projectPath)
-
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src) || isAbsolute(src)) return
-    item.src = resolve(projectDir, src)
-  })
-
-  return JSON.stringify(project, null, 2)
-}
 
 function prepareZipProject(projectJson: string, assetPaths: string[]): { projectJson: string; assets: ZipAsset[] } {
   const project = JSON.parse(projectJson) as PortableProject
@@ -204,25 +148,18 @@ export function registerIpcHandlers(): void {
 
   // ── file:save ──────────────────────────────────────────────────────────────
   ipcMain.handle('file:save', async (_e, { path, data }: { path: string; data: string }) => {
-    if (path.toLowerCase().endsWith('.citadelz')) {
+    if (isCitadelArchivePath(path)) {
       await writeZipProject(path, data, collectProjectAssetPaths(data))
       return { ok: true }
     }
 
-    const portableData = path.toLowerCase().endsWith('.citadel')
-      ? makeCitadelProjectPortable(data, path)
-      : data
-    writeFileSync(path, portableData, 'utf-8')
+    writeCitadelProject(path, data)
     return { ok: true }
   })
 
   // ── file:load ──────────────────────────────────────────────────────────────
   ipcMain.handle('file:load', async (_e, { path }: { path: string }) => {
-    const raw = readFileSync(path, 'utf-8')
-    const data = path.toLowerCase().endsWith('.citadel')
-      ? resolveCitadelProjectAssets(raw, path)
-      : raw
-    return { data }
+    return { data: readCitadelProject(path) }
   })
 
   // ── file:saveDialog ────────────────────────────────────────────────────────
@@ -495,6 +432,52 @@ export function registerIpcHandlers(): void {
     const settings = readSettings()
     settings['ui.zoomFactor'] = clamped
     writeSettings(settings)
+    return { ok: true }
+  })
+
+  // ── window:setMode ─────────────────────────────────────────────────────────
+  // Always-on-top, opacity, and click-through. Only the first two are persisted:
+  // relaunching into a window that ignores the mouse would be a trap.
+  ipcMain.handle('window:setMode', async (e, request: WindowModeRequest = {}) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return { ok: false, mode: windowMode }
+
+    windowMode = nextWindowMode(windowMode, request)
+    win.setAlwaysOnTop(windowMode.alwaysOnTop)
+    win.setOpacity(windowMode.opacity)
+    // forward keeps mouse-move events coming, so the interface can still react
+    // as the pointer passes over it.
+    win.setIgnoreMouseEvents(windowMode.clickThrough, { forward: true })
+
+    // The shortcut is the only way back out of click-through, so it exists only
+    // while it is needed and never steals the combination the rest of the time.
+    if (windowMode.clickThrough && !globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
+      globalShortcut.register(CLICK_THROUGH_SHORTCUT, () => {
+        windowMode = nextWindowMode(windowMode, { clickThrough: false })
+        win.setIgnoreMouseEvents(false)
+        globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
+        win.webContents.send('window:modeChanged', windowMode)
+        win.focus()
+      })
+    } else if (!windowMode.clickThrough && globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
+      globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
+    }
+
+    const settings = readSettings()
+    settings['ui.alwaysOnTop'] = windowMode.alwaysOnTop
+    settings['ui.windowOpacity'] = windowMode.opacity
+    writeSettings(settings)
+
+    return { ok: true, mode: windowMode }
+  })
+
+  // ── window:setMenuBarVisible ───────────────────────────────────────────────
+  // Driven by the hover strip in the renderer. Auto-hide stays on underneath,
+  // so Alt reveals the menu whether or not the pointer is anywhere near it.
+  ipcMain.handle('window:setMenuBarVisible', async (e, { visible }: { visible: boolean }) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return { ok: false }
+    win.setMenuBarVisibility(Boolean(visible))
     return { ok: true }
   })
 

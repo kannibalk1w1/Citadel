@@ -3,6 +3,7 @@ import type { Connection } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
+import { canvasColor } from '../../theme/canvasColors'
 
 export type ConnectRelicClickResult = 'armed' | 'created' | 'ignored'
 
@@ -14,7 +15,7 @@ function createDefaultBinding(fromId: string, toId: string): Connection {
     fromAnchor: 'auto',
     toAnchor: 'auto',
     style: 'bezier',
-    color: '#b8c2bd',
+    color: canvasColor("accent"),
     width: 1.5,
     arrowHead: 'arrow',
     dashed: false,

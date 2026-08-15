@@ -102,7 +102,7 @@ export function RecordingBar(): React.ReactElement | null {
           borderRadius: 20,
           padding: '4px 14px',
           color: 'var(--text-secondary)',
-          fontSize: 11,
+          fontSize: 'var(--text-md)',
           fontFamily: 'var(--font-body)',
           cursor: 'pointer',
           boxShadow: 'var(--shadow-md)',
@@ -116,37 +116,37 @@ export function RecordingBar(): React.ReactElement | null {
           marginTop: 4,
           background: 'var(--bg-panel)',
           border: '1px solid var(--border)',
-          borderRadius: 6,
+          borderRadius: 'var(--radius-md)',
           padding: 6,
           minWidth: 220,
           boxShadow: 'var(--shadow-lg)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
+          gap: 'var(--space-1)',
         }}>
           {recordings.map((r) => (
-            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 4px', borderRadius: 4 }}>
+            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '3px 4px', borderRadius: 'var(--radius-sm)' }}>
               <button
                 onClick={() => playRecording(r)}
                 title={playingId === r.id ? 'Stop' : 'Play'}
                 style={{
                   background: playingId === r.id ? 'rgba(139,32,32,0.2)' : 'transparent',
                   border: '1px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   color: playingId === r.id ? 'var(--accent-danger)' : 'var(--text-secondary)',
                   width: 22, height: 22,
                   cursor: 'pointer',
-                  fontSize: 10,
+                  fontSize: 'var(--text-sm)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
                 }}
               >
                 {playingId === r.id ? '■' : '▶'}
               </button>
-              <span style={{ flex: 1, fontSize: 11, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ flex: 1, fontSize: 'var(--text-md)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.name}
               </span>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
                 {formatDuration(r)}
               </span>
               <button
@@ -157,7 +157,7 @@ export function RecordingBar(): React.ReactElement | null {
                   border: 'none',
                   color: 'var(--accent-danger)',
                   cursor: 'pointer',
-                  fontSize: 14,
+                  fontSize: 'var(--text-lg)',
                   lineHeight: 1,
                   padding: '0 2px',
                   flexShrink: 0,
@@ -182,13 +182,13 @@ const barStyle: React.CSSProperties = {
   padding: '4px 14px',
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 'var(--space-4)',
   zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
   boxShadow: 'var(--shadow-md)',
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 'var(--text-md)',
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-body)',
 }
@@ -198,5 +198,5 @@ const btnStyle: React.CSSProperties = {
   border: 'none',
   color: 'var(--accent-danger)',
   cursor: 'pointer',
-  fontSize: 11,
+  fontSize: 'var(--text-md)',
 }

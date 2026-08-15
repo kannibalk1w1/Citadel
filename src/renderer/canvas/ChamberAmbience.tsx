@@ -80,7 +80,7 @@ export function ChamberAmbience(): React.ReactElement | null {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(ellipse at 50% 48%, transparent 52%, #030506 130%)',
+            background: 'radial-gradient(ellipse at 50% 48%, transparent 52%, var(--canvas-flat) 130%)',
             opacity: identity.vignette,
           }}
         />

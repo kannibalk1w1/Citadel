@@ -20,6 +20,10 @@ const imageState = vi.hoisted(() => ({
 
 vi.mock('gifler', () => ({}))
 
+// window.gifler is set by the browserify bundle, so it is not on the Window type.
+const giflerMock = (): ReturnType<typeof vi.fn> =>
+  (window as unknown as { gifler: ReturnType<typeof vi.fn> }).gifler
+
 vi.mock('use-image', () => ({
   default: (url: string) => {
     imageState.lastUrl = url
@@ -98,7 +102,7 @@ afterEach(() => cleanup())
 describe('GifItem animation lifecycle', () => {
   it('stops playback and ignores late frames after the relic sleeps', () => {
     const { unmount } = render(<GifItem item={gifItem} />)
-    expect(window.gifler).toHaveBeenCalledWith('local:///C:/archive/memory.gif')
+    expect(giflerMock()).toHaveBeenCalledWith('local:///C:/archive/memory.gif')
     expect(frameCallback).not.toBeNull()
 
     unmount()
@@ -131,6 +135,6 @@ describe('GifItem thumbnail-first rendering', () => {
 
     expect(imageState.lastUrl).toBe('local:///C:/cache/gif-thumb.png')
     expect(lastImageProp).toBe(imageState.image)
-    expect(window.gifler).not.toHaveBeenCalled()
+    expect(giflerMock()).not.toHaveBeenCalled()
   })
 })

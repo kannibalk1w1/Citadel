@@ -9,6 +9,7 @@ import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
 import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
+import { MenuBarHover } from './ui/shell/MenuBarHover'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
@@ -199,6 +200,9 @@ export default function App(): React.ReactElement {
         'export.area',
         'export.includeComments',
         'ui.canvasBackground',
+        'ui.canvasDefaultMigration',
+        'ui.alwaysOnTop',
+        'ui.windowOpacity',
       ],
     }).then((res) => {
       const { values } = res as { values: Record<string, unknown> }
@@ -226,7 +230,29 @@ export default function App(): React.ReactElement {
       if (canvasBackground && typeof canvasBackground === 'object') {
         nextState.canvasBackground = normalizeCanvasBackground(canvasBackground)
       }
+      // One-time move to the flat canvas. Stone was never chosen by anyone — it
+      // was simply the only default — so an install still carrying it is moved
+      // across once. Picking stone again afterwards sticks, because the marker
+      // is written either way.
+      const CANVAS_DEFAULT_MIGRATION = 2
+      const migrated = typeof values['ui.canvasDefaultMigration'] === 'number' ? values['ui.canvasDefaultMigration'] : 0
+      if (migrated < CANVAS_DEFAULT_MIGRATION) {
+        const carried = nextState.canvasBackground?.mode
+        if (carried === 'stone' || carried === 'flat') {
+          nextState.canvasBackground = { ...nextState.canvasBackground!, mode: 'dots' }
+          ipc.invoke('settings:set', { key: 'ui.canvasBackground', value: nextState.canvasBackground }).catch(() => {})
+        }
+        ipc.invoke('settings:set', { key: 'ui.canvasDefaultMigration', value: CANVAS_DEFAULT_MIGRATION }).catch(() => {})
+      }
       if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
+      // Re-apply through main so the window actually adopts the stored mode.
+      // Click-through is never restored: it is not persisted.
+      const alwaysOnTop = values['ui.alwaysOnTop'] === true
+      const storedOpacity = values['ui.windowOpacity']
+      const opacity = typeof storedOpacity === 'number' ? storedOpacity : 1
+      if (alwaysOnTop || opacity !== 1) {
+        useUIStore.getState().applyWindowMode({ alwaysOnTop, opacity })
+      }
       const zoomFactor = values['ui.zoomFactor']
       if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
     }).catch(() => {})
@@ -424,19 +450,19 @@ export default function App(): React.ReactElement {
       const stones = resolveWaystones(board)
       const event = plantWaystoneEvent(board, {
         id: nanoid(),
-        name: `Waystone ${stones.length + 1}`,
+        name: `Bookmark ${stones.length + 1}`,
         x: viewport.x,
         y: viewport.y,
         scale: viewport.scale,
       })
       if (!event) {
-        inscribe('The chamber holds no more waystones')
+        inscribe('This board holds no more bookmarks')
         return
       }
       useHistoryStore.getState().push('BOARD_STYLE', board.id, event.before, event.after)
       canvas.updateBoardMeta(board.id, event.after)
       useHistoryStore.getState().markDirty()
-      inscribe('Waystone planted')
+      inscribe('Bookmark added')
     })
 
     let waystoneCursor = -1
@@ -449,12 +475,12 @@ export default function App(): React.ReactElement {
       waystoneCursor = (waystoneCursor + 1) % stones.length
       const stone = stones[waystoneCursor]
       canvas.updateViewport({ x: stone.x, y: stone.y, scale: stone.scale })
-      inscribe(`Waystone: ${stone.name}`)
+      inscribe(`Bookmark: ${stone.name}`)
     })
 
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
       useUIStore.getState().toggleFilenameLabels()
-      inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames revealed' : 'Filenames veiled')
+      inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames shown' : 'Filenames hidden')
     })
 
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
@@ -567,10 +593,10 @@ export default function App(): React.ReactElement {
     // Boards
     resolver.register(Actions.BOARD_NEW, () => {
       const canvas = useCanvasStore.getState()
-      const id = canvas.addBoard(`Chamber ${canvas.boards.length + 1}`)
+      const id = canvas.addBoard(`Board ${canvas.boards.length + 1}`)
       canvas.setActiveBoard(id)
       useHistoryStore.getState().markDirty()
-      inscribe('Chamber raised')
+      inscribe('Board created')
     })
     resolver.register(Actions.BOARD_DUPLICATE, () => {
       const canvas = useCanvasStore.getState()
@@ -578,7 +604,7 @@ export default function App(): React.ReactElement {
       const id = canvas.duplicateBoard(canvas.activeBoardId)
       if (id) {
         useHistoryStore.getState().markDirty()
-        inscribe('Chamber cloned')
+        inscribe('Board duplicated')
       }
     })
     resolver.register(Actions.BOARD_NEXT, () => {
@@ -597,7 +623,7 @@ export default function App(): React.ReactElement {
       const { boards, activeBoardId } = useCanvasStore.getState()
       const board = boards.find((b) => b.id === activeBoardId)
       if (!board || !activeBoardId) return
-      void askInscription('Rename chamber:', board.name).then((name) => {
+      void askInscription('Rename board:', board.name).then((name) => {
         if (!name) return
         useCanvasStore.getState().renameBoard(activeBoardId, name)
         useHistoryStore.getState().markDirty()
@@ -612,7 +638,7 @@ export default function App(): React.ReactElement {
       removeBoard(activeBoardId)
       useHistoryStore.getState().markDirty()
       if (next.length > 0) setActiveBoard(next[Math.min(idx, next.length - 1)].id)
-      inscribe('Chamber sealed away')
+      inscribe('Board deleted')
     })
     resolver.register(Actions.RECORD_PLAY, () => {
       // RecordingBar manages its own playback UI — no-op here
@@ -627,9 +653,32 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
     resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())
 
+    // Window modes
+    const OPACITY_STEP = 0.1
+    resolver.register(Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ alwaysOnTop: !ui.windowAlwaysOnTop })
+      inscribe(ui.windowAlwaysOnTop ? 'Window no longer on top' : 'Window stays on top')
+    })
+    resolver.register(Actions.WINDOW_CLICK_THROUGH_TOGGLE, () => {
+      const ui = useUIStore.getState()
+      const clickThrough = !ui.windowClickThrough
+      ui.applyWindowMode({ clickThrough })
+      // The only way back is the global shortcut, so say so plainly.
+      inscribe(clickThrough ? 'Clicks pass through — Ctrl+Alt+C to stop' : 'Clicks return to Citadel')
+    })
+    resolver.register(Actions.WINDOW_OPACITY_DOWN, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ opacity: ui.windowOpacity - OPACITY_STEP })
+    })
+    resolver.register(Actions.WINDOW_OPACITY_UP, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ opacity: ui.windowOpacity + OPACITY_STEP })
+    })
+
     // Exports
-    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('Export inscribed (PDF)')).catch(console.error) })
-    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Export inscribed (image)')).catch(console.error) })
+    resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('PDF exported')).catch(console.error) })
+    resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Image exported')).catch(console.error) })
     resolver.register(Actions.EXPORT_ZIP,   () => { void exportToZip().catch(console.error) })
 
     // File
@@ -638,7 +687,7 @@ export default function App(): React.ReactElement {
         if (!ok) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Archive sealed')
+        else inscribe('Project saved')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
@@ -646,11 +695,11 @@ export default function App(): React.ReactElement {
         if (!p) return
         triggerEffect('rune-seal')
         if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Archive sealed')
+        else inscribe('Project saved')
       })
     })
-    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Archive opened') } }) })
-    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New archive founded') } })
+    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Project opened') } }) })
+    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New project created') } })
 
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {
@@ -766,11 +815,11 @@ export default function App(): React.ReactElement {
         if (session) saveRecording(session)
         clearEffect('eye-open')
         trigger('eye-close')
-        inscribe('The eye closes')
+        inscribe('Recording stopped')
       } else {
         startRecording(`Recording ${new Date().toLocaleTimeString()}`)
         trigger('eye-open')
-        inscribe('The eye opens')
+        inscribe('Recording started')
       }
     })
   }, [])
@@ -818,7 +867,7 @@ export default function App(): React.ReactElement {
   // Electron menu accelerators intercept keydown before the renderer sees it,
   // so we listen for the IPC messages the menu sends and dispatch them here.
   useEffect(() => {
-    const ipc = (window as unknown as { ipc: { on: (ch: string, fn: () => void) => () => void } }).ipc
+    const ipc = (window as unknown as { ipc: { on: (ch: string, fn: (payload?: unknown) => void) => () => void } }).ipc
     const unsubs = [
       ipc.on('menu:undo',       () => resolver.dispatch(Actions.UNDO)),
       ipc.on('menu:redo',       () => resolver.dispatch(Actions.REDO)),
@@ -840,6 +889,14 @@ export default function App(): React.ReactElement {
       ipc.on('menu:boardNext',    () => resolver.dispatch(Actions.BOARD_NEXT)),
       ipc.on('menu:boardPrev',    () => resolver.dispatch(Actions.BOARD_PREV)),
       ipc.on('menu:recordToggle', () => resolver.dispatch(Actions.RECORD_TOGGLE)),
+      ipc.on('menu:alwaysOnTopToggle', () => resolver.dispatch(Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE)),
+      ipc.on('menu:clickThroughToggle', () => resolver.dispatch(Actions.WINDOW_CLICK_THROUGH_TOGGLE)),
+      // Main turns click-through off from the global shortcut; mirror it here.
+      ipc.on('window:modeChanged', (payload) => {
+        const mode = payload as { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }
+        useUIStore.getState().setWindowModeFromMain(mode)
+        if (!mode.clickThrough) inscribe('Clicks return to Citadel')
+      }),
       ipc.on('menu:exportPdf',    () => exportToPdf().catch(console.error)),
       ipc.on('menu:exportImage',  () => exportToImage().catch(console.error)),
       ipc.on('menu:exportZip',    () => exportToZip().catch(console.error)),
@@ -899,28 +956,28 @@ export default function App(): React.ReactElement {
           zIndex: 'var(--z-modal)' as unknown as number,
           background: 'var(--bg-panel)',
           border: '1px solid var(--accent)',
-          borderRadius: 6, padding: '12px 16px',
-          display: 'flex', alignItems: 'center', gap: 12,
+          borderRadius: 'var(--radius-md)', padding: '12px 16px',
+          display: 'flex', alignItems: 'center', gap: 'var(--space-5)',
           boxShadow: 'var(--shadow-lg)',
-          fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
+          fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', color: 'var(--text-primary)',
         }}>
           <span style={{ color: 'var(--accent)' }}>⚠</span>
           <span>
             Unsaved session detected
-            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-secondary)', marginTop: 2 }}>
               {recoveryData.savedAt ? `${new Date(recoveryData.savedAt).toLocaleString()} - ` : ''}
               {recoveryData.boardCount} boards / {recoveryData.itemCount} items
             </span>
           </span>
           <button onClick={handleRecoveryRestore} style={{
             background: 'var(--accent)', color: '#070808', border: 'none',
-            borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
+            borderRadius: 'var(--radius-sm)', padding: '4px 10px', cursor: 'pointer',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600,
           }}>Restore</button>
           <button onClick={handleRecoveryDismiss} style={{
             background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-            borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'var(--font-body)', fontSize: 12,
+            borderRadius: 'var(--radius-sm)', padding: '4px 10px', cursor: 'pointer',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
           }}>Discard</button>
         </div>
   )
@@ -933,27 +990,27 @@ export default function App(): React.ReactElement {
           zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 'var(--space-5)',
           padding: '6px 8px',
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border)',
           background: 'var(--bg-panel)',
           color: 'var(--text-secondary)',
           boxShadow: 'var(--shadow-md)',
           fontFamily: 'var(--font-mono)',
-          fontSize: 10,
+          fontSize: 'var(--text-sm)',
         }}>
           <button
             type="button"
             onClick={() => stepPresentation(-1)}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >
@@ -966,12 +1023,12 @@ export default function App(): React.ReactElement {
             onClick={() => stepPresentation(1)}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >
@@ -985,12 +1042,12 @@ export default function App(): React.ReactElement {
             }}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >
@@ -1005,6 +1062,7 @@ export default function App(): React.ReactElement {
       archiveRailCollapsed={archiveRailCollapsed}
       topBar={(
         <>
+          {!presentationMode && <MenuBarHover />}
           {recoveryBanner}
           <BoardTabs />
           <ProjectMenu />

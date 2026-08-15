@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { useUIStore } from '../store/uiStore'
+import { refreshCanvasColors } from './canvasColors'
 
 const overrideVariables = {
   canvas: '--bg-canvas',
@@ -20,6 +21,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
       if (value) document.documentElement.style.setProperty(variable, value)
       else document.documentElement.style.removeProperty(variable)
     }
+    // Konva cannot read CSS variables, so the canvas layer keeps resolved copies.
+    refreshCanvasColors()
+    useUIStore.getState().bumpSnap()
   }, [theme, themeOverrides])
 
   return <>{children}</>

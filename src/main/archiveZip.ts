@@ -1,5 +1,5 @@
 import { promises as fsp } from 'fs'
-import { dirname, isAbsolute, join, relative, resolve } from 'path'
+import { dirname, isAbsolute, relative, resolve } from 'path'
 import type JSZip from 'jszip'
 
 export type ArchiveZipLimits = {

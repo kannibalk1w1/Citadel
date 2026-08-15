@@ -268,6 +268,52 @@ function MascotPNG(): React.ReactElement {
 }
 
 // ── Quick-action button ────────────────────────────────────────────────────────
+// Window modes: the PureRef-style workflow of keeping references above the app
+// you are drawing in. Click-through is last and marked, because it is the one
+// that takes the mouse away from Citadel entirely.
+function WindowModes(): React.ReactElement {
+  const alwaysOnTop = useUIStore((s) => s.windowAlwaysOnTop)
+  const opacity = useUIStore((s) => s.windowOpacity)
+  const clickThrough = useUIStore((s) => s.windowClickThrough)
+  const applyWindowMode = useUIStore((s) => s.applyWindowMode)
+
+  return (
+    <div className="citadel-sidebar-section">
+      <div className="citadel-sidebar-section-title">Window</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
+        <QuickBtn
+          label={alwaysOnTop ? 'On top ✓' : 'On top'}
+          title="Keep Citadel above other windows (Ctrl+Alt+T)"
+          onClick={() => applyWindowMode({ alwaysOnTop: !alwaysOnTop })}
+        />
+        <label
+          title="Window opacity — references stay readable over the app beneath"
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}
+        >
+          <span>Opacity</span>
+          <input
+            type="range"
+            min={30}
+            max={100}
+            step={5}
+            value={Math.round(opacity * 100)}
+            onChange={(e) => applyWindowMode({ opacity: Number(e.target.value) / 100 })}
+            style={{ flex: 1, accentColor: 'var(--accent)' }}
+          />
+          <span style={{ minWidth: 26, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
+        </label>
+        <QuickBtn
+          label={clickThrough ? 'Click through ✓' : 'Click through'}
+          title={clickThrough
+            ? 'Clicks are passing through — press Ctrl+Alt+C to take the mouse back'
+            : 'Let clicks reach the app underneath (Ctrl+Alt+C to undo)'}
+          onClick={() => applyWindowMode({ clickThrough: !clickThrough })}
+        />
+      </div>
+    </div>
+  )
+}
+
 function QuickBtn({
   label, title, onClick,
 }: { label: React.ReactNode; title: string; onClick: () => void }): React.ReactElement {
@@ -281,9 +327,9 @@ function QuickBtn({
         padding: '5px 0',
         background: 'var(--bg-ui)',
         border: '1px solid var(--border)',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-sm)',
         color: 'var(--text-secondary)',
-        fontSize: 11,
+        fontSize: 'var(--text-md)',
         fontFamily: 'var(--font-body)',
         cursor: 'pointer',
         transition: 'var(--transition-fast)',
@@ -329,7 +375,7 @@ function StatusLine(): React.ReactElement {
   const stateLabel = needsSave ? 'needs saving' : `saved ${fmtTime(saveActivity.lastManualSaveAt)}`
 
   return (
-    <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       {[
         { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
         { label: 'State', val: stateLabel, color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
@@ -345,8 +391,8 @@ function StatusLine(): React.ReactElement {
   )
 }
 
-const statLabel: React.CSSProperties = { fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
-const statVal:   React.CSSProperties = { fontSize: 9, fontFamily: 'var(--font-mono)' }
+const statLabel: React.CSSProperties = { fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const statVal:   React.CSSProperties = { fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)' }
 
 function RecentProjects(): React.ReactElement | null {
   const [projects, setProjects] = useState<RecentProject[]>([])
@@ -369,7 +415,7 @@ function RecentProjects(): React.ReactElement | null {
   return (
     <div className="citadel-sidebar-section">
       <div className="citadel-sidebar-section-title">Recent</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {projects.map((project) => (
           <button
             key={project.path}
@@ -378,7 +424,7 @@ function RecentProjects(): React.ReactElement | null {
               openRecentProject(project.path).then((ok) => {
                 if (ok) {
                   triggerEffect('lightning-in')
-                  inscribe('Archive opened')
+                  inscribe('Project opened')
                 }
               })
             }}
@@ -388,9 +434,9 @@ function RecentProjects(): React.ReactElement | null {
               padding: '3px 5px',
               background: 'var(--bg-ui)',
               border: '1px solid var(--border)',
-              borderRadius: 4,
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--text-secondary)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               fontFamily: 'var(--font-body)',
               cursor: 'pointer',
               textAlign: 'left',
@@ -422,11 +468,11 @@ export function RightSidebar(): React.ReactElement {
           type="button"
           className="citadel-archive-rail-reveal"
           onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
-          title="Open archive rail"
-          aria-label="Open archive rail"
+          title="Open project rail"
+          aria-label="Open project rail"
         >
           <span aria-hidden="true">‹</span>
-          <span>Archive</span>
+          <span>Project</span>
         </button>
       </aside>
     )
@@ -447,7 +493,7 @@ export function RightSidebar(): React.ReactElement {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '12px 10px',
-        gap: 10,
+        gap: 'var(--space-5)',
         zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -457,8 +503,8 @@ export function RightSidebar(): React.ReactElement {
         type="button"
         className="citadel-archive-rail-collapse"
         onClick={() => resolver.dispatch(Actions.PANEL_ARCHIVE_RAIL_TOGGLE)}
-        title="Collapse archive rail"
-        aria-label="Collapse archive rail"
+        title="Collapse project rail"
+        aria-label="Collapse project rail"
       >
         ›
       </button>
@@ -470,7 +516,7 @@ export function RightSidebar(): React.ReactElement {
       <div
         className="citadel-sidebar-title"
         style={{
-          fontSize: 9,
+          fontSize: 'var(--text-xs)',
           fontFamily: 'var(--font-display)',
           color: 'var(--text-accent)',
           textTransform: 'uppercase',
@@ -487,23 +533,23 @@ export function RightSidebar(): React.ReactElement {
 
       {/* Quick actions */}
       <div className="citadel-sidebar-section">
-        <div className="citadel-sidebar-section-title">Archive</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div className="citadel-sidebar-section-title">Project</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Open project" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
-          <QuickBtn label="New chamber" title="Add a new chamber (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
+          <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
           <button
             type="button"
             className="citadel-sidebar-disclosure"
             aria-expanded={archiveToolsOpen}
             onClick={() => setArchiveToolsOpen((open) => !open)}
           >
-            Archive tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
+            Project tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
           </button>
           {archiveToolsOpen && (
             <div className="citadel-sidebar-disclosure-content">
-              <QuickBtn label="Index" title="Browse all relics and threads" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
-              <QuickBtn label="Workbench" title="Review uncategorized relics and ingest folders" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
-              <QuickBtn label="Clone chamber" title="Duplicate active chamber (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
+              <QuickBtn label="Index" title="Browse all items and connections" onClick={() => useUIStore.getState().togglePanel('indexLedger')} />
+              <QuickBtn label="Media review" title="Review untagged and missing files, or import a folder" onClick={() => useUIStore.getState().togglePanel('archiveWorkbench')} />
+              <QuickBtn label="Duplicate board" title="Duplicate the active board (Ctrl+Shift+D)" onClick={() => resolver.dispatch(Actions.BOARD_DUPLICATE)} />
             </div>
           )}
         </div>
@@ -511,22 +557,24 @@ export function RightSidebar(): React.ReactElement {
 
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Mark</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
-          <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media relics (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
+          <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
         </div>
       </div>
 
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Export</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Export PDF" title="Export canvas as PDF" onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
           <QuickBtn label="Export PNG" title="Export canvas as image" onClick={() => resolver.dispatch(Actions.EXPORT_IMAGE)} />
           <QuickBtn label="Export ZIP" title="Bundle project as .citadelz" onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
         </div>
       </div>
+
+      <WindowModes />
 
       <RecentProjects />
 
@@ -547,7 +595,7 @@ export function RightSidebar(): React.ReactElement {
           background: 'transparent',
           border: 'none',
           color: 'var(--text-muted)',
-          fontSize: 9,
+          fontSize: 'var(--text-xs)',
           fontFamily: 'var(--font-mono)',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

@@ -38,15 +38,15 @@ export function InscriptionPrompt(): React.ReactElement | null {
           width: 320,
           background: 'var(--bg-panel)',
           border: '1px solid var(--border)',
-          borderRadius: 6,
+          borderRadius: 'var(--radius-md)',
           boxShadow: 'var(--shadow-md)',
           padding: 14,
           display: 'flex',
           flexDirection: 'column',
-          gap: 10,
+          gap: 'var(--space-5)',
         }}
       >
-        <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {request.title}
         </div>
         <input
@@ -61,26 +61,26 @@ export function InscriptionPrompt(): React.ReactElement | null {
           style={{
             background: 'var(--bg-ui)',
             border: '1px solid var(--border)',
-            borderRadius: 3,
+            borderRadius: 'var(--radius-sm)',
             color: 'var(--text-primary)',
             fontFamily: 'var(--font-body)',
-            fontSize: 13,
+            fontSize: 'var(--text-lg)',
             padding: '6px 8px',
             outline: 'none',
           }}
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
           <button
             type="button"
             onClick={cancel}
-            style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 10, padding: '4px 10px' }}
+            style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '4px 10px' }}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={submit}
-            style={{ background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 3, color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 10, padding: '4px 10px' }}
+            style={{ background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '4px 10px' }}
           >
             Inscribe
           </button>

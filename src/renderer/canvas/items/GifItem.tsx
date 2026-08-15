@@ -19,6 +19,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { useStableImage } from './useStableImage'
+import { canvasColor } from '../../theme/canvasColors'
 
 type GiflerFn = (src: string) => {
   frames(canvas: HTMLCanvasElement, fn: (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => void): void
@@ -118,7 +119,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity}
-        stroke={isSelected ? '#b8c2bd' : undefined}
+        stroke={isSelected ? canvasColor("accent") : undefined}
         strokeWidth={isSelected ? 2 : 0}
         shadowEnabled={isSelected}
         shadowColor="rgba(185,148,85,0.7)"
@@ -153,7 +154,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
           const node = e.target
           const dragged = { ...item, x: node.x(), y: node.y() }
           const viewport = useCanvasStore.getState().viewport()
-          const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
+          const snapped = snapItem(dragged, viewport, { invertSnap: e.evt.ctrlKey })
           node.x(snapped.x)
           node.y(snapped.y)
           useUIStore.getState().bumpSnap()

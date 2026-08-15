@@ -167,7 +167,7 @@ export function connectionQuickToolbarPosition(from: { x: number; y: number }, t
 export function mediaPlaceholderLabel(item: CanvasItem): string | null {
   if (item.src) return null
   switch (item.type) {
-    case 'model3d': return '3D relic missing'
+    case 'model3d': return '3D file missing'
     case 'video': return 'Video source missing'
     case 'youtube': return 'YouTube source missing'
     case 'audio': return 'Audio source missing'

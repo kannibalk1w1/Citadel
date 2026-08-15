@@ -7,6 +7,7 @@ import { resolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
 import type { CanvasItem } from '../../../types'
 import { activeArchiveRailWidth } from '../shell/shellModel'
+import { canvasColor } from '../../theme/canvasColors'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -14,10 +15,10 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'var(--bg-ui)',
   border: '1px solid var(--border)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-sm)',
   padding: '3px 6px',
   color: 'var(--text-primary)',
-  fontSize: 11,
+  fontSize: 'var(--text-md)',
   fontFamily: 'var(--font-mono)',
   outline: 'none',
   boxSizing: 'border-box',
@@ -29,7 +30,7 @@ const STICKY_COLORS = [
 ]
 
 const STICKY_COLORS_DISPLAY: Record<string, string> = {
-  '#1e1b18': '#b8c2bd', '#1a211a': '#6f8a5f', '#171d22': '#65798a',
+  '#1e1b18': canvasColor("accent"), '#1a211a': '#6f8a5f', '#171d22': '#65798a',
   '#211721': '#8a6384', '#241919': '#8a3d3d', '#211e16': '#9a7a45',
   '#172220': '#4f8276', '#202216': '#7b8745',
 }
@@ -80,8 +81,8 @@ function centerViewportOnItem(item: CanvasItem): void {
 
 function Divider({ label }: { label: string }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '2px 0' }}>
-      <span style={{ fontSize: 9, color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', margin: '2px 0' }}>
+      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
       <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, var(--border), transparent)' }} />
     </div>
   )
@@ -89,8 +90,8 @@ function Divider({ label }: { label: string }): React.ReactElement {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ width: 54, fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <span style={{ width: 54, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
       <div style={{ flex: 1 }}>{children}</div>
     </div>
   )
@@ -103,23 +104,23 @@ const panelChrome: React.CSSProperties = {
   width: 236,
   background: 'var(--bg-panel)',
   border: '1px solid var(--border)',
-  borderRadius: 4,
+  borderRadius: 'var(--radius-sm)',
   padding: 12,
   zIndex: 'var(--z-panels)',
   boxShadow: 'var(--shadow-lg)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 10,
+  gap: 'var(--space-5)',
 }
 
 function PanelTitle({ title, subtitle }: { title: string; subtitle?: string }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, borderBottom: '1px solid var(--border-muted)', paddingBottom: 8 }}>
-      <h3 style={{ margin: 0, fontSize: 12, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', borderBottom: '1px solid var(--border-muted)', paddingBottom: 8 }}>
+      <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
         {title}
       </h3>
       {subtitle && (
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {subtitle}
         </span>
       )}
@@ -170,9 +171,9 @@ function SwatchRow({ color, onColorChange, onRemove }: {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
       <label style={{ position: 'relative', width: 26, height: 26, flexShrink: 0, cursor: 'pointer' }}>
-        <div style={{ width: 26, height: 26, borderRadius: 3, background: color, border: '1px solid var(--border)' }} />
+        <div style={{ width: 26, height: 26, borderRadius: 'var(--radius-sm)', background: color, border: '1px solid var(--border)' }} />
         <input
           type="color"
           value={color}
@@ -196,10 +197,10 @@ function SwatchRow({ color, onColorChange, onRemove }: {
         style={{
           background: 'transparent',
           border: '1px solid var(--border)',
-          borderRadius: 3,
+          borderRadius: 'var(--radius-sm)',
           color: copied ? 'var(--accent)' : 'var(--text-muted)',
           cursor: 'pointer',
-          fontSize: 10,
+          fontSize: 'var(--text-sm)',
           padding: '2px 5px',
           fontFamily: 'var(--font-mono)',
           flexShrink: 0,
@@ -218,7 +219,7 @@ function SwatchRow({ color, onColorChange, onRemove }: {
           border: 'none',
           color: 'var(--accent-danger)',
           cursor: onRemove ? 'pointer' : 'default',
-          fontSize: 14,
+          fontSize: 'var(--text-lg)',
           opacity: onRemove ? 1 : 0.25,
           lineHeight: 1,
           padding: '0 2px',
@@ -238,7 +239,7 @@ function AlignPanel(): React.ReactElement {
     >
       <PanelTitle title="Align" subtitle={`${selectedIds.length} items selected`} />
       {ALIGN_ROWS.map((row, ri) => (
-        <div key={ri} style={{ display: 'flex', gap: 4 }}>
+        <div key={ri} style={{ display: 'flex', gap: 'var(--space-2)' }}>
           {row.map(({ label, title, action }) => (
             <button
               key={action}
@@ -247,12 +248,12 @@ function AlignPanel(): React.ReactElement {
               style={{
                 flex: 1,
                 height: 28,
-                borderRadius: 4,
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border)',
                 background: 'var(--bg-ui)',
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
-                fontSize: 14,
+                fontSize: 'var(--text-lg)',
                 fontFamily: 'var(--font-mono)',
               }}
             >
@@ -296,22 +297,22 @@ function ComparisonSlotRow({
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-      <span style={{ width: 12, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <span style={{ width: 12, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
         {label}
       </span>
       {src ? (
         <img
           src={'local:///' + src.replace(/\\/g, '/')}
-          style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: 2, flexShrink: 0, border: '1px solid var(--border)' }}
+          style={{ width: 26, height: 26, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0, border: '1px solid var(--border)' }}
           alt=""
         />
       ) : (
-        <div style={{ width: 26, height: 26, borderRadius: 2, background: 'var(--bg-hover)', border: '1px solid var(--border)', flexShrink: 0 }} />
+        <div style={{ width: 26, height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--bg-hover)', border: '1px solid var(--border)', flexShrink: 0 }} />
       )}
       <span style={{
         flex: 1,
-        fontSize: 10,
+        fontSize: 'var(--text-sm)',
         color: filename ? 'var(--text-secondary)' : 'var(--text-muted)',
         fontFamily: 'var(--font-mono)',
         overflow: 'hidden',
@@ -325,10 +326,10 @@ function ComparisonSlotRow({
         style={{
           background: 'var(--bg-ui)',
           border: '1px solid var(--border)',
-          borderRadius: 3,
+          borderRadius: 'var(--radius-sm)',
           color: 'var(--text-secondary)',
           cursor: 'pointer',
-          fontSize: 10,
+          fontSize: 'var(--text-sm)',
           padding: '2px 6px',
           fontFamily: 'var(--font-mono)',
           flexShrink: 0,
@@ -345,7 +346,7 @@ function ComparisonSlotRow({
             border: 'none',
             color: 'var(--accent-danger)',
             cursor: 'pointer',
-            fontSize: 14,
+            fontSize: 'var(--text-lg)',
             lineHeight: 1,
             padding: '0 2px',
             flexShrink: 0,
@@ -389,21 +390,21 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       {item.tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           {item.tags.map((tag) => (
             <span
               key={tag}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 3,
+                gap: 'var(--space-2)',
                 background: 'var(--bg-hover)',
                 border: '1px solid var(--border)',
-                borderRadius: 10,
+                borderRadius: 'var(--radius-lg)',
                 padding: '1px 6px 1px 7px',
-                fontSize: 10,
+                fontSize: 'var(--text-sm)',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--text-secondary)',
               }}
@@ -416,7 +417,7 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
                   border: 'none',
                   color: 'var(--text-muted)',
                   cursor: 'pointer',
-                  fontSize: 11,
+                  fontSize: 'var(--text-md)',
                   lineHeight: 1,
                   padding: 0,
                   marginLeft: 1,
@@ -448,7 +449,7 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
             zIndex: 10,
             background: 'var(--bg-panel)',
             border: '1px solid var(--border)',
-            borderRadius: 3,
+            borderRadius: 'var(--radius-sm)',
             marginTop: 2,
           }}>
             {suggestions.map((s) => (
@@ -457,7 +458,7 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
                 onMouseDown={() => addTag(s)}
                 style={{
                   padding: '3px 8px',
-                  fontSize: 11,
+                  fontSize: 'var(--text-md)',
                   fontFamily: 'var(--font-mono)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
@@ -501,20 +502,20 @@ function CommentAttachPanel({
       className="citadel-floating-panel citadel-context-inspector"
       style={panelChrome}
     >
-      <PanelTitle title="Bind inscription" subtitle="Bind note to relic" />
-      <div style={{ fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-        Bind <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
+      <PanelTitle title="Attach comment" subtitle="Attach this comment to an item" />
+      <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+        Attach <span style={{ color: 'var(--text-primary)' }}>{itemLabel(comment)}</span> to <span style={{ color: 'var(--text-primary)' }}>{itemLabel(target)}</span>.
       </div>
       <button
         onClick={attach}
         style={{
           height: 26,
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border)',
           background: 'var(--bg-ui)',
           color: 'var(--text-primary)',
           cursor: 'pointer',
-          fontSize: 11,
+          fontSize: 'var(--text-md)',
           fontFamily: 'var(--font-mono)',
         }}
       >
@@ -579,9 +580,9 @@ export function ItemProperties(): React.ReactElement | null {
       className="citadel-floating-panel citadel-context-inspector citadel-item-properties"
       style={panelChrome}
     >
-      <PanelTitle title="Relic" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
+      <PanelTitle title="Item" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
         <Field label="X"><NumInput value={item.x} onChange={(v) => update({ x: v })} /></Field>
         <Field label="Y"><NumInput value={item.y} onChange={(v) => update({ y: v })} /></Field>
         <Field label="W"><NumInput value={item.width} onChange={(v) => update({ width: Math.max(1, v) })} /></Field>
@@ -620,7 +621,7 @@ export function ItemProperties(): React.ReactElement | null {
       {itemInscriptionRefs(item).length > 0 && (
         <>
           <Divider label="References" />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {itemInscriptionRefs(item).map((ref) => (
               <button
                 key={ref}
@@ -633,11 +634,11 @@ export function ItemProperties(): React.ReactElement | null {
                 style={{
                   background: 'var(--bg-ui)',
                   border: '1px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   color: 'var(--text-accent)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
+                  fontSize: 'var(--text-sm)',
                   padding: '2px 8px',
                 }}
               >
@@ -652,13 +653,13 @@ export function ItemProperties(): React.ReactElement | null {
       {!['video', 'youtube', 'audio', 'model3d'].includes(item.type) && (
         <>
           <Divider label="Tint" />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
             <input
               type="checkbox"
               checked={!!item.tint}
               onChange={(e) => {
                 if (e.target.checked) {
-                  update({ tint: { color: '#b8c2bd', opacity: 0.25 } })
+                  update({ tint: { color: canvasColor("accent"), opacity: 0.25 } })
                 } else {
                   update({ tint: undefined })
                 }
@@ -678,14 +679,14 @@ export function ItemProperties(): React.ReactElement | null {
                 />
               </Field>
               <Field label="Opacity">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                   <input
                     type="range" min={0} max={1} step={0.01}
                     value={item.tint.opacity}
                     onChange={(e) => update({ tint: { ...item.tint!, opacity: parseFloat(e.target.value) } })}
                     style={{ flex: 1 }}
                   />
-                  <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', width: 28, textAlign: 'right' }}>
+                  <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', width: 28, textAlign: 'right' }}>
                     {Math.round(item.tint.opacity * 100)}%
                   </span>
                 </div>
@@ -700,7 +701,7 @@ export function ItemProperties(): React.ReactElement | null {
         <>
           <Divider label="Image" />
           <Field label="Fit">
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
               {[
                 { value: 'stretch', label: 'Stretch' },
                 { value: 'fit', label: 'Fit' },
@@ -715,8 +716,8 @@ export function ItemProperties(): React.ReactElement | null {
                     style={{
                       flex: 1,
                       height: 24,
-                      fontSize: 9,
-                      borderRadius: 3,
+                      fontSize: 'var(--text-xs)',
+                      borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       border: '1px solid var(--border)',
                       background: active ? 'var(--accent)' : 'var(--bg-ui)',
@@ -736,7 +737,7 @@ export function ItemProperties(): React.ReactElement | null {
       {item.type === 'swatch' && (
         <>
           <Divider label="Palette" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {((item.meta?.colors as string[]) ?? []).map((color, i) => {
               const colors = (item.meta?.colors as string[]) ?? []
               return (
@@ -754,7 +755,7 @@ export function ItemProperties(): React.ReactElement | null {
             })}
             <button
               onClick={() => updateMeta({ colors: [...((item.meta?.colors as string[]) ?? []), '#808080'] })}
-              style={{ background: 'var(--bg-ui)', border: '1px dashed var(--border)', borderRadius: 3, color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, padding: '4px 0' }}
+              style={{ background: 'var(--bg-ui)', border: '1px dashed var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '4px 0' }}
             >
               + Add color
             </button>
@@ -766,7 +767,7 @@ export function ItemProperties(): React.ReactElement | null {
       {item.type === 'sticky' && (
         <>
           <Divider label="Sticky" />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {STICKY_COLORS.map((bg) => (
               <button
                 key={bg}
@@ -775,8 +776,8 @@ export function ItemProperties(): React.ReactElement | null {
                 style={{
                   width: 22,
                   height: 22,
-                  borderRadius: 3,
-                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? '#b8c2bd' : 'transparent'}`,
+                  borderRadius: 'var(--radius-sm)',
+                  border: `2px solid ${(item.meta?.color as string) === bg ? STICKY_COLORS_DISPLAY[bg] ?? canvasColor("accent") : 'transparent'}`,
                   background: bg,
                   cursor: 'pointer',
                   padding: 0,
@@ -789,7 +790,7 @@ export function ItemProperties(): React.ReactElement | null {
               value={(item.meta?.color as string) ?? '#1e1b18'}
               onChange={(e) => updateMeta({ color: e.target.value })}
               title="Custom color"
-              style={{ width: 22, height: 22, borderRadius: 3, border: '1px solid var(--border)', cursor: 'pointer', padding: 0, background: 'none' }}
+              style={{ width: 22, height: 22, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', cursor: 'pointer', padding: 0, background: 'none' }}
             />
           </div>
         </>
@@ -811,13 +812,13 @@ export function ItemProperties(): React.ReactElement | null {
             />
           </Field>
           <Field label="Align">
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
               {(['left', 'center', 'right'] as const).map((a) => (
                 <button
                   key={a}
                   onClick={() => updateMeta({ align: a })}
                   style={{
-                    flex: 1, height: 24, fontSize: 9, borderRadius: 3, cursor: 'pointer',
+                    flex: 1, height: 24, fontSize: 'var(--text-xs)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                     border: '1px solid var(--border)',
                     background: (item.meta?.align ?? 'left') === a ? 'var(--accent)' : 'var(--bg-ui)',
                     color: (item.meta?.align ?? 'left') === a ? 'var(--bg-ui)' : 'var(--text-secondary)',
@@ -877,22 +878,22 @@ export function ItemProperties(): React.ReactElement | null {
         <>
           <Divider label="Comment" />
           <Field label="Target">
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: attachedTarget ? 'var(--text-secondary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: attachedTarget ? 'var(--text-secondary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {attachedTarget ? itemLabel(attachedTarget) : 'Detached'}
             </div>
           </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
             <button
               onClick={() => { if (attachedTarget) centerViewportOnItem(attachedTarget) }}
               disabled={!attachedTarget}
-              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: attachedTarget ? 'pointer' : 'default', opacity: attachedTarget ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: attachedTarget ? 'pointer' : 'default', opacity: attachedTarget ? 1 : 0.4, fontSize: 'var(--text-sm)', padding: '4px 0', fontFamily: 'var(--font-mono)' }}
             >
               Jump
             </button>
             <button
               onClick={() => updateMeta({ attachedTo: undefined })}
               disabled={!attachedTargetId}
-              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: attachedTargetId ? 'pointer' : 'default', opacity: attachedTargetId ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+              style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: attachedTargetId ? 'pointer' : 'default', opacity: attachedTargetId ? 1 : 0.4, fontSize: 'var(--text-sm)', padding: '4px 0', fontFamily: 'var(--font-mono)' }}
             >
               Detach
             </button>
@@ -901,7 +902,7 @@ export function ItemProperties(): React.ReactElement | null {
             onClick={() => { if (nearestTarget) updateMeta({ attachedTo: nearestTarget.id }) }}
             disabled={!nearestTarget}
             title={nearestTarget ? `Attach to ${itemLabel(nearestTarget)}` : 'No target item available'}
-            style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: nearestTarget ? 'pointer' : 'default', opacity: nearestTarget ? 1 : 0.4, fontSize: 10, padding: '4px 0', fontFamily: 'var(--font-mono)' }}
+            style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: nearestTarget ? 'pointer' : 'default', opacity: nearestTarget ? 1 : 0.4, fontSize: 'var(--text-sm)', padding: '4px 0', fontFamily: 'var(--font-mono)' }}
           >
             Attach nearest
           </button>
@@ -915,7 +916,7 @@ export function ItemProperties(): React.ReactElement | null {
           onChange={(v) => updateMeta({ presentationOrder: v > 0 ? Math.round(v) : undefined })}
         />
       </Field>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
         <input
           type="checkbox"
           checked={item.meta?.skipPresentation === true}

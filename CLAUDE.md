@@ -308,6 +308,7 @@ Key tokens:
 | `cache:previewStats` | r→m | → `{ count, bytes }` across `preview-cache` + legacy `pdf-cache` |
 | `cache:clearUnusedPreviews` | r→m | `{ preservePaths, assetPaths }` — keeps referenced previews + live-asset thumbnails |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
+| `window:setMode` | r→m | `{ alwaysOnTop?, opacity?, clickThrough? }` → `{ ok, mode }` — click-through implies always-on-top; opacity floors at 0.3; only the first two persist |
 
 ---
 

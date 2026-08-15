@@ -5,7 +5,7 @@ import { useMascotStore, type MascotEffect } from '../store/mascotStore'
 // Strict colour palette enforced — see CLAUDE.md.
 
 export function MascotWidget(): React.ReactElement {
-  const { effectQueue, persistentEffects, consumeNextEffect, position, setPosition } = useMascotStore()
+  const { effectQueue, persistentEffects, consumeNextEffect } = useMascotStore()
   const [currentEffect, setCurrentEffect] = useState<MascotEffect | null>(null)
   const [currentProgress, setCurrentProgress] = useState(0)
 

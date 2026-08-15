@@ -3,6 +3,8 @@
 This guide defines the local Windows alpha packaging path for Citadel. It is intentionally local-first: it covers building, packaging, and manually smoke-testing artifacts before adding signing, auto-update publishing, or GitHub release automation.
 
 For feature coverage, see [Citadel Capabilities Guide](./citadel-capabilities-guide.md).
+For whether a build is fit to sell — signing, licensing, platform scope, and the
+full pre-release smoke pass — see the [Release-Candidate Checklist](./release-candidate-checklist.md).
 
 ## Prerequisites
 
@@ -66,11 +68,11 @@ Optional checks:
 
 ## Known Alpha Limitations
 
-- Builds are unsigned unless code signing is added later.
-- GitHub release automation is not part of this slice.
+- Builds are unsigned until a certificate is added — see [Release Signing](./release-signing.md).
+- Tagged release automation lives in `.github/workflows/release.yml`; this local path is the manual alternative to it.
 - Auto-update publishing is not part of this slice.
 - Manual smoke testing is required before sharing artifacts.
-- Packaged artifact names are controlled by Electron Builder defaults unless customized later.
+- Artifacts are named `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
 
 ## Troubleshooting
 

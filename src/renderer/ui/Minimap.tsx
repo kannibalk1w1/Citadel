@@ -8,13 +8,14 @@ import {
   viewportForMinimapDrag,
   type MinimapModel,
 } from './minimapModel'
+import { canvasColor } from '../theme/canvasColors'
 
 const MAP_W = 176
 const MAP_H = 112
 const SIDEBAR_W = 164
 
 function itemColour(type: string, selected: boolean, meta?: Record<string, unknown>): string {
-  if (selected) return '#b8c2bd'
+  if (selected) return canvasColor("accent")
   switch (type) {
     case 'image':
     case 'gif':        return '#4a5260'
@@ -168,7 +169,7 @@ export function Minimap(): React.ReactElement | null {
         width: MAP_W,
         height: MAP_H,
         border: '1px solid rgba(185,148,85,0.25)',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-sm)',
         overflow: 'hidden',
         zIndex: 30,
         background: '#161514',

@@ -2,6 +2,7 @@ import React from 'react'
 import type { Viewport } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { visibleGroupIds } from './overlayVisibility'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = {
   viewport: Viewport
@@ -51,7 +52,7 @@ export function GroupLayer({ viewport, visibleItemIds }: Props): React.ReactElem
             x={sx} y={sy}
             width={sw} height={sh}
             fill="none"
-            stroke="#b8c2bd"
+            stroke={canvasColor("accent")}
             strokeWidth={1}
             strokeDasharray="5 4"
             strokeOpacity={0.4}

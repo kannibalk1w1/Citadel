@@ -31,10 +31,10 @@ export async function exportToZip(filename = 'citadel-archive.citadelz'): Promis
       { ok: boolean; reason?: string }
     if (result.ok) {
       mascot.triggerEffect('lightning-out')
-      inscribe('Archive bundled (.citadelz)')
+      inscribe('Archive exported (.citadelz)')
     } else if (result.reason) {
       // reason absent = user cancelled the save dialog; stay silent then.
-      inscribe(`The archive resisted: ${result.reason}`, { tone: 'danger' })
+      inscribe(`Archive export failed: ${result.reason}`, { tone: 'danger' })
       mascot.triggerEffect('fracture')
     }
   } finally {

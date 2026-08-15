@@ -254,7 +254,7 @@ export async function saveCurrentOrAs(): Promise<boolean> {
 
 function surfaceOpenFailure(error: unknown): void {
   const reason = error instanceof Error ? error.message : String(error)
-  inscribe(`The archive resisted: ${reason}`, { tone: 'danger' })
+  inscribe(`Could not open the project: ${reason}`, { tone: 'danger' })
   useMascotStore.getState().triggerEffect('fracture')
 }
 

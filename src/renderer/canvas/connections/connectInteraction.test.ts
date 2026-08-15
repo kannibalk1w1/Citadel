@@ -4,6 +4,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { handleConnectRelicClick } from './connectInteraction'
+import { canvasColor } from '../../theme/canvasColors'
 
 const source: CanvasItem = {
   id: 'source-relic',
@@ -68,7 +69,9 @@ describe('handleConnectRelicClick', () => {
       fromAnchor: 'auto',
       toAnchor: 'auto',
       style: 'bezier',
-      color: '#b8c2bd',
+      // New connections take the live theme accent, not the abandoned
+      // grey-green; existing saved connections keep whatever they stored.
+      color: canvasColor('accent'),
       width: 1.5,
       arrowHead: 'arrow',
       dashed: false,

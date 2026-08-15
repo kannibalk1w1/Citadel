@@ -27,12 +27,12 @@ function Button({ title, children, onClick, active = false, danger = false }: {
       style={{
         width: 28,
         height: 26,
-        borderRadius: 3,
+        borderRadius: 'var(--radius-sm)',
         border: '1px solid var(--border-muted)',
         background: active ? 'var(--accent)' : 'var(--bg-ui)',
         color: active ? 'var(--bg-ui)' : danger ? 'var(--accent-danger)' : 'var(--text-secondary)',
         cursor: 'pointer',
-        fontSize: 10,
+        fontSize: 'var(--text-sm)',
         fontFamily: 'var(--font-mono)',
       }}
     >
@@ -63,7 +63,7 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
     useHistoryStore.getState().push('CONNECTION_STYLE', activeBoardId, { id: conn.id }, { id: conn.id, ...patch })
   }
   const editLabel = () => {
-    void askInscription('Thread inscription:', conn.label ?? '').then((label) => {
+    void askInscription('Connection label:', conn.label ?? '').then((label) => {
       if (label === null) return
       update({ label: label || undefined })
     })
@@ -85,10 +85,10 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
         transform: position.transform,
         zIndex: 'var(--z-panels)',
         display: 'flex',
-        gap: 4,
+        gap: 'var(--space-2)',
         padding: 4,
         border: '1px solid var(--border)',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-sm)',
         background: 'linear-gradient(180deg, #17130f 0%, #0a0908 100%)',
         boxShadow: '0 10px 24px rgba(0,0,0,0.72)',
         pointerEvents: 'auto',

@@ -116,6 +116,7 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
       )}
       <DOMItem
         item={item}
+        editableFrame
         style={{ background: 'var(--bg-canvas)' }}
         onClick={(e) => {
           e.stopPropagation()
@@ -154,7 +155,7 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
                 width: 26,
                 height: 24,
                 border: '1px solid var(--border)',
-                borderRadius: 3,
+                borderRadius: 'var(--radius-sm)',
                 background: 'var(--bg-panel)',
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
@@ -180,7 +181,7 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
                 width: 26,
                 height: 24,
                 border: '1px solid var(--border)',
-                borderRadius: 3,
+                borderRadius: 'var(--radius-sm)',
                 background: 'var(--bg-panel)',
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
@@ -203,12 +204,12 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
             left: 8,
             bottom: 8,
             padding: '3px 6px',
-            borderRadius: 3,
+            borderRadius: 'var(--radius-sm)',
             background: 'var(--bg-panel)',
             border: '1px solid var(--border)',
             color: 'var(--text-secondary)',
             fontFamily: 'var(--font-mono)',
-            fontSize: 10,
+            fontSize: 'var(--text-sm)',
             pointerEvents: 'none',
           }}>
             {message}

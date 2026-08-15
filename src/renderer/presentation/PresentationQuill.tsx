@@ -28,7 +28,7 @@ export function PresentationQuill(): React.ReactElement | null {
   return (
     <svg
       ref={svgRef}
-      aria-label="Presentation quill"
+      aria-label="Presentation pen"
       style={{
         position: 'absolute',
         inset: 0,

@@ -43,7 +43,7 @@ describe('snapItem', () => {
     const allItems = [dragged, fartherTarget, closerTarget]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport)
+    const result = snapItem(dragged, viewport)
 
     expect(result.x).toBe(192)
     expect(snapLines.filter((line) => line.orientation === 'vertical')).toHaveLength(1)
@@ -55,11 +55,42 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    snapItem(dragged, allItems, viewport)
+    snapItem(dragged, viewport)
 
     expect(snapLines).toContainEqual(expect.objectContaining({
       orientation: 'vertical',
       label: '0 px',
+    }))
+  })
+
+  it('measures the gap between aligned items', () => {
+    // Left edges align; the items are 60px apart vertically (dragged bottom at
+    // 120, target top at 180). Ref Flow shows that number, and now so do we.
+    const dragged = item('dragged', 297, 20)
+    const target = item('target', 300, 180)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    snapItem(dragged, viewport)
+
+    expect(snapLines).toContainEqual(expect.objectContaining({
+      orientation: 'vertical',
+      label: '60 px',
+    }))
+  })
+
+  it('measures the gap on horizontal guides too', () => {
+    // Top edges align; 40px of clear space between them horizontally.
+    const dragged = item('dragged', 20, 97)
+    const target = item('target', 160, 100)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    snapItem(dragged, viewport)
+
+    expect(snapLines).toContainEqual(expect.objectContaining({
+      orientation: 'horizontal',
+      label: '40 px',
     }))
   })
 
@@ -70,7 +101,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport)
+    const result = snapItem(dragged, viewport)
 
     expect(result.x).toBe(197)
     expect(snapLines).toHaveLength(0)
@@ -83,7 +114,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport, { invertSnap: true })
+    const result = snapItem(dragged, viewport, { invertSnap: true })
 
     expect(result.x).toBe(200)
     expect(snapLines.filter((line) => line.orientation === 'vertical')).toHaveLength(1)

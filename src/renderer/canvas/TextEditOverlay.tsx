@@ -99,17 +99,17 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             height: TOOLBAR_H,
             background: 'var(--bg-panel)',
             border: '1px solid var(--border)',
-            borderRadius: 6,
+            borderRadius: 'var(--radius-md)',
             padding: '5px 8px',
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 'var(--space-5)',
             boxShadow: 'var(--shadow-lg)',
             zIndex: 201,
           }}
         >
           {/* Colour swatches */}
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             {STICKY_COLORS.map((c) => (
               <button
                 key={c}
@@ -121,7 +121,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
                   border: pendingMeta.color === c
                     ? '1.5px solid var(--accent)'
                     : '1.5px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   padding: 0,
                   flexShrink: 0,
@@ -140,7 +140,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             />
           </div>
           {/* Font size */}
-          <div style={{ display: 'flex', gap: 2 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
             {FONT_SIZES.map(({ label, value }) => {
               const active = (pendingMeta.fontSize ?? 14) === value
               return (
@@ -153,9 +153,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
                     background: active ? 'var(--accent)' : 'var(--bg-canvas)',
                     color: active ? '#070808' : 'var(--text-primary)',
                     border: '1px solid var(--border)',
-                    borderRadius: 3,
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
-                    fontSize: 10,
+                    fontSize: 'var(--text-sm)',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 600,
                     padding: 0,
@@ -167,7 +167,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
             })}
           </div>
           {/* Alignment */}
-          <div style={{ display: 'flex', gap: 2 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
             {ALIGNS.map(({ label, value }) => {
               const active = (pendingMeta.align ?? 'left') === value
               return (
@@ -180,9 +180,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
                     background: active ? 'var(--accent)' : 'var(--bg-canvas)',
                     color: active ? '#070808' : 'var(--text-primary)',
                     border: '1px solid var(--border)',
-                    borderRadius: 3,
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
-                    fontSize: 10,
+                    fontSize: 'var(--text-sm)',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 600,
                     padding: 0,
@@ -202,9 +202,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
               background: pendingMeta.fontStyle === 'bold' ? 'var(--accent)' : 'var(--bg-canvas)',
               color: pendingMeta.fontStyle === 'bold' ? '#070808' : 'var(--text-primary)',
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               cursor: 'pointer',
-              fontSize: 12,
+              fontSize: 'var(--text-base)',
               fontFamily: 'var(--font-mono)',
               fontWeight: 700,
               padding: 0,

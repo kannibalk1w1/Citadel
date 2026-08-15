@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, protocol, net } from 'electron'
+import { app, BrowserWindow, shell, protocol, net, globalShortcut } from 'electron'
 import { join } from 'path'
 
 // Must be called before app.whenReady() — marks 'local' as a secure scheme
@@ -21,7 +21,8 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 600,
     show: false,
-    autoHideMenuBar: false,
+    // Hidden by default; the renderer reveals it on hover, and Alt still works.
+    autoHideMenuBar: true,
     frame: true,
     backgroundColor: '#0f0d0b',
     webPreferences: {
@@ -82,6 +83,12 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+// The click-through escape shortcut is registered globally while it is active;
+// leaving it bound after quit would steal the combination from the desktop.
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 app.on('window-all-closed', () => {
