@@ -3,6 +3,8 @@
 This guide defines the local Windows alpha packaging path for Citadel. It is intentionally local-first: it covers building, packaging, and manually smoke-testing artifacts before adding signing, auto-update publishing, or GitHub release automation.
 
 For feature coverage, see [Citadel Capabilities Guide](./citadel-capabilities-guide.md).
+For whether a build is fit to sell — signing, licensing, platform scope, and the
+full pre-release smoke pass — see the [Release-Candidate Checklist](./release-candidate-checklist.md).
 
 ## Prerequisites
 
