@@ -9,6 +9,9 @@ import { useUIStore } from '../../store/uiStore'
 import { canvasToScreen } from '../../../types'
 import { chromeFrameStyle, connectedItemIds, frameVariant, frameVariantStyle, itemTypeBadge } from '../overlays/boardChromeViewModel'
 import { filenameInscription } from '../../assets/filenameLabel'
+import { snapItem } from '../snapping/snapEngine'
+import { spatialIndex } from '../snapping/spatialIndex'
+import { snapLines } from '../overlays/SnapGuides'
 
 type Props = {
   item: CanvasItem
@@ -87,6 +90,9 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       clientY: event.clientY,
       item: { x: item.x, y: item.y, width: item.width, height: item.height },
     }
+    // Same contract as the Konva drag handlers: the snap engine reads nearby
+    // items from the spatial index, so it has to be current before the move.
+    if (mode === 'move') spatialIndex.rebuild(useCanvasStore.getState().items())
   }
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -96,10 +102,12 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
     const dx = (event.clientX - start.clientX) / viewport.scale
     const dy = (event.clientY - start.clientY) / viewport.scale
     if (start.mode === 'move') {
-      useCanvasStore.getState().updateItem(activeBoardId, item.id, {
-        x: start.item.x + dx,
-        y: start.item.y + dy,
-      })
+      const canvas = useCanvasStore.getState()
+      const dragged = { ...item, ...start.item, x: start.item.x + dx, y: start.item.y + dy }
+      // Ctrl inverts the snap setting mid-drag, exactly as it does on the Konva layer.
+      const snapped = snapItem(dragged, canvas.items(), canvas.viewport(), { invertSnap: event.ctrlKey })
+      canvas.updateItem(activeBoardId, item.id, { x: snapped.x, y: snapped.y })
+      useUIStore.getState().bumpSnap()
       return
     }
     useCanvasStore.getState().updateItem(activeBoardId, item.id, {
@@ -119,6 +127,10 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       }
     }
     pointerStart.current = null
+    if (start.mode === 'move') {
+      snapLines.length = 0
+      useUIStore.getState().bumpSnap()
+    }
     const after = useCanvasStore.getState().items().find((candidate) => candidate.id === item.id)
     if (!after) return
     const before = { id: item.id, ...start.item }
