@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, app, clipboard, nativeImage } from 'electron'
+import { ipcMain, dialog, shell, app, clipboard, nativeImage, BrowserWindow, globalShortcut } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import JSZip from 'jszip'
@@ -15,6 +15,16 @@ import {
 } from './projectPersistence'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
+import {
+  CLICK_THROUGH_SHORTCUT,
+  defaultWindowMode,
+  nextWindowMode,
+  type WindowModeRequest,
+  type WindowModeState,
+} from './windowModes'
+
+// Live window mode. Click-through is deliberately absent from settings.json.
+let windowMode: WindowModeState = { ...defaultWindowMode }
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
@@ -423,6 +433,42 @@ export function registerIpcHandlers(): void {
     settings['ui.zoomFactor'] = clamped
     writeSettings(settings)
     return { ok: true }
+  })
+
+  // ── window:setMode ─────────────────────────────────────────────────────────
+  // Always-on-top, opacity, and click-through. Only the first two are persisted:
+  // relaunching into a window that ignores the mouse would be a trap.
+  ipcMain.handle('window:setMode', async (e, request: WindowModeRequest = {}) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return { ok: false, mode: windowMode }
+
+    windowMode = nextWindowMode(windowMode, request)
+    win.setAlwaysOnTop(windowMode.alwaysOnTop)
+    win.setOpacity(windowMode.opacity)
+    // forward keeps mouse-move events coming, so the interface can still react
+    // as the pointer passes over it.
+    win.setIgnoreMouseEvents(windowMode.clickThrough, { forward: true })
+
+    // The shortcut is the only way back out of click-through, so it exists only
+    // while it is needed and never steals the combination the rest of the time.
+    if (windowMode.clickThrough && !globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
+      globalShortcut.register(CLICK_THROUGH_SHORTCUT, () => {
+        windowMode = nextWindowMode(windowMode, { clickThrough: false })
+        win.setIgnoreMouseEvents(false)
+        globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
+        win.webContents.send('window:modeChanged', windowMode)
+        win.focus()
+      })
+    } else if (!windowMode.clickThrough && globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
+      globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
+    }
+
+    const settings = readSettings()
+    settings['ui.alwaysOnTop'] = windowMode.alwaysOnTop
+    settings['ui.windowOpacity'] = windowMode.opacity
+    writeSettings(settings)
+
+    return { ok: true, mode: windowMode }
   })
 
   // ── recovery:get ──────────────────────────────────────────────────────────

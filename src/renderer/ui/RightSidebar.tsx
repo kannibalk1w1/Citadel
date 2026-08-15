@@ -268,6 +268,52 @@ function MascotPNG(): React.ReactElement {
 }
 
 // ── Quick-action button ────────────────────────────────────────────────────────
+// Window modes: the PureRef-style workflow of keeping references above the app
+// you are drawing in. Click-through is last and marked, because it is the one
+// that takes the mouse away from Citadel entirely.
+function WindowModes(): React.ReactElement {
+  const alwaysOnTop = useUIStore((s) => s.windowAlwaysOnTop)
+  const opacity = useUIStore((s) => s.windowOpacity)
+  const clickThrough = useUIStore((s) => s.windowClickThrough)
+  const applyWindowMode = useUIStore((s) => s.applyWindowMode)
+
+  return (
+    <div className="citadel-sidebar-section">
+      <div className="citadel-sidebar-section-title">Window</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <QuickBtn
+          label={alwaysOnTop ? 'On top ✓' : 'On top'}
+          title="Keep Citadel above other windows (Ctrl+Alt+T)"
+          onClick={() => applyWindowMode({ alwaysOnTop: !alwaysOnTop })}
+        />
+        <label
+          title="Window opacity — references stay readable over the app beneath"
+          style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}
+        >
+          <span>Opacity</span>
+          <input
+            type="range"
+            min={30}
+            max={100}
+            step={5}
+            value={Math.round(opacity * 100)}
+            onChange={(e) => applyWindowMode({ opacity: Number(e.target.value) / 100 })}
+            style={{ flex: 1, accentColor: 'var(--accent)' }}
+          />
+          <span style={{ minWidth: 26, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
+        </label>
+        <QuickBtn
+          label={clickThrough ? 'Click through ✓' : 'Click through'}
+          title={clickThrough
+            ? 'Clicks are passing through — press Ctrl+Alt+C to take the mouse back'
+            : 'Let clicks reach the app underneath (Ctrl+Alt+C to undo)'}
+          onClick={() => applyWindowMode({ clickThrough: !clickThrough })}
+        />
+      </div>
+    </div>
+  )
+}
+
 function QuickBtn({
   label, title, onClick,
 }: { label: React.ReactNode; title: string; onClick: () => void }): React.ReactElement {
@@ -527,6 +573,8 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label="Export ZIP" title="Bundle project as .citadelz" onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
         </div>
       </div>
+
+      <WindowModes />
 
       <RecentProjects />
 

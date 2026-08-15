@@ -199,6 +199,8 @@ export default function App(): React.ReactElement {
         'export.area',
         'export.includeComments',
         'ui.canvasBackground',
+        'ui.alwaysOnTop',
+        'ui.windowOpacity',
       ],
     }).then((res) => {
       const { values } = res as { values: Record<string, unknown> }
@@ -227,6 +229,14 @@ export default function App(): React.ReactElement {
         nextState.canvasBackground = normalizeCanvasBackground(canvasBackground)
       }
       if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
+      // Re-apply through main so the window actually adopts the stored mode.
+      // Click-through is never restored: it is not persisted.
+      const alwaysOnTop = values['ui.alwaysOnTop'] === true
+      const storedOpacity = values['ui.windowOpacity']
+      const opacity = typeof storedOpacity === 'number' ? storedOpacity : 1
+      if (alwaysOnTop || opacity !== 1) {
+        useUIStore.getState().applyWindowMode({ alwaysOnTop, opacity })
+      }
       const zoomFactor = values['ui.zoomFactor']
       if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
     }).catch(() => {})
@@ -627,6 +637,29 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
     resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())
 
+    // Window modes
+    const OPACITY_STEP = 0.1
+    resolver.register(Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ alwaysOnTop: !ui.windowAlwaysOnTop })
+      inscribe(ui.windowAlwaysOnTop ? 'Window no longer on top' : 'Window stays on top')
+    })
+    resolver.register(Actions.WINDOW_CLICK_THROUGH_TOGGLE, () => {
+      const ui = useUIStore.getState()
+      const clickThrough = !ui.windowClickThrough
+      ui.applyWindowMode({ clickThrough })
+      // The only way back is the global shortcut, so say so plainly.
+      inscribe(clickThrough ? 'Clicks pass through — Ctrl+Alt+C to stop' : 'Clicks return to Citadel')
+    })
+    resolver.register(Actions.WINDOW_OPACITY_DOWN, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ opacity: ui.windowOpacity - OPACITY_STEP })
+    })
+    resolver.register(Actions.WINDOW_OPACITY_UP, () => {
+      const ui = useUIStore.getState()
+      ui.applyWindowMode({ opacity: ui.windowOpacity + OPACITY_STEP })
+    })
+
     // Exports
     resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('PDF exported')).catch(console.error) })
     resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Image exported')).catch(console.error) })
@@ -818,7 +851,7 @@ export default function App(): React.ReactElement {
   // Electron menu accelerators intercept keydown before the renderer sees it,
   // so we listen for the IPC messages the menu sends and dispatch them here.
   useEffect(() => {
-    const ipc = (window as unknown as { ipc: { on: (ch: string, fn: () => void) => () => void } }).ipc
+    const ipc = (window as unknown as { ipc: { on: (ch: string, fn: (payload?: unknown) => void) => () => void } }).ipc
     const unsubs = [
       ipc.on('menu:undo',       () => resolver.dispatch(Actions.UNDO)),
       ipc.on('menu:redo',       () => resolver.dispatch(Actions.REDO)),
@@ -840,6 +873,14 @@ export default function App(): React.ReactElement {
       ipc.on('menu:boardNext',    () => resolver.dispatch(Actions.BOARD_NEXT)),
       ipc.on('menu:boardPrev',    () => resolver.dispatch(Actions.BOARD_PREV)),
       ipc.on('menu:recordToggle', () => resolver.dispatch(Actions.RECORD_TOGGLE)),
+      ipc.on('menu:alwaysOnTopToggle', () => resolver.dispatch(Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE)),
+      ipc.on('menu:clickThroughToggle', () => resolver.dispatch(Actions.WINDOW_CLICK_THROUGH_TOGGLE)),
+      // Main turns click-through off from the global shortcut; mirror it here.
+      ipc.on('window:modeChanged', (payload) => {
+        const mode = payload as { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }
+        useUIStore.getState().setWindowModeFromMain(mode)
+        if (!mode.clickThrough) inscribe('Clicks return to Citadel')
+      }),
       ipc.on('menu:exportPdf',    () => exportToPdf().catch(console.error)),
       ipc.on('menu:exportImage',  () => exportToImage().catch(console.error)),
       ipc.on('menu:exportZip',    () => exportToZip().catch(console.error)),

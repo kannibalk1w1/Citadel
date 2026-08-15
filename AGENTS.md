@@ -327,6 +327,7 @@ Key tokens:
 | `settings:get` | r→m | `{ key }` → `{ value }` |
 | `settings:set` | r→m | `{ key, value }` |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
+| `window:setMode` | r→m | `{ alwaysOnTop?, opacity?, clickThrough? }` → `{ ok, mode }` — click-through implies always-on-top; opacity floors at 0.3; only the first two persist |
 
 ---
 

@@ -78,6 +78,11 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
 
   // Snap / align
   [Actions.TOGGLE_SNAP]:    ['s', 'ctrl+shift+g'],
+
+  [Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE]: ['ctrl+alt+t'],
+  [Actions.WINDOW_CLICK_THROUGH_TOGGLE]: ['ctrl+alt+c'],
+  [Actions.WINDOW_OPACITY_DOWN]:         ['ctrl+alt+minus'],
+  [Actions.WINDOW_OPACITY_UP]:           ['ctrl+alt+plus'],
   [Actions.ALIGN_LEFT]:     [],
   [Actions.ALIGN_CENTER_H]: [],
   [Actions.ALIGN_RIGHT]:    [],

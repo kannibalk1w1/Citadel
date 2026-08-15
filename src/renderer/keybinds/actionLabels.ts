@@ -72,6 +72,11 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.PANEL_SEARCH]: 'Open search',
   [Actions.PANEL_ARCHIVE_RAIL_TOGGLE]: 'Show or hide the project rail',
 
+  [Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE]: 'Keep the window on top',
+  [Actions.WINDOW_CLICK_THROUGH_TOGGLE]: 'Let clicks pass through the window',
+  [Actions.WINDOW_OPACITY_DOWN]: 'Make the window more transparent',
+  [Actions.WINDOW_OPACITY_UP]: 'Make the window more opaque',
+
   [Actions.RECORD_TOGGLE]: 'Start or stop recording',
   [Actions.RECORD_PLAY]: 'Play recording',
 

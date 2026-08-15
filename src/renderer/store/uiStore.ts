@@ -230,10 +230,15 @@ type UIState = {
 
   // Filename inscriptions under media relics
   filenameLabelsVisible: boolean
+  windowAlwaysOnTop: boolean
+  windowOpacity: number
+  windowClickThrough: boolean
+  applyWindowMode: (request: { alwaysOnTop?: boolean; opacity?: number; clickThrough?: boolean }) => void
+  setWindowModeFromMain: (mode: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }) => void
   toggleFilenameLabels: () => void
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   toolMode: 'select',
   setToolMode: (mode) => set({ toolMode: mode }),
 
@@ -450,4 +455,23 @@ export const useUIStore = create<UIState>((set) => ({
 
   filenameLabelsVisible: false,
   toggleFilenameLabels: () => set((s) => ({ filenameLabelsVisible: !s.filenameLabelsVisible })),
+
+  // Window modes live in the main process; the renderer mirrors what it is told.
+  // Main owns the invariants (click-through implies always-on-top, opacity has a
+  // floor), so the store takes the applied mode back rather than assuming it.
+  windowAlwaysOnTop: false,
+  windowOpacity: 1,
+  windowClickThrough: false,
+  applyWindowMode: (request) => {
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('window:setMode', request).then((res) => {
+      const { mode } = (res ?? {}) as { mode?: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean } }
+      if (mode) get().setWindowModeFromMain(mode)
+    }).catch(console.error)
+  },
+  setWindowModeFromMain: (mode) => set({
+    windowAlwaysOnTop: mode.alwaysOnTop,
+    windowOpacity: mode.opacity,
+    windowClickThrough: mode.clickThrough,
+  }),
 }))
