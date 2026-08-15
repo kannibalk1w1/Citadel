@@ -40,7 +40,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   // Viewport
   [Actions.ZOOM_IN]:        ['ctrl+=', 'meta+=', 'ctrl+shift+='],
   [Actions.ZOOM_OUT]:       ['ctrl+-', 'meta+-'],
-  [Actions.ZOOM_FIT]:       ['ctrl+shift+h', 'meta+shift+h'],
+  [Actions.ZOOM_FIT]:       ['f', 'ctrl+shift+h', 'meta+shift+h'],
   [Actions.ZOOM_RESET]:     ['ctrl+0', 'meta+0'],
   [Actions.PRESENTATION_TOGGLE]: ['f5'],
   [Actions.PRESENTATION_NEXT]: ['arrowright', 'pagedown'],
@@ -77,7 +77,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.RECORD_PLAY]:    [],
 
   // Snap / align
-  [Actions.TOGGLE_SNAP]:    ['ctrl+shift+g'],
+  [Actions.TOGGLE_SNAP]:    ['s', 'ctrl+shift+g'],
   [Actions.ALIGN_LEFT]:     [],
   [Actions.ALIGN_CENTER_H]: [],
   [Actions.ALIGN_RIGHT]:    [],

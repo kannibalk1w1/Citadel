@@ -63,6 +63,37 @@ describe('snapItem', () => {
     }))
   })
 
+  it('measures the gap between aligned items', () => {
+    // Left edges align; the items are 60px apart vertically (dragged bottom at
+    // 120, target top at 180). Ref Flow shows that number, and now so do we.
+    const dragged = item('dragged', 297, 20)
+    const target = item('target', 300, 180)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    snapItem(dragged, allItems, viewport)
+
+    expect(snapLines).toContainEqual(expect.objectContaining({
+      orientation: 'vertical',
+      label: '60 px',
+    }))
+  })
+
+  it('measures the gap on horizontal guides too', () => {
+    // Top edges align; 40px of clear space between them horizontally.
+    const dragged = item('dragged', 20, 97)
+    const target = item('target', 160, 100)
+    const allItems = [dragged, target]
+    spatialIndex.rebuild(allItems)
+
+    snapItem(dragged, allItems, viewport)
+
+    expect(snapLines).toContainEqual(expect.objectContaining({
+      orientation: 'horizontal',
+      label: '40 px',
+    }))
+  })
+
   it('does not snap when snapping is off', () => {
     useUIStore.setState({ snapToGrid: false })
     const dragged = item('dragged', 197, 20)
