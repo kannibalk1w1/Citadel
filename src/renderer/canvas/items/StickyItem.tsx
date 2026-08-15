@@ -11,6 +11,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
 
@@ -252,6 +253,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
             width: Math.max(80, newBox.width),
             height: Math.max(60, newBox.height),
           })}
+          {...selectionTransformerStyle(scale)}
         />
       )}
     </>

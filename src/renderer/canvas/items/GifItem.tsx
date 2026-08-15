@@ -20,6 +20,7 @@ import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { useStableImage } from './useStableImage'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type GiflerFn = (src: string) => {
   frames(canvas: HTMLCanvasElement, fn: (ctx: CanvasRenderingContext2D, frame: { buffer: HTMLCanvasElement }) => void): void
@@ -190,7 +191,7 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         />
       )}
       {isSelected && !item.locked && (
-        <Transformer ref={trRef} keepRatio={false} rotateEnabled />
+        <Transformer ref={trRef} keepRatio={false} rotateEnabled {...selectionTransformerStyle(scale)} />
       )}
     </>
   )

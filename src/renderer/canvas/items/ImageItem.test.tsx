@@ -37,9 +37,9 @@ vi.mock('react-konva', () => ({
     <div data-testid="konva-rect" data-listening={String(listening ?? true)} />
   ),
   Text: ({ text }: { text?: string }) => <div data-testid="konva-text">{text}</div>,
-  Transformer: React.forwardRef(function Transformer(_props: unknown, ref: React.ForwardedRef<unknown>) {
+  Transformer: React.forwardRef(function Transformer(props: { anchorSize?: number }, ref: React.ForwardedRef<unknown>) {
     React.useImperativeHandle(ref, () => ({ nodes: vi.fn(), getLayer: () => ({ batchDraw: vi.fn() }) }))
-    return <div data-testid="image-transformer" />
+    return <div data-testid="image-transformer" data-anchor-size={props.anchorSize} />
   }),
 }))
 
@@ -88,6 +88,7 @@ describe('ImageItem hit testing', () => {
 
   it('keeps hook order stable while the image loads asynchronously', () => {
     imageState.image = null
+    useCanvasStore.setState({ selectedIds: [imageItem.id] })
     const { rerender } = render(<ImageItem item={imageItem} />)
     expect(screen.queryByTestId('image-group')).toBeNull()
 
@@ -95,6 +96,7 @@ describe('ImageItem hit testing', () => {
 
     expect(() => rerender(<ImageItem item={imageItem} />)).not.toThrow()
     expect(screen.getByTestId('konva-image')).toBeTruthy()
+    expect(screen.getByTestId('image-transformer').getAttribute('data-anchor-size')).toBe('10')
   })
 })
 

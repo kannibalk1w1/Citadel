@@ -12,6 +12,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
 
@@ -36,6 +37,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const scale = useCanvasStore((s) => s.viewport().scale)
 
   useEffect(() => {
     if (isSelected && trRef.current && groupRef.current) {
@@ -350,6 +352,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
           ref={trRef}
           keepRatio={false}
           rotateEnabled
+          {...selectionTransformerStyle(scale)}
         />
       )}
     </>

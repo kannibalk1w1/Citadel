@@ -116,7 +116,7 @@ describe('DOMItem dragging', () => {
   it('does not snap while resizing', () => {
     render(<DOMItem item={dragged} editableFrame><div /></DOMItem>)
 
-    const handle = screen.getByTitle('Resize')
+    const handle = screen.getByTestId('resize-bottom-right')
     fireEvent.pointerDown(handle, { pointerId: 2, clientX: 0, clientY: 0 })
     fireEvent.pointerMove(handle, { pointerId: 2, clientX: 12, clientY: 8 })
 

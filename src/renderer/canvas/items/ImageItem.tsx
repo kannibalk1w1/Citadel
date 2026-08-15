@@ -21,6 +21,7 @@ import { FILENAME_LABEL_FONT_PX, filenameInscription } from '../../assets/filena
 import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPatch, type Waymark } from './waymarks'
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
 
@@ -49,7 +50,10 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
       trRef.current.nodes([groupRef.current])
       trRef.current.getLayer()?.batchDraw()
     }
-  }, [isSelected])
+  // A newly imported image first renders without a Konva node while its source
+  // loads. Include that readiness in the dependency list so selection made on
+  // import attaches the transformer as soon as the node exists.
+  }, [image, isMissing, isSelected])
 
   useEffect(() => { void ensureThumbnail(item.src) }, [item.src])
 
@@ -312,7 +316,14 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           </React.Fragment>
         ))}
       </Group>
-      {isSelected && !item.locked && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
+      {isSelected && !item.locked && (
+        <Transformer
+          ref={trRef}
+          rotateEnabled
+          keepRatio={false}
+          {...selectionTransformerStyle(scale)}
+        />
+      )}
     </>
   )
 }

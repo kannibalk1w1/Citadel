@@ -11,6 +11,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
 
@@ -193,6 +194,7 @@ export function TextItem({ item }: Props): React.ReactElement {
           ref={trRef}
           keepRatio={false}
           rotateEnabled
+          {...selectionTransformerStyle(scale)}
         />
       )}
     </>

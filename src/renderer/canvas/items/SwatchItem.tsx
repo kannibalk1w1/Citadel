@@ -10,6 +10,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
+import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
 
@@ -20,6 +21,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)!
   const toolMode = useUIStore((s) => s.toolMode)
   const openContextMenu = useUIStore((s) => s.openContextMenu)
+  const scale = useCanvasStore((s) => s.viewport().scale)
 
   const groupRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
@@ -183,6 +185,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
             width: Math.max(60, newBox.width),
             height: Math.max(30, newBox.height),
           })}
+          {...selectionTransformerStyle(scale)}
         />
       )}
     </>

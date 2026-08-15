@@ -13,6 +13,7 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
+import { resizeCursor, resizeFromHandle, resizeHandles, type ResizeHandle } from './domResize'
 
 type Props = {
   item: CanvasItem
@@ -35,7 +36,7 @@ function domLayerTarget(): HTMLElement {
 
 type PointerStart = {
   pointerId: number
-  mode: 'move' | 'resize-se'
+  mode: 'move' | ResizeHandle
   clientX: number
   clientY: number
   item: Pick<CanvasItem, 'x' | 'y' | 'width' | 'height'>
@@ -111,10 +112,11 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       useUIStore.getState().bumpSnap()
       return
     }
-    useCanvasStore.getState().updateItem(activeBoardId, item.id, {
-      width: Math.max(MIN_SIZE, start.item.width + dx),
-      height: Math.max(MIN_SIZE, start.item.height + dy),
-    })
+    useCanvasStore.getState().updateItem(
+      activeBoardId,
+      item.id,
+      resizeFromHandle(start.item, start.mode, dx, dy, MIN_SIZE),
+    )
   }
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -274,23 +276,35 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       </div>
       {canEdit && (
         <>
-          {/* Moving is the title bar's job — see above. A full-surface overlay
-              here would swallow every click the item's own content needs. */}
-          <div
-            onPointerDown={(event) => beginPointerAction(event, 'resize-se')}
-            title="Resize"
-            style={{
-              position: 'absolute',
-              right: 0,
-              bottom: 0,
-              width: 14,
-              height: 14,
-              background: 'var(--accent)',
-              border: '1px solid var(--bg-canvas)',
-              cursor: 'nwse-resize',
-              pointerEvents: 'auto',
-            }}
-          />
+          {/* Moving is the title bar's job — see above. The resize grips sit on
+              the frame, leaving video/audio controls and webviews clickable. */}
+          {resizeHandles.map((handle) => {
+            const horizontal = handle.includes('left') ? 'left' : handle.includes('right') ? 'right' : 'center'
+            const vertical = handle.includes('top') ? 'top' : handle.includes('bottom') ? 'bottom' : 'center'
+            return (
+              <div
+                key={handle}
+                data-testid={`resize-${handle}`}
+                onPointerDown={(event) => beginPointerAction(event, handle)}
+                title="Resize"
+                style={{
+                  position: 'absolute',
+                  width: 10,
+                  height: 10,
+                  borderRadius: 3,
+                  background: 'var(--bg-panel)',
+                  border: '1.5px solid var(--accent)',
+                  boxShadow: '0 1px 5px rgba(0,0,0,0.6)',
+                  cursor: resizeCursor[handle],
+                  pointerEvents: 'auto',
+                  zIndex: 2,
+                  [horizontal === 'left' ? 'left' : horizontal === 'right' ? 'right' : 'left']: horizontal === 'center' ? '50%' : -5,
+                  [vertical === 'top' ? 'top' : vertical === 'bottom' ? 'bottom' : 'top']: vertical === 'center' ? '50%' : -5,
+                  transform: `translate(${horizontal === 'center' ? '-50%' : '0'}, ${vertical === 'center' ? '-50%' : '0'})`,
+                }}
+              />
+            )
+          })}
         </>
       )}
       {item.tint && (
