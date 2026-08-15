@@ -5,7 +5,9 @@ the current build and one a buyer can be charged for.
 
 This is the commercial-readiness document. [Release Readiness Lite](./release-readiness-lite.md)
 remains the mechanical how-to for building and packaging a local Windows alpha;
-this file says whether the result is fit to sell.
+this file says whether the result is fit to sell. For how the build compares to
+Ref Flow — the product a buyer will price it against — see
+[Citadel vs Ref Flow](./citadel-vs-refflow.md).
 
 **Scope of the first release: Windows x64 only.** Everything below is written
 against that. Linux and macOS are addressed in [Platform scope](#platform-scope).
