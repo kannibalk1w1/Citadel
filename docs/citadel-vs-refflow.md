@@ -3,6 +3,9 @@
 Where the current Citadel build stands against the tool it is a spiritual clone
 of, as a *shipping product* rather than a feature list.
 
+For the wider category — PureRef, Eagle, and the rest — see
+[Category Scan](./citadel-category-scan.md).
+
 Reviewed 2026-08-15 against Ref Flow's own store pages
 ([ref-flow](https://hp651106.itch.io/ref-flow),
 [ref-flow-v10](https://hp651106.itch.io/ref-flow-v10)). Ref Flow claims here are
@@ -79,8 +82,11 @@ case (`snapEngine.ts:40`, `isGaplessDock`). Any non-zero relationship gets an
 unlabelled line, and there is no equal-spacing or distribution guide at all —
 the thing that makes Figma-style alignment feel precise rather than magnetic.
 
-Everything needed is present: the guide already carries an optional `label`,
-`labelX`, `labelY`. What is missing is measuring the gap and rendering it.
+**Fixed 2026-08-15** (`3de7cff`). Every guide now carries the real separation
+between the two items, measured at the position the item will land in rather
+than where the pointer left it — which is what keeps a gapless dock reading
+`0 px`. Equal-spacing and distribution guides are still absent; that is the
+remaining half of Figma-style alignment.
 
 ### 3. One language against six
 
@@ -192,8 +198,9 @@ substance sits behind a first run that shows none of it.
 
 1. ~~Route `DOMItem` drags through the snap engine.~~ Done, `277a243`.
 2. ~~Give video, YouTube and audio a move affordance.~~ Done, `2c1f7c5`.
-3. **Measure and label non-zero gaps** in the snap guides.
-4. **Give snap and fit single-key defaults.**
+3. ~~Measure and label non-zero gaps in the snap guides.~~ Done, `3de7cff`.
+4. ~~Give snap and fit single-key defaults.~~ Done, `3de7cff` — `s` and `f`,
+   with the old chords kept as aliases.
 5. **Measure the packaged size** on the first CI build; decide listing vs code.
 6. **Extract UI strings into a catalogue** while their locations are still fresh,
    even if no translation is commissioned yet.
