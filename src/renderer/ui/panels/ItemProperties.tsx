@@ -855,6 +855,30 @@ export function ItemProperties(): React.ReactElement | null {
         </>
       )}
 
+      {item.type === 'code' && (
+        <>
+          <Divider label="Code" />
+          <Field label="Language">
+            <input
+              value={(item.meta?.language as string) ?? 'plaintext'}
+              onChange={(e) => updateMeta({ language: e.target.value || 'plaintext' })}
+              style={inputStyle}
+              placeholder="typescript"
+            />
+          </Field>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Snippet
+            <textarea
+              value={(item.meta?.code as string) ?? ''}
+              onChange={(e) => updateMeta({ code: e.target.value })}
+              spellCheck={false}
+              style={{ ...inputStyle, minHeight: 150, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', lineHeight: 1.55, padding: 8 }}
+              placeholder="Paste code here"
+            />
+          </label>
+        </>
+      )}
+
       {/* ── Comparison-specific ── */}
       {item.type === 'comparison' && (
         <>

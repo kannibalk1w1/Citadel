@@ -18,13 +18,8 @@ import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
 import { RuntimeStatsSigil } from './overlays/RuntimeStatsSigil'
 import { CanvasBackground } from './CanvasBackground'
-import { ChamberAmbience } from './ChamberAmbience'
 import { chamberAccentVariables, resolveChamberIdentity } from './chamberIdentity'
-import { CanvasEffectLayer } from './effects/CanvasEffectLayer'
-import { useCanvasEffectStore } from './effects/canvasEffectStore'
 import { useFileDrop } from './useFileDrop'
-import { engine } from '../arcade/HyperTypeEngine'
-import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
 import { visibleItemIds } from './visibility/viewportVisibility'
 import { activeArchiveRailWidth } from '../ui/shell/shellModel'
 import { canvasRuntimeStats } from '../performance/canvasRuntimeStats'
@@ -35,25 +30,11 @@ const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 const VIEWPORT_OVERSCAN_PX = 240
 
-const DRAGON_CURSORS: Record<string, string> = {
-  select:     DS_NORMAL,
-  pan:        'grab',
-  lasso:      DS_WHIP,
-  connect:    DS_CROSS,
-  text:       DS_NORMAL,
-  sticky:     DS_NORMAL,
-  link:       DS_HAND,
-  tag:        DS_NORMAL,
-  swatch:     DS_NORMAL,
-  comparison: DS_NORMAL,
-  record:     DS_NORMAL,
-  default:    DS_NORMAL,
-}
-
 const STANDARD_CURSORS: Record<string, string> = {
   pan:        'grab',
   connect:    'crosshair',
   text:       'text',
+  code:       'cell',
   sticky:     'cell',
   swatch:     'cell',
   comparison: 'cell',
@@ -87,12 +68,9 @@ export function CanvasStage(): React.ReactElement {
     [boardMeta]
   )
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
-  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
-  const setLastCanvasPointer = useCanvasEffectStore((s) => s.setLastCanvasPointer)
-
-  const CURSOR = dragonCursorEnabled ? DRAGON_CURSORS : STANDARD_CURSORS
+  const CURSOR = STANDARD_CURSORS
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 
@@ -143,7 +121,6 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
-      engine.burst('📌', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -159,7 +136,20 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().setSelection([item.id])
       useUIStore.getState().setEditingItemId(item.id)
       useUIStore.getState().setToolMode('select')
-      engine.burst('T', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
+      return
+    }
+
+    if (toolMode === 'code') {
+      const item = {
+        id: nanoid(), type: 'code' as const,
+        x: cx - 260, y: cy - 150, width: 520, height: 300,
+        rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
+        tags: [], meta: { code: '// Paste code here', language: 'typescript' },
+      }
+      useCanvasStore.getState().addItem(activeBoardId, item)
+      useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
+      useCanvasStore.getState().setSelection([item.id])
+      useUIStore.getState().setToolMode('select')
       return
     }
 
@@ -174,7 +164,6 @@ export function CanvasStage(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
       useUIStore.getState().setToolMode('select')
-      engine.burst('★', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -189,7 +178,6 @@ export function CanvasStage(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, newItem)
       useCanvasStore.getState().setSelection([newItem.id])
       useUIStore.getState().setToolMode('select')
-      engine.burst('⟺', cx * viewport.scale + viewport.x, cy * viewport.scale + viewport.y)
       return
     }
 
@@ -210,17 +198,9 @@ export function CanvasStage(): React.ReactElement {
 
   // Connect tool rubber-band — track cursor
   const handleMouseMove = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
-    const stage = stageRef.current
-    const pointer = stage?.getPointerPosition()
-    if (pointer) {
-      setLastCanvasPointer({
-        x: (pointer.x - viewport.x) / viewport.scale,
-        y: (pointer.y - viewport.y) / viewport.scale,
-      })
-    }
     if (toolMode !== 'connect' || !connectFromId) { setCursorPos(null); return }
     setCursorPos({ x: e.evt.clientX, y: e.evt.clientY })
-  }, [connectFromId, setLastCanvasPointer, toolMode, viewport])
+  }, [connectFromId, toolMode])
 
   // ── Middle-mouse pan ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -302,8 +282,6 @@ export function CanvasStage(): React.ReactElement {
       onDrop={handleDrop}
     >
       <CanvasBackground />
-      <ChamberAmbience />
-      <CanvasEffectLayer viewport={viewport} width={width} height={height} />
       <Stage
         ref={stageRef}
         width={width}

@@ -82,7 +82,7 @@ export function RecordingBar(): React.ReactElement | null {
   if (isRecording) {
     return (
       <div className="citadel-floating-panel" style={barStyle}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-danger)', display: 'inline-block', animation: 'pulse 1s infinite' }} />
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-danger)', display: 'inline-block' }} />
         <span style={labelStyle}>Recording</span>
         <button onClick={handleToggleRecord} style={btnStyle}>Stop</button>
       </div>

@@ -124,7 +124,6 @@ beforeEach(() => {
   useUIStore.setState({
     toolMode: 'select',
     connectFromId: null,
-    dragonCursorEnabled: false,
     presentationMode: false,
     searchHighlightId: null,
   })

@@ -22,33 +22,10 @@ export function InscriptionToasts(): React.ReactElement | null {
         pointerEvents: 'none',
       }}
     >
-      <style>{`
-        @keyframes inscription-rise {
-          from { opacity: 0; transform: translateY(8px); }
-          12%  { opacity: 1; transform: translateY(0); }
-          82%  { opacity: 1; }
-          to   { opacity: 0; }
-        }
-        .citadel-inscription-toast {
-          animation-name: inscription-rise;
-          animation-timing-function: ease-out;
-          animation-fill-mode: forwards;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          @keyframes inscription-rise {
-            from { opacity: 0; transform: none; }
-            12%  { opacity: 1; }
-            82%  { opacity: 1; }
-            to   { opacity: 0; }
-          }
-        }
-      `}</style>
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="citadel-inscription-toast"
           style={{
-            animationDuration: `${toast.lifetimeMs}ms`,
             background: 'color-mix(in srgb, var(--bg-panel) 94%, transparent)',
             border: toast.tone === 'danger' ? '1px solid var(--accent-danger)' : '1px solid var(--border)',
             borderRadius: 'var(--radius-sm)',
@@ -60,7 +37,7 @@ export function InscriptionToasts(): React.ReactElement | null {
             padding: '6px 14px',
           }}
         >
-          <span style={{ color: toast.tone === 'danger' ? 'var(--accent-danger)' : 'var(--text-accent)', fontFamily: 'var(--font-display)', marginRight: 6 }}>❧</span>
+          <span aria-hidden="true" style={{ color: toast.tone === 'danger' ? 'var(--accent-danger)' : 'var(--text-accent)', marginRight: 6 }}>•</span>
           {toast.text}
         </div>
       ))}

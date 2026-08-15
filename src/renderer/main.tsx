@@ -5,7 +5,6 @@ import { ThemeProvider } from './theme/ThemeProvider'
 import './theme/fonts.css'
 import './theme/dark.css'
 import './theme/light.css'
-import './theme/gothicChrome.css'
 import './theme/cleanArchive.css'
 import './theme/graphite.css'
 

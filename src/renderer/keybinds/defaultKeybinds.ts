@@ -10,6 +10,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.TOOL_CONNECT]:   ['c'],
   [Actions.TOOL_LASSO]:     ['l'],
   [Actions.TOOL_TEXT]:      ['t'],
+  [Actions.TOOL_CODE]:      ['d'],
   [Actions.TOOL_STICKY]:    ['n'],
   [Actions.TOOL_LINK]:      ['k'],
   [Actions.TOOL_TAG]:       ['g'],

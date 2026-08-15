@@ -11,7 +11,7 @@ import {
   itemTypeBadge,
 } from './boardChromeViewModel'
 
-const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
+const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d', 'code'])
 
 function canvasToken(value: string): string {
   if (!value.startsWith('var(')) return value

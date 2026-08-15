@@ -23,6 +23,7 @@ const PRIMARY_TOOLS: ToolDef[] = [
   { mode: 'lasso', label: 'Lasso', key: 'L', icon: 'lasso' },
   { mode: 'connect', label: 'Connect', key: 'C', icon: 'connect' },
   { mode: 'text', label: 'Text', key: 'T', icon: 'text' },
+  { mode: 'code', label: 'Code snippet', key: 'D', icon: 'code' },
   { mode: 'sticky', label: 'Note', key: 'N', icon: 'sticky' },
 ]
 
@@ -49,7 +50,7 @@ export function Toolbar(): React.ReactElement {
 
   const [youtubeOpen, setYoutubeOpen] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [youtubeShake, setYoutubeShake] = useState(false)
+  const [youtubeError, setYoutubeError] = useState(false)
   const [voiceRecording, setVoiceRecording] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -63,6 +64,7 @@ export function Toolbar(): React.ReactElement {
   const closeYouTube = () => {
     setYoutubeOpen(false)
     setYoutubeUrl('')
+    setYoutubeError(false)
   }
 
   useEffect(() => {
@@ -79,8 +81,7 @@ export function Toolbar(): React.ReactElement {
     const url = youtubeUrl.trim()
     if (!url) return
     if (!isValidYouTubeUrl(url)) {
-      setYoutubeShake(true)
-      setTimeout(() => { setYoutubeShake(false); setYoutubeUrl('') }, 350)
+      setYoutubeError(true)
       return
     }
     const vp = useCanvasStore.getState().viewport()
@@ -337,16 +338,6 @@ export function Toolbar(): React.ReactElement {
             })}
 
       {/* ── YouTube ── */}
-      <style>{`
-        @keyframes ytShake {
-          0%,100% { transform: translateX(0); }
-          20%      { transform: translateX(-4px); }
-          40%      { transform: translateX(4px); }
-          60%      { transform: translateX(-3px); }
-          80%      { transform: translateX(3px); }
-        }
-      `}</style>
-
       <button
         title="YouTube Embed (paste URL)"
         onClick={() => youtubeOpen ? closeYouTube() : setYoutubeOpen(true)}
@@ -372,7 +363,7 @@ export function Toolbar(): React.ReactElement {
           <input
             autoFocus
             value={youtubeUrl}
-            onChange={(e) => setYoutubeUrl(e.target.value)}
+            onChange={(e) => { setYoutubeUrl(e.target.value); setYoutubeError(false) }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') placeYouTube()
               if (e.key === 'Escape') closeYouTube()
@@ -381,7 +372,7 @@ export function Toolbar(): React.ReactElement {
             style={{
               width: 148,
               background: 'var(--bg-ui)',
-              border: '1px solid var(--border)',
+              border: `1px solid ${youtubeError ? 'var(--accent-danger)' : 'var(--border)'}`,
               borderRadius: 'var(--radius-sm)',
               color: 'var(--text-primary)',
               fontFamily: 'var(--font-mono)',
@@ -389,7 +380,6 @@ export function Toolbar(): React.ReactElement {
               padding: '4px 6px',
               outline: 'none',
               boxSizing: 'border-box',
-              animation: youtubeShake ? 'ytShake 0.35s ease' : 'none',
             }}
           />
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>

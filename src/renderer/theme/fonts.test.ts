@@ -14,7 +14,7 @@ const indexHtml = readFileSync(join(here, '..', 'index.html'), 'utf-8')
  */
 describe('bundled typefaces', () => {
   it('declares every family Citadel names in its theme tokens', () => {
-    for (const family of ['Cinzel', 'Inter', 'JetBrains Mono', 'Press Start 2P']) {
+    for (const family of ['Inter', 'JetBrains Mono']) {
       expect(fontsCss).toContain(`font-family: '${family}'`)
     }
   })

@@ -15,6 +15,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.TOOL_CONNECT]: 'Connect tool',
   [Actions.TOOL_LASSO]: 'Lasso tool',
   [Actions.TOOL_TEXT]: 'Text tool',
+  [Actions.TOOL_CODE]: 'Code snippet tool',
   [Actions.TOOL_STICKY]: 'Note tool',
   [Actions.TOOL_LINK]: 'Link tool',
   [Actions.TOOL_TAG]: 'Tag tool',

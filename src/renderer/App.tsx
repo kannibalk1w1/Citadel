@@ -23,7 +23,6 @@ import { ItemProperties } from './ui/panels/ItemProperties'
 import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
 import { TextEditOverlay } from './canvas/TextEditOverlay'
-import { YouSavedBanner } from './ui/YouSavedBanner'
 import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { ArchiveRiteOverlay } from './ui/ArchiveRiteOverlay'
@@ -36,9 +35,6 @@ import { InscriptionPrompt } from './ui/prompt/InscriptionPrompt'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
-import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
-import { engine, lastMouse } from './arcade/HyperTypeEngine'
-import { getCaretScreenPos } from './arcade/caretPos'
 import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
@@ -166,16 +162,11 @@ export default function App(): React.ReactElement {
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
-  const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
   const windowOpacity = useUIStore((s) => s.windowOpacity)
   const windowOpacityUsesRendererFallback = useUIStore((s) => s.windowOpacityUsesRendererFallback)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    engine.setEnabled(hyperTypeEnabled)
-  }, [hyperTypeEnabled])
 
   // Electron's BrowserWindow#setOpacity is a documented no-op on Linux. The
   // transparent host created by main lets this alpha reach the compositor there,
@@ -204,12 +195,9 @@ export default function App(): React.ReactElement {
 
     ipc.invoke('settings:getMany', {
       keys: [
-        'ui.youSavedEnabled',
-        'ui.hyperTypeEnabled',
         'ui.theme',
         'ui.themeOverrides',
         'ui.savedThemePalettes',
-        'ui.dragonCursorEnabled',
         'ui.archiveRailCollapsed',
         'ui.zoomFactor',
         'export.scale',
@@ -223,16 +211,11 @@ export default function App(): React.ReactElement {
     }).then((res) => {
       const { values } = res as { values: Record<string, unknown> }
       const nextState: Partial<ReturnType<typeof useUIStore.getState>> = {}
-      if (values['ui.youSavedEnabled'] === true) nextState.youSavedEnabled = true
-      if (values['ui.hyperTypeEnabled'] === true) {
-        nextState.hyperTypeEnabled = true
-      }
       const theme = values['ui.theme']
       if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'
       nextState.themeOverrides = normalizeThemeOverrides(values['ui.themeOverrides'])
       nextState.savedThemePalettes = normalizeSavedThemePalettes(values['ui.savedThemePalettes'])
-      if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
       if (typeof values['ui.archiveRailCollapsed'] === 'boolean') nextState.archiveRailCollapsed = values['ui.archiveRailCollapsed']
       if (typeof values['export.scale'] === 'number') {
         nextState.exportScale = Math.min(3, Math.max(1, Math.round(values['export.scale'])))
@@ -308,6 +291,7 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.TOOL_CONNECT, () => useUIStore.getState().setToolMode('connect'))
     resolver.register(Actions.TOOL_LASSO,   () => useUIStore.getState().setToolMode('lasso'))
     resolver.register(Actions.TOOL_TEXT,    () => useUIStore.getState().setToolMode('text'))
+    resolver.register(Actions.TOOL_CODE,    () => useUIStore.getState().setToolMode('code'))
     resolver.register(Actions.TOOL_STICKY,  () => useUIStore.getState().setToolMode('sticky'))
     resolver.register(Actions.TOOL_LINK,    () => useUIStore.getState().setToolMode('link'))
     resolver.register(Actions.TOOL_TAG,     () => useUIStore.getState().setToolMode('tag'))
@@ -343,7 +327,6 @@ export default function App(): React.ReactElement {
         canvas.removeConnection(event.boardId, connection.id)
       }
       triggerEffect('rewind-swirl')
-      engine.burst('↩', lastMouse.x, lastMouse.y)
     })
 
     resolver.register(Actions.REDO, () => {
@@ -373,7 +356,6 @@ export default function App(): React.ReactElement {
         canvas.addConnection(event.boardId, event.after as Connection)
       }
       triggerEffect('forward-surge')
-      engine.burst('↪', lastMouse.x, lastMouse.y)
     })
 
     // Delete selected items
@@ -387,7 +369,6 @@ export default function App(): React.ReactElement {
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
       triggerEffect('crumble', undefined, itemEffectSource(toDelete))
-      engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
     })
 
     // Duplicate selected items
@@ -702,16 +683,14 @@ export default function App(): React.ReactElement {
       saveCurrentOrAs().then((ok) => {
         if (!ok) return
         triggerEffect('rune-seal')
-        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Project saved')
+        inscribe('Project saved')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
       saveProjectAs().then((p) => {
         if (!p) return
         triggerEffect('rune-seal')
-        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
-        else inscribe('Project saved')
+        inscribe('Project saved')
       })
     })
     resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Project opened') } }) })
@@ -846,13 +825,6 @@ export default function App(): React.ReactElement {
       const target = e.target as HTMLElement
       const tag = target.tagName
       const inText = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable
-      let spawnX = lastMouse.x
-      let spawnY = lastMouse.y
-      if (inText) {
-        const pos = getCaretScreenPos(target)
-        if (pos) { spawnX = pos.x; spawnY = pos.y }
-      }
-      engine.keyStroke(e.key, spawnX, spawnY)
       if (useUIStore.getState().presentationMode && e.key === 'Escape') {
         e.preventDefault()
         // Escape rests a raised quill before it exits the presentation.
@@ -867,15 +839,9 @@ export default function App(): React.ReactElement {
       if (inText) return
       resolver.resolve(e)
     }
-    const onMouseMove = (e: MouseEvent) => {
-      lastMouse.x = e.clientX
-      lastMouse.y = e.clientY
-    }
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('mousemove', onMouseMove, { passive: true })
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('mousemove', onMouseMove)
     }
   }, [])
 
@@ -1112,11 +1078,9 @@ export default function App(): React.ReactElement {
       presentationOverlay={presentationOverlay}
       globalOverlays={(
         <>
-          <YouSavedBanner />
           <InscriptionToasts />
           <ArchiveRiteOverlay />
           <InscriptionPrompt />
-          <HyperTypeOverlay canvasContainerRef={canvasContainerRef} />
         </>
       )}
     />

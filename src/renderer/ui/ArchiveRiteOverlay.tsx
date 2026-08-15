@@ -25,21 +25,6 @@ export function ArchiveRiteOverlay(): React.ReactElement | null {
         backdropFilter: 'blur(2px)',
       }}
     >
-      <style>{`
-        @keyframes archive-rite-shimmer {
-          from { background-position: -120px 0; }
-          to   { background-position: 120px 0; }
-        }
-        .archive-rite-bar-fill {
-          background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text-accent) 35%, transparent), transparent);
-          background-size: 120px 100%;
-          background-repeat: no-repeat;
-          animation: archive-rite-shimmer 1400ms linear infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .archive-rite-bar-fill { animation: none; background-image: none; }
-        }
-      `}</style>
       <div
         style={{
           background: 'var(--bg-panel)',
@@ -56,8 +41,7 @@ export function ArchiveRiteOverlay(): React.ReactElement | null {
         </div>
         <div style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', height: 8, overflow: 'hidden' }}>
           <div
-            className="archive-rite-bar-fill"
-            style={{ background: 'var(--text-accent)', height: '100%', transition: 'width 120ms linear', width: `${rite.percent}%` }}
+            style={{ background: 'var(--text-accent)', height: '100%', width: `${rite.percent}%` }}
           />
         </div>
         <div style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', marginTop: 10, opacity: 0.8 }}>

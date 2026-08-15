@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
-import towerImg from '../assets/CitadelTower.png'
+import React, { useEffect, useState } from 'react'
 import { useMascotStore, type MascotEffect } from '../store/mascotStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
@@ -198,71 +197,12 @@ const overlaySvgStyle: React.CSSProperties = {
 
 // ── Mascot PNG with effect layers ──────────────────────────────────────────────
 function MascotPNG(): React.ReactElement {
-  const { effectQueue, persistentEffects, consumeNextEffect } = useMascotStore()
-  const [currentEffect, setCurrentEffect] = useState<MascotEffect | null>(null)
-  const [currentProgress, setCurrentProgress] = useState(0)
-  // key forces remount so CSS animation re-fires on repeated triggers
-  const [animKey, setAnimKey] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (currentEffect || effectQueue.length === 0) return
-    const next = consumeNextEffect()
-    if (!next) return
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setCurrentEffect(next.name)
-    setCurrentProgress(next.progress ?? 0)
-    setAnimKey((k) => k + 1)
-    timerRef.current = setTimeout(() => setCurrentEffect(null), 1400)
-  }, [effectQueue, currentEffect, consumeNextEffect])
-
-  const hasPersistentEye = persistentEffects.has('eye-open')
-  const hasEmber = persistentEffects.has('ember-drift')
-
-  const imgClass = (currentEffect && IMG_CLASS[currentEffect]) ?? ''
-  const isRecording = hasPersistentEye
-  const recordingClass = isRecording ? 'mascot-recording' : ''
-
+  // Legacy effect definitions stay only to deserialize old state; the live UI is static.
+  void IMG_CLASS
+  void OverlaySVG
   return (
-    <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-      {/* Tower image */}
-      <img
-        key={animKey}
-        src={towerImg}
-        alt="Citadel"
-        className={[imgClass, recordingClass].filter(Boolean).join(' ')}
-        style={{
-          width: '100%',
-          maxWidth: 120,
-          height: 'auto',
-          display: 'block',
-          imageRendering: 'auto',
-          // mix-blend-mode removes the white background against the dark panel
-          mixBlendMode: 'multiply',
-          transition: 'filter 0.15s',
-        }}
-        draggable={false}
-      />
-
-      {/* SVG overlay for particle / line effects */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <OverlaySVG effect={currentEffect} progress={currentProgress} />
-      </div>
-
-      {/* Ember drift particles */}
-      {hasEmber && (
-        <svg
-          viewBox="0 0 120 150"
-          style={{ ...overlaySvgStyle, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-        >
-          {[44, 60, 76].map((x, i) => (
-            <circle key={i} cx={x} cy={20} r="1.2" fill="#505050">
-              <animate attributeName="cy" values="20;5;-10" dur={`${2.2 + i * 0.5}s`} repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.5;0.15;0" dur={`${2.2 + i * 0.5}s`} repeatCount="indefinite" />
-            </circle>
-          ))}
-        </svg>
-      )}
+    <div aria-label="Citadel" style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16 }}>
+      C
     </div>
   )
 }

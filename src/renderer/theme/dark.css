@@ -19,12 +19,12 @@
   --text-primary:   #e8ddd0;
   --text-secondary: #b9ad9f;
   --text-muted:     #81766a;
-  --text-accent:    #d2b47c;
+  --text-accent:    #9fc3e6;
 
   /* Accent */
-  --accent:        #c8a96e;
-  --accent-soft:   rgba(200, 169, 110, 0.16);
-  --accent-danger: #8b2020;
+  --accent:        #73a8db;
+  --accent-soft:   rgba(115, 168, 219, 0.16);
+  --accent-danger: #d36472;
 
   /* Borders */
   --border:        #3a3025;
@@ -37,7 +37,7 @@
   --effect-dim:     #505050;
 
   /* Typography */
-  --font-display: 'Cinzel', serif;
+  --font-display: 'Inter', 'DM Sans', sans-serif;
   --font-body:    'Inter', 'DM Sans', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 

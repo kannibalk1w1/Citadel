@@ -96,12 +96,6 @@ export function KeybindSettings(): React.ReactElement | null {
   const applyThemePalette = useUIStore((s) => s.applyThemePalette)
   const removeThemePalette = useUIStore((s) => s.removeThemePalette)
   const importThemePalette = useUIStore((s) => s.importThemePalette)
-  const youSavedEnabled = useUIStore((s) => s.youSavedEnabled)
-  const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
-  const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
-  const setHyperTypeEnabled = useUIStore((s) => s.setHyperTypeEnabled)
-  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
-  const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
   const uiScale = useUIStore((s) => s.uiScale)
   const setUiScale = useUIStore((s) => s.setUiScale)
   const exportScale = useUIStore((s) => s.exportScale)
@@ -497,56 +491,7 @@ export function KeybindSettings(): React.ReactElement | null {
           </label>
         </div>
       </div>
-      <div style={{
-        marginBottom: 16,
-        paddingBottom: 12,
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Fun Settings
-        </h3>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={youSavedEnabled}
-            onChange={(e) => setYouSavedEnabled(e.target.checked)}
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-          />
-          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
-            YOU SAVED banner on manual save
-          </span>
-          <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-            dark souls
-          </span>
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 6 }}>
-          <input
-            type="checkbox"
-            checked={hyperTypeEnabled}
-            onChange={(e) => setHyperTypeEnabled(e.target.checked)}
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-          />
-          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
-            HyperType mode
-          </span>
-          <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
-            by Thanh-Huy1104<br />MIT
-          </span>
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 6 }}>
-          <input
-            type="checkbox"
-            checked={dragonCursorEnabled}
-            onChange={(e) => setDragonCursorEnabled(e.target.checked)}
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-          />
-          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
-            Dragon Scimitar cursor
-          </span>
-          <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
-            rw-designer.com<br />CC Attribution / PD
-          </span>
-        </label>
+      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 6 }}>
           <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
             UI Scale

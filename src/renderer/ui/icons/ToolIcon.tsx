@@ -6,6 +6,7 @@ export type ToolIconName =
   | 'lasso'
   | 'connect'
   | 'text'
+  | 'code'
   | 'sticky'
   | 'link'
   | 'swatch'
@@ -26,6 +27,7 @@ export const TOOL_ICON_NAMES: ToolIconName[] = [
   'lasso',
   'connect',
   'text',
+  'code',
   'sticky',
   'link',
   'swatch',
@@ -48,7 +50,7 @@ type ToolIconProps = {
 }
 
 const S = {
-  strokeWidth: 1.7,
+  strokeWidth: 1.8,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 }
@@ -90,6 +92,14 @@ function iconPaths(name: ToolIconName): React.ReactNode {
           <path d="M5 6 H19" />
           <path d="M12 6 V19" />
           <path d="M9 19 H15" />
+        </>
+      )
+    case 'code':
+      return (
+        <>
+          <path d="M9 7 L4.5 12 L9 17" />
+          <path d="M15 7 L19.5 12 L15 17" />
+          <path d="M13.5 5.5 L10.5 18.5" />
         </>
       )
     case 'sticky':

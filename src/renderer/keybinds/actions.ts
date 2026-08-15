@@ -8,6 +8,7 @@ export const Actions = {
   TOOL_CONNECT: 'tool:connect',
   TOOL_LASSO: 'tool:lasso',
   TOOL_TEXT: 'tool:text',
+  TOOL_CODE: 'tool:code',
   TOOL_STICKY: 'tool:sticky',
   TOOL_LINK: 'tool:link',
   TOOL_TAG: 'tool:tag',

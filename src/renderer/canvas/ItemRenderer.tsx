@@ -13,9 +13,10 @@ import { StickyItem } from './items/StickyItem'
 import { TextItem } from './items/TextItem'
 import { SwatchItem } from './items/SwatchItem'
 import { ComparisonItem } from './items/ComparisonItem'
+import { CodeItem } from './items/CodeItem'
 import { canvasColor } from '../theme/canvasColors'
 
-const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d'])
+const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d', 'code'])
 
 export function isDOMLayerItem(item: CanvasItem): boolean {
   return DOM_TYPES.has(item.type)
@@ -36,6 +37,7 @@ function Inner({ item, domOnly = false }: InnerProps): React.ReactElement | null
     case 'text':       return <TextItem item={item} />
     case 'swatch':     return <SwatchItem item={item} />
     case 'comparison': return <ComparisonItem item={item} />
+    case 'code':       return <CodeItem item={item} domOnly={domOnly} />
     default:           return null
   }
 }

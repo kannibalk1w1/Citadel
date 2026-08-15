@@ -11,6 +11,7 @@ export type ItemType =
   | 'sticky'
   | 'comparison'
   | 'swatch'
+  | 'code'
 
 export type CanvasItem = {
   id: string
@@ -143,6 +144,7 @@ export type ToolMode =
   | 'swatch'
   | 'record'
   | 'comparison'
+  | 'code'
 
 // ─── Keybinds ─────────────────────────────────────────────────────────────────
 

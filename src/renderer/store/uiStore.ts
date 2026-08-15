@@ -189,21 +189,6 @@ type UIState = {
   _snapTick: number
   bumpSnap: () => void
 
-  // YOU SAVED banner
-  youSavedEnabled: boolean
-  youSavedVisible: boolean
-  showYouSaved: () => void
-  hideYouSaved: () => void
-  setYouSavedEnabled: (enabled: boolean) => void
-
-  // HyperType arcade mode
-  hyperTypeEnabled: boolean
-  setHyperTypeEnabled: (enabled: boolean) => void
-
-  // Dragon cursor
-  dragonCursorEnabled: boolean
-  setDragonCursorEnabled: (enabled: boolean) => void
-
   // UI scale
   uiScale: number
   setUiScale: (v: number) => void
@@ -371,30 +356,6 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   _snapTick: 0,
   bumpSnap: () => set((s) => ({ _snapTick: s._snapTick + 1 })),
-
-  youSavedEnabled: false,
-  youSavedVisible: false,
-  showYouSaved: () => set({ youSavedVisible: true }),
-  hideYouSaved: () => set({ youSavedVisible: false }),
-  setYouSavedEnabled: (enabled) => {
-    set({ youSavedEnabled: enabled })
-    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'ui.youSavedEnabled', value: enabled }).catch(console.error)
-  },
-
-  hyperTypeEnabled: false,
-  setHyperTypeEnabled: (enabled) => {
-    set({ hyperTypeEnabled: enabled })
-    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'ui.hyperTypeEnabled', value: enabled }).catch(console.error)
-  },
-
-  dragonCursorEnabled: false,
-  setDragonCursorEnabled: (enabled) => {
-    set({ dragonCursorEnabled: enabled })
-    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'ui.dragonCursorEnabled', value: enabled }).catch(console.error)
-  },
 
   uiScale: 1.0,
   setUiScale: (v) => {

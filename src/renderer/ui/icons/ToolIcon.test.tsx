@@ -12,6 +12,7 @@ describe('ToolIcon', () => {
       'lasso',
       'connect',
       'text',
+      'code',
       'sticky',
       'link',
       'swatch',
