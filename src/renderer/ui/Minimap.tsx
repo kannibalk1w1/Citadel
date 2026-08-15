@@ -8,13 +8,14 @@ import {
   viewportForMinimapDrag,
   type MinimapModel,
 } from './minimapModel'
+import { canvasColor } from '../theme/canvasColors'
 
 const MAP_W = 176
 const MAP_H = 112
 const SIDEBAR_W = 164
 
 function itemColour(type: string, selected: boolean, meta?: Record<string, unknown>): string {
-  if (selected) return '#b8c2bd'
+  if (selected) return canvasColor("accent")
   switch (type) {
     case 'image':
     case 'gif':        return '#4a5260'

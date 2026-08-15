@@ -11,6 +11,7 @@ import { pathToUrl } from '../../utils/pathToUrl'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -285,7 +286,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
         {/* ── Divider line ── */}
         <Line
           points={[splitPx, 0, splitPx, item.height]}
-          stroke="#b8c2bd"
+          stroke={canvasColor("accent")}
           strokeWidth={2}
           listening={false}
         />
@@ -295,7 +296,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
           x={splitPx}
           y={item.height / 2}
           radius={10}
-          fill="#b8c2bd"
+          fill={canvasColor("accent")}
           listening={false}
         />
         <Text
@@ -333,7 +334,7 @@ export function ComparisonItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#b8c2bd"
+            stroke={canvasColor("accent")}
             strokeWidth={2}
             shadowEnabled
             shadowColor="rgba(185,148,85,0.7)"

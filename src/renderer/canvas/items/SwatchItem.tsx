@@ -9,6 +9,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -32,7 +33,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
     }
   }, [isSelected])
 
-  const colors = (item.meta?.colors as string[]) ?? ['#b8c2bd']
+  const colors = (item.meta?.colors as string[]) ?? [canvasColor("accent")]
   // Compute pixel-perfect tile boundaries to avoid sub-pixel gaps
   const n = Math.max(1, colors.length)
   const swatchX = (i: number) => Math.round((item.width * i) / n)
@@ -162,7 +163,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
             x={0} y={0}
             width={item.width} height={item.height}
             fill={undefined}
-            stroke="#b8c2bd"
+            stroke={canvasColor("accent")}
             strokeWidth={1.5}
             shadowEnabled
             shadowColor="rgba(185,148,85,0.7)"

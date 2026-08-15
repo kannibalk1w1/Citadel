@@ -6,6 +6,7 @@ import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { useUIStore } from '../../store/uiStore'
 import { bindingEndpointMarks, connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 import { visibleConnectionIds } from './overlayVisibility'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = {
   viewport: Viewport
@@ -138,7 +139,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
     >
       <defs>
         <filter id="connector-glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#b8c2bd" floodOpacity="0.72" />
+          <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor={canvasColor("accent")} floodOpacity="0.72" />
         </filter>
         <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
           <path d="M0,0 L0,6 L8,3 z" fill="currentColor" />
@@ -150,7 +151,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
           <polygon points="4,0 8,4 4,8 0,4" fill="currentColor" />
         </marker>
         <marker id="arrow-rubber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#b8c2bd" opacity="0.6" />
+          <path d="M0,0 L0,6 L8,3 z" fill={canvasColor("accent")} opacity="0.6" />
         </marker>
       </defs>
 
@@ -201,7 +202,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
               <path
                 d={d}
                 fill="none"
-                stroke="#b8c2bd"
+                stroke={canvasColor("accent")}
                 strokeWidth={conn.width + 8}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -213,7 +214,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
               <path
                 d={d}
                 fill="none"
-                stroke="#b8c2bd"
+                stroke={canvasColor("accent")}
                 strokeWidth={conn.width + pulse.strokeBoost}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -289,8 +290,8 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                   width={plaque.width}
                   height={plaque.height}
                   rx={3}
-                  fill="#0d1110"
-                  stroke={isActive ? '#b8c2bd' : '#31403c'}
+                  fill={canvasColor("bgSunken")}
+                  stroke={isActive ? canvasColor("accent") : canvasColor("border")}
                   strokeWidth={1}
                   opacity={0.96}
                 />
@@ -299,7 +300,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                   y1={plaque.y - plaque.height / 2 + 4}
                   x2={plaque.x + plaque.width / 2 - 5}
                   y2={plaque.y - plaque.height / 2 + 4}
-                  stroke="#b8c2bd"
+                  stroke={canvasColor("accent")}
                   strokeWidth={0.75}
                   opacity={0.28}
                 />
@@ -324,7 +325,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                       height={12}
                       rx={2}
                       fill="#111817"
-                      stroke="#b8c2bd"
+                      stroke={canvasColor("accent")}
                       strokeWidth={0.75}
                       opacity={0.88}
                     />
@@ -332,7 +333,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
                       x={plaque.badgeX}
                       y={plaque.badgeY}
                       textAnchor="middle"
-                      fill="#b8c2bd"
+                      fill={canvasColor("accent")}
                       fontSize={8}
                       fontFamily="var(--font-mono)"
                       fontWeight={700}
@@ -353,7 +354,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
         <line
           x1={rubberBand.x1} y1={rubberBand.y1}
           x2={rubberBand.x2} y2={rubberBand.y2}
-          stroke="#b8c2bd"
+          stroke={canvasColor("accent")}
           strokeWidth={1.5}
           strokeDasharray="6 4"
           opacity={0.6}

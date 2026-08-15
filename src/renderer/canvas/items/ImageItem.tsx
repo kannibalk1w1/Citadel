@@ -20,6 +20,7 @@ import { flipProps, itemFlip } from './flipTransform'
 import { FILENAME_LABEL_FONT_PX, filenameInscription } from '../../assets/filenameLabel'
 import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPatch, type Waymark } from './waymarks'
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = { item: CanvasItem }
 
@@ -257,7 +258,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           width={item.width}
           height={item.height}
           fill={undefined}
-          stroke={isConnectSource || isSelected ? '#b8c2bd' : undefined}
+          stroke={isConnectSource || isSelected ? canvasColor("accent") : undefined}
           strokeWidth={isConnectSource || isSelected ? 2 : 0}
           shadowEnabled={isSelected}
           shadowColor="rgba(185,148,85,0.7)"

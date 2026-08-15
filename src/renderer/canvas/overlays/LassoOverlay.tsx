@@ -3,6 +3,7 @@ import { Line, Rect } from 'react-konva'
 import type Konva from 'konva'
 import { useUIStore } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Point = [number, number]
 
@@ -95,7 +96,7 @@ export function LassoOverlay(): React.ReactElement | null {
       {points.length > 2 && (
         <Line
           points={points}
-          stroke="#b8c2bd"
+          stroke={canvasColor("accent")}
           strokeWidth={strokeW}
           closed
           dash={[dashLen, dashLen]}

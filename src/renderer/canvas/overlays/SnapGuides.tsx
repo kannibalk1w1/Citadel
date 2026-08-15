@@ -1,6 +1,7 @@
 import React from 'react'
 import { Line, Text } from 'react-konva'
 import { useUIStore } from '../../store/uiStore'
+import { canvasColor } from '../../theme/canvasColors'
 
 export type SnapLine = {
   x1: number
@@ -26,7 +27,7 @@ export function SnapGuides(): React.ReactElement {
         <React.Fragment key={i}>
           <Line
             points={[line.x1, line.y1, line.x2, line.y2]}
-            stroke="var(--accent)"
+            stroke={canvasColor("accent")}
             strokeWidth={0.5}
             dash={[4, 4]}
             listening={false}
@@ -38,7 +39,7 @@ export function SnapGuides(): React.ReactElement {
               text={line.label}
               fontSize={10}
               fontFamily="var(--font-mono)"
-              fill="var(--text-accent)"
+              fill={canvasColor("textAccent")}
               listening={false}
             />
           ) : null}

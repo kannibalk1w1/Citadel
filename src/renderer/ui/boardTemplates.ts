@@ -1,4 +1,5 @@
 import type { CanvasItem, Connection, Viewport } from '../../types'
+import { canvasColor } from '../theme/canvasColors'
 
 export type BoardTemplateId = 'blank' | 'moodboard' | 'comparison' | 'storyboard'
 
@@ -74,7 +75,7 @@ export function createBoardTemplate(id: BoardTemplateId, makeId: IdFactory): Boa
     const hero = baseItem(makeId(), 'image', -360, -160, 320, 220, { placeholder: 'hero reference' })
     const detail = baseItem(makeId(), 'image', 0, -160, 220, 150, { placeholder: 'detail reference' })
     const note = sticky(makeId(), 260, -160, 'Notes, silhouettes, materials')
-    const palette = baseItem(makeId(), 'swatch', 0, 40, 300, 90, { colors: ['#070808', '#b8c2bd', '#6f1717', '#e3ded4'] })
+    const palette = baseItem(makeId(), 'swatch', 0, 40, 300, 90, { colors: ['#070808', canvasColor("accent"), '#6f1717', '#e3ded4'] })
     return {
       name: 'Moodboard',
       items: [title, hero, detail, note, palette],

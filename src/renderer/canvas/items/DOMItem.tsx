@@ -12,6 +12,7 @@ import { filenameInscription } from '../../assets/filenameLabel'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
+import { canvasColor } from '../../theme/canvasColors'
 
 type Props = {
   item: CanvasItem
@@ -306,7 +307,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
             position: 'absolute',
             top: 4,
             right: 4,
-            color: '#b8c2bd',
+            color: canvasColor("accent"),
             fontSize: 14,
             lineHeight: 1,
             textShadow: '0 1px 4px rgba(0,0,0,0.85)',

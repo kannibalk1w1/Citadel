@@ -28,6 +28,7 @@ import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
 import { visibleItemIds } from './visibility/viewportVisibility'
 import { activeArchiveRailWidth } from '../ui/shell/shellModel'
 import { canvasRuntimeStats } from '../performance/canvasRuntimeStats'
+import { canvasColor } from '../theme/canvasColors'
 
 const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
@@ -167,7 +168,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'swatch' as const,
         x: cx - 150, y: cy - 40, width: 300, height: 80,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { colors: ['#070909', '#b8c2bd', '#6f1717', '#d9e0dc', '#3f4a46'] },
+        tags: [], meta: { colors: ['#070909', canvasColor("accent"), '#6f1717', '#d9e0dc', '#3f4a46'] },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
