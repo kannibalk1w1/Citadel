@@ -36,6 +36,9 @@ and unit tested, because they are what keeps the window recoverable:
 - Click-through implies always-on-top; dropping always-on-top drops
   click-through with it.
 - Opacity cannot be taken to zero.
+- Electron does not implement native window opacity on Linux, so Linux uses a
+  transparent window host and renderer alpha; Windows continues to use the
+  native window-opacity API.
 - Click-through registers `Ctrl+Alt+C` as a *global* shortcut while it is
   active — by definition no click can reach the window to turn it off — and
   unregisters it the moment it is not, so it never steals the combination

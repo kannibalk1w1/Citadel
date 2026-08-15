@@ -30,6 +30,13 @@ export const defaultWindowMode: WindowModeState = {
   clickThrough: false,
 }
 
+// Electron exposes BrowserWindow#setOpacity on every platform, but documents it
+// as a no-op on Linux. Linux windows use a transparent host plus renderer alpha
+// instead, while Windows and macOS retain the native (whole-window) path.
+export function usesRendererOpacityFallback(platform: string): boolean {
+  return platform === 'linux'
+}
+
 export function clampOpacity(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return MAX_WINDOW_OPACITY
   return Math.min(MAX_WINDOW_OPACITY, Math.max(MIN_WINDOW_OPACITY, value))

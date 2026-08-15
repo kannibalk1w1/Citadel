@@ -19,6 +19,7 @@ import {
   CLICK_THROUGH_SHORTCUT,
   defaultWindowMode,
   nextWindowMode,
+  usesRendererOpacityFallback,
   type WindowModeRequest,
   type WindowModeState,
 } from './windowModes'
@@ -443,32 +444,45 @@ export function registerIpcHandlers(): void {
     if (!win) return { ok: false, mode: windowMode }
 
     windowMode = nextWindowMode(windowMode, request)
-    win.setAlwaysOnTop(windowMode.alwaysOnTop)
-    win.setOpacity(windowMode.opacity)
-    // forward keeps mouse-move events coming, so the interface can still react
-    // as the pointer passes over it.
-    win.setIgnoreMouseEvents(windowMode.clickThrough, { forward: true })
+    let escapeShortcutUnavailable = false
 
-    // The shortcut is the only way back out of click-through, so it exists only
-    // while it is needed and never steals the combination the rest of the time.
+    // Register the escape hatch before making the window ignore the mouse. A
+    // failed global registration (for example, one reserved by the desktop)
+    // must never leave the user with an unrecoverable window.
     if (windowMode.clickThrough && !globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
-      globalShortcut.register(CLICK_THROUGH_SHORTCUT, () => {
+      const registered = globalShortcut.register(CLICK_THROUGH_SHORTCUT, () => {
         windowMode = nextWindowMode(windowMode, { clickThrough: false })
         win.setIgnoreMouseEvents(false)
         globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
         win.webContents.send('window:modeChanged', windowMode)
         win.focus()
       })
+      if (!registered) {
+        windowMode = { ...windowMode, clickThrough: false }
+        escapeShortcutUnavailable = true
+      }
     } else if (!windowMode.clickThrough && globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
       globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
     }
+
+    win.setAlwaysOnTop(windowMode.alwaysOnTop)
+    const rendererOpacityFallback = usesRendererOpacityFallback(process.platform)
+    if (!rendererOpacityFallback) win.setOpacity(windowMode.opacity)
+    // forward keeps mouse-move events coming, so the interface can still react
+    // as the pointer passes over it.
+    win.setIgnoreMouseEvents(windowMode.clickThrough, { forward: true })
 
     const settings = readSettings()
     settings['ui.alwaysOnTop'] = windowMode.alwaysOnTop
     settings['ui.windowOpacity'] = windowMode.opacity
     writeSettings(settings)
 
-    return { ok: true, mode: windowMode }
+    return {
+      ok: !escapeShortcutUnavailable,
+      mode: windowMode,
+      rendererOpacityFallback,
+      warning: escapeShortcutUnavailable ? 'Click-through was not enabled because its escape shortcut is unavailable.' : undefined,
+    }
   })
 
   // ── window:setMenuBarVisible ───────────────────────────────────────────────

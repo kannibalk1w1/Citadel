@@ -20,6 +20,10 @@ beforeEach(() => {
     themeOverrides: {},
     savedThemePalettes: [],
     canvasBackground: normalizeCanvasBackground(undefined),
+    windowAlwaysOnTop: false,
+    windowOpacity: 1,
+    windowOpacityUsesRendererFallback: false,
+    windowClickThrough: false,
   })
 })
 
@@ -106,6 +110,25 @@ describe('uiStore - comment pins', () => {
     useUIStore.getState().setIncludeCommentsInExport(false)
     expect(useUIStore.getState().includeCommentsInExport).toBe(false)
     expect(mockInvoke).toHaveBeenCalledWith('settings:set', { key: 'export.includeComments', value: false })
+  })
+})
+
+describe('uiStore - window modes', () => {
+  it('uses the main-process-selected renderer opacity fallback', async () => {
+    mockInvoke.mockResolvedValueOnce({
+      ok: true,
+      mode: { alwaysOnTop: true, opacity: 0.6, clickThrough: true },
+      rendererOpacityFallback: true,
+    })
+
+    await useUIStore.getState().applyWindowMode({ opacity: 0.6, clickThrough: true })
+
+    expect(useUIStore.getState()).toMatchObject({
+      windowAlwaysOnTop: true,
+      windowOpacity: 0.6,
+      windowOpacityUsesRendererFallback: true,
+      windowClickThrough: true,
+    })
   })
 })
 

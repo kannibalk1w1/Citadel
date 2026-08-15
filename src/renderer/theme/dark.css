@@ -111,6 +111,18 @@ body {
   height: 100%;
 }
 
+/* Electron's native window opacity is not implemented on Linux. When main
+   selects its transparent-host fallback, alpha on the renderer exposes the app
+   beneath without changing the Windows/macOS native behaviour. */
+html[data-window-opacity-fallback='true'],
+html[data-window-opacity-fallback='true'] body {
+  background: transparent;
+}
+
+html[data-window-opacity-fallback='true'] #root {
+  opacity: var(--window-overlay-opacity, 1);
+}
+
 a {
   color: var(--text-accent);
   text-decoration: none;

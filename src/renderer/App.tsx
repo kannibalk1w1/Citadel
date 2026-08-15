@@ -167,6 +167,8 @@ export default function App(): React.ReactElement {
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
   const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
+  const windowOpacity = useUIStore((s) => s.windowOpacity)
+  const windowOpacityUsesRendererFallback = useUIStore((s) => s.windowOpacityUsesRendererFallback)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
   const canvasContainerRef = React.useRef<HTMLDivElement>(null)
@@ -174,6 +176,20 @@ export default function App(): React.ReactElement {
   useEffect(() => {
     engine.setEnabled(hyperTypeEnabled)
   }, [hyperTypeEnabled])
+
+  // Electron's BrowserWindow#setOpacity is a documented no-op on Linux. The
+  // transparent host created by main lets this alpha reach the compositor there,
+  // while desktop builds with native opacity leave the renderer fully opaque.
+  useEffect(() => {
+    const root = document.documentElement
+    if (windowOpacityUsesRendererFallback) {
+      root.dataset.windowOpacityFallback = 'true'
+      root.style.setProperty('--window-overlay-opacity', String(windowOpacity))
+      return
+    }
+    delete root.dataset.windowOpacityFallback
+    root.style.removeProperty('--window-overlay-opacity')
+  }, [windowOpacity, windowOpacityUsesRendererFallback])
 
   useEffect(() => {
     initBoard()

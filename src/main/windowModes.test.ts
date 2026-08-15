@@ -5,6 +5,7 @@ import {
   MAX_WINDOW_OPACITY,
   MIN_WINDOW_OPACITY,
   nextWindowMode,
+  usesRendererOpacityFallback,
   type WindowModeState,
 } from './windowModes'
 
@@ -25,6 +26,14 @@ describe('clampOpacity', () => {
 
   it('passes through a value in range', () => {
     expect(clampOpacity(0.62)).toBe(0.62)
+  })
+})
+
+describe('usesRendererOpacityFallback', () => {
+  it('uses a transparent renderer on Linux, where Electron opacity is a no-op', () => {
+    expect(usesRendererOpacityFallback('linux')).toBe(true)
+    expect(usesRendererOpacityFallback('win32')).toBe(false)
+    expect(usesRendererOpacityFallback('darwin')).toBe(false)
   })
 })
 

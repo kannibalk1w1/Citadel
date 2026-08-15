@@ -235,8 +235,9 @@ type UIState = {
   filenameLabelsVisible: boolean
   windowAlwaysOnTop: boolean
   windowOpacity: number
+  windowOpacityUsesRendererFallback: boolean
   windowClickThrough: boolean
-  applyWindowMode: (request: { alwaysOnTop?: boolean; opacity?: number; clickThrough?: boolean }) => void
+  applyWindowMode: (request: { alwaysOnTop?: boolean; opacity?: number; clickThrough?: boolean }) => Promise<void>
   setWindowModeFromMain: (mode: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }) => void
   toggleFilenameLabels: () => void
 }
@@ -464,12 +465,19 @@ export const useUIStore = create<UIState>((set, get) => ({
   // floor), so the store takes the applied mode back rather than assuming it.
   windowAlwaysOnTop: false,
   windowOpacity: 1,
+  windowOpacityUsesRendererFallback: false,
   windowClickThrough: false,
   applyWindowMode: (request) => {
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('window:setMode', request).then((res) => {
-      const { mode } = (res ?? {}) as { mode?: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean } }
+    return ipc.invoke('window:setMode', request).then((res) => {
+      const { mode, rendererOpacityFallback, warning } = (res ?? {}) as {
+        mode?: { alwaysOnTop: boolean; opacity: number; clickThrough: boolean }
+        rendererOpacityFallback?: boolean
+        warning?: string
+      }
       if (mode) get().setWindowModeFromMain(mode)
+      if (typeof rendererOpacityFallback === 'boolean') set({ windowOpacityUsesRendererFallback: rendererOpacityFallback })
+      if (warning) console.warn(warning)
     }).catch(console.error)
   },
   setWindowModeFromMain: (mode) => set({

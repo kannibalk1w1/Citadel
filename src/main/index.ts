@@ -24,7 +24,11 @@ function createWindow(): void {
     // Hidden by default; the renderer reveals it on hover, and Alt still works.
     autoHideMenuBar: true,
     frame: true,
-    backgroundColor: '#0f0d0b',
+    // Electron's native opacity API is a no-op on Linux. A transparent host lets
+    // the renderer provide the same overlay fade there; Windows keeps its native
+    // framed opacity path.
+    transparent: process.platform === 'linux',
+    backgroundColor: process.platform === 'linux' ? '#00000000' : '#0f0d0b',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
