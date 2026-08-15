@@ -154,13 +154,13 @@ export function TagSearch(): React.ReactElement | null {
         width: 320,
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
       }}
     >
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: results.length > 0 || commentResults.length > 0 || query ? 8 : 0 }}>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', marginBottom: results.length > 0 || commentResults.length > 0 || query ? 8 : 0 }}>
         <input
           autoFocus
           value={searchQuery}
@@ -171,10 +171,10 @@ export function TagSearch(): React.ReactElement | null {
             flex: 1,
             background: 'var(--bg-ui)',
             border: '1px solid var(--border)',
-            borderRadius: 4,
+            borderRadius: 'var(--radius-sm)',
             padding: '5px 8px',
             color: 'var(--text-primary)',
-            fontSize: 12,
+            fontSize: 'var(--text-base)',
             fontFamily: 'var(--font-body)',
             outline: 'none',
           }}
@@ -187,17 +187,17 @@ export function TagSearch(): React.ReactElement | null {
             border: 'none',
             color: 'var(--text-muted)',
             cursor: 'pointer',
-            fontSize: 16,
+            fontSize: 'var(--text-xl)',
             lineHeight: 1,
             padding: '2px 4px',
-            borderRadius: 3,
+            borderRadius: 'var(--radius-sm)',
           }}
         >
           x
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginBottom: 8 }}>
         {SEARCH_CHIPS.map((chip) => {
           const active = searchQuery.toLowerCase().split(/\s+/).includes(chip.token)
           return (
@@ -208,11 +208,11 @@ export function TagSearch(): React.ReactElement | null {
               style={{
                 background: active ? 'var(--accent)' : 'var(--bg-ui)',
                 border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 3,
+                borderRadius: 'var(--radius-sm)',
                 color: active ? 'var(--bg-canvas)' : 'var(--text-secondary)',
                 cursor: active ? 'default' : 'pointer',
                 fontFamily: 'var(--font-mono)',
-                fontSize: 9,
+                fontSize: 'var(--text-xs)',
                 padding: '3px 5px',
                 textTransform: 'uppercase',
               }}
@@ -224,11 +224,11 @@ export function TagSearch(): React.ReactElement | null {
       </div>
 
       {results.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)', marginBottom: 8 }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             {activeResultIndex + 1} / {results.length}
           </span>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <button
               type="button"
               onClick={() => stepResult(-1)}
@@ -250,7 +250,7 @@ export function TagSearch(): React.ReactElement | null {
       )}
 
       {query && results.length === 0 && (
-        <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)', padding: '4px 2px' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', padding: '4px 2px' }}>
           No items found
         </div>
       )}
@@ -271,11 +271,11 @@ export function TagSearch(): React.ReactElement | null {
 const navButtonStyle: React.CSSProperties = {
   background: 'var(--bg-ui)',
   border: '1px solid var(--border)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-sm)',
   color: 'var(--text-secondary)',
   cursor: 'pointer',
   fontFamily: 'var(--font-mono)',
-  fontSize: 9,
+  fontSize: 'var(--text-xs)',
   padding: '3px 6px',
   textTransform: 'uppercase',
 }
@@ -292,9 +292,9 @@ function ResultList({
   selectResult: (result: SearchResult) => void
 }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 340, overflowY: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', maxHeight: 340, overflowY: 'auto' }}>
       {title && (
-        <div style={{ color: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '1px 2px 3px' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '1px 2px 3px' }}>
           {title}
         </div>
       )}
@@ -309,9 +309,9 @@ function ResultList({
             border: `1px solid ${active ? 'var(--accent)' : 'transparent'}`,
             textAlign: 'left',
             color: 'var(--text-primary)',
-            fontSize: 11,
+            fontSize: 'var(--text-md)',
             padding: '5px 6px',
-            borderRadius: 4,
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
             fontFamily: 'var(--font-body)',
           }}
@@ -324,7 +324,7 @@ function ResultList({
             e.currentTarget.style.borderColor = active ? 'var(--accent)' : 'transparent'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
             <span style={{
               flex: 1,
               overflow: 'hidden',
@@ -336,9 +336,9 @@ function ResultList({
             <span style={{
               color: 'var(--accent)',
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               padding: '1px 4px',
-              fontSize: 9,
+              fontSize: 'var(--text-xs)',
               fontFamily: 'var(--font-mono)',
               flexShrink: 0,
               textTransform: 'uppercase',
@@ -348,7 +348,7 @@ function ResultList({
           </div>
           <div style={{
             color: 'var(--text-muted)',
-            fontSize: 10,
+            fontSize: 'var(--text-sm)',
             fontFamily: 'var(--font-mono)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

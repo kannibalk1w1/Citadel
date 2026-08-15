@@ -16,7 +16,7 @@ export function RuntimeStatsSigil({ stats }: Props): React.ReactElement {
         bottom: 12,
         width: 172,
         padding: '8px 10px',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         border: '1px solid var(--border)',
         background: 'color-mix(in srgb, var(--bg-panel) 88%, transparent)',
         color: 'var(--text-secondary)',
@@ -30,7 +30,7 @@ export function RuntimeStatsSigil({ stats }: Props): React.ReactElement {
         style={{
           color: 'var(--text-accent)',
           fontFamily: 'var(--font-display)',
-          fontSize: 11,
+          fontSize: 'var(--text-md)',
           letterSpacing: 0,
           marginBottom: 6,
           textTransform: 'uppercase',
@@ -51,8 +51,8 @@ function RuntimeStat({ label, value }: { label: string; value: string }): React.
       style={{
         display: 'flex',
         justifyContent: 'space-between',
-        gap: 10,
-        fontSize: 10,
+        gap: 'var(--space-5)',
+        fontSize: 'var(--text-sm)',
         lineHeight: 1.6,
       }}
     >

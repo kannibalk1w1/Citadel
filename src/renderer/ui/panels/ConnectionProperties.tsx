@@ -20,8 +20,8 @@ export function ConnectionProperties(): React.ReactElement | null {
 
   return (
     <div className="citadel-floating-panel citadel-context-inspector" style={panelStyle}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)', marginBottom: 10 }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Thread
         </h3>
         <button
@@ -84,7 +84,7 @@ export function ConnectionProperties(): React.ReactElement | null {
         <input type="range" min={1} max={8} value={conn.width} onChange={(e) => update({ width: parseInt(e.target.value) })} style={{ width: '100%' }} />
       </label>
 
-      <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 'var(--space-4)' }}>
         <input type="checkbox" checked={conn.dashed} onChange={(e) => update({ dashed: e.target.checked })} />
         Dashed branch
       </label>
@@ -114,19 +114,19 @@ const panelStyle: React.CSSProperties = {
   width: 248,
   background: 'var(--bg-panel)',
   border: '1px solid var(--border)',
-  borderRadius: 6,
+  borderRadius: 'var(--radius-md)',
   padding: 12,
   zIndex: 'var(--z-panels)',
   boxShadow: 'var(--shadow-md)',
 }
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: 8 }
-const selectStyle: React.CSSProperties = { background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)', fontSize: 11, padding: '2px 4px' }
-const inputStyle: React.CSSProperties = { background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-primary)', fontSize: 11, padding: '3px 6px', fontFamily: 'var(--font-mono)', outline: 'none', width: '100%' }
+const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: 8 }
+const selectStyle: React.CSSProperties = { background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: 'var(--text-md)', padding: '2px 4px' }
+const inputStyle: React.CSSProperties = { background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: 'var(--text-md)', padding: '3px 6px', fontFamily: 'var(--font-mono)', outline: 'none', width: '100%' }
 const iconButtonStyle: React.CSSProperties = {
   width: 22,
   height: 22,
   border: '1px solid var(--border)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-sm)',
   background: 'var(--bg-ui)',
   color: 'var(--text-secondary)',
   cursor: 'pointer',
@@ -136,7 +136,7 @@ const iconButtonStyle: React.CSSProperties = {
 const previewStyle: React.CSSProperties = {
   marginTop: 8,
   border: '1px solid var(--border)',
-  borderRadius: 4,
+  borderRadius: 'var(--radius-sm)',
   background: 'var(--bg-ui)',
   padding: 6,
 }

@@ -280,7 +280,7 @@ function WindowModes(): React.ReactElement {
   return (
     <div className="citadel-sidebar-section">
       <div className="citadel-sidebar-section-title">Window</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
         <QuickBtn
           label={alwaysOnTop ? 'On top ✓' : 'On top'}
           title="Keep Citadel above other windows (Ctrl+Alt+T)"
@@ -288,7 +288,7 @@ function WindowModes(): React.ReactElement {
         />
         <label
           title="Window opacity — references stay readable over the app beneath"
-          style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}
         >
           <span>Opacity</span>
           <input
@@ -327,9 +327,9 @@ function QuickBtn({
         padding: '5px 0',
         background: 'var(--bg-ui)',
         border: '1px solid var(--border)',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-sm)',
         color: 'var(--text-secondary)',
-        fontSize: 11,
+        fontSize: 'var(--text-md)',
         fontFamily: 'var(--font-body)',
         cursor: 'pointer',
         transition: 'var(--transition-fast)',
@@ -375,7 +375,7 @@ function StatusLine(): React.ReactElement {
   const stateLabel = needsSave ? 'needs saving' : `saved ${fmtTime(saveActivity.lastManualSaveAt)}`
 
   return (
-    <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div className="citadel-status-strip" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       {[
         { label: 'File', val: projectName, color: needsSave ? 'var(--text-accent)' : 'var(--text-secondary)' },
         { label: 'State', val: stateLabel, color: needsSave ? 'var(--accent)' : 'var(--text-muted)' },
@@ -391,8 +391,8 @@ function StatusLine(): React.ReactElement {
   )
 }
 
-const statLabel: React.CSSProperties = { fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
-const statVal:   React.CSSProperties = { fontSize: 9, fontFamily: 'var(--font-mono)' }
+const statLabel: React.CSSProperties = { fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const statVal:   React.CSSProperties = { fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)' }
 
 function RecentProjects(): React.ReactElement | null {
   const [projects, setProjects] = useState<RecentProject[]>([])
@@ -415,7 +415,7 @@ function RecentProjects(): React.ReactElement | null {
   return (
     <div className="citadel-sidebar-section">
       <div className="citadel-sidebar-section-title">Recent</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {projects.map((project) => (
           <button
             key={project.path}
@@ -434,9 +434,9 @@ function RecentProjects(): React.ReactElement | null {
               padding: '3px 5px',
               background: 'var(--bg-ui)',
               border: '1px solid var(--border)',
-              borderRadius: 4,
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--text-secondary)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               fontFamily: 'var(--font-body)',
               cursor: 'pointer',
               textAlign: 'left',
@@ -493,7 +493,7 @@ export function RightSidebar(): React.ReactElement {
         flexDirection: 'column',
         alignItems: 'center',
         padding: '12px 10px',
-        gap: 10,
+        gap: 'var(--space-5)',
         zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -516,7 +516,7 @@ export function RightSidebar(): React.ReactElement {
       <div
         className="citadel-sidebar-title"
         style={{
-          fontSize: 9,
+          fontSize: 'var(--text-xs)',
           fontFamily: 'var(--font-display)',
           color: 'var(--text-accent)',
           textTransform: 'uppercase',
@@ -534,7 +534,7 @@ export function RightSidebar(): React.ReactElement {
       {/* Quick actions */}
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Project</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Open project" title="Open project file" onClick={() => resolver.dispatch(Actions.OPEN)} />
           <QuickBtn label="New board" title="Add a new board (Ctrl+Shift+N)" onClick={() => resolver.dispatch(Actions.BOARD_NEW)} />
           <button
@@ -557,7 +557,7 @@ export function RightSidebar(): React.ReactElement {
 
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Mark</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
@@ -567,7 +567,7 @@ export function RightSidebar(): React.ReactElement {
 
       <div className="citadel-sidebar-section">
         <div className="citadel-sidebar-section-title">Export</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
           <QuickBtn label="Export PDF" title="Export canvas as PDF" onClick={() => resolver.dispatch(Actions.EXPORT_PDF)} />
           <QuickBtn label="Export PNG" title="Export canvas as image" onClick={() => resolver.dispatch(Actions.EXPORT_IMAGE)} />
           <QuickBtn label="Export ZIP" title="Bundle project as .citadelz" onClick={() => resolver.dispatch(Actions.EXPORT_ZIP)} />
@@ -595,7 +595,7 @@ export function RightSidebar(): React.ReactElement {
           background: 'transparent',
           border: 'none',
           color: 'var(--text-muted)',
-          fontSize: 9,
+          fontSize: 'var(--text-xs)',
           fontFamily: 'var(--font-mono)',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

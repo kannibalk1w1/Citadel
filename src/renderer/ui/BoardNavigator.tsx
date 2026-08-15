@@ -28,7 +28,7 @@ import { activeArchiveRailWidth } from './shell/shellModel'
 
 function RiteLabel({ text }: { text: string }): React.ReactElement {
   return (
-    <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+    <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
       {text}
     </span>
   )
@@ -69,9 +69,9 @@ function RiteSlider({
 
 function Stat({ label, value }: { label: string; value: number }): React.ReactElement {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 40 }}>
-      <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{value}</span>
-      <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 40 }}>
+      <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)' }}>{value}</span>
+      <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
     </div>
   )
 }
@@ -103,12 +103,12 @@ function IconButton({
         height: 22,
         background: 'var(--bg-ui)',
         border: '1px solid var(--border)',
-        borderRadius: 3,
+        borderRadius: 'var(--radius-sm)',
         color: danger ? 'var(--accent-danger)' : 'var(--text-secondary)',
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.35 : 1,
         fontFamily: 'var(--font-mono)',
-        fontSize: 11,
+        fontSize: 'var(--text-md)',
         padding: 0,
       }}
     >
@@ -283,27 +283,27 @@ export function BoardNavigator(): React.ReactElement | null {
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--space-4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Boards
         </h3>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <IconButton label="+" title="New board" onClick={createBoard} />
           <IconButton label="x" title="Close" onClick={() => closePanel('boardNavigator')} />
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-2)' }}>
         {boardTemplates.map((template) => (
           <button
             key={template.id}
@@ -314,11 +314,11 @@ export function BoardNavigator(): React.ReactElement | null {
               height: 24,
               background: 'var(--bg-ui)',
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: 0,
             }}
           >
@@ -328,8 +328,8 @@ export function BoardNavigator(): React.ReactElement | null {
       </div>
 
       {activeChamber && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, border: '1px solid var(--border)', borderRadius: 5, padding: 8 }}>
-          <div style={{ fontSize: 9, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Appearance — {activeChamber.name}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'center' }}>
@@ -340,10 +340,10 @@ export function BoardNavigator(): React.ReactElement | null {
               style={{
                 background: 'var(--bg-ui)',
                 border: '1px solid var(--border)',
-                borderRadius: 3,
+                borderRadius: 'var(--radius-sm)',
                 color: 'var(--text-primary)',
                 fontFamily: 'var(--font-mono)',
-                fontSize: 10,
+                fontSize: 'var(--text-sm)',
                 padding: '2px 4px',
               }}
             >
@@ -368,7 +368,7 @@ export function BoardNavigator(): React.ReactElement | null {
               onCommit={(value) => applyChamberPatch(activeChamber.id, { glow: value })}
             />
             <RiteLabel text="Floor" />
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
               <button
                 type="button"
                 title="Choose a floor texture for this board"
@@ -378,11 +378,11 @@ export function BoardNavigator(): React.ReactElement | null {
                   height: 20,
                   background: 'var(--bg-ui)',
                   border: '1px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   color: 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: 9,
+                  fontSize: 'var(--text-xs)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -400,11 +400,11 @@ export function BoardNavigator(): React.ReactElement | null {
                     height: 20,
                     background: 'var(--bg-ui)',
                     border: '1px solid var(--border)',
-                    borderRadius: 3,
+                    borderRadius: 'var(--radius-sm)',
                     color: 'var(--text-muted)',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 10,
+                    fontSize: 'var(--text-sm)',
                     padding: 0,
                   }}
                 >
@@ -420,7 +420,7 @@ export function BoardNavigator(): React.ReactElement | null {
                 <RiteLabel text="Item templates" />
               </div>
               {relicTemplates.map((template) => (
-                <div key={template.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div key={template.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <button
                     type="button"
                     title={`Add "${template.name}" to this board (${template.items.length} items)`}
@@ -430,11 +430,11 @@ export function BoardNavigator(): React.ReactElement | null {
                       height: 20,
                       background: 'var(--bg-ui)',
                       border: '1px solid var(--border)',
-                      borderRadius: 3,
+                      borderRadius: 'var(--radius-sm)',
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
                       fontFamily: 'var(--font-mono)',
-                      fontSize: 10,
+                      fontSize: 'var(--text-sm)',
                       overflow: 'hidden',
                       textAlign: 'left',
                       paddingLeft: 8,
@@ -455,7 +455,7 @@ export function BoardNavigator(): React.ReactElement | null {
             <IconButton label="+" title="Bookmark the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
           </div>
           {resolveWaystones(activeChamber).map((stone) => (
-            <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <button
                 type="button"
                 title={`Travel to ${stone.name} (Alt+])`}
@@ -465,11 +465,11 @@ export function BoardNavigator(): React.ReactElement | null {
                   height: 20,
                   background: 'var(--bg-ui)',
                   border: '1px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
+                  fontSize: 'var(--text-sm)',
                   overflow: 'hidden',
                   textAlign: 'left',
                   paddingLeft: 8,
@@ -486,7 +486,7 @@ export function BoardNavigator(): React.ReactElement | null {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', paddingRight: 2 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', overflowY: 'auto', paddingRight: 2 }}>
         {boards.map((board) => {
           const active = board.id === activeBoardId
           const summary = summarizeBoard(board)
@@ -500,15 +500,15 @@ export function BoardNavigator(): React.ReactElement | null {
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr auto',
-                gap: 8,
+                gap: 'var(--space-4)',
                 border: `1px solid ${active ? moodAccent : 'var(--border)'}`,
-                borderRadius: 5,
+                borderRadius: 'var(--radius-md)',
                 background: active ? 'var(--bg-hover)' : 'transparent',
                 padding: 8,
                 cursor: 'pointer',
               }}
             >
-              <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 {editingId === board.id ? (
                   <input
                     autoFocus
@@ -524,9 +524,9 @@ export function BoardNavigator(): React.ReactElement | null {
                     style={{
                       background: 'var(--bg-ui)',
                       border: '1px solid var(--accent)',
-                      borderRadius: 3,
+                      borderRadius: 'var(--radius-sm)',
                       color: 'var(--text-accent)',
-                      fontSize: 12,
+                      fontSize: 'var(--text-base)',
                       fontFamily: 'var(--font-body)',
                       padding: '3px 5px',
                       outline: 'none',
@@ -536,7 +536,7 @@ export function BoardNavigator(): React.ReactElement | null {
                   <div style={{
                     color: active ? moodAccent : 'var(--text-primary)',
                     fontFamily: 'var(--font-body)',
-                    fontSize: 12,
+                    fontSize: 'var(--text-base)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -544,7 +544,7 @@ export function BoardNavigator(): React.ReactElement | null {
                     {board.name}
                   </div>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 'var(--space-2)' }}>
                   {CHAMBER_MOOD_PRESETS.map((preset) => {
                     const selected = mood === preset.id
                     return (
@@ -560,11 +560,11 @@ export function BoardNavigator(): React.ReactElement | null {
                           height: 18,
                           background: selected ? preset.accent : 'var(--bg-ui)',
                           border: `1px solid ${selected ? preset.accent : 'var(--border)'}`,
-                          borderRadius: 3,
+                          borderRadius: 'var(--radius-sm)',
                           color: selected ? 'var(--bg-canvas)' : 'var(--text-muted)',
                           cursor: 'pointer',
                           fontFamily: 'var(--font-mono)',
-                          fontSize: 8,
+                          fontSize: 'var(--text-xs)',
                           padding: 0,
                           textTransform: 'uppercase',
                         }}
@@ -574,7 +574,7 @@ export function BoardNavigator(): React.ReactElement | null {
                     )
                   })}
                 </div>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-5)', flexWrap: 'wrap' }}>
                   <Stat label="items" value={summary.itemCount} />
                   <Stat label="visible" value={summary.visibleCount} />
                   <Stat label="notes" value={summary.commentCount} />
@@ -583,7 +583,7 @@ export function BoardNavigator(): React.ReactElement | null {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 <IconButton label="r" title="Rename" onClick={() => startRename(board.id, board.name)} />
                 <IconButton label="d" title="Duplicate" onClick={() => cloneBoard(board.id)} />
                 <IconButton label="-" title="Delete" danger disabled={boards.length <= 1} onClick={() => deleteBoard(board.id)} />

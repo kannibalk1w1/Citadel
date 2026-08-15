@@ -74,35 +74,35 @@ export function PresentationSequence(): React.ReactElement | null {
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--space-4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Sequence
         </h3>
         <button
           onClick={() => closePanel('presentationSequence')}
           title="Close"
-          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1 }}
         >
           x
         </button>
       </div>
 
       {sequence.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)' }}>
           No presentation items
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', paddingRight: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', overflowY: 'auto', paddingRight: 2 }}>
           {sequence.map((item, index) => {
             const selected = selectedIds.includes(item.id)
             return (
@@ -112,15 +112,15 @@ export function PresentationSequence(): React.ReactElement | null {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '22px 1fr 24px 24px',
-                  gap: 4,
+                  gap: 'var(--space-2)',
                   alignItems: 'center',
                   border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                  borderRadius: 4,
+                  borderRadius: 'var(--radius-sm)',
                   background: selected ? 'var(--bg-hover)' : 'transparent',
                   padding: 4,
                 }}
               >
-                <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10, textAlign: 'right' }}>
+                <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', textAlign: 'right' }}>
                   {index + 1}
                 </span>
                 <button
@@ -133,7 +133,7 @@ export function PresentationSequence(): React.ReactElement | null {
                     border: 'none',
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     fontFamily: 'var(--font-body)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -174,11 +174,11 @@ function miniButtonStyle(disabled: boolean): React.CSSProperties {
     height: 22,
     background: 'var(--bg-ui)',
     border: '1px solid var(--border)',
-    borderRadius: 3,
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--text-secondary)',
     cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.35 : 1,
-    fontSize: 11,
+    fontSize: 'var(--text-md)',
     fontFamily: 'var(--font-mono)',
     padding: 0,
   }

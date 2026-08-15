@@ -71,21 +71,21 @@ export function IndexLedger(): React.ReactElement | null {
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--space-4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Index
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
             {rows.length} entries
           </span>
           <button
@@ -94,8 +94,8 @@ export function IndexLedger(): React.ReactElement | null {
             onClick={() => useUIStore.getState().closePanel('indexLedger')}
             style={{
               width: 22, height: 22,
-              background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3,
-              color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11, padding: 0,
+              background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-md)', padding: 0,
             }}
           >
             x
@@ -110,10 +110,10 @@ export function IndexLedger(): React.ReactElement | null {
         style={{
           background: 'var(--bg-ui)',
           border: '1px solid var(--border)',
-          borderRadius: 3,
+          borderRadius: 'var(--radius-sm)',
           color: 'var(--text-primary)',
           fontFamily: 'var(--font-body)',
-          fontSize: 12,
+          fontSize: 'var(--text-base)',
           padding: '4px 8px',
           outline: 'none',
         }}
@@ -132,7 +132,7 @@ export function IndexLedger(): React.ReactElement | null {
               color: sortKey === column.key ? 'var(--text-accent)' : 'var(--text-muted)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 9,
+              fontSize: 'var(--text-xs)',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               textAlign: 'left',
@@ -162,22 +162,22 @@ export function IndexLedger(): React.ReactElement | null {
               textAlign: 'left',
             }}
           >
-            <span style={{ width: COLUMNS[0].width, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6 }}>
+            <span style={{ width: COLUMNS[0].width, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6 }}>
               {row.kind === 'thread' ? '⌁ ' : ''}{row.label}
             </span>
-            <span style={{ width: COLUMNS[1].width, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
+            <span style={{ width: COLUMNS[1].width, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}>
               {row.type}
             </span>
-            <span style={{ width: COLUMNS[2].width, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6 }}>
+            <span style={{ width: COLUMNS[2].width, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6 }}>
               {row.chamberName}
             </span>
-            <span style={{ width: COLUMNS[3].width, color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ width: COLUMNS[3].width, color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {row.sigils}
             </span>
           </button>
         ))}
         {rows.length === 0 && (
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11, padding: '8px 0' }}>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', padding: '8px 0' }}>
             Nothing in the ledger matches.
           </span>
         )}

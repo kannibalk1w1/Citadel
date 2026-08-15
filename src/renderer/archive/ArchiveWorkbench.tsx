@@ -14,7 +14,7 @@ const PROBE_LIMIT = 200
 
 function sectionTitle(text: string): React.ReactElement {
   return (
-    <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
+    <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
       {text}
     </div>
   )
@@ -119,25 +119,25 @@ export function ArchiveWorkbench(): React.ReactElement | null {
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--space-4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Media review
         </h3>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <button
             type="button"
             title="Import a folder of media into this board"
             onClick={() => { void ingestFolder() }}
-            style={{ height: 22, background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 3, color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 10, padding: '0 8px' }}
+            style={{ height: 22, background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '0 8px' }}
           >
             Import folder…
           </button>
@@ -145,47 +145,47 @@ export function ArchiveWorkbench(): React.ReactElement | null {
             type="button"
             title="Close"
             onClick={() => useUIStore.getState().closePanel('archiveWorkbench')}
-            style={{ width: 22, height: 22, background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11, padding: 0 }}
+            style={{ width: 22, height: 22, background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-md)', padding: 0 }}
           >
             x
           </button>
         </div>
       </div>
 
-      <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+      <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
         {model.summary.uncategorized} untagged · {model.summary.missingAssets} missing
       </div>
 
-      <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         {sectionTitle('Untagged items')}
         {model.uncategorizedRelics.length === 0 && (
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)' }}>
             Every item has a tag or a note.
           </span>
         )}
         {model.uncategorizedRelics.map((relic) => (
-          <div key={relic.itemId} style={{ border: '1px solid var(--border)', borderRadius: 4, padding: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <div key={relic.itemId} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 6, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
               <button
                 type="button"
                 title={`Go to ${relic.filename} in ${relic.chamberName}`}
                 onClick={() => travelTo(relic.chamberId, relic.itemId)}
-                style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 11, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
+                style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
               >
                 {relic.filename}
               </button>
-              <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+              <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
                 {relic.type} · {relic.chamberName}
               </span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
               {relic.suggestedSigils.map((sigil) => (
                 <button
                   key={sigil}
                   type="button"
                   title={`Apply tag "${sigil}"`}
                   onClick={() => applySigil(relic, sigil)}
-                  style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 9, padding: '1px 7px' }}
+                  style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', padding: '1px 7px' }}
                 >
                   +{sigil}
                 </button>
@@ -196,21 +196,21 @@ export function ArchiveWorkbench(): React.ReactElement | null {
 
         {sectionTitle('Missing files')}
         {model.missingRelics.length === 0 && (
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)' }}>
             No files are missing from disk.
           </span>
         )}
         {model.missingRelics.map((missing) => (
-          <div key={missing.src} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, border: '1px solid var(--accent-danger)', borderRadius: 4, padding: '4px 6px' }}>
+          <div key={missing.src} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', border: '1px solid var(--accent-danger)', borderRadius: 'var(--radius-sm)', padding: '4px 6px' }}>
             <button
               type="button"
               title={`Travel to the first ${missing.filename} relic`}
               onClick={() => travelTo(missing.chamberIds[0], missing.itemIds[0])}
-              style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 10, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
+              style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
             >
               {missing.filename}
             </button>
-            <span style={{ color: 'var(--accent-danger)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+            <span style={{ color: 'var(--accent-danger)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
               ×{missing.itemIds.length}
             </span>
           </div>

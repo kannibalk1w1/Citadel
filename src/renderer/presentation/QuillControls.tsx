@@ -16,12 +16,12 @@ function ControlButton({ label, title, engaged, onClick }: {
       onClick={onClick}
       style={{
         border: `1px solid ${engaged ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: 3,
+        borderRadius: 'var(--radius-sm)',
         background: engaged ? 'var(--bg-panel)' : 'var(--bg-canvas)',
         color: engaged ? 'var(--text-accent)' : 'var(--text-primary)',
         cursor: 'pointer',
         fontFamily: 'var(--font-mono)',
-        fontSize: 10,
+        fontSize: 'var(--text-sm)',
         padding: '2px 6px',
       }}
     >
@@ -38,7 +38,7 @@ export function QuillControls(): React.ReactElement {
   const strokeCount = useQuillStore((s) => s.strokes.length)
 
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
       <ControlButton label="Pen" title="Turn the presentation pen on or off (Q)" engaged={active} onClick={() => useQuillStore.getState().toggleActive()} />
       {active && (
         <>

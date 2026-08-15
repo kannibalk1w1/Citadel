@@ -25,9 +25,9 @@ const btnStyle: React.CSSProperties = {
   background: 'var(--bg-canvas)',
   color: 'var(--text-primary)',
   border: '1px solid var(--border)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
-  fontSize: 14,
+  fontSize: 'var(--text-lg)',
   fontFamily: 'var(--font-mono)',
   padding: 0,
   lineHeight: 1,
@@ -36,10 +36,10 @@ const btnStyle: React.CSSProperties = {
 const paletteButtonStyle: React.CSSProperties = {
   background: 'transparent',
   border: '1px solid var(--border)',
-  borderRadius: 3,
+  borderRadius: 'var(--radius-sm)',
   color: 'var(--text-secondary)',
   cursor: 'pointer',
-  fontSize: 10,
+  fontSize: 'var(--text-sm)',
   padding: '4px 7px',
   fontFamily: 'var(--font-body)',
 }
@@ -286,14 +286,14 @@ export function KeybindSettings(): React.ReactElement | null {
   })
 
   return (
-    <div className="citadel-floating-panel" style={{ position: 'fixed', inset: '60px 20px 20px', background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, zIndex: 'var(--z-modal)', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
+    <div className="citadel-floating-panel" style={{ position: 'fixed', inset: '60px 20px 20px', background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 16, zIndex: 'var(--z-modal)', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 14, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--text-lg)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
           Keybindings
         </h2>
         <button
           onClick={() => togglePanel('keybindSettings')}
-          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '2px 4px' }}
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1, padding: '2px 4px' }}
           title="Close"
         >
           ×
@@ -304,15 +304,15 @@ export function KeybindSettings(): React.ReactElement | null {
         paddingBottom: 12,
         borderBottom: '1px solid var(--border)',
       }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Appearance
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 148px', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 148px', gap: 'var(--space-4)', alignItems: 'center', marginBottom: 8 }}>
           <div>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               Interface theme
             </div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
               Select a starting palette, then tune its core colours below.
             </div>
           </div>
@@ -320,21 +320,21 @@ export function KeybindSettings(): React.ReactElement | null {
             value={theme}
             onChange={(event) => setTheme(event.target.value as ThemePreset)}
             aria-label="Interface theme"
-            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-primary)', padding: '5px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}
+            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', padding: '5px 7px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)' }}
           >
             {themePresets.map((preset) => <option key={preset} value={preset}>{themePresetLabels[preset]}</option>)}
           </select>
         </div>
-        <div style={{ display: 'flex', alignItems: 'end', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'end', gap: 'var(--space-4)', marginBottom: 12 }}>
           {themeOverrideKeys.map((key) => (
-            <label key={key} title={`${themeOverrideLabels[key]} colour`} style={{ display: 'grid', gap: 3, color: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+            <label key={key} title={`${themeOverrideLabels[key]} colour`} style={{ display: 'grid', gap: 'var(--space-2)', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
               {themeOverrideLabels[key]}
               <input
                 type="color"
                 value={themeOverrides[key] ?? themePresetColors[theme][key]}
                 onChange={(event) => setThemeOverrides({ [key]: event.target.value })}
                 aria-label={`${themeOverrideLabels[key]} colour`}
-                style={{ width: 28, height: 24, padding: 1, background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 3, cursor: 'pointer' }}
+                style={{ width: 28, height: 24, padding: 1, background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
               />
             </label>
           ))}
@@ -342,12 +342,12 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={resetThemeOverrides}
             disabled={Object.keys(themeOverrides).length === 0}
-            style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 3, color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 10, padding: '4px 6px', fontFamily: 'var(--font-body)' }}
+            style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '4px 6px', fontFamily: 'var(--font-body)' }}
           >
             Reset colours
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) auto auto auto', gap: 6, alignItems: 'center', marginBottom: savedThemePalettes.length > 0 ? 8 : 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) auto auto auto', gap: 'var(--space-3)', alignItems: 'center', marginBottom: savedThemePalettes.length > 0 ? 8 : 12 }}>
           <input
             value={paletteName}
             onChange={(event) => { setPaletteName(event.target.value); setPaletteMessage('') }}
@@ -355,17 +355,17 @@ export function KeybindSettings(): React.ReactElement | null {
             placeholder="Palette name"
             aria-label="Palette name"
             maxLength={48}
-            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-primary)', padding: '5px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}
+            style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', padding: '5px 7px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)' }}
           />
           <button type="button" onClick={saveCurrentPalette} style={paletteButtonStyle}>Save</button>
           <button type="button" onClick={() => exportCurrentPalette().catch(console.error)} style={paletteButtonStyle}>Export…</button>
           <button type="button" onClick={() => importPalette().catch(console.error)} style={paletteButtonStyle}>Import…</button>
         </div>
-        {paletteMessage && <div style={{ margin: '-4px 0 8px', color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}>{paletteMessage}</div>}
+        {paletteMessage && <div style={{ margin: '-4px 0 8px', color: 'var(--text-muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)' }}>{paletteMessage}</div>}
         {savedThemePalettes.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', marginBottom: 12 }}>
             {savedThemePalettes.map((palette) => (
-              <div key={palette.id} style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+              <div key={palette.id} style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                 <button type="button" onClick={() => { applyThemePalette(palette.id); setPaletteMessage(`applied ${palette.name}`) }} style={{ ...paletteButtonStyle, border: 0, borderRadius: 0 }}>
                   {palette.name}
                 </button>
@@ -374,12 +374,12 @@ export function KeybindSettings(): React.ReactElement | null {
             ))}
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 'var(--space-4)', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               Canvas background
             </div>
-            <div title={canvasBackground.assetPath ?? undefined} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div title={canvasBackground.assetPath ?? undefined} style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {canvasBackground.mode === 'custom' && canvasBackground.assetPath
                 ? canvasBackground.assetPath.split(/[\\/]/).pop()
                 : canvasBackground.mode}
@@ -393,7 +393,7 @@ export function KeybindSettings(): React.ReactElement | null {
               ...btnStyle,
               width: 'auto',
               padding: '0 8px',
-              fontSize: 11,
+              fontSize: 'var(--text-md)',
               background: canvasBackground.mode === 'stone' ? 'var(--accent)' : 'var(--bg-canvas)',
               color: canvasBackground.mode === 'stone' ? 'var(--bg-ui)' : 'var(--text-primary)',
             }}
@@ -408,7 +408,7 @@ export function KeybindSettings(): React.ReactElement | null {
               ...btnStyle,
               width: 'auto',
               padding: '0 8px',
-              fontSize: 11,
+              fontSize: 'var(--text-md)',
               background: canvasBackground.mode === 'custom' ? 'var(--accent)' : 'var(--bg-canvas)',
               color: canvasBackground.mode === 'custom' ? 'var(--bg-ui)' : 'var(--text-primary)',
             }}
@@ -423,7 +423,7 @@ export function KeybindSettings(): React.ReactElement | null {
               ...btnStyle,
               width: 'auto',
               padding: '0 8px',
-              fontSize: 11,
+              fontSize: 'var(--text-md)',
               background: canvasBackground.mode === 'none' ? 'var(--accent)' : 'var(--bg-canvas)',
               color: canvasBackground.mode === 'none' ? 'var(--bg-ui)' : 'var(--text-primary)',
             }}
@@ -431,9 +431,9 @@ export function KeybindSettings(): React.ReactElement | null {
             None
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, alignItems: 'center', marginTop: 10 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Opacity</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 'var(--space-5)', alignItems: 'center', marginTop: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Opacity</span>
             <input
               type="range"
               min={0}
@@ -444,8 +444,8 @@ export function KeybindSettings(): React.ReactElement | null {
               style={{ width: '100%' }}
             />
           </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Scale</span>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Scale</span>
             <input
               type="range"
               min={0.25}
@@ -456,7 +456,7 @@ export function KeybindSettings(): React.ReactElement | null {
               style={{ width: '100%' }}
             />
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'var(--font-body)', color: 'var(--text-secondary)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', color: 'var(--text-secondary)' }}>
             <input
               type="checkbox"
               checked={canvasBackground.repeat}
@@ -472,53 +472,53 @@ export function KeybindSettings(): React.ReactElement | null {
         paddingBottom: 12,
         borderBottom: '1px solid var(--border)',
       }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Fun Settings
         </h3>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={youSavedEnabled}
             onChange={(e) => setYouSavedEnabled(e.target.checked)}
             style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
             YOU SAVED banner on manual save
           </span>
-          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
             dark souls
           </span>
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 6 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 6 }}>
           <input
             type="checkbox"
             checked={hyperTypeEnabled}
             onChange={(e) => setHyperTypeEnabled(e.target.checked)}
             style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
             HyperType mode
           </span>
-          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
+          <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
             by Thanh-Huy1104<br />MIT
           </span>
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 6 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 6 }}>
           <input
             type="checkbox"
             checked={dragonCursorEnabled}
             onChange={(e) => setDragonCursorEnabled(e.target.checked)}
             style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
             Dragon Scimitar cursor
           </span>
-          <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
+          <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
             rw-designer.com<br />CC Attribution / PD
           </span>
         </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 6 }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
             UI Scale
           </span>
           <button
@@ -528,7 +528,7 @@ export function KeybindSettings(): React.ReactElement | null {
             aria-label="Decrease UI scale"
             style={{ ...btnStyle, opacity: uiScale <= 0.75 ? 0.35 : 1, cursor: uiScale <= 0.75 ? 'not-allowed' : 'pointer' }}
           >−</button>
-          <span style={{ width: 36, textAlign: 'center', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
+          <span style={{ width: 36, textAlign: 'center', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
             {Math.round(uiScale * 100)}%
           </span>
           <button
@@ -545,25 +545,25 @@ export function KeybindSettings(): React.ReactElement | null {
         paddingBottom: 12,
         borderBottom: '1px solid var(--border)',
       }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Export
         </h3>
         <div style={{
           display: 'grid',
           gridTemplateColumns: '132px 1fr auto',
-          gap: 10,
+          gap: 'var(--space-5)',
           alignItems: 'center',
           marginBottom: 10,
           padding: 8,
           border: '1px solid var(--border)',
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           background: 'var(--bg-canvas)',
         }}>
           <div style={{
             width: 132,
             height: 74,
             border: '1px solid var(--border)',
-            borderRadius: 3,
+            borderRadius: 'var(--radius-sm)',
             background: 'var(--bg-ui)',
             display: 'flex',
             alignItems: 'center',
@@ -577,16 +577,16 @@ export function KeybindSettings(): React.ReactElement | null {
                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
               />
             ) : (
-              <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 preview
               </span>
             )}
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               {describeExportPreview({ area: exportArea, scale: exportScale, includeComments: includeCommentsInExport, selectedCount: selectedIds.length })}
             </div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: exportPreviewError ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: exportPreviewError ? 'var(--accent-danger)' : 'var(--text-muted)', marginTop: 3 }}>
               {exportPreview
                 ? `${exportPreview.width} x ${exportPreview.height}px source`
                 : exportPreviewError || 'Generate a preview before exporting'}
@@ -596,12 +596,12 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={() => generateExportPreview().catch(console.error)}
             disabled={exportPreviewBusy}
-            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: exportPreviewBusy ? 0.45 : 1 }}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: exportPreviewBusy ? 0.45 : 1 }}
           >
             {exportPreviewBusy ? 'Rendering' : 'Preview'}
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)', marginBottom: 10 }}>
           {(Object.entries(exportPresets) as [ExportPreset, (typeof exportPresets)[ExportPreset]][]).map(([preset, settings]) => {
             const active = exportArea === settings.area
               && exportScale === settings.scale
@@ -617,7 +617,7 @@ export function KeybindSettings(): React.ReactElement | null {
                   ...btnStyle,
                   width: '100%',
                   minHeight: 28,
-                  fontSize: 10,
+                  fontSize: 'var(--text-sm)',
                   background: active ? 'var(--accent)' : 'var(--bg-canvas)',
                   color: active ? 'var(--bg-ui)' : 'var(--text-primary)',
                   textTransform: 'uppercase',
@@ -628,8 +628,8 @@ export function KeybindSettings(): React.ReactElement | null {
             )
           })}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
             Quality scale
           </span>
           {[1, 2, 3].map((scale) => (
@@ -641,7 +641,7 @@ export function KeybindSettings(): React.ReactElement | null {
               style={{
                 ...btnStyle,
                 width: 32,
-                fontSize: 11,
+                fontSize: 'var(--text-md)',
                 background: exportScale === scale ? 'var(--accent)' : 'var(--bg-canvas)',
                 color: exportScale === scale ? 'var(--bg-ui)' : 'var(--text-primary)',
               }}
@@ -650,8 +650,8 @@ export function KeybindSettings(): React.ReactElement | null {
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 8 }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)', flex: 1 }}>
             Area
           </span>
           {exportAreas.map(({ area, label }) => (
@@ -669,7 +669,7 @@ export function KeybindSettings(): React.ReactElement | null {
                 ...btnStyle,
                 width: 'auto',
                 padding: '0 8px',
-                fontSize: 11,
+                fontSize: 'var(--text-md)',
                 background: exportArea === area ? 'var(--accent)' : 'var(--bg-canvas)',
                 color: exportArea === area ? 'var(--bg-ui)' : 'var(--text-primary)',
               }}
@@ -678,17 +678,17 @@ export function KeybindSettings(): React.ReactElement | null {
             </button>
           ))}
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 8 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 8 }}>
           <input
             type="checkbox"
             checked={includeCommentsInExport}
             onChange={(e) => setIncludeCommentsInExport(e.target.checked)}
             style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
             Include comment pins
           </span>
-          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
             export
           </span>
         </label>
@@ -698,15 +698,15 @@ export function KeybindSettings(): React.ReactElement | null {
         paddingBottom: 12,
         borderBottom: '1px solid var(--border)',
       }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Maintenance
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-4)', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               Preview cache
             </div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: 2 }}>
               {cacheStats ? `${cacheStats.count} files / ${formatBytes(cacheStats.bytes)} / ${preservePaths.length} referenced` : 'not loaded'}
               {cacheMessage ? ` - ${cacheMessage}` : ''}
             </div>
@@ -715,7 +715,7 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={() => loadCacheStats().catch(console.error)}
             disabled={cacheBusy}
-            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: cacheBusy ? 0.45 : 1 }}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: cacheBusy ? 0.45 : 1 }}
           >
             Refresh
           </button>
@@ -723,23 +723,23 @@ export function KeybindSettings(): React.ReactElement | null {
             type="button"
             onClick={() => clearUnusedCache().catch(console.error)}
             disabled={cacheBusy}
-            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: cacheBusy ? 0.45 : 1 }}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: cacheBusy ? 0.45 : 1 }}
           >
             Clear unused
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', marginTop: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-4)', alignItems: 'center', marginTop: 8 }}>
           <div>
-            <div style={{ fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
               Local asset health
             </div>
-            <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: assetHealth?.missing ? 'var(--accent)' : 'var(--text-muted)', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: assetHealth?.missing ? 'var(--accent)' : 'var(--text-muted)', marginTop: 2 }}>
               {assetHealth ? `${assetHealth.total} checked / ${assetHealth.missing} missing` : 'not loaded'}
               {relinkMessage ? ` - ${relinkMessage}` : ''}
             </div>
           </div>
           {assetHealth?.missing ? (
-            <span title={assetHealth.missingPaths.join('\n')} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-accent)' }}>
+            <span title={assetHealth.missingPaths.join('\n')} style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-accent)' }}>
               inspect
             </span>
           ) : null}
@@ -748,7 +748,7 @@ export function KeybindSettings(): React.ReactElement | null {
               type="button"
               onClick={() => relinkMissingAssets().catch(console.error)}
               disabled={relinkBusy}
-              style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: relinkBusy ? 0.45 : 1 }}
+              style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: relinkBusy ? 0.45 : 1 }}
             >
               Relink folder
             </button>
@@ -759,9 +759,9 @@ export function KeybindSettings(): React.ReactElement | null {
         placeholder="Filter actions…"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        style={{ width: '100%', marginBottom: 12, background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 4, padding: '5px 8px', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }}
+        style={{ width: '100%', marginBottom: 12, background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '5px 8px', color: 'var(--text-primary)', fontSize: 'var(--text-base)', outline: 'none' }}
       />
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-md)' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Action</th>
@@ -773,11 +773,11 @@ export function KeybindSettings(): React.ReactElement | null {
             <tr key={action} style={{ borderBottom: '1px solid var(--border-muted)' }}>
               <td style={{ padding: '5px 8px', color: 'var(--text-secondary)' }}>
                 <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>{actionLabel(action)}</span>
-                <span style={{ marginLeft: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>{action}</span>
+                <span style={{ marginLeft: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>{action}</span>
               </td>
               <td style={{ padding: '5px 8px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                 {(keys as string[]).map((k) => (
-                  <kbd key={k} style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 3, padding: '1px 5px', marginRight: 4, fontSize: 10 }}>
+                  <kbd key={k} style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1px 5px', marginRight: 4, fontSize: 'var(--text-sm)' }}>
                     {k}
                   </kbd>
                 ))}

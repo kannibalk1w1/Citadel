@@ -940,28 +940,28 @@ export default function App(): React.ReactElement {
           zIndex: 'var(--z-modal)' as unknown as number,
           background: 'var(--bg-panel)',
           border: '1px solid var(--accent)',
-          borderRadius: 6, padding: '12px 16px',
-          display: 'flex', alignItems: 'center', gap: 12,
+          borderRadius: 'var(--radius-md)', padding: '12px 16px',
+          display: 'flex', alignItems: 'center', gap: 'var(--space-5)',
           boxShadow: 'var(--shadow-lg)',
-          fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
+          fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', color: 'var(--text-primary)',
         }}>
           <span style={{ color: 'var(--accent)' }}>⚠</span>
           <span>
             Unsaved session detected
-            <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-secondary)', marginTop: 2 }}>
               {recoveryData.savedAt ? `${new Date(recoveryData.savedAt).toLocaleString()} - ` : ''}
               {recoveryData.boardCount} boards / {recoveryData.itemCount} items
             </span>
           </span>
           <button onClick={handleRecoveryRestore} style={{
             background: 'var(--accent)', color: '#070808', border: 'none',
-            borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
+            borderRadius: 'var(--radius-sm)', padding: '4px 10px', cursor: 'pointer',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600,
           }}>Restore</button>
           <button onClick={handleRecoveryDismiss} style={{
             background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-            borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
-            fontFamily: 'var(--font-body)', fontSize: 12,
+            borderRadius: 'var(--radius-sm)', padding: '4px 10px', cursor: 'pointer',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
           }}>Discard</button>
         </div>
   )
@@ -974,27 +974,27 @@ export default function App(): React.ReactElement {
           zIndex: 'var(--z-ui)' as React.CSSProperties['zIndex'],
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 'var(--space-5)',
           padding: '6px 8px',
-          borderRadius: 4,
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border)',
           background: 'var(--bg-panel)',
           color: 'var(--text-secondary)',
           boxShadow: 'var(--shadow-md)',
           fontFamily: 'var(--font-mono)',
-          fontSize: 10,
+          fontSize: 'var(--text-sm)',
         }}>
           <button
             type="button"
             onClick={() => stepPresentation(-1)}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >
@@ -1007,12 +1007,12 @@ export default function App(): React.ReactElement {
             onClick={() => stepPresentation(1)}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >
@@ -1026,12 +1026,12 @@ export default function App(): React.ReactElement {
             }}
             style={{
               border: '1px solid var(--border)',
-              borderRadius: 3,
+              borderRadius: 'var(--radius-sm)',
               background: 'var(--bg-canvas)',
               color: 'var(--text-primary)',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 'var(--text-sm)',
               padding: '2px 6px',
             }}
           >

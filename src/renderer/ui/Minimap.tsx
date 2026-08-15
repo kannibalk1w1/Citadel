@@ -169,7 +169,7 @@ export function Minimap(): React.ReactElement | null {
         width: MAP_W,
         height: MAP_H,
         border: '1px solid rgba(185,148,85,0.25)',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-sm)',
         overflow: 'hidden',
         zIndex: 30,
         background: '#161514',

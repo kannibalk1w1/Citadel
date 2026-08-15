@@ -84,35 +84,35 @@ export function AssetLibrary(): React.ReactElement | null {
         maxHeight: 'calc(100vh - 72px)',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
-        borderRadius: 6,
+        borderRadius: 'var(--radius-md)',
         padding: 10,
         zIndex: 'var(--z-panels)',
         boxShadow: 'var(--shadow-md)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--space-4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 11, fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           Relics
         </h3>
         <button
           onClick={() => closePanel('assetLibrary')}
           title="Close"
-          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1 }}
         >
           x
         </button>
       </div>
 
       {assets.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)' }}>
           No imported relics yet
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowY: 'auto', paddingRight: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', overflowY: 'auto', paddingRight: 2 }}>
           {assets.map((entry) => (
             <div
               key={entry.src}
@@ -120,10 +120,10 @@ export function AssetLibrary(): React.ReactElement | null {
               style={{
                 display: 'grid',
                 gridTemplateColumns: '44px 1fr auto',
-                gap: 8,
+                gap: 'var(--space-4)',
                 alignItems: 'center',
                 border: '1px solid var(--border)',
-                borderRadius: 5,
+                borderRadius: 'var(--radius-md)',
                 padding: 6,
               }}
             >
@@ -135,7 +135,7 @@ export function AssetLibrary(): React.ReactElement | null {
                   width: 44,
                   height: 34,
                   border: '1px solid var(--border)',
-                  borderRadius: 4,
+                  borderRadius: 'var(--radius-sm)',
                   background: 'var(--bg-ui)',
                   padding: 0,
                   overflow: 'hidden',
@@ -145,16 +145,16 @@ export function AssetLibrary(): React.ReactElement | null {
                 {previewTypes.has(entry.type) ? (
                   <img src={pathToUrl(entry.src)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 ) : (
-                  <span style={{ color: 'var(--text-accent)', fontSize: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
+                  <span style={{ color: 'var(--text-accent)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
                     {entry.type.slice(0, 3)}
                   </span>
                 )}
               </button>
               <div style={{ minWidth: 0 }}>
-                <div style={{ color: 'var(--text-primary)', fontSize: 12, fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ color: 'var(--text-primary)', fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {entry.filename}
                 </div>
-                <div style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                   {itemLabel(entry)}
                 </div>
               </div>
@@ -166,10 +166,10 @@ export function AssetLibrary(): React.ReactElement | null {
                   height: 24,
                   padding: '0 8px',
                   border: '1px solid var(--border)',
-                  borderRadius: 3,
+                  borderRadius: 'var(--radius-sm)',
                   background: 'var(--bg-ui)',
                   color: 'var(--text-secondary)',
-                  fontSize: 10,
+                  fontSize: 'var(--text-sm)',
                   fontFamily: 'var(--font-mono)',
                   cursor: 'pointer',
                 }}

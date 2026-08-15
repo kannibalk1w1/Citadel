@@ -15,7 +15,7 @@ export function MediaPlaceholder({ item, label }: { item: CanvasItem; label?: st
         background: 'linear-gradient(180deg, #12100d 0%, #080807 100%)',
         color: 'var(--text-muted)',
         fontFamily: 'var(--font-display)',
-        fontSize: 12,
+        fontSize: 'var(--text-base)',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         textAlign: 'center',

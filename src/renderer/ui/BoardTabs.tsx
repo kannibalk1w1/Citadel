@@ -82,7 +82,7 @@ function BoardThumbnail({ board, active }: { board: CanvasBoard; active: boolean
       style={{
         width: THUMB_W,
         height: THUMB_H,
-        borderRadius: 3,
+        borderRadius: 'var(--radius-sm)',
         border: active ? `1px solid ${moodAccent}` : '1px solid var(--border)',
         boxShadow: active ? `0 0 8px ${glow}` : 'none',
         opacity: active ? 1 : 0.72,
@@ -138,7 +138,7 @@ export function BoardTabs(): React.ReactElement {
         borderBottom: '1px solid var(--border)',
         zIndex: 20,
         padding: '0 96px 0 4px',
-        gap: 2,
+        gap: 'var(--space-1)',
         overflow: 'hidden',
       }}
     >
@@ -154,12 +154,12 @@ export function BoardTabs(): React.ReactElement {
             borderBottom: board.id === activeBoardId ? `2px solid ${boardMoodAccent(board)}` : '2px solid transparent',
             background: board.id === activeBoardId ? 'var(--bg-panel)' : 'transparent',
             color: board.id === activeBoardId ? boardMoodAccent(board) : 'var(--text-secondary)',
-            fontSize: 12,
+            fontSize: 'var(--text-base)',
             fontFamily: 'var(--font-body)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 'var(--space-3)',
             whiteSpace: 'nowrap',
             userSelect: 'none',
             minWidth: 0,
@@ -181,9 +181,9 @@ export function BoardTabs(): React.ReactElement {
               style={{
                 background: 'var(--bg-ui)',
                 border: '1px solid var(--accent)',
-                borderRadius: 3,
+                borderRadius: 'var(--radius-sm)',
                 color: 'var(--text-accent)',
-                fontSize: 12,
+                fontSize: 'var(--text-base)',
                 fontFamily: 'var(--font-body)',
                 padding: '1px 4px',
                 outline: 'none',
@@ -196,7 +196,7 @@ export function BoardTabs(): React.ReactElement {
           {boards.length > 1 && editingId !== board.id && (
             <span
               onClick={(e) => { e.stopPropagation(); removeBoard(board.id); markDirty() }}
-              style={{ opacity: 0.35, fontSize: 14, lineHeight: 1, marginLeft: 2, paddingBottom: 1 }}
+              style={{ opacity: 0.35, fontSize: 'var(--text-lg)', lineHeight: 1, marginLeft: 2, paddingBottom: 1 }}
             >
               ×
             </span>
@@ -214,7 +214,7 @@ export function BoardTabs(): React.ReactElement {
           background: 'transparent',
           border: 'none',
           color: 'var(--text-muted)',
-          fontSize: 18,
+          fontSize: 'var(--text-xl)',
           cursor: 'pointer',
           lineHeight: 1,
         }}

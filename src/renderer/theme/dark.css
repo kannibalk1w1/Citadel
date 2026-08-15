@@ -37,6 +37,28 @@
   --font-body:    'Inter', 'DM Sans', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 
+  /* Rhythm — the scale components snap to.
+     Before these existed, 61 components improvised: 9 border radii, 10 font
+     sizes, 11 gap values and 39 distinct padding strings, so nothing quite
+     lined up with anything else. */
+  --radius-sm: 3px;   /* controls, chips, inputs */
+  --radius-md: 5px;   /* panels, cards */
+  --radius-lg: 8px;   /* modals, floating surfaces */
+
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+
+  --text-xs: 9px;     /* mono metadata, badges */
+  --text-sm: 10px;    /* dense controls */
+  --text-md: 11px;    /* default UI body */
+  --text-base: 12px;  /* readable body, dialogs */
+  --text-lg: 14px;    /* panel titles */
+  --text-xl: 16px;    /* modal headings */
+
   /* Layout */
   --archive-rail-w: 208px;
   --sidebar-right-w: 208px;
