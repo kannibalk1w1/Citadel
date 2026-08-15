@@ -1,6 +1,6 @@
 import { existsSync, mkdtempSync, readdirSync } from 'fs'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { JSZip as JSZipType } from 'jszip'
@@ -36,8 +36,21 @@ describe('archiveZip path safety', () => {
   })
 
   it('keeps extracted asset paths inside the asset directory', () => {
-    expect(resolveSafeAssetOutputPath('C:/tmp/_citadel_assets', 'assets/folder/relic.png')).toBe('C:\\tmp\\_citadel_assets\\folder\\relic.png')
-    expect(() => resolveSafeAssetOutputPath('C:/tmp/_citadel_assets', '../escape.png')).toThrow(/unsafe/i)
+    // Built with the host separator so the guarantee is asserted on Windows and POSIX alike.
+    const assetDir = resolve(tmpdir(), '_citadel_assets')
+
+    expect(resolveSafeAssetOutputPath(assetDir, 'assets/folder/relic.png'))
+      .toBe(join(assetDir, 'folder', 'relic.png'))
+
+    for (const escape of [
+      '../escape.png',
+      'assets/../../escape.png',
+      'assets\\..\\..\\escape.png',
+      '/etc/passwd',
+      'C:/Windows/system32/escape.png',
+    ]) {
+      expect(() => resolveSafeAssetOutputPath(assetDir, escape)).toThrow(/unsafe|unexpected/i)
+    }
   })
 })
 
