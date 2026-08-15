@@ -43,9 +43,25 @@ So the feature works on precisely the item types Ref Flow gives away free, and
 fails on precisely the ones it charges for. It is invisible in tests because the
 snap tests exercise `snapEngine` directly, not the DOM drag path.
 
-**Cost to fix: small.** The snap call and guide publication already exist; the
-DOM pointer handler needs to route through them. This is the highest
-value-per-hour item in this document.
+**Fixed 2026-08-15** (`277a243`). `DOMItem` now mirrors the Konva contract —
+spatial index rebuilt on pointer down, snap on move with `Ctrl` inverting the
+setting mid-drag, guides cleared on pointer up or cancel. `DOMItem.test.tsx` is
+the first coverage of that drag path.
+
+**But it uncovered a larger gap underneath it.** Only `Model3DItem` passes
+`editableFrame` to `DOMItem`, and the Konva proxy rects for video, YouTube and
+audio are `opacity={0}` with an `onClick` for selection and no `draggable`. So
+those three item types have **no interactive move affordance at all** — they can
+be selected, and repositioned only by auto-arrange or the align actions. The
+snapping fix makes dragging correct wherever it is reachable; for video, YouTube
+and audio it is not yet reachable.
+
+The obvious fix — passing `editableFrame` — would regress playback, because the
+move overlay covers the whole item (`inset: 0`) and would swallow clicks on the
+native `<video>`/`<audio>` controls and the YouTube `<webview>`. A grab bar is
+the usual answer, but every edge is already occupied: controls sit at the bottom
+of video and audio, and `VideoItem` puts its frame-capture buttons at `top: 6`.
+**This needs a UX decision, not just a wiring change.**
 
 ### 2. Smart guides do not show distances
 
@@ -168,12 +184,13 @@ substance sits behind a first run that shows none of it.
 
 ## Suggested order
 
-1. **Route `DOMItem` drags through the snap engine.** Small, and it closes a hole
-   in the feature Ref Flow leads with, on the item types it charges for.
-2. **Measure and label non-zero gaps** in the snap guides.
-3. **Give snap and fit single-key defaults.**
-4. **Measure the packaged size** on the first CI build; decide listing vs code.
-5. **Extract UI strings into a catalogue** while their locations are still fresh,
+1. ~~Route `DOMItem` drags through the snap engine.~~ Done, `277a243`.
+2. **Give video, YouTube and audio a move affordance** — see item 1 above; this
+   is now the real gap, and it needs a decision on where the grab area lives.
+3. **Measure and label non-zero gaps** in the snap guides.
+4. **Give snap and fit single-key defaults.**
+5. **Measure the packaged size** on the first CI build; decide listing vs code.
+6. **Extract UI strings into a catalogue** while their locations are still fresh,
    even if no translation is commissioned yet.
-6. **Settle the price against $29**, with the sample archive doing the work of
+7. **Settle the price against $29**, with the sample archive doing the work of
    showing what the extra surface buys.
