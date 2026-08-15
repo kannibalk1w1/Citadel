@@ -171,27 +171,65 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
           pointerEvents: 'none',
         }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          left: 6,
-          top: -13,
-          minWidth: 26,
-          height: 14,
-          padding: '1px 5px',
-          border: `1px solid ${frame.stroke}`,
-          borderRadius: 2,
-          background: variant.badgeFill,
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: 8,
-          lineHeight: '11px',
-          opacity: 0.94,
-          pointerEvents: 'none',
-        }}
-      >
-        {badge}
-      </div>
+      {canEdit ? (
+        // Selected and editable: the badge grows into a title bar that is the
+        // drag target. It sits above the frame so it never covers the item's
+        // own controls — native video/audio transport, the YouTube webview, or
+        // VideoItem's capture buttons at top: 6.
+        <div
+          onPointerDown={(event) => beginPointerAction(event, 'move')}
+          title="Move"
+          style={{
+            position: 'absolute',
+            left: -2,
+            right: -2,
+            top: -17,
+            height: 15,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 5px',
+            border: `1px solid ${frame.stroke}`,
+            borderBottom: 'none',
+            borderRadius: '3px 3px 0 0',
+            background: variant.badgeFill,
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 8,
+            lineHeight: '13px',
+            opacity: 0.94,
+            cursor: 'move',
+            pointerEvents: 'auto',
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
+        >
+          <span>{badge}</span>
+          <span aria-hidden="true" style={{ letterSpacing: 1, opacity: 0.5 }}>⋮⋮</span>
+        </div>
+      ) : (
+        <div
+          style={{
+            position: 'absolute',
+            left: 6,
+            top: -13,
+            minWidth: 26,
+            height: 14,
+            padding: '1px 5px',
+            border: `1px solid ${frame.stroke}`,
+            borderRadius: 2,
+            background: variant.badgeFill,
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 8,
+            lineHeight: '11px',
+            opacity: 0.94,
+            pointerEvents: 'none',
+          }}
+        >
+          {badge}
+        </div>
+      )}
       {filenameLabel && (
         <div
           style={{
@@ -235,16 +273,8 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       </div>
       {canEdit && (
         <>
-          <div
-            onPointerDown={(event) => beginPointerAction(event, 'move')}
-            title="Move"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              cursor: 'move',
-              pointerEvents: 'auto',
-            }}
-          />
+          {/* Moving is the title bar's job — see above. A full-surface overlay
+              here would swallow every click the item's own content needs. */}
           <div
             onPointerDown={(event) => beginPointerAction(event, 'resize-se')}
             title="Resize"

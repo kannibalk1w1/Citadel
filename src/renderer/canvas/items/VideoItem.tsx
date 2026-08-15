@@ -116,6 +116,7 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
       )}
       <DOMItem
         item={item}
+        editableFrame
         style={{ background: 'var(--bg-canvas)' }}
         onClick={(e) => {
           e.stopPropagation()

@@ -98,6 +98,21 @@ describe('DOMItem dragging', () => {
     expect(snapLines).toHaveLength(0)
   })
 
+  it('leaves the item content clickable while selected', () => {
+    // The move affordance used to be a full-surface overlay, which would have
+    // swallowed every click on native media controls.
+    const onPlay = vi.fn()
+    render(
+      <DOMItem item={dragged} editableFrame>
+        <button type="button" onClick={onPlay}>Play</button>
+      </DOMItem>
+    )
+
+    fireEvent.click(screen.getByText('Play'))
+
+    expect(onPlay).toHaveBeenCalledTimes(1)
+  })
+
   it('does not snap while resizing', () => {
     render(<DOMItem item={dragged} editableFrame><div /></DOMItem>)
 

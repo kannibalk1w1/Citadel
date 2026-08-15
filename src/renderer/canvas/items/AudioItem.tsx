@@ -127,6 +127,7 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
       )}
       <DOMItem
         item={item}
+        editableFrame
         style={{ background: 'var(--bg-panel)', borderRadius: 4, padding: 4 }}
         onClick={(e) => {
           e.stopPropagation()
