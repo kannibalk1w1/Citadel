@@ -38,7 +38,7 @@ describe('createRelicTemplate', () => {
     expect(template.items[1].x).toBe(200)
     expect(template.items[1].y).toBe(200)
     expect('id' in template.items[0]).toBe(false)
-    expect(template.items[1].groupId).toBeUndefined()
+    expect('groupId' in template.items[1]).toBe(false)
   })
 
   it('keeps only connections whose both endpoints are in the selection, as indices', () => {

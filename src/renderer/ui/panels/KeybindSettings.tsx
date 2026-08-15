@@ -16,7 +16,6 @@ import {
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
-import { Actions } from '../../keybinds/actions'
 import { actionLabel } from '../../keybinds/actionLabels'
 import { prepareExportCanvas } from '../../export/exportCanvas'
 import { describeExportPreview } from '../../export/exportPreviewModel'

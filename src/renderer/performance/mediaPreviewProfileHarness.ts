@@ -12,7 +12,7 @@ type IpcApi = {
   invoke: (channel: string, args?: unknown) => Promise<unknown>
 }
 
-type ProfileWindow = Window & {
+export type ProfileWindow = Window & {
   __citadelMediaPreviewProfile?: {
     run: (args: MediaPreviewProfilePaths & { timeoutMs?: number }) => Promise<MediaPreviewProfileResult>
   }

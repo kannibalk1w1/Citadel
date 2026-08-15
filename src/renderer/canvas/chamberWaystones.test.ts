@@ -41,8 +41,9 @@ describe('resolveWaystones', () => {
 describe('waystone events', () => {
   it('plants a waystone with before/after meta patches', () => {
     const event = plantWaystoneEvent(board(), stone('a'))
-    expect(event.before).toEqual({ waystones: [] })
-    expect(event.after).toEqual({ waystones: [stone('a')] })
+    expect(event).not.toBeNull()
+    expect(event?.before).toEqual({ waystones: [] })
+    expect(event?.after).toEqual({ waystones: [stone('a')] })
   })
 
   it('refuses to plant beyond the cap', () => {

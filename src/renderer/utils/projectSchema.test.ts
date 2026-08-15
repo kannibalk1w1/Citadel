@@ -26,7 +26,7 @@ describe('projectSchema', () => {
   it('rejects malformed project files with readable errors', () => {
     const result = validateProjectFile({ ...validProject, boards: [{ id: 'bad' }] })
 
-    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error('expected the malformed project to be rejected')
     expect(result.errors.join('\n')).toContain('boards[0].items')
   })
 

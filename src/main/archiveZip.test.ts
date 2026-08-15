@@ -3,7 +3,6 @@ import { tmpdir } from 'os'
 import { join, resolve } from 'path'
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { JSZip as JSZipType } from 'jszip'
 import {
   assertSafeZipPath,
   createProgressThrottle,
@@ -98,16 +97,16 @@ describe('inspectCitadelZip', () => {
   })
 })
 
-function fakeEntry(name: string, content: Buffer, claimedSize?: number): JSZipType.JSZipObject {
+function fakeEntry(name: string, content: Buffer, claimedSize?: number): JSZip.JSZipObject {
   return {
     name,
     dir: false,
     _data: { uncompressedSize: claimedSize ?? content.length },
     async: () => Promise.resolve(content),
-  } as unknown as JSZipType.JSZipObject
+  } as unknown as JSZip.JSZipObject
 }
 
-function fakeManifest(assets: JSZipType.JSZipObject[]): Parameters<typeof extractCitadelZip>[0] {
+function fakeManifest(assets: JSZip.JSZipObject[]): Parameters<typeof extractCitadelZip>[0] {
   return { project: fakeEntry('project.citadel', Buffer.from('{}')), assets, totalBytes: 0 }
 }
 
@@ -161,7 +160,7 @@ describe('extractCitadelZip', () => {
 })
 
 describe('createProgressThrottle', () => {
-  afterEach(() => vi.useRealTimers())
+  afterEach(() => { vi.useRealTimers() })
 
   it('drops events inside the interval but always lets 100 through', () => {
     vi.useFakeTimers()

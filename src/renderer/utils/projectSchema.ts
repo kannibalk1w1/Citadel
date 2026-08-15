@@ -112,7 +112,7 @@ export function migrateProjectFile(value: unknown): ProjectFile {
     boards,
     activeBoardId,
     recordings: Array.isArray(source.recordings) ? source.recordings as ProjectFile['recordings'] : [],
-    keybindOverrides: isObject(source.keybindOverrides) ? source.keybindOverrides : undefined,
+    keybindOverrides: isObject(source.keybindOverrides) ? source.keybindOverrides as ProjectFile['keybindOverrides'] : undefined,
   }
 }
 

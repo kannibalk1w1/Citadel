@@ -43,7 +43,7 @@ describe('snapItem', () => {
     const allItems = [dragged, fartherTarget, closerTarget]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport)
+    const result = snapItem(dragged, viewport)
 
     expect(result.x).toBe(192)
     expect(snapLines.filter((line) => line.orientation === 'vertical')).toHaveLength(1)
@@ -55,7 +55,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    snapItem(dragged, allItems, viewport)
+    snapItem(dragged, viewport)
 
     expect(snapLines).toContainEqual(expect.objectContaining({
       orientation: 'vertical',
@@ -71,7 +71,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    snapItem(dragged, allItems, viewport)
+    snapItem(dragged, viewport)
 
     expect(snapLines).toContainEqual(expect.objectContaining({
       orientation: 'vertical',
@@ -86,7 +86,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    snapItem(dragged, allItems, viewport)
+    snapItem(dragged, viewport)
 
     expect(snapLines).toContainEqual(expect.objectContaining({
       orientation: 'horizontal',
@@ -101,7 +101,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport)
+    const result = snapItem(dragged, viewport)
 
     expect(result.x).toBe(197)
     expect(snapLines).toHaveLength(0)
@@ -114,7 +114,7 @@ describe('snapItem', () => {
     const allItems = [dragged, target]
     spatialIndex.rebuild(allItems)
 
-    const result = snapItem(dragged, allItems, viewport, { invertSnap: true })
+    const result = snapItem(dragged, viewport, { invertSnap: true })
 
     expect(result.x).toBe(200)
     expect(snapLines.filter((line) => line.orientation === 'vertical')).toHaveLength(1)

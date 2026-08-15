@@ -105,7 +105,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       const canvas = useCanvasStore.getState()
       const dragged = { ...item, ...start.item, x: start.item.x + dx, y: start.item.y + dy }
       // Ctrl inverts the snap setting mid-drag, exactly as it does on the Konva layer.
-      const snapped = snapItem(dragged, canvas.items(), canvas.viewport(), { invertSnap: event.ctrlKey })
+      const snapped = snapItem(dragged, canvas.viewport(), { invertSnap: event.ctrlKey })
       canvas.updateItem(activeBoardId, item.id, { x: snapped.x, y: snapped.y })
       useUIStore.getState().bumpSnap()
       return

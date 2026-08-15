@@ -104,7 +104,7 @@ describe('itemSearchModel', () => {
   })
 
   it('finds thread labels and groups them as threads', () => {
-    const items = [
+    const items: CanvasItem[] = [
       { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
       { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
     ]
@@ -119,7 +119,7 @@ describe('itemSearchModel', () => {
   })
 
   it('indexes and filters thread meanings', () => {
-    const items = [
+    const items: CanvasItem[] = [
       { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
       { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
     ]
@@ -133,7 +133,7 @@ describe('itemSearchModel', () => {
   })
 
   it('uses thread meaning as the fallback connection label', () => {
-    const items = [
+    const items: CanvasItem[] = [
       { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
       { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
     ]
@@ -144,7 +144,7 @@ describe('itemSearchModel', () => {
   })
 
   it('filters to marked threads with has:meaning', () => {
-    const items = [
+    const items: CanvasItem[] = [
       { ...baseItem, id: 'image-1', type: 'image', src: 'C:/refs/gate.png' },
       { ...baseItem, id: 'note-1', type: 'sticky', meta: { content: 'Gate notes' } },
     ]

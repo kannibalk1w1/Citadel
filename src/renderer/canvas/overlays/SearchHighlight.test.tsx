@@ -66,6 +66,8 @@ beforeEach(() => {
       presentationSequence: false,
       boardNavigator: false,
       assetLibrary: false,
+      indexLedger: false,
+      archiveWorkbench: false,
     },
     searchQuery: 'gate',
     searchHighlightId: null,

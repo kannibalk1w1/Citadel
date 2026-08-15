@@ -29,7 +29,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
   const scale = useCanvasStore((s) => s.viewport().scale)
   const isEditing = useUIStore((s) => s.editingItemId === item.id)
 
-  const groupRef = useRef<import('konva/lib/shapes/Group').Group>(null)
+  const groupRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
@@ -90,7 +90,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
     const node = e.target
     const dragged = { ...item, x: node.x(), y: node.y() }
     const viewport = useCanvasStore.getState().viewport()
-    const snapped = snapItem(dragged, useCanvasStore.getState().items(), viewport, { invertSnap: e.evt.ctrlKey })
+    const snapped = snapItem(dragged, viewport, { invertSnap: e.evt.ctrlKey })
     node.x(snapped.x)
     node.y(snapped.y)
     useUIStore.getState().bumpSnap()

@@ -70,9 +70,10 @@ function horizontalGuide(dragged: CanvasItem, candidate: SnapCandidate): SnapLin
   }
 }
 
+// Candidates come from the spatial index, which the drag handlers rebuild on
+// drag start — this never needed the full item list.
 export function snapItem(
   dragged: CanvasItem,
-  allItems: CanvasItem[],
   viewport: Viewport,
   options: SnapOptions = {}
 ): SnapResult {

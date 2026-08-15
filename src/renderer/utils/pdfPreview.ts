@@ -22,7 +22,7 @@ export async function renderPdfFirstPage(pdfPath: string): Promise<{ imageData: 
     canvas.width = Math.ceil(viewport.width)
     canvas.height = Math.ceil(viewport.height)
 
-    await page.render({ canvasContext: ctx, viewport }).promise
+    await page.render({ canvas, canvasContext: ctx, viewport }).promise
     return {
       imageData: canvas.toDataURL('image/png'),
       width: canvas.width,

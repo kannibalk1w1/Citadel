@@ -1,20 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasBoard } from '../../types'
-import { installMediaPreviewProfileHarness } from './mediaPreviewProfileHarness'
+import { installMediaPreviewProfileHarness, type ProfileWindow } from './mediaPreviewProfileHarness'
 
-type HarnessWindow = Window & {
-  __citadelMediaPreviewProfile?: {
-    run: (args: { gifPath: string; videoPath: string; modelPath: string; timeoutMs?: number }) => Promise<unknown>
-  }
-  __citadelProfileResult?: unknown
-  __citadelLargeChamber?: {
-    mount: (options?: { itemCount?: number; columns?: number }) => { boardId: string; itemCount: number }
-  }
-}
-
-const windowLike = (): HarnessWindow => ({
-  location: { search: '', hash: '' } as Location,
-} as HarnessWindow)
+// The harness owns this shape; the test used to keep a divergent copy of it.
+const windowLike = (search = ''): ProfileWindow => ({
+  location: { search, hash: '' },
+} as unknown as ProfileWindow)
 
 describe('media preview profile harness', () => {
   beforeEach(() => {
@@ -39,8 +30,7 @@ describe('media preview profile harness', () => {
   })
 
   it('mounts the large-chamber fixture board when active', () => {
-    const target = windowLike()
-    target.location = { search: '?profile=media-preview', hash: '' } as Location
+    const target = windowLike('?profile=media-preview')
     const setProfileBoard = vi.fn()
 
     installMediaPreviewProfileHarness({
@@ -60,8 +50,7 @@ describe('media preview profile harness', () => {
   })
 
   it('runs a cold and warm preview-cache sweep when active', async () => {
-    const target = windowLike()
-    target.location = { search: '?profile=media-preview', hash: '' } as Location
+    const target = windowLike('?profile=media-preview')
     const setProfileBoard = vi.fn()
     const wait = vi.fn().mockResolvedValue(undefined)
     const now = vi.fn()

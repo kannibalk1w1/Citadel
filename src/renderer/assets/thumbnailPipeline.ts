@@ -1,3 +1,4 @@
+import type * as THREE from 'three'
 import { pathToUrl } from '../utils/pathToUrl'
 import { getAssetMetadata, isLocalAssetSrc, recordAssetMetadata } from './assetMetadata'
 import { thumbnailDimensions } from './previewPolicy'
