@@ -166,6 +166,38 @@ describe('citadel project round trip', () => {
     ])
   })
 
+  it('brings code cards and the threads bound to them back from disk', async () => {
+    // `code` reached `ItemType` without reaching the schema's accepted set, so
+    // every snippet — and every thread touching one — was dropped on open with
+    // no error. The board is built here rather than in `buildArchive` so the
+    // loss would show as this case alone rather than as a count in every case.
+    newProject()
+    const store = useCanvasStore.getState()
+    const boardId = store.activeBoardId!
+    store.addItem(boardId, relic({
+      id: 'snippet-1', type: 'code',
+      x: 80, y: 80, width: 320, height: 220,
+      tags: ['snippet'],
+      meta: { code: 'const answer = 42\n', language: 'typescript' },
+    }))
+    store.addItem(boardId, relic({ id: 'note-1', type: 'sticky', x: 500, y: 80, zIndex: 1 }))
+    store.addConnection(boardId, thread({ id: 'thread-code', fromId: 'snippet-1', toId: 'note-1' }))
+    useHistoryStore.getState().markDirty()
+
+    await saveProjectAs()
+    newProject()
+    await openProject()
+
+    const board = useCanvasStore.getState().boards[0]
+    expect(board.items.map((item) => item.id)).toEqual(['snippet-1', 'note-1'])
+    expect(board.items.find((item) => item.id === 'snippet-1')).toMatchObject({
+      type: 'code',
+      tags: ['snippet'],
+      meta: { code: 'const answer = 42\n', language: 'typescript' },
+    })
+    expect(board.connections.map((connection) => connection.id)).toEqual(['thread-code'])
+  })
+
   it('records the saved and reopened archive in recent projects', async () => {
     buildArchive(join(root, 'relic.png'))
 

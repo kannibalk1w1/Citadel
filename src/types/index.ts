@@ -1,17 +1,28 @@
 // ─── Item Types ──────────────────────────────────────────────────────────────
 
-export type ItemType =
-  | 'image'
-  | 'gif'
-  | 'video'
-  | 'youtube'
-  | 'audio'
-  | 'model3d'
-  | 'text'
-  | 'sticky'
-  | 'comparison'
-  | 'swatch'
-  | 'code'
+/**
+ * Every item type, as values rather than a bare union.
+ *
+ * `ItemType` is derived from this list so the two can never disagree. They did:
+ * `code` was added to the union alone, and `projectSchema`'s separate validator
+ * set kept rejecting it, so every saved code card was dropped on load. A single
+ * list is the only thing that makes that class of bug impossible.
+ */
+export const ITEM_TYPES = [
+  'image',
+  'gif',
+  'video',
+  'youtube',
+  'audio',
+  'model3d',
+  'text',
+  'sticky',
+  'comparison',
+  'swatch',
+  'code',
+] as const
+
+export type ItemType = (typeof ITEM_TYPES)[number]
 
 export type CanvasItem = {
   id: string

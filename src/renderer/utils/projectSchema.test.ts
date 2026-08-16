@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProjectFile } from '../../types'
+import { ITEM_TYPES } from '../../types'
 import { migrateProjectFile, parseProjectFile, validateProjectFile } from './projectSchema'
 
 const validProject: ProjectFile = {
@@ -21,6 +22,22 @@ describe('projectSchema', () => {
   it('accepts a valid project file', () => {
     expect(validateProjectFile(validProject).ok).toBe(true)
     expect(parseProjectFile(JSON.stringify(validProject))).toEqual(validProject)
+  })
+
+  it('keeps every declared item type on load', () => {
+    // The schema used to restate the type list by hand, and `code` was added to
+    // `ItemType` without being added here — so saved code cards were discarded
+    // on open. Reading the shared list means a new type cannot be half-added.
+    const migrated = migrateProjectFile({
+      boards: [{
+        id: 'every-type',
+        name: 'Every type',
+        items: ITEM_TYPES.map((type, index) => ({ id: `item-${type}`, type, x: index * 10, y: 0 })),
+        connections: [],
+      }],
+    })
+
+    expect(migrated.boards[0].items.map((item) => item.type)).toEqual([...ITEM_TYPES])
   })
 
   it('rejects malformed project files with readable errors', () => {

@@ -1,9 +1,12 @@
 import type { AnchorSide, CanvasBoard, CanvasItem, Connection, ItemType, ProjectFile } from '../../types'
+import { ITEM_TYPES } from '../../types'
 import { normalizeThreadMeaning } from '../canvas/connections/threadMeaning'
 import { canvasColor } from '../theme/canvasColors'
 
 const CURRENT_VERSION = '1.0.0'
-const ITEM_TYPES = new Set<ItemType>(['image', 'gif', 'video', 'youtube', 'audio', 'model3d', 'text', 'sticky', 'comparison', 'swatch'])
+// Derived from the shared list, never restated: a type this set does not know
+// about is discarded on load, so a hand-copied list is a silent data loss.
+const KNOWN_ITEM_TYPES = new Set<ItemType>(ITEM_TYPES)
 const ANCHORS = new Set<AnchorSide>(['top', 'right', 'bottom', 'left', 'auto'])
 const STYLES = new Set<Connection['style']>(['straight', 'bezier', 'elbow'])
 const ARROWS = new Set<Connection['arrowHead']>(['none', 'arrow', 'dot', 'diamond'])
@@ -30,7 +33,7 @@ function stringArray(value: unknown): string[] {
 
 function migrateItem(value: unknown, index: number): CanvasItem | null {
   if (!isObject(value)) return null
-  const type = typeof value.type === 'string' && ITEM_TYPES.has(value.type as ItemType) ? value.type as ItemType : null
+  const type = typeof value.type === 'string' && KNOWN_ITEM_TYPES.has(value.type as ItemType) ? value.type as ItemType : null
   if (!type) return null
   return {
     id: stringValue(value.id, `item-${index}`),
