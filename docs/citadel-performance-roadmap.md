@@ -30,8 +30,8 @@ These are the active implementation decisions that future sessions should preser
 Completed direction:
 
 - Citadel is a clean, static canvas for memory, research, reference, introspection, and nonlinear thought, not primarily a worldbuilding app.
-- Product language should stay broad and archival: Relic, Inscription, Thread, Sigil, Chamber, Index, Binding, and Rite.
-- Default first-class concepts like Character, Place, Event, Faction, and Clue should not drive the base UX; they can be user-created sigils or templates later.
+- Product language follows `docs/citadel-ui-vocabulary.md`, which is the authority for anything a user reads: controls get the plain word (Board, Item, Connection, Tag, Note, Bookmark, Index), while identifiers, filenames and `ActionName` strings keep the archival vocabulary. The archival wording in this document describes internals, not labels.
+- Default first-class concepts like Character, Place, Event, Faction, and Clue should not drive the base UX; they can be user-created tags or templates later.
 - Performance work should preserve clarity and responsiveness. Do not add decorative animation, ornamental chrome, fantasy/gothic framing, or themed cursors.
 
 Implemented performance decisions:
@@ -71,6 +71,10 @@ Implemented performance decisions:
 - Waystones: per-chamber named viewport anchors in `board.meta.waystones` (cap 12, `chamberWaystones.ts`), planted/renamed/removed through `BOARD_STYLE` events; `alt+w` plants, `alt+]` cycles, navigator lists them under Chamber Rite.
 - The presentation quill (`presentation:quillToggle`, `q` while presenting) draws ephemeral screen-space strokes on an SVG overlay via `quillStore` — deliberately outside `historyStore` so presenter scribbles never enter undo or recordings; everything resets when presentation mode exits.
 - Verbal confirmations go through `inscribe(text)` (`src/renderer/ui/toasts/inscriptionToastStore.ts`) — max 3 stacked, 2.6s lifetime, archival phrasing ("Chamber raised", "The eye opens"). Saves keep the bespoke YouSaved banner; the toast fires on save only when that banner is disabled.
+- The mascot and canvas-effect subsystem is gone (2026-08-16), not merely disabled: `mascotStore`, `canvas/effects/*`, the RightSidebar effect overlay and every `triggerEffect` call site are removed, along with `PluginAPI.triggerMascotEffect`. No mascot state was ever persisted, so project files are unaffected. Feedback that only existed as an effect is now an `inscribe` toast. Do not reintroduce an effect queue.
+- The interface draws its icons from one source: `ui/icons/ToolIcon.tsx`, a 24-unit grid at stroke 1.8. `LOCK_PATH_D` is exported from it so the Konva lock badge and the DOM lock badge stay the same mark. New secondary controls take a ToolIcon rather than a text glyph or an emoji.
+- `ToolIcon` is `aria-hidden`, so an icon-only control must carry its own `aria-label` — `title` alone is not an accessible name. Toggles carry `aria-pressed`, disclosures `aria-expanded`. A Toolbar test fails on any unnamed button.
+- The code snippet card reads its palette from `--code-*` tokens in `dark.css`. It keeps a dark terminal scheme in both themes on purpose, the way an editor keeps its colour scheme; that is a deliberate exception, not an oversight.
 - `SelectedActionStrip` supports multi-selection (positioned over the gutter-padded selection union via `selectedActionStripPositionForSelection`); single-target buttons (properties/connect/link/tag) stay single-only. Flip lives in `meta.flipX`/`meta.flipY` via `item:flipH`/`item:flipV` (`shift+h`/`shift+v`), rendered with `flipTransform.flipProps` on image relics only — GIF/video nodes are their own interactive Konva nodes where a base -1 scale would break transformer math.
 
 Profiling notes:
@@ -85,11 +89,15 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Complete the clean-interface audit: replace remaining fantasy/gothic terminology, images, and dormant effect code; keep UI feedback static and direct.
-2. Validate critical interaction paths in the packaged desktop app: overlay opacity, immediate resize handles on imports, and code snippet copy/editing.
-3. Develop code snippets as a first-class item: language picker, richer highlighting, inline editing, and a keyboard copy action.
-4. Audit secondary icons (context menus, panels, empty states) for legibility and consistent geometry.
-5. Keep Index marks capped and visibility-aware; consider saved trails only after multi-chamber archives are in real use.
+1. Validate critical interaction paths in the packaged desktop app: overlay opacity, immediate resize handles on imports, and code snippet copy/editing. This is the only item still gated on manual desktop QA.
+2. Keep Index marks capped and visibility-aware; consider saved trails only after multi-chamber archives are in real use.
+3. Consider a far-zoom gate for code snippets. Text and sticky items silhouette below a 5px on-screen font (`textDetailPolicy`); code cards render full syntax highlighting at any zoom. They are viewport-virtualized like the other DOM items, so this is legibility consistency rather than a measured cost — profile before building it.
+
+Closed in the clean-interface pass (2026-08-16):
+
+- Fantasy/gothic terminology, images, and dormant effect code are removed; UI feedback is static and direct. The remaining archival words are identifiers only.
+- Code snippets are a first-class item: language picker, tokenized highlighting, double-click editing, and a keyboard copy action.
+- Secondary icons across context menus, panels, and empty states run through `ToolIcon` with accessible names.
 
 ## Rendering Strategy
 
@@ -316,7 +324,7 @@ Suggested meanings:
 
 ### Phase 5: Chamber Appearance
 
-Status: reset for the clean-interface direction (2026-08-16). Accent presets and optional user-selected textures remain; decorative ambience, animation, stone defaults, and gothic framing are retired.
+Status: reset for the clean-interface direction (2026-08-16). Accent presets and optional user-selected textures remain; decorative ambience, animation, stone defaults, and gothic framing are retired. The follow-through then deleted the assets themselves — the bundled stone tile, the tower PNG, the themed `.cur` cursors, the arcade sounds, and the Cinzel and Press Start typefaces — so nothing dormant remains to be switched back on.
 
 Goals:
 
