@@ -2,7 +2,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import type { ExportArea } from '../store/uiStore'
 import type { CanvasItem, Viewport } from '../../types'
-import { isExportableCodeItem, paintCodeCardsForExport } from './codeCardExport'
+import { hasDOMLayerItems, paintDOMLayerForExport } from './domLayerExport'
 
 type ExportCanvas = {
   canvas: HTMLCanvasElement
@@ -66,15 +66,19 @@ export function stagePixelRatio(canvas: Pick<HTMLCanvasElement, 'width' | 'clien
 }
 
 /**
- * Code cards live in the DOM overlay, which the stage capture never sees, so
- * they are repainted onto a copy of the captured bitmap. `scaledCanvas` hands
- * back the live stage canvas at scale 1, and drawing on that would smear the
- * card across the board the user is still looking at — so copy first, always.
+ * DOM-layer items — code cards, video, YouTube, audio, 3D — live in an overlay
+ * element the stage capture never sees, so they are repainted onto a copy of
+ * the captured bitmap. `scaledCanvas` hands back the live stage canvas at scale
+ * 1, and drawing on that would smear the items across the board the user is
+ * still looking at — so copy first, always.
+ *
+ * Boards with none of these keep the exact capture they always had, and skip
+ * both the copy and the poster decode.
  */
-function withCodeCards(captured: HTMLCanvasElement, source: HTMLCanvasElement, exportScale: number): HTMLCanvasElement {
+async function withDOMLayer(captured: HTMLCanvasElement, source: HTMLCanvasElement, exportScale: number): Promise<HTMLCanvasElement> {
   const canvasStore = useCanvasStore.getState()
-  const codeItems = canvasStore.items().filter(isExportableCodeItem)
-  if (codeItems.length === 0) return captured
+  const items = canvasStore.items()
+  if (!hasDOMLayerItems(items)) return captured
 
   const out = captured === source ? document.createElement('canvas') : captured
   if (out !== captured) {
@@ -88,7 +92,7 @@ function withCodeCards(captured: HTMLCanvasElement, source: HTMLCanvasElement, e
   const ctx = out.getContext('2d')
   if (!ctx) return captured
   const ratio = stagePixelRatio(source) * Math.max(1, exportScale)
-  paintCodeCardsForExport(ctx, codeItems, canvasStore.viewport(), ratio)
+  await paintDOMLayerForExport(ctx, items, canvasStore.viewport(), ratio)
   return out
 }
 
@@ -124,7 +128,7 @@ async function captureViewportCanvas(scale: number): Promise<ExportCanvas> {
   const canvasEl = getStageCanvas()
   const captured = scaledCanvas(canvasEl, scale)
   return {
-    canvas: withCodeCards(captured, canvasEl, scale),
+    canvas: await withDOMLayer(captured, canvasEl, scale),
     width: canvasEl.width,
     height: canvasEl.height,
   }

@@ -134,7 +134,7 @@ describe('code cards in a captured export', () => {
     expect(contexts.filter((c) => c.canvas === stage && c.calls.some((call) => call.op === 'fillText'))).toEqual([])
   })
 
-  it('leaves a board with no code cards on the untouched capture path', async () => {
+  it('leaves a board with no DOM-layer items on the untouched capture path', async () => {
     setBoard([imageCard])
     const stage = document.querySelector('canvas') as HTMLCanvasElement
 
@@ -155,6 +155,58 @@ describe('code cards in a captured export', () => {
 
   it('skips a hidden code card', async () => {
     setBoard([{ ...codeCard, visible: false }])
+
+    await prepareExportCanvas()
+
+    expect(drawnText()).toEqual([])
+  })
+
+  const media = (type: CanvasItem['type'], src: string, y: number): CanvasItem => ({
+    id: `${type}-1`, type, x: 0, y, width: 320, height: 200,
+    rotation: 0, zIndex: 1, locked: false, visible: true, opacity: 1, tags: [], src,
+  })
+
+  it('labels every DOM media type rather than leaving a blank gap', async () => {
+    setBoard([
+      media('video', 'refs/run-cycle.mp4', 0),
+      media('audio', 'notes/take-3.wav', 220),
+      media('youtube', 'https://youtu.be/dQw4w9WgXcQ', 440),
+      media('model3d', 'models/bust.glb', 660),
+    ])
+
+    await prepareExportCanvas()
+    const text = drawnText()
+
+    expect(text).toContain('VIDEO')
+    expect(text).toContain('AUDIO')
+    expect(text).toContain('YOUTUBE')
+    expect(text).toContain('3D MODEL')
+    expect(text).toContain('run-cycle.mp4')
+    expect(text.join(' ')).toContain('dQw4w9WgXcQ')
+  })
+
+  it('composes code cards and media together in one export', async () => {
+    setBoard([codeCard, media('audio', 'take.wav', 400)])
+
+    await prepareExportCanvas()
+    const text = drawnText()
+
+    expect(text).toContain('PYTHON')
+    expect(text).toContain('AUDIO')
+  })
+
+  it('never draws onto the live stage canvas for media either', async () => {
+    setBoard([media('video', 'clip.mp4', 0)])
+    const stage = document.querySelector('canvas') as HTMLCanvasElement
+
+    const result = await prepareExportCanvas()
+
+    expect(result.canvas).not.toBe(stage)
+    expect(contexts.filter((c) => c.canvas === stage && c.calls.some((call) => call.op === 'fillText'))).toEqual([])
+  })
+
+  it('skips hidden media', async () => {
+    setBoard([{ ...media('video', 'clip.mp4', 0), visible: false }])
 
     await prepareExportCanvas()
 
