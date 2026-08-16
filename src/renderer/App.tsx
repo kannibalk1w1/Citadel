@@ -10,6 +10,7 @@ import { BoardTabs } from './ui/BoardTabs'
 import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
 import { MenuBarHover } from './ui/shell/MenuBarHover'
+import { ClickThroughPanel } from './ui/shell/ClickThroughPanel'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
@@ -1039,6 +1040,7 @@ export default function App(): React.ReactElement {
         <>
           <InscriptionToasts />
           <ArchiveRiteOverlay />
+          <ClickThroughPanel />
           <InscriptionPrompt />
         </>
       )}

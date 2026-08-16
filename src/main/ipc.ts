@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell, app, clipboard, nativeImage, BrowserWindow, globalShortcut } from 'electron'
+import { ipcMain, dialog, shell, app, clipboard, nativeImage, BrowserWindow, globalShortcut, screen } from 'electron'
 import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, readdirSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import JSZip from 'jszip'
@@ -23,9 +23,49 @@ import {
   type WindowModeRequest,
   type WindowModeState,
 } from './windowModes'
+import {
+  CLICK_THROUGH_POLL_MS,
+  normalizeRegion,
+  shouldCaptureMouse,
+  type Rect,
+} from './clickThroughRegion'
 
 // Live window mode. Click-through is deliberately absent from settings.json.
 let windowMode: WindowModeState = { ...defaultWindowMode }
+
+// The one part of the window that stays clickable while click-through is on.
+// Reported by the renderer panel; geometry only, never a second copy of the
+// window mode itself.
+let interactiveRegion: Rect | null = null
+let clickThroughPoll: ReturnType<typeof setInterval> | null = null
+let mouseCaptured = false
+
+export function stopClickThroughWatch(): void {
+  if (clickThroughPoll) clearInterval(clickThroughPoll)
+  clickThroughPoll = null
+  mouseCaptured = false
+}
+
+function startClickThroughWatch(win: BrowserWindow): void {
+  stopClickThroughWatch()
+  clickThroughPoll = setInterval(() => {
+    if (win.isDestroyed()) {
+      stopClickThroughWatch()
+      return
+    }
+    const capture = shouldCaptureMouse(
+      screen.getCursorScreenPoint(),
+      win.getContentBounds(),
+      interactiveRegion,
+      win.webContents.getZoomFactor(),
+    )
+    if (capture === mouseCaptured) return
+    mouseCaptured = capture
+    // Taking the mouse back only for the panel; everywhere else keeps passing
+    // clicks through to whatever is underneath.
+    win.setIgnoreMouseEvents(!capture, { forward: true })
+  }, CLICK_THROUGH_POLL_MS)
+}
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
@@ -452,6 +492,7 @@ export function registerIpcHandlers(): void {
     if (windowMode.clickThrough && !globalShortcut.isRegistered(CLICK_THROUGH_SHORTCUT)) {
       const registered = globalShortcut.register(CLICK_THROUGH_SHORTCUT, () => {
         windowMode = nextWindowMode(windowMode, { clickThrough: false })
+        stopClickThroughWatch()
         win.setIgnoreMouseEvents(false)
         globalShortcut.unregister(CLICK_THROUGH_SHORTCUT)
         win.webContents.send('window:modeChanged', windowMode)
@@ -468,9 +509,16 @@ export function registerIpcHandlers(): void {
     win.setAlwaysOnTop(windowMode.alwaysOnTop)
     const rendererOpacityFallback = usesRendererOpacityFallback(process.platform)
     if (!rendererOpacityFallback) win.setOpacity(windowMode.opacity)
-    // forward keeps mouse-move events coming, so the interface can still react
-    // as the pointer passes over it.
+    // forward keeps mouse-move events coming on the platforms that support it,
+    // so the interface can still react as the pointer passes over it. The panel
+    // itself does not rely on that — see clickThroughRegion.
     win.setIgnoreMouseEvents(windowMode.clickThrough, { forward: true })
+    mouseCaptured = false
+    if (windowMode.clickThrough) startClickThroughWatch(win)
+    else {
+      stopClickThroughWatch()
+      interactiveRegion = null
+    }
 
     const settings = readSettings()
     settings['ui.alwaysOnTop'] = windowMode.alwaysOnTop
@@ -483,6 +531,15 @@ export function registerIpcHandlers(): void {
       rendererOpacityFallback,
       warning: escapeShortcutUnavailable ? 'Click-through was not enabled because its escape shortcut is unavailable.' : undefined,
     }
+  })
+
+  // ── window:setInteractiveRegion ────────────────────────────────────────────
+  // The renderer reports where its click-through panel sits, in CSS pixels
+  // relative to the window content. Geometry only: the window mode itself still
+  // lives in `windowMode` and is still changed only through window:setMode.
+  ipcMain.handle('window:setInteractiveRegion', async (_e, region: unknown) => {
+    interactiveRegion = normalizeRegion(region)
+    return { ok: true, region: interactiveRegion }
   })
 
   // ── window:setMenuBarVisible ───────────────────────────────────────────────
