@@ -21,6 +21,13 @@ import { actionLabel } from '../../keybinds/actionLabels'
 import { hasNonModifierKey, resolver, serializeEvent } from '../../keybinds/keybindResolver'
 import { prepareExportCanvas } from '../../export/exportCanvas'
 import { describeExportPreview } from '../../export/exportPreviewModel'
+import {
+  buildSourceChangeIndex,
+  type SourceChangeIndex,
+  type SourceProbe,
+  sourcePathFor,
+  withSourceFingerprint,
+} from '../../assets/sourceProvenance'
 
 const btnStyle: React.CSSProperties = {
   width: 22, height: 22,
@@ -119,6 +126,9 @@ export function KeybindSettings(): React.ReactElement | null {
   const [cacheMessage, setCacheMessage] = useState('')
   const [relinkBusy, setRelinkBusy] = useState(false)
   const [relinkMessage, setRelinkMessage] = useState('')
+  const [sourceChanges, setSourceChanges] = useState<SourceChangeIndex | null>(null)
+  const [sourceBusy, setSourceBusy] = useState(false)
+  const [sourceMessage, setSourceMessage] = useState('')
   const [exportPreview, setExportPreview] = useState<{ src: string; width: number; height: number } | null>(null)
   const [exportPreviewBusy, setExportPreviewBusy] = useState(false)
   const [exportPreviewError, setExportPreviewError] = useState('')
@@ -131,6 +141,10 @@ export function KeybindSettings(): React.ReactElement | null {
   const localAssetPaths = useMemo(() => (
     preservePaths.filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
   ), [preservePaths])
+  const provenancePaths = useMemo(() => (
+    Array.from(new Set(boards.flatMap((board) => board.items.map(sourcePathFor).filter((src): src is string => Boolean(src)))))
+      .filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
+  ), [boards])
 
   const loadCacheStats = async (assetPaths = localAssetPaths): Promise<void> => {
     try {
@@ -197,6 +211,63 @@ export function KeybindSettings(): React.ReactElement | null {
     } finally {
       setRelinkBusy(false)
     }
+  }
+
+  const scanSourceChanges = async (): Promise<void> => {
+    setSourceBusy(true)
+    setSourceMessage('')
+    try {
+      const paths = provenancePaths
+      const checks = await Promise.all(paths.map(async (path) => {
+        const probe = await getIpc().invoke('assets:getThumbnail', { path }) as SourceProbe
+        return [path, {
+          exists: probe.exists === true,
+          size: typeof probe.size === 'number' ? probe.size : undefined,
+          mtimeMs: typeof probe.mtimeMs === 'number' ? probe.mtimeMs : undefined,
+        } satisfies SourceProbe] as const
+      }))
+      setSourceChanges(buildSourceChangeIndex(boards, Object.fromEntries(checks)))
+    } catch (error) {
+      console.error('Failed to check source changes:', error)
+      setSourceMessage('source check failed')
+    } finally {
+      setSourceBusy(false)
+    }
+  }
+
+  const acceptCurrentSources = (): void => {
+    if (!sourceChanges) return
+    let accepted = 0
+    const currentBySource = new Map(
+      sourceChanges.entries
+        .filter((entry) => (entry.status === 'changed' || entry.status === 'untracked') && entry.current)
+        .map((entry) => [entry.src, entry.current!]),
+    )
+    for (const board of boards) {
+      for (const item of board.items) {
+        const sourcePath = sourcePathFor(item)
+        if (!sourcePath) continue
+        const fingerprint = currentBySource.get(sourcePath)
+        if (!fingerprint) continue
+        const meta = withSourceFingerprint(item.meta, fingerprint)
+        useHistoryStore.getState().push('ITEM_STYLE', board.id, { id: item.id, meta: item.meta }, { id: item.id, meta })
+        updateItem(board.id, item.id, { meta })
+        accepted += 1
+      }
+    }
+    if (accepted === 0) return
+    setSourceMessage(`accepted ${accepted} item${accepted === 1 ? '' : 's'}`)
+    setSourceChanges((previous) => {
+      if (!previous) return previous
+      const entries = previous.entries.map((entry) => (
+        (entry.status === 'changed' || entry.status === 'untracked') && entry.current
+          ? { ...entry, status: 'unchanged' as const }
+          : entry
+      ))
+      const summary: SourceChangeIndex['summary'] = { unchanged: 0, changed: 0, missing: 0, untracked: 0 }
+      entries.forEach((entry) => { summary[entry.status] += 1 })
+      return { entries, summary }
+    })
   }
 
   const chooseCanvasBackground = async (): Promise<void> => {
@@ -316,7 +387,10 @@ export function KeybindSettings(): React.ReactElement | null {
   }
 
   useEffect(() => {
-    if (isOpen) loadCacheStats().catch(console.error)
+    if (isOpen) {
+      loadCacheStats().catch(console.error)
+      scanSourceChanges().catch(console.error)
+    }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -762,6 +836,35 @@ export function KeybindSettings(): React.ReactElement | null {
               Relink folder
             </button>
           ) : null}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--space-4)', alignItems: 'center', marginTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
+              Source updates
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: sourceChanges && (sourceChanges.summary.changed || sourceChanges.summary.missing) ? 'var(--accent)' : 'var(--text-muted)', marginTop: 2 }}>
+              {sourceChanges
+                ? `${sourceChanges.summary.changed} changed / ${sourceChanges.summary.missing} missing / ${sourceChanges.summary.untracked} untracked`
+                : 'not checked'}
+              {sourceMessage ? ` - ${sourceMessage}` : ''}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => scanSourceChanges().catch(console.error)}
+            disabled={sourceBusy}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: sourceBusy ? 0.45 : 1 }}
+          >
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={acceptCurrentSources}
+            disabled={!sourceChanges || (sourceChanges.summary.changed + sourceChanges.summary.untracked === 0)}
+            style={{ ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 'var(--text-md)', opacity: !sourceChanges || (sourceChanges.summary.changed + sourceChanges.summary.untracked === 0) ? 0.45 : 1 }}
+          >
+            Accept current
+          </button>
         </div>
       </div>
       <input

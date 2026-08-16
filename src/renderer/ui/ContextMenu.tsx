@@ -12,6 +12,7 @@ import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 import { extractImagePalette, paletteSourceConnection, paletteSwatchForImage } from '../assets/paletteExtraction'
 import { canvasColor } from '../theme/canvasColors'
+import { startSourceCapture } from './sourceCapture'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
@@ -133,6 +134,14 @@ export function ContextMenu(): React.ReactElement | null {
             console.error('Could not pull palette:', error)
             inscribe('Could not pull palette. Check that the image file is available.', { tone: 'danger' })
           })
+        },
+      }] : []),
+      ...(selectedItems.length === 1 && selectedItems[0].src ? [{
+        label: 'Capture note from source…',
+        action: () => {
+          const source = selectedItems[0]
+          closeContextMenu()
+          void startSourceCapture(source)
         },
       }] : []),
       { divider: true, label: '', action: () => {} },

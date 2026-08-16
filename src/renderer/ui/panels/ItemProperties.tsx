@@ -10,6 +10,7 @@ import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
+import { sourceCaptureReference } from '../../canvas/sourceCapture'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -489,6 +490,26 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
   )
 }
 
+function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElement | null {
+  const source = sourceCaptureReference(item)
+  if (!source) return null
+  return (
+    <>
+      <Divider label="Source" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <div title={source.reference} style={{ fontSize: 'var(--text-sm)', color: source.reference ? 'var(--text-secondary)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {source.reference || 'No source recorded'}
+        </div>
+        {source.locator && (
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            {source.locator}
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 
 function CommentAttachPanel({
@@ -573,6 +594,7 @@ export function ItemProperties(): React.ReactElement | null {
   }
 
   const isComment = isCommentItem(item)
+  const captureSource = sourceCaptureReference(item)
   const attachedTargetId = isComment && typeof item.meta?.attachedTo === 'string' ? item.meta.attachedTo : null
   const attachedTarget = attachedTargetId ? items.find((candidate) => candidate.id === attachedTargetId) : undefined
   const nearestTarget = isComment
@@ -614,6 +636,8 @@ export function ItemProperties(): React.ReactElement | null {
           style={{ width: '100%' }}
         />
       </Field>
+
+      {captureSource && <SourceCaptureSection item={item} />}
 
       <Field label="Frame">
         <select

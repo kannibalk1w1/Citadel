@@ -7,6 +7,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { renderPdfFirstPage } from '../utils/pdfPreview'
+import { fingerprintFromProbe, withSourceFingerprint } from '../assets/sourceProvenance'
 import {
   buildDocumentItem,
   documentDropFormat,
@@ -24,6 +25,21 @@ type FileTypeInfo = {
 }
 
 type IpcApi = { invoke: (channel: string, args: unknown) => Promise<unknown> }
+
+type SourceProbe = { exists?: unknown; size?: unknown; mtimeMs?: unknown }
+
+async function sourceFingerprint(path: string): Promise<ReturnType<typeof fingerprintFromProbe>> {
+  try {
+    const probe = await ((window as unknown as { ipc: IpcApi }).ipc.invoke('assets:getThumbnail', { path })) as SourceProbe
+    return fingerprintFromProbe({
+      exists: probe.exists === true,
+      size: typeof probe.size === 'number' ? probe.size : undefined,
+      mtimeMs: typeof probe.mtimeMs === 'number' ? probe.mtimeMs : undefined,
+    })
+  } catch {
+    return undefined
+  }
+}
 
 const EXT_MAP: Record<string, FileTypeInfo> = {
   // Images
@@ -137,6 +153,7 @@ export function useFileDrop() {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       if (ext === 'pdf') {
         try {
+          const fingerprint = await sourceFingerprint(file.path)
           const preview = await renderPdfFirstPage(file.path)
           const result = await ((window as unknown as { ipc: IpcApi }).ipc.invoke('pdf:cachePageImage', {
             pdfPath: file.path,
@@ -160,7 +177,7 @@ export function useFileDrop() {
             opacity: 1,
             tags: [],
             src: result.path,
-            meta: { sourcePdf: file.path, sourcePdfPage: 1 },
+            meta: withSourceFingerprint({ sourcePdf: file.path, sourcePdfPage: 1 }, fingerprint),
           }
 
           addItem(activeBoardId, item)
@@ -207,6 +224,7 @@ export function useFileDrop() {
           stackOffset: STACK_OFFSET,
           zIndex: Date.now() + offsetIndex,
         })
+        item.meta = withSourceFingerprint(item.meta, await sourceFingerprint(file.path))
 
         addItem(activeBoardId, item)
         pushEvent('ITEM_ADD', activeBoardId, null, item)
@@ -220,6 +238,7 @@ export function useFileDrop() {
       if (!typeInfo) continue
 
       const src = file.path   // Electron provides full local path
+      const fingerprint = await sourceFingerprint(src)
 
       let width = typeInfo.defaultWidth
       let height = typeInfo.defaultHeight
@@ -247,6 +266,7 @@ export function useFileDrop() {
         opacity: 1,
         tags: [],
         src,
+        meta: withSourceFingerprint(undefined, fingerprint),
       }
 
       addItem(activeBoardId, item)

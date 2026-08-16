@@ -9,6 +9,7 @@ import { resolver } from '../keybinds/keybindResolver'
 import { ToolIcon, type ToolIconName } from './icons/ToolIcon'
 import { activeArchiveRailWidth } from './shell/shellModel'
 import { inscribe } from './toasts/inscriptionToastStore'
+import { startSourceCapture } from './sourceCapture'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: ToolIconName }
 
@@ -333,6 +334,31 @@ export function Toolbar(): React.ReactElement {
                 </button>
               )
             })}
+
+            <button
+              type="button"
+              title="Capture from source"
+              aria-label="Capture from source"
+              onClick={() => {
+                const source = useCanvasStore.getState().selectedItems().find((item) => !!item.src)
+                void startSourceCapture(source)
+                setMoreOpen(false)
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                cursor: 'pointer',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ToolIcon name="edit" />
+            </button>
 
       {/* ── YouTube ── */}
       <button
