@@ -25,6 +25,7 @@ import { stampRelicTemplate, type RelicTemplate } from './relicTemplates'
 import { askInscription } from './prompt/inscriptionPromptStore'
 import { useRelicTemplateStore } from './relicTemplateStore'
 import { activeArchiveRailWidth } from './shell/shellModel'
+import { ToolIcon, type ToolIconName } from './icons/ToolIcon'
 
 function RiteLabel({ text }: { text: string }): React.ReactElement {
   return (
@@ -77,13 +78,13 @@ function Stat({ label, value }: { label: string; value: number }): React.ReactEl
 }
 
 function IconButton({
-  label,
+  icon,
   title,
   danger,
   disabled,
   onClick,
 }: {
-  label: string
+  icon: ToolIconName
   title: string
   danger?: boolean
   disabled?: boolean
@@ -112,7 +113,7 @@ function IconButton({
         padding: 0,
       }}
     >
-      {label}
+      <ToolIcon name={icon} size={14} />
     </button>
   )
 }
@@ -298,8 +299,8 @@ export function BoardNavigator(): React.ReactElement | null {
           Boards
         </h3>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <IconButton label="+" title="New board" onClick={createBoard} />
-          <IconButton label="x" title="Close" onClick={() => closePanel('boardNavigator')} />
+          <IconButton icon="plus" title="New board" onClick={createBoard} />
+          <IconButton icon="close" title="Close" onClick={() => closePanel('boardNavigator')} />
         </div>
       </div>
 
@@ -420,7 +421,7 @@ export function BoardNavigator(): React.ReactElement | null {
                   >
                     {template.name} · {template.items.length}
                   </button>
-                  <IconButton label="-" title="Remove template" danger onClick={() => useRelicTemplateStore.getState().removeTemplate(template.id)} />
+                  <IconButton icon="trash" title="Remove template" danger onClick={() => useRelicTemplateStore.getState().removeTemplate(template.id)} />
                 </div>
               ))}
             </>
@@ -428,7 +429,7 @@ export function BoardNavigator(): React.ReactElement | null {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
             <RiteLabel text="Bookmarks" />
-            <IconButton label="+" title="Bookmark the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
+              <IconButton icon="bookmark" title="Bookmark the current view (Alt+W)" onClick={() => plantWaystone(activeChamber.id)} />
           </div>
           {resolveWaystones(activeChamber).map((stone) => (
             <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -455,8 +456,8 @@ export function BoardNavigator(): React.ReactElement | null {
               >
                 {stone.name}
               </button>
-              <IconButton label="r" title="Rename bookmark" onClick={() => renameWaystone(activeChamber.id, stone.id, stone.name)} />
-              <IconButton label="-" title="Remove bookmark" danger onClick={() => pushWaystoneEvent(activeChamber.id, removeWaystoneEvent(activeChamber, stone.id))} />
+              <IconButton icon="edit" title="Rename bookmark" onClick={() => renameWaystone(activeChamber.id, stone.id, stone.name)} />
+              <IconButton icon="trash" title="Remove bookmark" danger onClick={() => pushWaystoneEvent(activeChamber.id, removeWaystoneEvent(activeChamber, stone.id))} />
             </div>
           ))}
         </div>
@@ -560,9 +561,9 @@ export function BoardNavigator(): React.ReactElement | null {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <IconButton label="r" title="Rename" onClick={() => startRename(board.id, board.name)} />
-                <IconButton label="d" title="Duplicate" onClick={() => cloneBoard(board.id)} />
-                <IconButton label="-" title="Delete" danger disabled={boards.length <= 1} onClick={() => deleteBoard(board.id)} />
+                <IconButton icon="edit" title="Rename" onClick={() => startRename(board.id, board.name)} />
+                <IconButton icon="duplicate" title="Duplicate" onClick={() => cloneBoard(board.id)} />
+                <IconButton icon="trash" title="Delete" danger disabled={boards.length <= 1} onClick={() => deleteBoard(board.id)} />
               </div>
             </div>
           )

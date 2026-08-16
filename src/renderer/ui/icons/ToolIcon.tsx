@@ -20,6 +20,13 @@ export type ToolIconName =
   | 'voice'
   | 'presentation'
   | 'theme'
+  | 'plus'
+  | 'close'
+  | 'minus'
+  | 'edit'
+  | 'duplicate'
+  | 'bookmark'
+  | 'trash'
 
 export const TOOL_ICON_NAMES: ToolIconName[] = [
   'select',
@@ -41,6 +48,13 @@ export const TOOL_ICON_NAMES: ToolIconName[] = [
   'voice',
   'presentation',
   'theme',
+  'plus',
+  'close',
+  'minus',
+  'edit',
+  'duplicate',
+  'bookmark',
+  'trash',
 ]
 
 type ToolIconProps = {
@@ -203,6 +217,20 @@ function iconPaths(name: ToolIconName): React.ReactNode {
           <path d="M12 5 A7 7 0 0 0 12 19 A3.8 7 0 0 1 12 5 Z" />
         </>
       )
+    case 'plus':
+      return <><path d="M12 5 V19" /><path d="M5 12 H19" /></>
+    case 'close':
+      return <><path d="M6 6 L18 18" /><path d="M18 6 L6 18" /></>
+    case 'minus':
+      return <path d="M5 12 H19" />
+    case 'edit':
+      return <><path d="M5 19 H9 L18 10 L14 6 L5 15 Z" /><path d="M12.5 7.5 L16.5 11.5" /></>
+    case 'duplicate':
+      return <><rect x="8" y="8" width="10" height="10" rx="1.5" /><path d="M6 15 H5.5 A1.5 1.5 0 0 1 4 13.5 V5.5 A1.5 1.5 0 0 1 5.5 4 H13.5 A1.5 1.5 0 0 1 15 5.5 V6" /></>
+    case 'bookmark':
+      return <path d="M7 4.5 H17 V20 L12 16.5 L7 20 Z" />
+    case 'trash':
+      return <><path d="M5 7 H19" /><path d="M9 7 V5 H15 V7" /><path d="M7 7 L8 19 H16 L17 7" /><path d="M10.5 10 V16 M13.5 10 V16" /></>
   }
 }
 

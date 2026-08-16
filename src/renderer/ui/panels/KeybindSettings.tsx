@@ -15,6 +15,7 @@ import {
 } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { ToolIcon } from '../icons/ToolIcon'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { actionLabel } from '../../keybinds/actionLabels'
 import { prepareExportCanvas } from '../../export/exportCanvas'
@@ -290,7 +291,7 @@ export function KeybindSettings(): React.ReactElement | null {
           style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1, padding: '2px 4px' }}
           title="Close"
         >
-          ×
+          <ToolIcon name="close" size={16} />
         </button>
       </div>
       <div style={{

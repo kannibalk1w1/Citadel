@@ -26,6 +26,13 @@ describe('ToolIcon', () => {
       'voice',
       'presentation',
       'theme',
+      'plus',
+      'close',
+      'minus',
+      'edit',
+      'duplicate',
+      'bookmark',
+      'trash',
     ])
   })
 
