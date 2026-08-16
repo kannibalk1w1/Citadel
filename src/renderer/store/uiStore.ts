@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ToolMode } from '../../types'
+import { nextVisionMode, type VisionMode } from '../canvas/visionModes'
 
 type PanelState = {
   itemProperties: boolean
@@ -220,6 +221,14 @@ type UIState = {
   setCommentPinsVisible: (enabled: boolean) => void
   toggleCommentPinsVisible: () => void
 
+  // Vision checks — ways of looking at the board, never changes to it.
+  visionMode: VisionMode
+  setVisionMode: (mode: VisionMode) => void
+  cycleVisionMode: () => void
+  mirrorView: boolean
+  toggleMirrorView: () => void
+  clearVisionChecks: () => void
+
   // Filename inscriptions under media relics
   filenameLabelsVisible: boolean
   windowAlwaysOnTop: boolean
@@ -423,6 +432,16 @@ export const useUIStore = create<UIState>((set, get) => ({
   commentPinsVisible: true,
   setCommentPinsVisible: (enabled) => set({ commentPinsVisible: enabled }),
   toggleCommentPinsVisible: () => set((s) => ({ commentPinsVisible: !s.commentPinsVisible })),
+
+  // Deliberately not persisted: a check is something you turn on to look at
+  // something, and reopening the app inside a greyscale, non-interactive board
+  // would read as breakage.
+  visionMode: 'none',
+  setVisionMode: (mode) => set({ visionMode: mode }),
+  cycleVisionMode: () => set((s) => ({ visionMode: nextVisionMode(s.visionMode) })),
+  mirrorView: false,
+  toggleMirrorView: () => set((s) => ({ mirrorView: !s.mirrorView })),
+  clearVisionChecks: () => set({ visionMode: 'none', mirrorView: false }),
 
   filenameLabelsVisible: false,
   toggleFilenameLabels: () => set((s) => ({ filenameLabelsVisible: !s.filenameLabelsVisible })),

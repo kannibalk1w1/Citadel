@@ -3,6 +3,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
+import { VISION_MODES } from '../canvas/visionModes'
 import { getCurrentFilePath, getRecentProjects, getSaveActivity, openRecentProject, type RecentProject, type SaveActivity } from '../utils/projectFile'
 import { inscribe } from './toasts/inscriptionToastStore'
 import { ToolIcon } from './icons/ToolIcon'
@@ -212,6 +213,10 @@ export function RightSidebar(): React.ReactElement {
   const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const visionMode = useUIStore((s) => s.visionMode)
+  const setVisionMode = useUIStore((s) => s.setVisionMode)
+  const mirrorView = useUIStore((s) => s.mirrorView)
+  const toggleMirrorView = useUIStore((s) => s.toggleMirrorView)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
   const [archiveToolsOpen, setArchiveToolsOpen] = useState(false)
 
@@ -317,6 +322,25 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
+        </div>
+      </div>
+
+      <div className="citadel-sidebar-section">
+        <div className="citadel-sidebar-section-title">Check</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
+          {VISION_MODES.filter((entry) => entry.id !== 'none').map((entry) => (
+            <QuickBtn
+              key={entry.id}
+              label={visionMode === entry.id ? `${entry.label} on` : entry.label}
+              title={entry.hint}
+              onClick={() => setVisionMode(visionMode === entry.id ? 'none' : entry.id)}
+            />
+          ))}
+          <QuickBtn
+            label={mirrorView ? 'Mirrored' : 'Mirror'}
+            title="Flip the view horizontally to spot drawing errors (Shift+M). The board is held still while mirrored."
+            onClick={toggleMirrorView}
+          />
         </div>
       </div>
 

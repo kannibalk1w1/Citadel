@@ -30,6 +30,8 @@ function domLayerTarget(): HTMLElement {
 
   const layer = document.createElement('div')
   layer.id = 'dom-items-layer'
+  // The vision checks style this layer as well as the canvas container.
+  layer.dataset.visionSurface = 'dom'
   layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;'
   document.getElementById('root')?.appendChild(layer)
   return layer

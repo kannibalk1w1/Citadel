@@ -5,6 +5,10 @@ import type { CanvasItem, Connection } from '../types'
 let clipboard: CanvasItem[] = []
 let pasteOffset = 0
 import { CanvasStage } from './canvas/CanvasStage'
+import { VisionFilterDefs } from './canvas/VisionFilterDefs'
+import { useVisionLayers } from './canvas/useVisionLayers'
+import { VisionStatusChip } from './ui/VisionStatusChip'
+import { visionStatusLabel, type VisionMode } from './canvas/visionModes'
 import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
 import { ProjectMenu } from './ui/ProjectMenu'
@@ -159,7 +163,11 @@ export default function App(): React.ReactElement {
   const windowOpacityUsesRendererFallback = useUIStore((s) => s.windowOpacityUsesRendererFallback)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
   const [recoveryData, setRecoveryData] = React.useState<ParsedRecovery | null>(null)
-  const canvasContainerRef = React.useRef<HTMLDivElement>(null)
+  // Held as state, not a ref: the vision checks style this element from an
+  // effect, and a ref's .current changing does not re-run one.
+  const [canvasContainerEl, setCanvasContainerEl] = React.useState<HTMLDivElement | null>(null)
+  const visionMode = useUIStore((s) => s.visionMode)
+  useVisionLayers(canvasContainerEl)
 
   // Electron's BrowserWindow#setOpacity is a documented no-op on Linux. The
   // transparent host created by main lets this alpha reach the compositor there,
@@ -477,6 +485,37 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
       useUIStore.getState().toggleFilenameLabels()
       inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames shown' : 'Filenames hidden')
+    })
+
+    // ── Vision checks ───────────────────────────────────────────────────────
+    // Ways of looking, not changes to the board, so none of these push a
+    // CanvasEvent and none of them are undoable.
+    const announceVision = (): void => {
+      const { visionMode, mirrorView } = useUIStore.getState()
+      inscribe(visionStatusLabel(visionMode, mirrorView) ?? 'Vision checks off')
+    }
+
+    const setVision = (mode: VisionMode): void => {
+      const current = useUIStore.getState().visionMode
+      // Pressing the same check again puts the board back, so one key is both
+      // "show me" and "stop showing me".
+      useUIStore.getState().setVisionMode(current === mode ? 'none' : mode)
+      announceVision()
+    }
+
+    resolver.register(Actions.VISION_CYCLE, () => {
+      useUIStore.getState().cycleVisionMode()
+      announceVision()
+    })
+    resolver.register(Actions.VISION_VALUE, () => setVision('value'))
+    resolver.register(Actions.VISION_SQUINT, () => setVision('squint'))
+    resolver.register(Actions.VISION_MIRROR, () => {
+      useUIStore.getState().toggleMirrorView()
+      announceVision()
+    })
+    resolver.register(Actions.VISION_CLEAR, () => {
+      useUIStore.getState().clearVisionChecks()
+      inscribe('Vision checks off')
     })
 
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
@@ -1024,10 +1063,20 @@ export default function App(): React.ReactElement {
       )}
       commandSpine={<Toolbar />}
       canvas={(
-        <div ref={canvasContainerRef} style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode, archiveRailCollapsed) }}>
-          <CanvasStage />
-          <PresentationQuill />
-        </div>
+        <>
+          <div
+            ref={setCanvasContainerEl}
+            data-vision-surface="canvas"
+            style={{ position: 'absolute', inset: 0, right: shellCanvasInset(presentationMode, archiveRailCollapsed) }}
+          >
+            <CanvasStage />
+            <PresentationQuill />
+          </div>
+          {/* Both outside the filtered container, so a check cannot hide its own
+              indicator or tint the matrix it is defined by. */}
+          <VisionFilterDefs mode={visionMode} />
+          <VisionStatusChip />
+        </>
       )}
       archiveRail={<RightSidebar />}
       contextDeck={(

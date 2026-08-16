@@ -38,6 +38,11 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.FLIP_H]: 'Flip horizontally',
   [Actions.FLIP_V]: 'Flip vertically',
   [Actions.FILENAME_LABELS_TOGGLE]: 'Show or hide filenames',
+  [Actions.VISION_CYCLE]: 'Vision check: step through',
+  [Actions.VISION_VALUE]: 'Vision check: value (greyscale)',
+  [Actions.VISION_SQUINT]: 'Vision check: squint (blur)',
+  [Actions.VISION_MIRROR]: 'Vision check: mirror the view',
+  [Actions.VISION_CLEAR]: 'Vision check: back to normal',
   [Actions.COMMENT_PIN_ADD]: 'Add comment pin',
 
   [Actions.BRING_FRONT]: 'Bring to front',

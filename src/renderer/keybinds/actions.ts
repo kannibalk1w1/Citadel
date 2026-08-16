@@ -32,6 +32,11 @@ export const Actions = {
   FLIP_H: 'item:flipH',
   FLIP_V: 'item:flipV',
   FILENAME_LABELS_TOGGLE: 'view:filenameLabels',
+  VISION_CYCLE: 'view:visionCycle',
+  VISION_VALUE: 'view:visionValue',
+  VISION_SQUINT: 'view:visionSquint',
+  VISION_MIRROR: 'view:visionMirror',
+  VISION_CLEAR: 'view:visionClear',
   COMMENT_PIN_ADD: 'annotation:commentPinAdd',
 
   // ── Item ordering ─────────────────────────────────────────────────────────
