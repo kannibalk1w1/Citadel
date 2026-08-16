@@ -10,6 +10,8 @@ import { Actions, type ActionName } from './actions'
 // The Record type is deliberate: adding an action without a label fails the
 // typecheck rather than leaking a raw id into the interface.
 export const actionLabels: Record<ActionName, string> = {
+  [Actions.PALETTE_TOGGLE]: 'Open the command palette',
+
   [Actions.TOOL_SELECT]: 'Select tool',
   [Actions.TOOL_PAN]: 'Pan tool',
   [Actions.TOOL_CONNECT]: 'Connect tool',

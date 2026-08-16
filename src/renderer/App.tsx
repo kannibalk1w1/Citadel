@@ -11,6 +11,7 @@ import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
 import { MenuBarHover } from './ui/shell/MenuBarHover'
 import { ClickThroughPanel } from './ui/shell/ClickThroughPanel'
+import { CommandPalette } from './ui/palette/CommandPalette'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
@@ -636,6 +637,7 @@ export default function App(): React.ReactElement {
     })
     resolver.register(Actions.PANEL_SEARCH,     () => useUIStore.getState().togglePanel('tagSearch'))
     resolver.register(Actions.PANEL_KEYBINDS,   () => useUIStore.getState().togglePanel('keybindSettings'))
+    resolver.register(Actions.PALETTE_TOGGLE,   () => useUIStore.getState().togglePanel('commandPalette'))
     resolver.register(Actions.PANEL_ARCHIVE_RAIL_TOGGLE, () => useUIStore.getState().toggleArchiveRail())
 
     // Window modes
@@ -1041,6 +1043,7 @@ export default function App(): React.ReactElement {
           <InscriptionToasts />
           <ArchiveRiteOverlay />
           <ClickThroughPanel />
+          <CommandPalette />
           <InscriptionPrompt />
         </>
       )}

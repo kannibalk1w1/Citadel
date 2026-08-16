@@ -14,6 +14,9 @@ export const Actions = {
   TOOL_TAG: 'tool:tag',
   TOOL_SWATCH: 'tool:swatch',
 
+  // ── Command palette ───────────────────────────────────────────────────────
+  PALETTE_TOGGLE: 'palette:toggle',
+
   // ── Edit ──────────────────────────────────────────────────────────────────
   UNDO: 'edit:undo',
   REDO: 'edit:redo',

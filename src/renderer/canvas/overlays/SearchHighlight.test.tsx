@@ -60,6 +60,7 @@ beforeEach(() => {
   useUIStore.setState({
     panels: {
       itemProperties: false,
+      commandPalette: false,
       connectionProperties: false,
       keybindSettings: false,
       tagSearch: true,

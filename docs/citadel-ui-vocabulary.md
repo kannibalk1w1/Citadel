@@ -46,6 +46,7 @@ should never have to translate a word to find a button.
 | A `.citadelz` bundle | Archive | **Archive** — this word, and only this |
 | The left sidebar | Archive rail | **Project rail** |
 | Saving a template | Seal | **Save** |
+| The keyboard launcher | — | **Command palette** |
 | Confirming a text prompt | Inscribe | **Save** |
 | Attaching a comment to an item | Bind inscription | **Attach comment** |
 | Going to a board, bookmark, or item | Travel | **Go to** |

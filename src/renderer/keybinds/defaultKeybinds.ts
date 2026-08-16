@@ -4,6 +4,9 @@ import { Actions, ActionName } from './actions'
 // Format: modifier keys joined by '+', then the key. e.g. 'ctrl+shift+z', 'escape', 'delete'
 
 export const defaultKeybinds: Record<ActionName, string[]> = {
+  // Command palette
+  [Actions.PALETTE_TOGGLE]: ['ctrl+k', 'meta+k'],
+
   // Tool modes
   [Actions.TOOL_SELECT]:    ['v', 'escape'],
   [Actions.TOOL_PAN]:       ['h', 'space'],

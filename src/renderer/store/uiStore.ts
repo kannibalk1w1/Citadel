@@ -5,6 +5,7 @@ type PanelState = {
   itemProperties: boolean
   connectionProperties: boolean
   keybindSettings: boolean
+  commandPalette: boolean
   tagSearch: boolean
   presentationSequence: boolean
   boardNavigator: boolean
@@ -319,6 +320,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     itemProperties: false,
     connectionProperties: false,
     keybindSettings: false,
+    commandPalette: false,
     tagSearch: false,
     presentationSequence: false,
     boardNavigator: false,

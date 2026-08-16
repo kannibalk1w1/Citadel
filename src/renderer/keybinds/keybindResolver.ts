@@ -48,6 +48,34 @@ export class KeybindResolver {
     return true
   }
 
+  /**
+   * Actions that currently have a handler, in registration order.
+   *
+   * The command palette lists these rather than keeping its own catalogue: an
+   * action with no handler would be a dead row, and a second registry would
+   * drift from this one the moment a feature registered without updating it.
+   */
+  registeredActions(): ActionName[] {
+    return [...this.handlers.keys()]
+  }
+
+  hasHandler(action: ActionName): boolean {
+    return this.handlers.has(action)
+  }
+
+  /**
+   * Every combo bound to an action, from the same merged map `resolve` uses —
+   * so anything the palette displays is what the user would actually press,
+   * including their overrides.
+   */
+  bindingsFor(action: ActionName): string[] {
+    const combos: string[] = []
+    for (const [combo, bound] of this.map) {
+      if (bound === action) combos.push(combo)
+    }
+    return combos
+  }
+
   dispatch(action: ActionName): boolean {
     const handler = this.handlers.get(action)
     if (!handler) return false
