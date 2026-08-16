@@ -51,6 +51,12 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.VISION_SQUINT]: ['shift+s'],
   [Actions.VISION_MIRROR]: ['shift+m'],
   [Actions.VISION_CLEAR]: ['shift+y'],
+  // A running session is driven with one hand while the other draws.
+  [Actions.STUDY_START]: ['shift+d'],
+  [Actions.STUDY_PAUSE]: ['shift+space'],
+  [Actions.STUDY_NEXT]: ['shift+arrowright'],
+  [Actions.STUDY_PREV]: ['shift+arrowleft'],
+  [Actions.STUDY_STOP]: ['shift+escape'],
   [Actions.COMMENT_PIN_ADD]: ['ctrl+shift+m', 'meta+shift+m'],
 
   // Item ordering

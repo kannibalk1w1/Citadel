@@ -8,6 +8,8 @@ import { CanvasStage } from './canvas/CanvasStage'
 import { VisionFilterDefs } from './canvas/VisionFilterDefs'
 import { useVisionLayers } from './canvas/useVisionLayers'
 import { VisionStatusChip } from './ui/VisionStatusChip'
+import { StudySessionBar } from './ui/StudySessionBar'
+import { useStudyStore } from './presentation/studyStore'
 import { visionStatusLabel, type VisionMode } from './canvas/visionModes'
 import { Toolbar } from './ui/Toolbar'
 import { BoardTabs } from './ui/BoardTabs'
@@ -55,7 +57,7 @@ import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
-import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
+import { focusViewportFor, nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
 import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 import { ToolIcon } from './ui/icons/ToolIcon'
 
@@ -101,22 +103,9 @@ function fitActiveBoard(fullWidth = false): void {
 }
 
 function focusPresentationItem(item: CanvasItem): void {
-  const canvasW = window.innerWidth
-  const canvasH = window.innerHeight
-  const pad = 160
-  const scale = Math.min(
-    MAX_SCALE,
-    Math.max(MIN_SCALE, Math.min(
-      (canvasW - pad) / Math.max(1, item.width),
-      (canvasH - pad) / Math.max(1, item.height),
-      2.5,
-    ))
+  useCanvasStore.getState().updateViewport(
+    focusViewportFor(item, { width: window.innerWidth, height: window.innerHeight }),
   )
-  useCanvasStore.getState().updateViewport({
-    scale,
-    x: canvasW / 2 - (item.x + item.width / 2) * scale,
-    y: canvasH / 2 - (item.y + item.height / 2) * scale,
-  })
 }
 
 function stepPresentation(direction: 1 | -1): void {
@@ -516,6 +505,24 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.VISION_CLEAR, () => {
       useUIStore.getState().clearVisionChecks()
       inscribe('Vision checks off')
+    })
+
+    // ── Study sessions ──────────────────────────────────────────────────────
+    resolver.register(Actions.STUDY_START, () => {
+      const study = useStudyStore.getState()
+      // The same key ends a running session, so it is one switch, not two.
+      if (study.status === 'idle') study.start()
+      else study.stop()
+    })
+    resolver.register(Actions.STUDY_PAUSE, () => {
+      const study = useStudyStore.getState()
+      if (study.status === 'running') study.pause()
+      else if (study.status === 'paused') study.resume()
+    })
+    resolver.register(Actions.STUDY_NEXT, () => useStudyStore.getState().advance(1))
+    resolver.register(Actions.STUDY_PREV, () => useStudyStore.getState().advance(-1))
+    resolver.register(Actions.STUDY_STOP, () => {
+      if (useStudyStore.getState().status !== 'idle') useStudyStore.getState().stop()
     })
 
     resolver.register(Actions.COMMENT_PIN_ADD, () => {
@@ -1076,6 +1083,7 @@ export default function App(): React.ReactElement {
               indicator or tint the matrix it is defined by. */}
           <VisionFilterDefs mode={visionMode} />
           <VisionStatusChip />
+          <StudySessionBar />
         </>
       )}
       archiveRail={<RightSidebar />}

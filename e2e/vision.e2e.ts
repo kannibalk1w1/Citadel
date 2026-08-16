@@ -1,32 +1,15 @@
-import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
-
-const projectRoot = resolve(__dirname, '..')
-
-type CitadelSession = { app: ElectronApplication; page: Page; userDataDir: string }
-
-async function launchCitadel(): Promise<CitadelSession> {
-  const userDataDir = await mkdtemp(join(tmpdir(), 'citadel-e2e-'))
-  const app = await electron.launch({
-    args: [projectRoot, `--user-data-dir=${userDataDir}`],
-    env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: 'true' },
-  })
-  return { app, page: await app.firstWindow(), userDataDir }
-}
+import { expect, test, type Page } from '@playwright/test'
+import { closeCitadel, launchCitadel, openBoard, type CitadelSession } from './harness'
 
 let session: CitadelSession | undefined
 
 test.beforeEach(async () => {
   session = await launchCitadel()
-  await session.page.waitForLoadState('domcontentloaded')
-  await session.page.getByRole('button', { name: 'Continue to board' }).click({ force: true })
+  await openBoard(session.page)
 })
 
 test.afterEach(async () => {
-  await session?.app.close().catch(() => {})
-  if (session) await rm(session.userDataDir, { recursive: true, force: true })
+  await closeCitadel(session)
   session = undefined
 })
 

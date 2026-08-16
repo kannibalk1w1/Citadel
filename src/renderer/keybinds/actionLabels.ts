@@ -43,6 +43,11 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.VISION_SQUINT]: 'Vision check: squint (blur)',
   [Actions.VISION_MIRROR]: 'Vision check: mirror the view',
   [Actions.VISION_CLEAR]: 'Vision check: back to normal',
+  [Actions.STUDY_START]: 'Study session: start',
+  [Actions.STUDY_PAUSE]: 'Study session: pause or resume',
+  [Actions.STUDY_NEXT]: 'Study session: next image',
+  [Actions.STUDY_PREV]: 'Study session: previous image',
+  [Actions.STUDY_STOP]: 'Study session: end',
   [Actions.COMMENT_PIN_ADD]: 'Add comment pin',
 
   [Actions.BRING_FRONT]: 'Bring to front',

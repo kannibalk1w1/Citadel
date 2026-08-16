@@ -29,8 +29,11 @@ export type ToolIconName =
   | 'trash'
   | 'check'
   | 'play'
+  | 'pause'
   | 'stop'
   | 'chevronDown'
+  | 'chevronLeft'
+  | 'chevronRight'
   | 'sortAsc'
   | 'sortDesc'
   | 'warning'
@@ -75,8 +78,11 @@ export const TOOL_ICON_NAMES: ToolIconName[] = [
   'trash',
   'check',
   'play',
+  'pause',
   'stop',
   'chevronDown',
+  'chevronLeft',
+  'chevronRight',
   'sortAsc',
   'sortDesc',
   'warning',
@@ -278,10 +284,16 @@ function iconPaths(name: ToolIconName): React.ReactNode {
       return <path d="M5 12.5 L10 17.5 L19 7" />
     case 'play':
       return <path d="M8 5.5 L18.5 12 L8 18.5 Z" />
+    case 'pause':
+      return <><path d="M9.5 6 V18" /><path d="M14.5 6 V18" /></>
     case 'stop':
       return <rect x="7" y="7" width="10" height="10" rx="1.5" />
     case 'chevronDown':
       return <path d="M6 9.5 L12 15.5 L18 9.5" />
+    case 'chevronLeft':
+      return <path d="M14.5 6 L8.5 12 L14.5 18" />
+    case 'chevronRight':
+      return <path d="M9.5 6 L15.5 12 L9.5 18" />
     case 'sortAsc':
       return <><path d="M12 19 V6" /><path d="M7 11 L12 6 L17 11" /></>
     case 'sortDesc':

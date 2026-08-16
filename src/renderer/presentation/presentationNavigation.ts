@@ -1,4 +1,35 @@
-import type { CanvasItem } from '../../types'
+import type { CanvasItem, Viewport } from '../../types'
+
+const MIN_SCALE = 0.05
+const MAX_SCALE = 20
+/** Breathing room around a focused item, in screen pixels. */
+const FOCUS_PADDING = 160
+/** However small the item, never magnify past this — a thumbnail should not fill a wall. */
+const FOCUS_MAX_SCALE = 2.5
+
+/**
+ * The viewport that puts one item in the middle of the screen, as large as it
+ * can be without crowding the edges. Pure so both presentation stepping and
+ * study sessions can use it, and so it can be tested without a window.
+ */
+export function focusViewportFor(
+  item: Pick<CanvasItem, 'x' | 'y' | 'width' | 'height'>,
+  screen: { width: number; height: number },
+): Viewport {
+  const scale = Math.min(
+    MAX_SCALE,
+    Math.max(MIN_SCALE, Math.min(
+      (screen.width - FOCUS_PADDING) / Math.max(1, item.width),
+      (screen.height - FOCUS_PADDING) / Math.max(1, item.height),
+      FOCUS_MAX_SCALE,
+    )),
+  )
+  return {
+    scale,
+    x: screen.width / 2 - (item.x + item.width / 2) * scale,
+    y: screen.height / 2 - (item.y + item.height / 2) * scale,
+  }
+}
 
 function presentationOrder(item: CanvasItem): number | null {
   const value = item.meta?.presentationOrder

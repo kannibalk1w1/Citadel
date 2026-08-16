@@ -37,6 +37,13 @@ export const Actions = {
   VISION_SQUINT: 'view:visionSquint',
   VISION_MIRROR: 'view:visionMirror',
   VISION_CLEAR: 'view:visionClear',
+
+  // ── Study sessions ────────────────────────────────────────────────────────
+  STUDY_START: 'study:start',
+  STUDY_PAUSE: 'study:pauseResume',
+  STUDY_NEXT: 'study:next',
+  STUDY_PREV: 'study:previous',
+  STUDY_STOP: 'study:stop',
   COMMENT_PIN_ADD: 'annotation:commentPinAdd',
 
   // ── Item ordering ─────────────────────────────────────────────────────────

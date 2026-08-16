@@ -4,6 +4,8 @@ import { useUIStore } from '../store/uiStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 import { VISION_MODES } from '../canvas/visionModes'
+import { useStudyStore } from '../presentation/studyStore'
+import { STUDY_INTERVALS } from '../presentation/studySession'
 import { getCurrentFilePath, getRecentProjects, getSaveActivity, openRecentProject, type RecentProject, type SaveActivity } from '../utils/projectFile'
 import { inscribe } from './toasts/inscriptionToastStore'
 import { ToolIcon } from './icons/ToolIcon'
@@ -217,6 +219,13 @@ export function RightSidebar(): React.ReactElement {
   const setVisionMode = useUIStore((s) => s.setVisionMode)
   const mirrorView = useUIStore((s) => s.mirrorView)
   const toggleMirrorView = useUIStore((s) => s.toggleMirrorView)
+  const studyStatus = useStudyStore((s) => s.status)
+  const studyInterval = useStudyStore((s) => s.intervalSeconds)
+  const setStudyInterval = useStudyStore((s) => s.setIntervalSeconds)
+  const studyShuffle = useStudyStore((s) => s.shuffle)
+  const toggleStudyShuffle = useStudyStore((s) => s.toggleShuffle)
+  const studySource = useStudyStore((s) => s.source)
+  const setStudySource = useStudyStore((s) => s.setSource)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
   const [archiveToolsOpen, setArchiveToolsOpen] = useState(false)
 
@@ -322,6 +331,51 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
+        </div>
+      </div>
+
+      <div className="citadel-sidebar-section">
+        <div className="citadel-sidebar-section-title">Study</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            {STUDY_INTERVALS.map((entry) => (
+              <button
+                key={entry.seconds}
+                type="button"
+                aria-pressed={studyInterval === entry.seconds}
+                title={`Give each image ${entry.label}`}
+                onClick={() => setStudyInterval(entry.seconds)}
+                style={{
+                  flex: '1 0 auto',
+                  padding: '3px 6px',
+                  background: studyInterval === entry.seconds ? 'var(--accent)' : 'var(--bg-ui)',
+                  color: studyInterval === entry.seconds ? 'var(--bg-ui)' : 'var(--text-secondary)',
+                  border: '1px solid var(--border-muted)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  cursor: 'pointer',
+                }}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+          <QuickBtn
+            label={studyShuffle ? 'Shuffled' : 'In order'}
+            title="Shuffle the images, or take them in board order"
+            onClick={toggleStudyShuffle}
+          />
+          <QuickBtn
+            label={studySource === 'selection' ? 'From selection' : 'From board'}
+            title="Study only the selected images, or everything on the board"
+            onClick={() => setStudySource(studySource === 'selection' ? 'board' : 'selection')}
+          />
+          <QuickBtn
+            label={studyStatus === 'idle' ? 'Start session' : 'End session'}
+            title="Timed reference practice (Shift+D)"
+            onClick={() => resolver.dispatch(Actions.STUDY_START)}
+          />
         </div>
       </div>
 
