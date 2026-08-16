@@ -17,20 +17,63 @@ export function serializeEvent(e: KeyboardEvent): string {
 
 type Handler = () => void
 
+function validCombo(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 80) return false
+  const parts = value.split('+')
+  const key = parts.at(-1)
+  if (!key || ['control', 'meta', 'alt', 'shift'].includes(key)) return false
+  const modifiers = parts.slice(0, -1)
+  return new Set(modifiers).size === modifiers.length
+    && modifiers.every((part) => ['ctrl', 'meta', 'alt', 'shift'].includes(part))
+}
+
+/**
+ * Accept only overrides for actions Citadel currently knows about. This makes
+ * the user-data setting forward-compatible: stale plugin/action names and
+ * malformed values never turn into invisible shortcuts.
+ */
+export function normalizeKeybindOverrides(value: unknown): Partial<KeybindMap> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const knownActions = new Set(Object.keys(defaultKeybinds))
+  return Object.entries(value as Record<string, unknown>).reduce<Partial<KeybindMap>>((overrides, [action, combos]) => {
+    if (!knownActions.has(action) || !Array.isArray(combos)) return overrides
+    const normalized = [...new Set(combos.filter(validCombo))]
+    // An empty array is meaningful: it deliberately unbinds an action.
+    overrides[action] = normalized
+    return overrides
+  }, {})
+}
+
 export class KeybindResolver {
   private map: Map<string, ActionName>       // combo → action
   private handlers: Map<ActionName, Handler> // action → handler
+  private overrides: Partial<KeybindMap>
 
   constructor(overrides: Partial<KeybindMap> = {}) {
     this.map = new Map()
     this.handlers = new Map()
 
-    const merged = { ...defaultKeybinds, ...overrides }
+    this.overrides = {}
+    this.setOverrides(overrides)
+  }
+
+  setOverrides(overrides: Partial<KeybindMap>): void {
+    this.overrides = normalizeKeybindOverrides(overrides)
+    this.map.clear()
+    const merged = { ...defaultKeybinds, ...this.overrides }
     for (const [action, combos] of Object.entries(merged)) {
       for (const combo of combos as string[]) {
         this.map.set(combo, action as ActionName)
       }
     }
+  }
+
+  overridesForSettings(): Partial<KeybindMap> {
+    return { ...this.overrides }
+  }
+
+  actionForCombo(combo: string): ActionName | undefined {
+    return this.map.get(combo)
   }
 
   register(action: ActionName, handler: Handler): void {

@@ -12,6 +12,7 @@ import { ShellFrame } from './ui/shell/ShellFrame'
 import { MenuBarHover } from './ui/shell/MenuBarHover'
 import { ClickThroughPanel } from './ui/shell/ClickThroughPanel'
 import { CommandPalette } from './ui/palette/CommandPalette'
+import { Onboarding } from './ui/onboarding/Onboarding'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
 import { BoardNavigator } from './ui/BoardNavigator'
 import { AssetLibrary } from './ui/AssetLibrary'
@@ -41,7 +42,7 @@ import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
 import { normalizeCanvasBackground, normalizeSavedThemePalettes, normalizeThemeOverrides } from './store/uiStore'
-import { resolver } from './keybinds/keybindResolver'
+import { normalizeKeybindOverrides, resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
 import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clearRecoveryIfClean, loadProjectData, parseRecoveryData, type ParsedRecovery } from './utils/projectFile'
@@ -198,6 +199,7 @@ export default function App(): React.ReactElement {
         'ui.canvasDefaultMigration',
         'ui.alwaysOnTop',
         'ui.windowOpacity',
+        'ui.onboardingComplete',
       ],
     }).then((res) => {
       const { values } = res as { values: Record<string, unknown> }
@@ -233,6 +235,9 @@ export default function App(): React.ReactElement {
         ipc.invoke('settings:set', { key: 'ui.canvasDefaultMigration', value: CANVAS_DEFAULT_MIGRATION }).catch(() => {})
       }
       if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
+      // The welcome panel is deliberately non-modal. It only appears on a
+      // first run, and never prevents an existing project from being opened.
+      if (values['ui.onboardingComplete'] !== true) useUIStore.getState().openPanel('onboarding')
       // Re-apply through main so the window actually adopts the stored mode.
       // Click-through is never restored: it is not persisted.
       const alwaysOnTop = values['ui.alwaysOnTop'] === true
@@ -243,6 +248,9 @@ export default function App(): React.ReactElement {
       }
       const zoomFactor = values['ui.zoomFactor']
       if (typeof zoomFactor === 'number' && zoomFactor !== 1.0) useUIStore.getState().setUiScale(zoomFactor)
+    }).catch(() => {})
+    ipc.invoke('keybinds:get').then((res) => {
+      resolver.setOverrides(normalizeKeybindOverrides((res as { overrides?: unknown }).overrides))
     }).catch(() => {})
 
     installMediaPreviewProfileHarness({
@@ -1043,6 +1051,7 @@ export default function App(): React.ReactElement {
           <InscriptionToasts />
           <ArchiveRiteOverlay />
           <ClickThroughPanel />
+          <Onboarding />
           <CommandPalette />
           <InscriptionPrompt />
         </>

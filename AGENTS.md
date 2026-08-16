@@ -9,7 +9,7 @@
 - **Name:** Citadel
 - **Type:** Electron desktop app (Windows)
 - **Purpose:** Atmospheric archive for memory, research, reference, introspection, and nonlinear thought — an infinite canvas where files, notes, media, and ideas become relics that can be marked, arranged, annotated, searched, and bound together.
-- **Theme:** Dark fantasy. Stone tones, aged gold text, arcane details. Never generic/material/flat.
+- **Theme:** Clean, dark archival workspace. Clear typography, restrained contrast, and readable icons; no fantasy/gothic/arcane framing or themed cursors. Purposeful, Refflow-like motion is welcome when it improves orientation or feedback and respects reduced motion.
 - **File extensions:** `.citadel` (JSON project), `.citadelz` (zip archive with bundled assets)
 - **License:** MIT. Open source from day one.
 
@@ -78,7 +78,6 @@ src/
       canvasStore.ts      ← items, boards, connections, selection
       historyStore.ts     ← event log, undo/redo, recording sessions
       uiStore.ts          ← toolMode, theme, panels, search
-      mascotStore.ts      ← effect queue, persistent effects, position
     canvas/
       CanvasStage.tsx     ← Konva Stage, pan/zoom
       ItemRenderer.tsx    ← routes item.type → component
@@ -109,7 +108,6 @@ src/
       Minimap.tsx
       RecordingBar.tsx
       TagSearch.tsx
-      MascotWidget.tsx
       panels/
         ItemProperties.tsx
         ConnectionProperties.tsx
@@ -130,9 +128,6 @@ src/
       ThemeProvider.tsx
       dark.css
       light.css
-    mascot/
-      MascotWidget.tsx
-      effects/              ← one file per effect animation
 ```
 
 ---
@@ -245,48 +240,18 @@ Assets are referenced as paths relative to the `.citadel` file. On save, prompt 
 
 ---
 
-## Mascot System
+## Motion and feedback
 
-The mascot is a chess-rook tower SVG in the UI corner. It reacts to app events with animations.
-
-**Strict colour palette — no exceptions except the two marked:**
-- Tower body: `#0a0a0a`
-- Effect primary (lightning, runes, beams): `#ffffff`
-- Effect mid (secondary particles): `#c8c8c8`
-- Effect dim (afterglow): `#505050`
-- Background bloom: `#2a2a2a`
-- Recording eye: `#8b0000` ← only intentional colour
-- Error fracture: `#5a0000` ← only intentional colour
-
-**Trigger effects via `mascotStore.triggerEffect(name)`** — never animate the mascot directly from feature code. Decoupling is mandatory.
-
-**Effect triggers (key ones):**
-| Action | Effect name |
-|---|---|
-| Export | `lightning-out` |
-| Import / file open | `lightning-in` |
-| Save | `rune-seal` |
-| Auto-save | `base-pulse` |
-| Undo | `rewind-swirl` |
-| Redo | `forward-surge` |
-| Delete | `crumble` |
-| Recording start | `eye-open` (persistent) |
-| Recording stop | `eye-close` |
-| Playback | `lighthouse-beam` |
-| Long operation | `progress-fill` (takes 0–1 progress value) |
-| Error/crash recovery | `fracture` |
-| App startup | `rise-from-fog` |
-| Idle 15s+ | `ember-drift` (persistent) |
-| Plugin loaded | `banner-raise` |
-
-All effects fade through `#c8c8c8` → `#505050` → transparent. Never blend into colour.
-Respect `prefers-reduced-motion` — replace all effects with a single brightness pulse.
+The mascot/effect subsystem has been removed. Use direct, accessible feedback
+(for example `inscribe` toasts) rather than an effect queue. Motion is allowed
+only when it is clean, brief, purposeful, and reduced-motion safe; it should
+help a person follow state or spatial change, never supply atmosphere.
 
 ---
 
 ## Theme
 
-Primary theme is dark fantasy. CSS variables are the source of truth — never hardcode colours.
+Primary theme is a clean dark workspace. CSS variables are the source of truth — never hardcode colours.
 
 Key tokens:
 ```css
@@ -298,14 +263,10 @@ Key tokens:
 --accent: #c8a96e
 --accent-danger: #8b2020
 --border: #2e2820
---effect-primary: #ffffff
---effect-mid: #c8c8c8
---effect-dim: #505050
 ```
 
 **Fonts:**
-- Display/headers: `Cinzel` (Google Fonts)
-- UI body: `Inter` or `DM Sans`
+- UI body: `Inter`
 - Mono (hex values, keybinds): `JetBrains Mono`
 
 ---
@@ -351,9 +312,8 @@ Before writing any new feature, confirm:
 - [ ] Does it go through the IPC bridge if it touches the filesystem?
 - [ ] Does it dispatch a `CanvasEvent` so undo/redo and recording work?
 - [ ] Does it use `ActionName` if it's keyboard-triggerable?
-- [ ] Does it trigger a mascot effect via `mascotStore`?
 - [ ] Does it use CSS variables for any colours?
-- [ ] Is the effect palette strictly black/white/grey?
+- [ ] If it moves, does it provide a clear purpose and respect reduced motion?
 
 After finishing any task:
 - Summarize what changed and how it was verified.

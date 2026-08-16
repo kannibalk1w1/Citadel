@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
-import { SearchHighlight } from './SearchHighlight'
+import { MAX_INDEX_MARKS, SearchHighlight, visibleIndexMarkItems } from './SearchHighlight'
 
 vi.mock('react-konva', () => ({
   Group: ({
@@ -69,6 +69,7 @@ beforeEach(() => {
       assetLibrary: false,
       indexLedger: false,
       archiveWorkbench: false,
+      onboarding: false,
     },
     searchQuery: 'gate',
     searchHighlightId: null,
@@ -78,6 +79,19 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('SearchHighlight Index marks', () => {
+  it('keeps the mark budget and visibility rule independent of rendering', () => {
+    const results = Array.from({ length: MAX_INDEX_MARKS + 4 }, (_, index) => ({
+      id: `result-${index}`,
+      visible: index !== 1,
+    }))
+    const visible = new Set(results.filter((_, index) => index % 2 === 0).map((result) => result.id))
+
+    expect(visibleIndexMarkItems(results)).toHaveLength(MAX_INDEX_MARKS)
+    expect(visibleIndexMarkItems(results, visible).map((result) => result.id)).toEqual(
+      results.filter((_, index) => index % 2 === 0).map((result) => result.id),
+    )
+  })
+
   it('renders a sigil mark for each matching Index result', () => {
     useCanvasStore.setState((state) => ({
       boards: state.boards.map((board) => ({

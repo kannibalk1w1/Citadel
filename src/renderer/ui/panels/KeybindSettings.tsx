@@ -18,6 +18,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { ToolIcon } from '../icons/ToolIcon'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { actionLabel } from '../../keybinds/actionLabels'
+import { resolver, serializeEvent } from '../../keybinds/keybindResolver'
 import { prepareExportCanvas } from '../../export/exportCanvas'
 import { describeExportPreview } from '../../export/exportPreviewModel'
 
@@ -121,6 +122,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const [exportPreview, setExportPreview] = useState<{ src: string; width: number; height: number } | null>(null)
   const [exportPreviewBusy, setExportPreviewBusy] = useState(false)
   const [exportPreviewError, setExportPreviewError] = useState('')
+  const [capturingAction, setCapturingAction] = useState<string | null>(null)
+  const [keybindMessage, setKeybindMessage] = useState('')
 
   const preservePaths = useMemo(() => (
     boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
@@ -265,6 +268,47 @@ export function KeybindSettings(): React.ReactElement | null {
     applyExportPreset(preset)
     setExportPreview(null)
     setExportPreviewError('')
+  }
+
+  const saveKeybindOverrides = (next: ReturnType<typeof resolver.overridesForSettings>): void => {
+    const previous = resolver.overridesForSettings()
+    resolver.setOverrides(next)
+    getIpc().invoke('keybinds:set', { overrides: next }).then((result) => {
+      if ((result as { ok?: boolean } | undefined)?.ok !== false) return
+      resolver.setOverrides(previous)
+      setKeybindMessage('Could not save shortcut changes')
+    }).catch(() => {
+      resolver.setOverrides(previous)
+      setKeybindMessage('Could not save shortcut changes')
+    })
+  }
+
+  const setBinding = (action: string, combos: string[]): void => {
+    const next = resolver.overridesForSettings()
+    const defaults = defaultKeybinds[action] ?? []
+    if (JSON.stringify(combos) === JSON.stringify(defaults)) delete next[action]
+    else next[action] = combos
+    saveKeybindOverrides(next)
+  }
+
+  const captureBinding = (event: React.KeyboardEvent<HTMLInputElement>, action: string): void => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (event.key === 'Escape') {
+      setCapturingAction(null)
+      setKeybindMessage('')
+      return
+    }
+    const combo = serializeEvent(event.nativeEvent)
+    if (!combo) return
+    const occupiedBy = resolver.actionForCombo(combo)
+    if (occupiedBy && occupiedBy !== action) {
+      setKeybindMessage(`${combo} is already used by ${actionLabel(occupiedBy)}`)
+      return
+    }
+    setBinding(action, [combo])
+    setCapturingAction(null)
+    setKeybindMessage(`${actionLabel(action)} now uses ${combo}`)
   }
 
   useEffect(() => {
@@ -727,26 +771,48 @@ export function KeybindSettings(): React.ReactElement | null {
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Action</th>
             <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Keys</th>
+            <th style={{ textAlign: 'right', padding: '4px 8px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Change</th>
           </tr>
         </thead>
         <tbody>
-          {entries.map(([action, keys]) => (
+          {entries.map(([action]) => (
             <tr key={action} style={{ borderBottom: '1px solid var(--border-muted)' }}>
               <td style={{ padding: '5px 8px', color: 'var(--text-secondary)' }}>
                 <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>{actionLabel(action)}</span>
                 <span style={{ marginLeft: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>{action}</span>
               </td>
               <td style={{ padding: '5px 8px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                {(keys as string[]).map((k) => (
+                {resolver.bindingsFor(action).map((k) => (
                   <kbd key={k} style={{ background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '1px 5px', marginRight: 4, fontSize: 'var(--text-sm)' }}>
                     {k}
                   </kbd>
                 ))}
+                {resolver.bindingsFor(action).length === 0 && <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>}
+              </td>
+              <td style={{ padding: '5px 8px', textAlign: 'right' }}>
+                {capturingAction === action ? (
+                  <input
+                    autoFocus
+                    aria-label={`Press a shortcut for ${actionLabel(action)}`}
+                    placeholder="Press keys…"
+                    onKeyDown={(event) => captureBinding(event, action)}
+                    onBlur={() => setCapturingAction(null)}
+                    style={{ width: 118, background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', padding: '4px 6px', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}
+                  />
+                ) : (
+                  <>
+                    <button type="button" onClick={() => { setCapturingAction(action); setKeybindMessage('') }} style={paletteButtonStyle}>Change</button>
+                    {Object.prototype.hasOwnProperty.call(resolver.overridesForSettings(), action) && (
+                      <button type="button" onClick={() => { setBinding(action, defaultKeybinds[action] ?? []); setKeybindMessage(`${actionLabel(action)} restored`) }} style={{ ...paletteButtonStyle, marginLeft: 4 }}>Reset</button>
+                    )}
+                  </>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {keybindMessage && <div role="status" style={{ marginTop: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}>{keybindMessage}</div>}
     </div>
   )
 }

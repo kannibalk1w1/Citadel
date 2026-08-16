@@ -12,6 +12,7 @@ type PanelState = {
   assetLibrary: boolean
   indexLedger: boolean
   archiveWorkbench: boolean
+  onboarding: boolean
 }
 
 export const themePresets = ['citadel', 'graphite', 'light'] as const
@@ -327,6 +328,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     assetLibrary: false,
     indexLedger: false,
     archiveWorkbench: false,
+    onboarding: false,
   },
   openPanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: true } })),
   closePanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: false } })),

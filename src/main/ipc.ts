@@ -69,6 +69,7 @@ function startClickThroughWatch(win: BrowserWindow): void {
 
 // Settings store (simple JSON file in userData)
 const settingsPath = join(app.getPath('userData'), 'settings.json')
+const keybindsPath = join(app.getPath('userData'), 'keybinds.json')
 const pdfCacheDir = (): string => join(app.getPath('userData'), 'pdf-cache')
 const previewCacheDir = (): string => join(app.getPath('userData'), 'preview-cache')
 // New previews are written to preview-cache; legacy pdf-cache is read and cleaned only.
@@ -462,6 +463,17 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('settings:setMany', async (_e, { values }: { values?: unknown } = {}) => {
     const settings = setManySettings(readSettings(), values)
     writeSettings(settings)
+    return { ok: true }
+  })
+
+  // ── keybinds ─────────────────────────────────────────────────────────────
+  // Kept separate from project files and general appearance settings so a
+  // person's shortcuts travel with their desktop, not with a board they open.
+  ipcMain.handle('keybinds:get', async () => ({ overrides: readSettingsFile(keybindsPath) }))
+
+  ipcMain.handle('keybinds:set', async (_e, { overrides }: { overrides?: unknown } = {}) => {
+    if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) return { ok: false }
+    writeSettingsFile(keybindsPath, overrides as Record<string, unknown>)
     return { ok: true }
   })
 
