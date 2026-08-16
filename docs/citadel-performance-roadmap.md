@@ -93,8 +93,14 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Validate critical interaction paths in the packaged desktop app: overlay opacity, immediate resize handles on imports, and code snippet copy/editing. This is the only item still gated on manual desktop QA.
-2. Keep Index marks capped and visibility-aware; consider saved trails only after multi-chamber archives are in real use.
+1. Keep Index marks capped and visibility-aware; consider saved trails only after multi-chamber archives are in real use.
+2. Add an interactive floating control surface for click-through mode. The panel itself must remain interactive while the rest of the window passes clicks through, and it must provide a clear exit from click-through.
+3. Add a keyboard-first command palette for actions, navigation, and common creation commands. It must use the existing ActionName/keybind system rather than a parallel command layer.
+4. Add a clean first-run onboarding flow that explains the board, importing, creating notes/code cards, search, and the window overlay controls. It must be skippable and never block opening an existing project.
+
+Deferred validation:
+
+- Manual packaged-desktop QA for overlay opacity, immediate resize handles on import, and code snippet copy/editing is intentionally deferred; it is not a release blocker.
 
 Closed in the clean-interface pass (2026-08-16):
 
