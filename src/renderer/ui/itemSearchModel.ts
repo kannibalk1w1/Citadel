@@ -1,4 +1,5 @@
 import type { CanvasBoard, CanvasItem, Connection } from '../../types'
+import { codeLanguageLabel, normalizeCodeLanguage } from '../canvas/items/codeSnippet'
 import { itemInscriptionRefs } from './inscriptionRefs'
 
 export type ChamberRef = {
@@ -30,7 +31,7 @@ export type ThreadSearchResult = {
 
 export type SearchResult = ItemSearchResult | ThreadSearchResult
 
-export type SearchResultGroupId = 'relics' | 'inscriptions' | 'sigils' | 'threads'
+export type SearchResultGroupId = 'relics' | 'inscriptions' | 'code' | 'sigils' | 'threads'
 
 export type SearchResultGroup = {
   id: SearchResultGroupId
@@ -94,6 +95,78 @@ function hasRelicSource(item: CanvasItem): boolean {
   return Boolean(item.src || item.meta?.srcA || item.meta?.srcB)
 }
 
+/**
+ * How much of a snippet the index will look at. A code card can hold a whole
+ * pasted file, and every keystroke rebuilds every result, so the haystack takes
+ * a bounded prefix rather than the entire body. A match past the cut is simply
+ * not found — the snippet is never truncated on the canvas or in the file.
+ */
+export const CODE_SEARCH_LIMITS = {
+  haystackChars: 20000,
+  excerptChars: 120,
+} as const
+
+export function isCodeItem(item: CanvasItem): boolean {
+  return item.type === 'code'
+}
+
+function codeText(item: CanvasItem): string {
+  return typeof item.meta?.code === 'string' ? item.meta.code : ''
+}
+
+function codeLanguage(item: CanvasItem): string {
+  return codeLanguageLabel(item.meta?.language)
+}
+
+function firstMeaningfulLine(code: string): string {
+  for (const line of code.split('\n')) {
+    const trimmed = line.trim()
+    if (trimmed) return trimmed
+  }
+  return ''
+}
+
+/** One line, collapsed and cut, so a result row can never become a code dump. */
+function codeExcerpt(line: string): string {
+  const clean = line.trim().replace(/\s+/g, ' ')
+  return clean.length > CODE_SEARCH_LIMITS.excerptChars
+    ? `${clean.slice(0, CODE_SEARCH_LIMITS.excerptChars - 1)}…`
+    : clean
+}
+
+/** The first line containing the query, so a hit explains why it matched. */
+function matchingCodeLine(code: string, text: string): string {
+  if (!text) return ''
+  const needle = text.toLowerCase()
+  for (const line of code.split('\n')) {
+    if (line.toLowerCase().includes(needle)) return line
+  }
+  return ''
+}
+
+function codeDetail(item: CanvasItem, matchedLine: string): string {
+  const code = codeText(item)
+  const lineCount = code ? code.split('\n').length : 0
+  const excerpt = codeExcerpt(matchedLine || firstMeaningfulLine(code))
+  return [
+    `Code · ${codeLanguage(item)}`,
+    lineCount ? `${lineCount} ${lineCount === 1 ? 'line' : 'lines'}` : 'empty',
+    item.tags.length ? `tags: ${formatSigils(item.tags)}` : '',
+    excerpt,
+  ].filter(Boolean).join('  |  ')
+}
+
+/**
+ * Re-renders a code result's context around the line the query actually hit.
+ * Applied after filtering, so `buildSearchResult` stays query-free for the
+ * callers that use it as a plain label/detail source (the Index ledger).
+ */
+function withCodeMatch(result: ItemSearchResult, text: string): ItemSearchResult {
+  if (!isCodeItem(result.item) || !text) return result
+  const matched = matchingCodeLine(codeText(result.item), text)
+  return matched ? { ...result, detail: codeDetail(result.item, matched) } : result
+}
+
 export function isItemSearchResult(result: SearchResult): result is ItemSearchResult {
   return result.kind === 'item'
 }
@@ -117,14 +190,40 @@ export function buildSearchResult(item: CanvasItem): ItemSearchResult {
   const hasText = hasInscription(item)
   const refs = itemInscriptionRefs(item)
 
+  const isCode = isCodeItem(item)
+  const codeBody = isCode ? codeText(item) : ''
+  const codeFirstLine = isCode ? codeExcerpt(firstMeaningfulLine(codeBody)) : ''
+
   const label =
     content ||
     (isComment ? 'Untitled comment' : '') ||
+    // An id in the interface is the thing the vocabulary work removed; a
+    // snippet names itself by its first line, or by its language when blank.
+    (isCode ? codeFirstLine || `${codeLanguage(item)} snippet` : '') ||
     srcName ||
     srcAName ||
     srcBName ||
     swatches ||
     `${item.type} ${item.id.slice(0, 6)}`
+
+  if (isCode) {
+    return {
+      id: item.id,
+      kind: 'item',
+      item,
+      label,
+      detail: codeDetail(item, ''),
+      haystack: [
+        'code snippet',
+        normalizeCodeLanguage(item.meta?.language),
+        codeLanguage(item),
+        item.tags.join(' '),
+        formatSigils(item.tags),
+        item.tags.length ? 'tag tags sigil sigils' : '',
+        codeBody.slice(0, CODE_SEARCH_LIMITS.haystackChars),
+      ].join(' ').toLowerCase(),
+    }
+  }
 
   const detailParts = [
     isComment ? 'note: comment' : hasSource ? `item: ${item.type}` : hasText ? `note: ${item.type}` : `item: ${item.type}`,
@@ -291,13 +390,18 @@ function getAllIndexResults(items: CanvasItem[], connections: Connection[], limi
 export function getSearchResults(items: CanvasItem[], query: string, limit = 30): ItemSearchResult[] {
   const parsed = parseSearchQuery(query)
   if (!hasSearchTerms(parsed)) return []
-  return items.map(buildSearchResult).filter((result) => matchesItemSearchQuery(result, parsed)).slice(0, limit)
+  return items.map(buildSearchResult)
+    .filter((result) => matchesItemSearchQuery(result, parsed))
+    .map((result) => withCodeMatch(result, parsed.text))
+    .slice(0, limit)
 }
 
 export function getIndexResults(items: CanvasItem[], connections: Connection[], query: string, limit = 30): SearchResult[] {
   const parsed = parseSearchQuery(query)
   if (!hasSearchTerms(parsed)) return []
-  const itemResults = items.map(buildSearchResult).filter((result) => matchesItemSearchQuery(result, parsed))
+  const itemResults = items.map(buildSearchResult)
+    .filter((result) => matchesItemSearchQuery(result, parsed))
+    .map((result) => withCodeMatch(result, parsed.text))
   const itemMap = new Map(items.map((item) => [item.id, item]))
   const threadResults = connections
     .map((thread) => buildThreadSearchResult(thread, itemMap))
@@ -358,6 +462,11 @@ export function groupSearchResults(results: SearchResult[]): SearchResultGroup[]
       results: results.filter((result) => isItemSearchResult(result) && hasInscription(result.item)),
     },
     {
+      id: 'code',
+      title: 'Code',
+      results: results.filter((result) => isItemSearchResult(result) && isCodeItem(result.item)),
+    },
+    {
       id: 'sigils',
       title: 'Tags',
       results: results.filter((result) => isItemSearchResult(result) && result.item.tags.length > 0),
@@ -399,5 +508,6 @@ export function resultBadgeLabel(result: SearchResult): string {
   if (isThreadSearchResult(result)) return result.thread.meaning ? result.thread.meaning : 'connection'
   if (isCommentItem(result.item)) return 'comment'
   if (result.item.tags.length > 0) return result.item.tags.length === 1 ? '1 tag' : `${result.item.tags.length} tags`
+  if (isCodeItem(result.item)) return normalizeCodeLanguage(result.item.meta?.language)
   return result.item.type
 }

@@ -4,6 +4,28 @@ export const CODE_LANGUAGES = [
 
 export type CodeLanguage = typeof CODE_LANGUAGES[number]
 
+/**
+ * How each language is written for a person. `titleCase` would give
+ * "Typescript" and "Json"; these are the names the languages actually use, and
+ * the picker and the Index both read them from here so they cannot disagree.
+ */
+export const CODE_LANGUAGE_LABELS: Record<CodeLanguage, string> = {
+  plaintext: 'Plain text',
+  typescript: 'TypeScript',
+  javascript: 'JavaScript',
+  python: 'Python',
+  json: 'JSON',
+  html: 'HTML',
+  css: 'CSS',
+  bash: 'Bash',
+  sql: 'SQL',
+  yaml: 'YAML',
+}
+
+export function codeLanguageLabel(value: unknown): string {
+  return CODE_LANGUAGE_LABELS[normalizeCodeLanguage(value)]
+}
+
 export function normalizeCodeLanguage(value: unknown): CodeLanguage {
   return typeof value === 'string' && (CODE_LANGUAGES as readonly string[]).includes(value)
     ? value as CodeLanguage

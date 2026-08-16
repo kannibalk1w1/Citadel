@@ -97,7 +97,7 @@ describe('itemSearchModel', () => {
 
     const groups = groupSearchResults(results)
 
-    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils', 'threads'])
+    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'code', 'sigils', 'threads'])
     expect(groups.find((group) => group.id === 'relics')?.results.map((result) => result.id)).toEqual(['image-1'])
     expect(groups.find((group) => group.id === 'inscriptions')?.results.map((result) => result.id)).toEqual(['note-1'])
     expect(groups.find((group) => group.id === 'sigils')?.results.map((result) => result.id)).toEqual(['image-1'])
@@ -114,7 +114,7 @@ describe('itemSearchModel', () => {
     expect(results.map((result) => result.id)).toContain('thread-1')
     expect(results.find((result) => result.id === 'thread-1')?.detail).toContain('Connection')
     expect(results.find((result) => result.id === 'thread-1')?.detail).toContain('label: source memory')
-    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'sigils', 'threads'])
+    expect(groups.map((group) => group.id)).toEqual(['relics', 'inscriptions', 'code', 'sigils', 'threads'])
     expect(groups.find((group) => group.id === 'threads')?.results.map((result) => result.id)).toEqual(['thread-1'])
   })
 
