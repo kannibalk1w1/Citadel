@@ -37,7 +37,7 @@ export type CanvasColorName =
   | 'codeComment'
   | 'codeAlert'
 
-const VARIABLES: Record<CanvasColorName, string> = {
+export const CANVAS_COLOR_VARIABLES: Record<CanvasColorName, string> = {
   accent: '--accent',
   accentSoft: '--accent-soft',
   accentDanger: '--accent-danger',
@@ -65,14 +65,17 @@ const VARIABLES: Record<CanvasColorName, string> = {
 
 // Used before styles resolve, and in tests without a document. These match
 // dark.css so a missed refresh degrades to the shipped theme rather than black.
-const FALLBACKS: Record<CanvasColorName, string> = {
-  accent: '#c8a96e',
-  accentSoft: 'rgba(200, 169, 110, 0.16)',
-  accentDanger: '#8b2020',
+// canvasColors.test.ts parses dark.css and holds them to that, because they had
+// already drifted once: the palette moved to a blue accent and this list kept
+// handing out the old gold.
+export const FALLBACKS: Record<CanvasColorName, string> = {
+  accent: '#73a8db',
+  accentSoft: 'rgba(115, 168, 219, 0.16)',
+  accentDanger: '#d36472',
   textPrimary: '#e8ddd0',
   textSecondary: '#b9ad9f',
   textMuted: '#81766a',
-  textAccent: '#d2b47c',
+  textAccent: '#9fc3e6',
   bgCanvas: '#0f0d0b',
   bgPanel: '#1d1813',
   bgSunken: '#0a0907',
@@ -95,14 +98,14 @@ const FALLBACKS: Record<CanvasColorName, string> = {
 // is an invalid assignment, so the context keeps whatever font it last had.
 export type CanvasFontName = 'body' | 'mono' | 'display'
 
-const FONT_VARIABLES: Record<CanvasFontName, string> = {
+export const CANVAS_FONT_VARIABLES: Record<CanvasFontName, string> = {
   body: '--font-body',
   mono: '--font-mono',
   display: '--font-display',
 }
 
 // Matching dark.css, where the type faces are declared for every theme.
-const FONT_FALLBACKS: Record<CanvasFontName, string> = {
+export const FONT_FALLBACKS: Record<CanvasFontName, string> = {
   body: "'Inter', 'DM Sans', sans-serif",
   mono: "'JetBrains Mono', monospace",
   display: "'Inter', 'DM Sans', sans-serif",
@@ -141,15 +144,15 @@ export function refreshCanvasColors(root: HTMLElement | null = typeof document =
 
   const computed = getComputedStyle(root)
   const next = {} as Record<CanvasColorName, string>
-  for (const name of Object.keys(VARIABLES) as CanvasColorName[]) {
-    const value = computed.getPropertyValue(VARIABLES[name]).trim()
+  for (const name of Object.keys(CANVAS_COLOR_VARIABLES) as CanvasColorName[]) {
+    const value = computed.getPropertyValue(CANVAS_COLOR_VARIABLES[name]).trim()
     next[name] = value || FALLBACKS[name]
   }
   resolved = next
 
   const nextFonts = {} as Record<CanvasFontName, string>
-  for (const name of Object.keys(FONT_VARIABLES) as CanvasFontName[]) {
-    const value = computed.getPropertyValue(FONT_VARIABLES[name]).trim()
+  for (const name of Object.keys(CANVAS_FONT_VARIABLES) as CanvasFontName[]) {
+    const value = computed.getPropertyValue(CANVAS_FONT_VARIABLES[name]).trim()
     nextFonts[name] = value || FONT_FALLBACKS[name]
   }
   resolvedFonts = nextFonts

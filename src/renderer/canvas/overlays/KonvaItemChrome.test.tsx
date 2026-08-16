@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { canvasColor } from '../../theme/canvasColors'
 import { KonvaItemChrome } from './KonvaItemChrome'
 
 vi.mock('react-konva', () => ({
@@ -69,10 +70,11 @@ describe('KonvaItemChrome', () => {
 
     render(<KonvaItemChrome />)
 
-    // The theme's accent. This used to read '#bd9652' — a fallback hardcoded in
-    // a local copy of the token resolver, which differed from --accent and so
-    // painted the chrome a slightly different gold whenever it was reached.
-    expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-stroke')).toBe('#c8a96e')
+    // The theme's accent, read from the palette rather than written out here.
+    // This used to assert '#bd9652', a fallback hardcoded in a local copy of the
+    // token resolver that differed from --accent, so the chrome painted a
+    // colour the rest of the canvas never used.
+    expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-stroke')).toBe(canvasColor('accent'))
     expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-opacity')).toBe('0.32')
   })
 })

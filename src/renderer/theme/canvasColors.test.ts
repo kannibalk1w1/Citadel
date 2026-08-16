@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  CANVAS_COLOR_VARIABLES,
+  CANVAS_FONT_VARIABLES,
+  FALLBACKS,
+  FONT_FALLBACKS,
   canvasColor,
   canvasColors,
   canvasFont,
@@ -51,7 +57,52 @@ describe('canvasColors', () => {
 
   it('survives being called without a document', () => {
     expect(() => refreshCanvasColors(null)).not.toThrow()
-    expect(canvasColor('accent')).toBe('#c8a96e')
+    // The shipped accent, not a literal that can drift away from the palette.
+    expect(canvasColor('accent')).toBe(FALLBACKS.accent)
+  })
+})
+
+/**
+ * The fallbacks are what the canvas paints before styles resolve and in any
+ * test without a document, and the module promises they match dark.css. They
+ * had already drifted: the palette moved to a blue accent while this list kept
+ * handing out the old gold, so chrome could paint a colour the app no longer
+ * uses. Parsing the stylesheet is the only way that promise stays true.
+ */
+describe('fallbacks match the shipped stylesheet', () => {
+  const css = readFileSync(join(__dirname, 'dark.css'), 'utf-8')
+
+  function declaredValue(token: string): string | null {
+    const match = new RegExp(`${token}\\s*:\\s*([^;]+);`).exec(css)
+    return match ? match[1].trim() : null
+  }
+
+  it('declares every canvas colour in dark.css, with the same value', () => {
+    const mismatched: string[] = []
+    for (const [name, token] of Object.entries(CANVAS_COLOR_VARIABLES)) {
+      const declared = declaredValue(token)
+      if (declared === null) {
+        mismatched.push(`${token} is not declared in dark.css`)
+        continue
+      }
+      const fallback = FALLBACKS[name as keyof typeof FALLBACKS]
+      if (declared !== fallback) mismatched.push(`${token}: dark.css has ${declared}, fallback has ${fallback}`)
+    }
+    expect(mismatched).toEqual([])
+  })
+
+  it('declares every canvas type face in dark.css, with the same value', () => {
+    const mismatched: string[] = []
+    for (const [name, token] of Object.entries(CANVAS_FONT_VARIABLES)) {
+      const declared = declaredValue(token)
+      if (declared === null) {
+        mismatched.push(`${token} is not declared in dark.css`)
+        continue
+      }
+      const fallback = FONT_FALLBACKS[name as keyof typeof FONT_FALLBACKS]
+      if (declared !== fallback) mismatched.push(`${token}: dark.css has ${declared}, fallback has ${fallback}`)
+    }
+    expect(mismatched).toEqual([])
   })
 })
 
