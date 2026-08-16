@@ -14,6 +14,7 @@ import {
   threadFocusPoint,
   type SearchResult,
 } from './itemSearchModel'
+import { ToolIcon } from './icons/ToolIcon'
 
 const SEARCH_CHIPS = [
   { label: 'Images', token: 'type:image' },
@@ -250,7 +251,8 @@ export function TagSearch(): React.ReactElement | null {
       )}
 
       {query && results.length === 0 && (
-        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', padding: '4px 2px' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', padding: '4px 2px', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <ToolIcon name="search" size={14} />
           No items found
         </div>
       )}

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import { activeArchiveRailWidth } from './shell/shellModel'
+import { ToolIcon } from './icons/ToolIcon'
 import {
   buildLedgerRows,
   filterLedgerRows,
@@ -125,8 +126,14 @@ export function IndexLedger(): React.ReactElement | null {
             key={column.key}
             type="button"
             onClick={() => headerClick(column.key)}
+            title={`Sort by ${column.title.toLowerCase()}`}
+            aria-label={`Sort by ${column.title.toLowerCase()}`}
+            aria-sort={sortKey === column.key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
             style={{
               width: column.width,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-1)',
               background: 'none',
               border: 'none',
               color: sortKey === column.key ? 'var(--text-accent)' : 'var(--text-muted)',
@@ -139,7 +146,8 @@ export function IndexLedger(): React.ReactElement | null {
               padding: 0,
             }}
           >
-            {column.title}{sortKey === column.key ? (direction === 'asc' ? ' ↑' : ' ↓') : ''}
+            {column.title}
+            {sortKey === column.key && <ToolIcon name={direction === 'asc' ? 'sortAsc' : 'sortDesc'} size={11} />}
           </button>
         ))}
       </div>
@@ -162,8 +170,9 @@ export function IndexLedger(): React.ReactElement | null {
               textAlign: 'left',
             }}
           >
-            <span style={{ width: COLUMNS[0].width, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6 }}>
-              {row.kind === 'thread' ? '⌁ ' : ''}{row.label}
+            <span style={{ width: COLUMNS[0].width, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 6, display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+              {row.kind === 'thread' && <ToolIcon name="connect" size={12} />}
+              {row.label}
             </span>
             <span style={{ width: COLUMNS[1].width, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}>
               {row.type}
@@ -177,8 +186,9 @@ export function IndexLedger(): React.ReactElement | null {
           </button>
         ))}
         {rows.length === 0 && (
-          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', padding: '8px 0' }}>
-            Nothing in the ledger matches.
+          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-md)', padding: '8px 0', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <ToolIcon name="search" size={14} />
+            Nothing in the index matches.
           </span>
         )}
       </div>

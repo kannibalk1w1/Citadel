@@ -27,6 +27,24 @@ export type ToolIconName =
   | 'duplicate'
   | 'bookmark'
   | 'trash'
+  | 'check'
+  | 'play'
+  | 'stop'
+  | 'chevronDown'
+  | 'sortAsc'
+  | 'sortDesc'
+  | 'warning'
+  | 'lock'
+  | 'search'
+  | 'arrowHead'
+  | 'diamondHead'
+  | 'dashed'
+  | 'alignLeft'
+  | 'alignCenterH'
+  | 'alignRight'
+  | 'alignTop'
+  | 'alignCenterV'
+  | 'alignBottom'
 
 export const TOOL_ICON_NAMES: ToolIconName[] = [
   'select',
@@ -55,7 +73,32 @@ export const TOOL_ICON_NAMES: ToolIconName[] = [
   'duplicate',
   'bookmark',
   'trash',
+  'check',
+  'play',
+  'stop',
+  'chevronDown',
+  'sortAsc',
+  'sortDesc',
+  'warning',
+  'lock',
+  'search',
+  'arrowHead',
+  'diamondHead',
+  'dashed',
+  'alignLeft',
+  'alignCenterH',
+  'alignRight',
+  'alignTop',
+  'alignCenterV',
+  'alignBottom',
 ]
+
+/**
+ * The lock badge is drawn on both layers: as an icon in the DOM overlay and as
+ * a Konva <Path> over canvas items. Sharing the geometry keeps one lock shape
+ * on screen instead of two that drifted apart.
+ */
+export const LOCK_PATH_D = 'M9 10.5 V8 A3 3 0 0 1 15 8 V10.5 M6.5 10.5 H17.5 V19 H6.5 Z M12 13.5 V16'
 
 type ToolIconProps = {
   name: ToolIconName
@@ -231,6 +274,42 @@ function iconPaths(name: ToolIconName): React.ReactNode {
       return <path d="M7 4.5 H17 V20 L12 16.5 L7 20 Z" />
     case 'trash':
       return <><path d="M5 7 H19" /><path d="M9 7 V5 H15 V7" /><path d="M7 7 L8 19 H16 L17 7" /><path d="M10.5 10 V16 M13.5 10 V16" /></>
+    case 'check':
+      return <path d="M5 12.5 L10 17.5 L19 7" />
+    case 'play':
+      return <path d="M8 5.5 L18.5 12 L8 18.5 Z" />
+    case 'stop':
+      return <rect x="7" y="7" width="10" height="10" rx="1.5" />
+    case 'chevronDown':
+      return <path d="M6 9.5 L12 15.5 L18 9.5" />
+    case 'sortAsc':
+      return <><path d="M12 19 V6" /><path d="M7 11 L12 6 L17 11" /></>
+    case 'sortDesc':
+      return <><path d="M12 5 V18" /><path d="M7 13 L12 18 L17 13" /></>
+    case 'warning':
+      return <><path d="M12 4.5 L21 19.5 H3 Z" /><path d="M12 10 V14" /><path d="M12 16.6 V16.7" /></>
+    case 'lock':
+      return <path d={LOCK_PATH_D} />
+    case 'search':
+      return <><circle cx="11" cy="11" r="6" /><path d="M15.4 15.4 L20 20" /></>
+    case 'arrowHead':
+      return <><path d="M4 12 H18" /><path d="M13.5 7.5 L18.5 12 L13.5 16.5" /></>
+    case 'diamondHead':
+      return <><path d="M4 12 H12" /><path d="M16 8 L20 12 L16 16 L12 12 Z" /></>
+    case 'dashed':
+      return <path d="M4 12 H8 M10.5 12 H13.5 M16 12 H20" />
+    case 'alignLeft':
+      return <><path d="M4 4 V20" /><rect x="7" y="6" width="12" height="4.5" rx="1" /><rect x="7" y="13.5" width="7" height="4.5" rx="1" /></>
+    case 'alignCenterH':
+      return <><path d="M12 3 V21" /><rect x="4" y="6" width="16" height="4.5" rx="1" /><rect x="7.5" y="13.5" width="9" height="4.5" rx="1" /></>
+    case 'alignRight':
+      return <><path d="M20 4 V20" /><rect x="5" y="6" width="12" height="4.5" rx="1" /><rect x="10" y="13.5" width="7" height="4.5" rx="1" /></>
+    case 'alignTop':
+      return <><path d="M4 4 H20" /><rect x="6" y="7" width="4.5" height="12" rx="1" /><rect x="13.5" y="7" width="4.5" height="7" rx="1" /></>
+    case 'alignCenterV':
+      return <><path d="M3 12 H21" /><rect x="6" y="4" width="4.5" height="16" rx="1" /><rect x="13.5" y="7.5" width="4.5" height="9" rx="1" /></>
+    case 'alignBottom':
+      return <><path d="M4 20 H20" /><rect x="6" y="5" width="4.5" height="12" rx="1" /><rect x="13.5" y="10" width="4.5" height="7" rx="1" /></>
   }
 }
 

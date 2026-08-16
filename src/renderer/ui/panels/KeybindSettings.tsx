@@ -487,8 +487,8 @@ export function KeybindSettings(): React.ReactElement | null {
             onClick={() => setUiScale(uiScale - 0.25)}
             disabled={uiScale <= 0.75}
             aria-label="Decrease UI scale"
-            style={{ ...btnStyle, opacity: uiScale <= 0.75 ? 0.35 : 1, cursor: uiScale <= 0.75 ? 'not-allowed' : 'pointer' }}
-          >−</button>
+            style={{ ...btnStyle, opacity: uiScale <= 0.75 ? 0.35 : 1, cursor: uiScale <= 0.75 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          ><ToolIcon name="minus" size={14} /></button>
           <span style={{ width: 36, textAlign: 'center', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
             {Math.round(uiScale * 100)}%
           </span>
@@ -497,8 +497,8 @@ export function KeybindSettings(): React.ReactElement | null {
             onClick={() => setUiScale(uiScale + 0.25)}
             disabled={uiScale >= 1.5}
             aria-label="Increase UI scale"
-            style={{ ...btnStyle, opacity: uiScale >= 1.5 ? 0.35 : 1, cursor: uiScale >= 1.5 ? 'not-allowed' : 'pointer' }}
-          >+</button>
+            style={{ ...btnStyle, opacity: uiScale >= 1.5 ? 0.35 : 1, cursor: uiScale >= 1.5 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          ><ToolIcon name="plus" size={14} /></button>
         </div>
       </div>
       <div style={{

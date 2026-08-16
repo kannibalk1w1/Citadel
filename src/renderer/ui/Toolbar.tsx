@@ -246,7 +246,10 @@ export function Toolbar(): React.ReactElement {
         return (
         <button
           key={mode}
+          type="button"
           title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+          aria-label={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+          aria-pressed={toolMode === mode}
           onClick={() => {
             if (isMergeMode) mergeSelectedToCompare()
             else setToolMode(mode)
@@ -305,6 +308,8 @@ export function Toolbar(): React.ReactElement {
                 <button
                   key={mode}
                   title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+                  aria-label={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+                  aria-pressed={toolMode === mode}
                   onClick={() => {
                     if (isMergeMode) mergeSelectedToCompare()
                     else setToolMode(mode)
@@ -332,6 +337,8 @@ export function Toolbar(): React.ReactElement {
       {/* ── YouTube ── */}
       <button
         title="YouTube Embed (paste URL)"
+        aria-label="YouTube Embed (paste URL)"
+        aria-expanded={youtubeOpen}
         onClick={() => youtubeOpen ? closeYouTube() : setYoutubeOpen(true)}
         style={{
           width: 36,
@@ -382,6 +389,8 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title={`Snap to Grid (Ctrl+Shift+G) — ${snapToGrid ? 'On' : 'Off'}`}
+        aria-label={`Snap to Grid (Ctrl+Shift+G) — ${snapToGrid ? 'On' : 'Off'}`}
+        aria-pressed={snapToGrid}
         onClick={toggleSnapToGrid}
         style={{
           width: 36,
@@ -402,6 +411,7 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title="Auto-arrange selection (Ctrl+Shift+A)"
+        aria-label="Auto-arrange selection (Ctrl+Shift+A)"
         onClick={() => resolver.dispatch(Actions.AUTO_ARRANGE)}
         disabled={!canAutoArrange}
         style={{
@@ -426,6 +436,8 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title={isRecording ? 'Stop Recording' : 'Start Recording (R)'}
+        aria-label={isRecording ? 'Stop Recording' : 'Start Recording (R)'}
+        aria-pressed={isRecording}
         onClick={handleRecord}
         style={{
           width: 36,
@@ -450,6 +462,8 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title={voiceRecording ? 'Stop voice memo' : 'Record voice memo'}
+        aria-label={voiceRecording ? 'Stop voice memo' : 'Record voice memo'}
+        aria-pressed={voiceRecording}
         onClick={() => {
           if (voiceRecording) stopVoiceMemo()
           else startVoiceMemo().catch(console.error)
@@ -475,6 +489,7 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title="Presentation Mode (F5)"
+        aria-label="Presentation Mode (F5)"
         onClick={() => resolver.dispatch(Actions.PRESENTATION_TOGGLE)}
         style={{
           width: 36,
@@ -497,6 +512,7 @@ export function Toolbar(): React.ReactElement {
 
       <button
         title="Appearance settings"
+        aria-label="Appearance settings"
         onClick={() => useUIStore.getState().openPanel('keybindSettings')}
         style={{
           width: 36,

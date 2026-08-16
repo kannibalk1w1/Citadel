@@ -93,6 +93,7 @@ function IconButton({
     <button
       type="button"
       title={title}
+      aria-label={title}
       disabled={disabled}
       onClick={(event) => {
         event.stopPropagation()

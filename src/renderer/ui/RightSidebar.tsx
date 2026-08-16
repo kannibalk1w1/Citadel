@@ -5,6 +5,7 @@ import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 import { getCurrentFilePath, getRecentProjects, getSaveActivity, openRecentProject, type RecentProject, type SaveActivity } from '../utils/projectFile'
 import { inscribe } from './toasts/inscriptionToastStore'
+import { ToolIcon } from './icons/ToolIcon'
 
 // ── App badge ─────────────────────────────────────────────────────────────────
 function AppBadge(): React.ReactElement {
@@ -286,7 +287,8 @@ export function RightSidebar(): React.ReactElement {
             aria-expanded={archiveToolsOpen}
             onClick={() => setArchiveToolsOpen((open) => !open)}
           >
-            Project tools <span aria-hidden="true">{archiveToolsOpen ? '−' : '+'}</span>
+            Project tools
+            <ToolIcon name="chevronDown" size={12} className={archiveToolsOpen ? undefined : 'citadel-disclosure-collapsed'} />
           </button>
           {archiveToolsOpen && (
             <div className="citadel-sidebar-disclosure-content">

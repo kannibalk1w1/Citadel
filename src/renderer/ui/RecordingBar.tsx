@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useHistoryStore } from '../store/historyStore'
 import { useCanvasStore } from '../store/canvasStore'
 import type { RecordingSession, CanvasItem } from '../../types'
+import { ToolIcon } from './icons/ToolIcon'
 
 type MovePatch = { id: string; x: number; y: number }
 
@@ -120,8 +121,10 @@ export function RecordingBar(): React.ReactElement | null {
           {recordings.map((r) => (
             <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '3px 4px', borderRadius: 'var(--radius-sm)' }}>
               <button
+                type="button"
                 onClick={() => playRecording(r)}
-                title={playingId === r.id ? 'Stop' : 'Play'}
+                title={playingId === r.id ? 'Stop playback' : 'Play recording'}
+                aria-label={playingId === r.id ? 'Stop playback' : 'Play recording'}
                 style={{
                   background: playingId === r.id ? 'rgba(139,32,32,0.2)' : 'transparent',
                   border: '1px solid var(--border)',
@@ -134,7 +137,7 @@ export function RecordingBar(): React.ReactElement | null {
                   flexShrink: 0,
                 }}
               >
-                {playingId === r.id ? '■' : '▶'}
+                <ToolIcon name={playingId === r.id ? 'stop' : 'play'} size={12} />
               </button>
               <span style={{ flex: 1, fontSize: 'var(--text-md)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.name}

@@ -50,6 +50,7 @@ import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
 import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
+import { ToolIcon } from './ui/icons/ToolIcon'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
@@ -901,7 +902,7 @@ export default function App(): React.ReactElement {
           boxShadow: 'var(--shadow-lg)',
           fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', color: 'var(--text-primary)',
         }}>
-          <span style={{ color: 'var(--accent)' }}>⚠</span>
+          <span style={{ color: 'var(--accent)', display: 'flex' }}><ToolIcon name="warning" size={20} /></span>
           <span>
             Unsaved session detected
             <span style={{ display: 'block', fontSize: 'var(--text-md)', color: 'var(--text-secondary)', marginTop: 2 }}>

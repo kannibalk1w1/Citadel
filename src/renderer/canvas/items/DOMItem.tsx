@@ -10,6 +10,7 @@ import { canvasToScreen } from '../../../types'
 import { chromeFrameStyle, connectedItemIds, frameVariant, frameVariantStyle, itemTypeBadge } from '../overlays/boardChromeViewModel'
 import { filenameInscription } from '../../assets/filenameLabel'
 import { snapItem } from '../snapping/snapEngine'
+import { ToolIcon } from '../../ui/icons/ToolIcon'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor } from '../../theme/canvasColors'
@@ -317,18 +318,18 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       )}
       {item.locked && (
         <div
+          title="Locked"
           style={{
             position: 'absolute',
             top: 4,
             right: 4,
             color: canvasColor("accent"),
-            fontSize: 'var(--text-lg)',
-            lineHeight: 1,
-            textShadow: '0 1px 4px rgba(0,0,0,0.85)',
+            lineHeight: 0,
+            filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.85))',
             pointerEvents: 'none',
           }}
         >
-          🔒
+          <ToolIcon name="lock" size={14} />
         </div>
       )}
     </div>,

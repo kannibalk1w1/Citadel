@@ -1,5 +1,5 @@
 import React from 'react'
-import { Group, Rect, Text } from 'react-konva'
+import { Group, Path, Rect } from 'react-konva'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { ItemErrorBoundary } from './ItemErrorBoundary'
@@ -15,6 +15,7 @@ import { SwatchItem } from './items/SwatchItem'
 import { ComparisonItem } from './items/ComparisonItem'
 import { CodeItem } from './items/CodeItem'
 import { canvasColor } from '../theme/canvasColors'
+import { LOCK_PATH_D } from '../ui/icons/ToolIcon'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d', 'code'])
 
@@ -59,13 +60,23 @@ export const ItemRenderer = React.memo(function ItemRenderer({ item }: Props): R
       listening={false}
     />
   ) : null
+  // Drawn from the shared ToolIcon outline so the canvas badge and the DOM
+  // overlay badge are the same mark. The outline lives in a 24-unit box and the
+  // badge should hold 14 screen px at any zoom, so the node scale cancels the
+  // stage scale the way the old fontSize={14 / scale} did. strokeWidth stays in
+  // those same 24-unit coordinates, which is why it matches the SVG's 1.8.
+  const lockScale = 14 / 24 / scale
   const lockMarker = item.locked ? (
-    <Text
+    <Path
       x={item.x + item.width - 18 / scale}
       y={item.y + 4 / scale}
-      text="🔒"
-      fontSize={14 / scale}
-      fill={canvasColor("accent")}
+      data={LOCK_PATH_D}
+      scaleX={lockScale}
+      scaleY={lockScale}
+      stroke={canvasColor("accent")}
+      strokeWidth={1.8}
+      lineCap="round"
+      lineJoin="round"
       shadowEnabled
       shadowColor="rgba(0,0,0,0.85)"
       shadowBlur={4 / scale}

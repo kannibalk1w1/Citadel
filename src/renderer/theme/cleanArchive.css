@@ -73,14 +73,22 @@
 }
 
 .citadel-project-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   height: 28px;
   padding: 0 9px;
   font-size: 11px;
 }
 
-.citadel-project-menu-trigger span {
-  margin-left: 4px;
+.citadel-project-menu-trigger svg {
   color: var(--text-muted);
+}
+
+/* Static flip, no transition: the disclosure marker points at its own state
+   rather than animating between them. */
+.citadel-disclosure-collapsed {
+  transform: rotate(-90deg);
 }
 
 .citadel-project-menu-trigger:hover,

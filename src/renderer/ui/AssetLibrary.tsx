@@ -7,6 +7,7 @@ import { useUIStore } from '../store/uiStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { buildAssetLibrary, type AssetLibraryEntry } from './assetLibraryModel'
 import { activeArchiveRailWidth } from './shell/shellModel'
+import { ToolIcon } from './icons/ToolIcon'
 
 const previewTypes = new Set(['image', 'gif'])
 
@@ -96,20 +97,23 @@ export function AssetLibrary(): React.ReactElement | null {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Relics
+          Items
         </h3>
         <button
+          type="button"
           onClick={() => closePanel('assetLibrary')}
           title="Close"
-          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1 }}
+          aria-label="Close"
+          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
         >
-          x
+          <ToolIcon name="close" size={16} />
         </button>
       </div>
 
       {assets.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)' }}>
-          No imported relics yet
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--text-md)', fontFamily: 'var(--font-body)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <ToolIcon name="plus" size={14} />
+          No imported files yet
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', overflowY: 'auto', paddingRight: 2 }}>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
 import { useUIStore } from '../store/uiStore'
+import { ToolIcon } from './icons/ToolIcon'
 
 type ProjectDestination = 'boardNavigator' | 'assetLibrary'
 
@@ -40,19 +41,20 @@ export function ProjectMenu(): React.ReactElement {
         aria-haspopup="menu"
         onClick={() => setIsOpen((open) => !open)}
       >
-        Project <span aria-hidden="true">⌄</span>
+        Project
+        <ToolIcon name="chevronDown" size={12} />
       </button>
 
       {isOpen && (
         <div className="citadel-project-menu-popover" role="menu" aria-label="Project">
           <button type="button" role="menuitem" onClick={() => { resolver.dispatch(Actions.BOARD_NEW); setIsOpen(false) }}>
-            New chamber
+            New board
           </button>
           <button type="button" role="menuitem" onClick={() => openPanel('boardNavigator')}>
-            Chambers
+            Boards
           </button>
           <button type="button" role="menuitem" onClick={() => openPanel('assetLibrary')}>
-            Relics
+            Items
           </button>
           <div className="citadel-project-menu-divider" role="separator" />
           <button type="button" role="menuitem" onClick={() => { resolver.dispatch(Actions.OPEN); setIsOpen(false) }}>

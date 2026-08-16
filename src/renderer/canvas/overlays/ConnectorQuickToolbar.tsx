@@ -5,6 +5,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { useUIStore } from '../../store/uiStore'
 import { connectionQuickToolbarPosition } from './boardChromeViewModel'
+import { ToolIcon, type ToolIconName } from '../../ui/icons/ToolIcon'
 
 function itemCenter(item: { x: number; y: number; width: number; height: number }, viewport: { x: number; y: number; scale: number }) {
   return {
@@ -13,16 +14,21 @@ function itemCenter(item: { x: number; y: number; width: number; height: number 
   }
 }
 
-function Button({ title, children, onClick, active = false, danger = false }: {
+// `active` marks a style the connection currently carries, so it maps to
+// aria-pressed rather than to colour alone.
+function Button({ title, icon, onClick, active, danger = false }: {
   title: string
-  children: React.ReactNode
+  icon: ToolIconName
   active?: boolean
   danger?: boolean
   onClick: () => void
 }): React.ReactElement {
   return (
     <button
+      type="button"
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       onClick={(event) => { event.stopPropagation(); onClick() }}
       style={{
         width: 28,
@@ -32,11 +38,12 @@ function Button({ title, children, onClick, active = false, danger = false }: {
         background: active ? 'var(--accent)' : 'var(--bg-ui)',
         color: active ? 'var(--bg-ui)' : danger ? 'var(--accent-danger)' : 'var(--text-secondary)',
         cursor: 'pointer',
-        fontSize: 'var(--text-sm)',
-        fontFamily: 'var(--font-mono)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
-      {children}
+      <ToolIcon name={icon} size={14} />
     </button>
   )
 }
@@ -95,11 +102,11 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <Button title="Edit label" onClick={editLabel}>LBL</Button>
-      <Button title="Arrow head" active={conn.arrowHead === 'arrow'} onClick={() => update({ arrowHead: conn.arrowHead === 'arrow' ? 'none' : 'arrow' })}>→</Button>
-      <Button title="Diamond head" active={conn.arrowHead === 'diamond'} onClick={() => update({ arrowHead: conn.arrowHead === 'diamond' ? 'none' : 'diamond' })}>◇</Button>
-      <Button title="Dashed branch" active={conn.dashed} onClick={() => update({ dashed: !conn.dashed })}>---</Button>
-      <Button title="Delete connector" danger onClick={remove}>X</Button>
+      <Button title="Edit label" icon="edit" onClick={editLabel} />
+      <Button title="Arrow head" icon="arrowHead" active={conn.arrowHead === 'arrow'} onClick={() => update({ arrowHead: conn.arrowHead === 'arrow' ? 'none' : 'arrow' })} />
+      <Button title="Diamond head" icon="diamondHead" active={conn.arrowHead === 'diamond'} onClick={() => update({ arrowHead: conn.arrowHead === 'diamond' ? 'none' : 'diamond' })} />
+      <Button title="Dashed line" icon="dashed" active={conn.dashed} onClick={() => update({ dashed: !conn.dashed })} />
+      <Button title="Delete connection" icon="trash" danger onClick={remove} />
     </div>
   )
 }

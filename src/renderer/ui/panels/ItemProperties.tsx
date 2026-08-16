@@ -9,6 +9,7 @@ import type { CanvasItem } from '../../../types'
 import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
+import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -36,17 +37,17 @@ const STICKY_COLORS_DISPLAY: Record<string, string> = {
   '#172220': '#4f8276', '#202216': '#7b8745',
 }
 
-type AlignAction = { label: string; action: string; title: string }
+type AlignAction = { icon: ToolIconName; action: string; title: string }
 const ALIGN_ROWS: AlignAction[][] = [
   [
-    { label: '←', title: 'Align Left',           action: Actions.ALIGN_LEFT },
-    { label: '⇔', title: 'Center Horizontal',    action: Actions.ALIGN_CENTER_H },
-    { label: '→', title: 'Align Right',          action: Actions.ALIGN_RIGHT },
+    { icon: 'alignLeft',     title: 'Align left',            action: Actions.ALIGN_LEFT },
+    { icon: 'alignCenterH',  title: 'Center horizontally',   action: Actions.ALIGN_CENTER_H },
+    { icon: 'alignRight',    title: 'Align right',           action: Actions.ALIGN_RIGHT },
   ],
   [
-    { label: '↑', title: 'Align Top',            action: Actions.ALIGN_TOP },
-    { label: '⇕', title: 'Center Vertical',      action: Actions.ALIGN_CENTER_V },
-    { label: '↓', title: 'Align Bottom',         action: Actions.ALIGN_BOTTOM },
+    { icon: 'alignTop',      title: 'Align top',             action: Actions.ALIGN_TOP },
+    { icon: 'alignCenterV',  title: 'Center vertically',     action: Actions.ALIGN_CENTER_V },
+    { icon: 'alignBottom',   title: 'Align bottom',          action: Actions.ALIGN_BOTTOM },
   ],
 ]
 
@@ -193,22 +194,24 @@ function SwatchRow({ color, onColorChange, onRemove }: {
       />
 
       <button
+        type="button"
         onClick={copyToClipboard}
-        title="Copy hex to clipboard"
+        title={copied ? 'Copied' : 'Copy hex to clipboard'}
+        aria-label={copied ? 'Copied' : 'Copy hex to clipboard'}
         style={{
           background: 'transparent',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-sm)',
           color: copied ? 'var(--accent)' : 'var(--text-muted)',
           cursor: 'pointer',
-          fontSize: 'var(--text-sm)',
+          display: 'flex',
+          alignItems: 'center',
           padding: '2px 5px',
-          fontFamily: 'var(--font-mono)',
           flexShrink: 0,
           transition: 'color 0.2s',
         }}
       >
-        {copied ? '✓' : 'copy'}
+        <ToolIcon name={copied ? 'check' : 'duplicate'} size={14} />
       </button>
 
       <button
@@ -241,10 +244,12 @@ function AlignPanel(): React.ReactElement {
       <PanelTitle title="Align" subtitle={`${selectedIds.length} items selected`} />
       {ALIGN_ROWS.map((row, ri) => (
         <div key={ri} style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          {row.map(({ label, title, action }) => (
+          {row.map(({ icon, title, action }) => (
             <button
               key={action}
+              type="button"
               title={title}
+              aria-label={title}
               onClick={() => resolver.dispatch(action)}
               style={{
                 flex: 1,
@@ -254,11 +259,12 @@ function AlignPanel(): React.ReactElement {
                 background: 'var(--bg-ui)',
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
-                fontSize: 'var(--text-lg)',
-                fontFamily: 'var(--font-mono)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              {label}
+              <ToolIcon name={icon} size={16} />
             </button>
           ))}
         </div>
@@ -627,7 +633,8 @@ export function ItemProperties(): React.ReactElement | null {
               <button
                 key={ref}
                 type="button"
-                title={`Chase "${ref}" through the Living Index`}
+                title={`Search for "${ref}"`}
+                aria-label={`Search for "${ref}"`}
                 onClick={() => {
                   useUIStore.getState().setSearchQuery(ref)
                   useUIStore.getState().openPanel('tagSearch')
@@ -641,9 +648,13 @@ export function ItemProperties(): React.ReactElement | null {
                   fontFamily: 'var(--font-mono)',
                   fontSize: 'var(--text-sm)',
                   padding: '2px 8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-1)',
                 }}
               >
-                ⟶ {ref}
+                <ToolIcon name="search" size={12} />
+                {ref}
               </button>
             ))}
           </div>
