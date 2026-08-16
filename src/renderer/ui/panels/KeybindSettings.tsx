@@ -411,21 +411,6 @@ export function KeybindSettings(): React.ReactElement | null {
           </button>
           <button
             type="button"
-            onClick={() => setCanvasBackground({ ...canvasBackground, mode: 'stone' })}
-            aria-pressed={canvasBackground.mode === 'stone'}
-            style={{
-              ...btnStyle,
-              width: 'auto',
-              padding: '0 8px',
-              fontSize: 'var(--text-md)',
-              background: canvasBackground.mode === 'stone' ? 'var(--accent)' : 'var(--bg-canvas)',
-              color: canvasBackground.mode === 'stone' ? 'var(--bg-ui)' : 'var(--text-primary)',
-            }}
-          >
-            Stone
-          </button>
-          <button
-            type="button"
             onClick={() => chooseCanvasBackground().catch(console.error)}
             aria-pressed={canvasBackground.mode === 'custom'}
             style={{

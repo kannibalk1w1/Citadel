@@ -24,6 +24,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.SELECT_ALL]:     ['ctrl+a', 'meta+a'],
   [Actions.DESELECT]:       ['escape'],
   [Actions.COPY]:           ['ctrl+c', 'meta+c'],
+  [Actions.CODE_COPY]:      ['ctrl+shift+c', 'meta+shift+c'],
   [Actions.PASTE]:          ['ctrl+v', 'meta+v'],
   [Actions.CUT]:            ['ctrl+x', 'meta+x'],
   [Actions.TOGGLE_LOCK]:    ['ctrl+l', 'meta+l'],

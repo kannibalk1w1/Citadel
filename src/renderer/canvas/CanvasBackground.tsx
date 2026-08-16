@@ -1,11 +1,8 @@
 import React, { useMemo } from 'react'
-import defaultCanvasTextureUrl from '../assets/arcane-stone-canvas-tile.png'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { resolveChamberIdentity, type ChamberTexture } from './chamberIdentity'
-
-export { defaultCanvasTextureUrl }
 
 export const DEFAULT_CANVAS_TEXTURE_TILE_SIZE = 720
 
@@ -46,36 +43,12 @@ export function buildDotGridStyle(input: DotGridStyleInput): React.CSSProperties
   }
 }
 
-type DefaultCanvasBackgroundStyleInput = {
-  opacity: number
-  scale: number
-  viewportScale: number
-  viewportX: number
-  viewportY: number
-}
-
 function clampTextureViewportScale(scale: number): number {
   return Math.max(0.75, Math.min(1.35, scale))
 }
 
-export function buildDefaultCanvasBackgroundStyle(input: DefaultCanvasBackgroundStyleInput): React.CSSProperties {
-  const tileSize = DEFAULT_CANVAS_TEXTURE_TILE_SIZE * input.scale * clampTextureViewportScale(input.viewportScale)
-
-  return {
-    position: 'absolute',
-    inset: 0,
-    backgroundColor: 'var(--canvas-flat)',
-    backgroundImage: `url("${defaultCanvasTextureUrl}")`,
-    backgroundRepeat: 'repeat',
-    backgroundSize: `${tileSize}px auto`,
-    backgroundPosition: `${input.viewportX}px ${input.viewportY}px`,
-    opacity: input.opacity,
-    pointerEvents: 'none',
-  }
-}
-
 type EffectiveBackground = {
-  mode: 'dots' | 'flat' | 'stone' | 'custom' | 'none'
+  mode: 'dots' | 'flat' | 'custom' | 'none'
   assetPath: string | null
   opacity: number
   scale: number
@@ -106,14 +79,6 @@ export function CanvasBackground(): React.ReactElement {
   const activeBoard = useCanvasStore((s) => s.boards.find((b) => b.id === s.activeBoardId) ?? null)
   const chamberTexture = activeBoard ? resolveChamberIdentity(activeBoard).texture : undefined
   const canvasBackground = resolveEffectiveBackground(chamberTexture, globalBackground)
-
-  const defaultBackgroundStyle = useMemo(() => buildDefaultCanvasBackgroundStyle({
-    opacity: canvasBackground.opacity,
-    scale: canvasBackground.scale,
-    viewportScale: viewport.scale,
-    viewportX: viewport.x,
-    viewportY: viewport.y,
-  }), [canvasBackground.opacity, canvasBackground.scale, viewport.scale, viewport.x, viewport.y])
 
   const dotGridStyle = useMemo(() => buildDotGridStyle({
     gridSize,
@@ -161,9 +126,5 @@ export function CanvasBackground(): React.ReactElement {
     )
   }
 
-  return (
-    <div
-      style={defaultBackgroundStyle}
-    />
-  )
+  return <div style={dotGridStyle} />
 }

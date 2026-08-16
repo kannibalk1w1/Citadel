@@ -32,12 +32,14 @@ export type ChamberMoodPreset = {
 // The first four ids shipped with BoardNavigator's original mood row and are
 // persisted in real projects — they must never be renamed.
 export const CHAMBER_MOOD_PRESETS: readonly ChamberMoodPreset[] = [
-  { id: 'gothic', label: 'Gothic', accent: '#bd9652', accentDim: '#5d4c2e', accentGlow: '#e8c684' },
-  { id: 'ember', label: 'Ember', accent: '#8a3d3d', accentDim: '#4a2424', accentGlow: '#c46a5a' },
-  { id: 'verdant', label: 'Verdant', accent: '#6f8a5f', accentDim: '#3a4a33', accentGlow: '#9dc084' },
-  { id: 'frost', label: 'Frost', accent: '#65798a', accentDim: '#37424c', accentGlow: '#94b4cc' },
-  { id: 'umbral', label: 'Umbral', accent: '#6b5a80', accentDim: '#3a3146', accentGlow: '#a08cc0' },
-  { id: 'aurum', label: 'Aurum', accent: '#c0a468', accentDim: '#63552f', accentGlow: '#f0d494' },
+  // IDs are persisted in existing projects; labels and colours are clean UI
+  // presets rather than the former fantasy-themed names.
+  { id: 'gothic', label: 'Neutral', accent: '#73a8db', accentDim: '#38546f', accentGlow: '#a8cdf0' },
+  { id: 'ember', label: 'Coral', accent: '#d67878', accentDim: '#714142', accentGlow: '#efaaaa' },
+  { id: 'verdant', label: 'Green', accent: '#78aa8b', accentDim: '#3f5e4b', accentGlow: '#a9d8b8' },
+  { id: 'frost', label: 'Blue', accent: '#78a9d6', accentDim: '#405b75', accentGlow: '#a9d0f2' },
+  { id: 'umbral', label: 'Violet', accent: '#9b88d5', accentDim: '#514574', accentGlow: '#c3b4ee' },
+  { id: 'aurum', label: 'Amber', accent: '#d6aa72', accentDim: '#735839', accentGlow: '#efd09f' },
 ] as const
 
 const DEFAULT_IDENTITY = {

@@ -9,7 +9,7 @@ import { inscribe } from './toasts/inscriptionToastStore'
 
 // ── Effect → CSS class map ─────────────────────────────────────────────────────
 // These apply to the <img> element itself via filter/transform.
-const IMG_CLASS: Partial<Record<MascotEffect, string>> = {
+export const IMG_CLASS: Partial<Record<MascotEffect, string>> = {
   'base-pulse':       'mascot-base-pulse',
   'brightness-pulse': 'mascot-brightness-pulse',
   'crumble':          'mascot-crumble',
@@ -28,7 +28,7 @@ const IMG_CLASS: Partial<Record<MascotEffect, string>> = {
 const OW = 120
 const OH = 150
 
-function OverlaySVG({ effect, progress }: { effect: MascotEffect | null; progress: number }): React.ReactElement | null {
+export function OverlaySVG({ effect, progress }: { effect: MascotEffect | null; progress: number }): React.ReactElement | null {
   if (!effect) return null
 
   // Spire tip is roughly at (60, 8) in our 120×150 viewBox
@@ -197,9 +197,6 @@ const overlaySvgStyle: React.CSSProperties = {
 
 // ── Mascot PNG with effect layers ──────────────────────────────────────────────
 function MascotPNG(): React.ReactElement {
-  // Legacy effect definitions stay only to deserialize old state; the live UI is static.
-  void IMG_CLASS
-  void OverlaySVG
   return (
     <div aria-label="Citadel" style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16 }}>
       C

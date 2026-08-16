@@ -229,15 +229,13 @@ export default function App(): React.ReactElement {
       if (canvasBackground && typeof canvasBackground === 'object') {
         nextState.canvasBackground = normalizeCanvasBackground(canvasBackground)
       }
-      // One-time move to the flat canvas. Stone was never chosen by anyone — it
-      // was simply the only default — so an install still carrying it is moved
-      // across once. Picking stone again afterwards sticks, because the marker
-      // is written either way.
-      const CANVAS_DEFAULT_MIGRATION = 2
+      // Retire older flat defaults in favour of the quiet dot grid. Legacy
+      // stone values have already been normalized to dots above.
+      const CANVAS_DEFAULT_MIGRATION = 3
       const migrated = typeof values['ui.canvasDefaultMigration'] === 'number' ? values['ui.canvasDefaultMigration'] : 0
       if (migrated < CANVAS_DEFAULT_MIGRATION) {
         const carried = nextState.canvasBackground?.mode
-        if (carried === 'stone' || carried === 'flat') {
+        if (carried === 'flat') {
           nextState.canvasBackground = { ...nextState.canvasBackground!, mode: 'dots' }
           ipc.invoke('settings:set', { key: 'ui.canvasBackground', value: nextState.canvasBackground }).catch(() => {})
         }
@@ -296,6 +294,11 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.TOOL_LINK,    () => useUIStore.getState().setToolMode('link'))
     resolver.register(Actions.TOOL_TAG,     () => useUIStore.getState().setToolMode('tag'))
     resolver.register(Actions.TOOL_SWATCH,  () => useUIStore.getState().setToolMode('swatch'))
+    resolver.register(Actions.CODE_COPY, () => {
+      const code = useCanvasStore.getState().selectedItems().find((item) => item.type === 'code')?.meta?.code
+      if (typeof code !== 'string') return
+      navigator.clipboard.writeText(code).then(() => inscribe('Code copied')).catch(() => inscribe('Could not copy code', { tone: 'danger' }))
+    })
 
     // Undo / redo
     resolver.register(Actions.UNDO, () => {

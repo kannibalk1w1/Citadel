@@ -28,6 +28,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.SELECT_ALL]: 'Select all',
   [Actions.DESELECT]: 'Deselect',
   [Actions.COPY]: 'Copy',
+  [Actions.CODE_COPY]: 'Copy selected code snippet',
   [Actions.PASTE]: 'Paste',
   [Actions.CUT]: 'Cut',
 

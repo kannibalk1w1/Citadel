@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
+import { normalizeCodeLanguage } from './codeSnippet'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -39,9 +41,31 @@ const tokenColor: Record<TokenKind, string> = {
 
 export function CodeItem({ item, domOnly = false }: Props): React.ReactElement | null {
   const [copied, setCopied] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
   if (!domOnly) return null
   const code = typeof item.meta?.code === 'string' ? item.meta.code : ''
-  const language = typeof item.meta?.language === 'string' ? item.meta.language : 'plaintext'
+  const language = normalizeCodeLanguage(item.meta?.language)
+
+  const beginEdit = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDraft(code)
+    setEditing(true)
+  }
+
+  const finishEdit = (save: boolean) => {
+    if (save && draft !== code) {
+      const canvas = useCanvasStore.getState()
+      const boardId = canvas.activeBoardId
+      if (boardId) {
+        const meta = { ...item.meta, code: draft }
+        useHistoryStore.getState().push('ITEM_STYLE', boardId, item, { ...item, meta })
+        canvas.updateItem(boardId, item.id, { meta })
+      }
+    }
+    setEditing(false)
+  }
 
   const copy = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -82,14 +106,30 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
             {copied ? 'Copied' : 'Copy'}
           </button>
         </header>
-        <pre style={{ margin: 0, padding: '10px 12px', flex: 1, minHeight: 0, overflow: 'auto', fontFamily: 'inherit', fontSize: '12px', lineHeight: 1.55, tabSize: 2, whiteSpace: 'pre' }}>
-          {code.split('\n').map((line, index) => (
-            <div key={index} style={{ display: 'flex', minWidth: 'max-content' }}>
-              <span aria-hidden="true" style={{ width: 28, flex: '0 0 28px', color: '#596779', userSelect: 'none', textAlign: 'right', paddingRight: 10 }}>{index + 1}</span>
-              <code>{tokensForLine(line).map((token, tokenIndex) => <span key={tokenIndex} style={{ color: tokenColor[token.kind] }}>{token.text}</span>)}</code>
-            </div>
-          ))}
-        </pre>
+        {editing ? (
+          <textarea
+            autoFocus
+            aria-label="Edit code snippet"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={() => finishEdit(true)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') { event.preventDefault(); finishEdit(false) }
+              if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); finishEdit(true) }
+            }}
+            spellCheck={false}
+            style={{ flex: 1, minHeight: 0, width: '100%', border: 0, outline: 0, resize: 'none', padding: '10px 12px', background: '#11161f', color: '#d8dee9', font: '12px/1.55 var(--font-mono)', tabSize: 2 }}
+          />
+        ) : (
+          <pre onDoubleClick={beginEdit} title="Double-click to edit" style={{ margin: 0, padding: '10px 12px', flex: 1, minHeight: 0, overflow: 'auto', fontFamily: 'inherit', fontSize: '12px', lineHeight: 1.55, tabSize: 2, whiteSpace: 'pre', cursor: 'text' }}>
+            {code.split('\n').map((line, index) => (
+              <span key={index} style={{ display: 'flex', minWidth: 'max-content' }}>
+                <span aria-hidden="true" style={{ width: 28, flex: '0 0 28px', color: '#596779', userSelect: 'none', textAlign: 'right', paddingRight: 10 }}>{index + 1}</span>
+                <code>{tokensForLine(line).map((token, tokenIndex) => <span key={tokenIndex} style={{ color: tokenColor[token.kind] }}>{token.text}</span>)}</code>
+              </span>
+            ))}
+          </pre>
+        )}
       </section>
     </DOMItem>
   )

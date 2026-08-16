@@ -92,7 +92,7 @@ export function normalizeSavedThemePalettes(value: unknown): SavedThemePalette[]
 
 export type ExportArea = 'viewport' | 'board' | 'selection'
 export type ExportPreset = 'draft' | 'clean' | 'high-res'
-export type CanvasBackgroundMode = 'dots' | 'flat' | 'stone' | 'custom' | 'none'
+export type CanvasBackgroundMode = 'dots' | 'flat' | 'custom' | 'none'
 
 export type CanvasBackgroundSettings = {
   mode: CanvasBackgroundMode
@@ -120,7 +120,9 @@ export const exportPresets: Record<ExportPreset, { label: string; area: ExportAr
 }
 
 export function normalizeCanvasBackground(settings: Partial<CanvasBackgroundSettings> | null | undefined): CanvasBackgroundSettings {
-  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'stone' || settings?.mode === 'flat' || settings?.mode === 'dots'
+  // Older settings may contain the retired bundled stone texture. Keep those
+  // projects opening cleanly by migrating them to the neutral dot grid.
+  const mode = settings?.mode === 'custom' || settings?.mode === 'none' || settings?.mode === 'flat' || settings?.mode === 'dots'
     ? settings.mode
     : DEFAULT_CANVAS_BACKGROUND.mode
   return {

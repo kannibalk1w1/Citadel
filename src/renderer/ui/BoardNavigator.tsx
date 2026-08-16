@@ -333,30 +333,6 @@ export function BoardNavigator(): React.ReactElement | null {
             Appearance — {activeChamber.name}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 8px', alignItems: 'center' }}>
-            <RiteLabel text="Ambience" />
-            <select
-              value={activeIdentity.ambience}
-              onChange={(e) => applyChamberPatch(activeChamber.id, { ambience: e.target.value as 'none' | 'motes' | 'fog' })}
-              style={{
-                background: 'var(--bg-ui)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-sm)',
-                padding: '2px 4px',
-              }}
-            >
-              <option value="none">Still</option>
-              <option value="motes">Motes</option>
-              <option value="fog">Fog</option>
-            </select>
-            <RiteLabel text="Presence" />
-            <RiteSlider
-              value={activeIdentity.ambienceIntensity}
-              disabled={activeIdentity.ambience === 'none'}
-              onCommit={(value) => applyChamberPatch(activeChamber.id, { ambienceIntensity: value })}
-            />
             <RiteLabel text="Vignette" />
             <RiteSlider
               value={activeIdentity.vignette}

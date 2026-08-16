@@ -22,6 +22,7 @@ export const Actions = {
   SELECT_ALL: 'edit:selectAll',
   DESELECT: 'edit:deselect',
   COPY: 'edit:copy',
+  CODE_COPY: 'code:copy',
   PASTE: 'edit:paste',
   CUT: 'edit:cut',
   TOGGLE_LOCK: 'item:toggleLock',

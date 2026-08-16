@@ -147,8 +147,8 @@ describe('uiStore - canvas background', () => {
     expect(useUIStore.getState().canvasBackground.mode).toBe('dots')
   })
 
-  it('still accepts the other grounds as explicit choices', () => {
-    expect(normalizeCanvasBackground({ mode: 'stone' }).mode).toBe('stone')
+  it('keeps legacy stone settings on the clean dot grid', () => {
+    expect(normalizeCanvasBackground({ mode: 'stone' as never }).mode).toBe('dots')
     expect(normalizeCanvasBackground({ mode: 'flat' }).mode).toBe('flat')
     expect(normalizeCanvasBackground({ mode: 'none' }).mode).toBe('none')
   })

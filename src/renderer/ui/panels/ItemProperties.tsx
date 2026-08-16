@@ -8,6 +8,7 @@ import { Actions } from '../../keybinds/actions'
 import type { CanvasItem } from '../../../types'
 import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor } from '../../theme/canvasColors'
+import { CODE_LANGUAGES, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -859,12 +860,13 @@ export function ItemProperties(): React.ReactElement | null {
         <>
           <Divider label="Code" />
           <Field label="Language">
-            <input
-              value={(item.meta?.language as string) ?? 'plaintext'}
-              onChange={(e) => updateMeta({ language: e.target.value || 'plaintext' })}
+            <select
+              value={normalizeCodeLanguage(item.meta?.language)}
+              onChange={(e) => updateMeta({ language: e.target.value })}
               style={inputStyle}
-              placeholder="typescript"
-            />
+            >
+              {CODE_LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}
+            </select>
           </Field>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Snippet
