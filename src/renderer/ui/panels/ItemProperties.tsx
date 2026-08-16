@@ -526,7 +526,7 @@ function CommentAttachPanel({
           fontFamily: 'var(--font-mono)',
         }}
       >
-        Bind inscription
+        Attach comment
       </button>
     </div>
   )

@@ -142,7 +142,7 @@ describe('TagSearch keyboard interactions', () => {
     render(<TagSearch />)
 
     await waitFor(() => expect(screen.getByText('1 / 3')).toBeTruthy())
-    expect(screen.getAllByText(/chamber: Vault/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/board: Vault/).length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getAllByText('gate sketches')[0])
 

@@ -160,7 +160,7 @@ export function BoardNavigator(): React.ReactElement | null {
   }
 
   const createBoard = () => {
-    const id = addBoard(`Chamber ${boards.length + 1}`)
+    const id = addBoard(`Board ${boards.length + 1}`)
     setActiveBoard(id)
     markDirty()
   }
@@ -213,13 +213,13 @@ export function BoardNavigator(): React.ReactElement | null {
     const stones = resolveWaystones(board)
     const event = plantWaystoneEvent(board, {
       id: nanoid(),
-      name: `Waystone ${stones.length + 1}`,
+      name: `Bookmark ${stones.length + 1}`,
       x: viewport.x,
       y: viewport.y,
       scale: viewport.scale,
     })
     if (!event) {
-      inscribe('This board holds no more bookmarks')
+      inscribe('No more bookmarks on this board')
       return
     }
     pushWaystoneEvent(boardId, event)
@@ -434,7 +434,7 @@ export function BoardNavigator(): React.ReactElement | null {
             <div key={stone.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <button
                 type="button"
-                title={`Travel to ${stone.name} (Alt+])`}
+                title={`Go to ${stone.name} (Alt+])`}
                 onClick={() => jumpToWaystone(stone)}
                 style={{
                   flex: 1,

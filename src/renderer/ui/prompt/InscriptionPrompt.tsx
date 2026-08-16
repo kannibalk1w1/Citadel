@@ -82,7 +82,7 @@ export function InscriptionPrompt(): React.ReactElement | null {
             onClick={submit}
             style={{ background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '4px 10px' }}
           >
-            Inscribe
+            Save
           </button>
         </div>
       </div>

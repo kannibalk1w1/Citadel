@@ -213,7 +213,7 @@ export function BoardTabs(): React.ReactElement {
       ))}
       <button
         onClick={() => {
-          const id = addBoard(`Chamber ${boards.length + 1}`)
+          const id = addBoard(`Board ${boards.length + 1}`)
           setActiveBoard(id)
           markDirty()
         }}

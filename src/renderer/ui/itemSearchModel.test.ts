@@ -179,7 +179,7 @@ describe('itemSearchModel', () => {
     expect(results.map((result) => result.id)).toEqual(['hall-gate', 'vault-gate'])
     expect(results[0].chamber).toBeUndefined()
     expect(results[1].chamber).toEqual({ id: 'vault', name: 'Vault' })
-    expect(results[1].detail).toContain('chamber: Vault')
+    expect(results[1].detail).toContain('board: Vault')
   })
 
   it('caps archive results across chambers', () => {
@@ -220,7 +220,7 @@ describe('itemSearchModel', () => {
 
     expect(thread?.chamber).toEqual({ id: 'vault', name: 'Vault' })
     expect(thread?.detail).toContain('gate.png -> Gate notes')
-    expect(thread?.detail).toContain('chamber: Vault')
+    expect(thread?.detail).toContain('board: Vault')
   })
 
   it('filters archive results by chamber token', () => {
@@ -271,7 +271,7 @@ describe('itemSearchModel', () => {
     const results = getArchiveIndexResults(boards, 'hall', 'chamber:memory-vault')
 
     expect(results.map((result) => result.id)).toEqual(['vault-note'])
-    expect(results[0].detail).toContain('chamber: Memory Vault')
+    expect(results[0].detail).toContain('board: Memory Vault')
   })
 
   it('computes a focus point between thread endpoints', () => {

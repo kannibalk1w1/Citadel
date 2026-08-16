@@ -206,7 +206,7 @@ export function ArchiveWorkbench(): React.ReactElement | null {
           <div key={missing.src} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', border: '1px solid var(--accent-danger)', borderRadius: 'var(--radius-sm)', padding: '4px 6px' }}>
             <button
               type="button"
-              title={`Travel to the first ${missing.filename} relic`}
+              title={`Go to the first ${missing.filename} item`}
               onClick={() => travelTo(missing.chamberIds[0], missing.itemIds[0])}
               style={{ flex: 1, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: 0 }}
             >

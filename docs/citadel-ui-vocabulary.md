@@ -46,6 +46,11 @@ should never have to translate a word to find a button.
 | A `.citadelz` bundle | Archive | **Archive** — this word, and only this |
 | The left sidebar | Archive rail | **Project rail** |
 | Saving a template | Seal | **Save** |
+| Confirming a text prompt | Inscribe | **Save** |
+| Attaching a comment to an item | Bind inscription | **Attach comment** |
+| Going to a board, bookmark, or item | Travel | **Go to** |
+| A new board's default name | `Chamber 3` | **`Board 3`** |
+| A new bookmark's default name | `Waystone 2` | **`Bookmark 2`** |
 
 "Archive" previously named three different things — the rail, the project, and
 the `.citadelz` file. It now names only the `.citadelz` file. Everything the
@@ -82,7 +87,9 @@ Two consequences:
 - Search still understands the old words. `sigil`, `relic`, `thread` and
   `binding` remain in the search haystacks, and `chamber:` still works as a
   query prefix alongside the new `board:`. Nobody who learned the old vocabulary
-  loses their muscle memory.
+  loses their muscle memory. What search *prints* is plain, though: a result's
+  detail line reads `board: Vault`, never `chamber: Vault`. Input keeps the
+  compatibility; output does not.
 
 ## Before adding a string
 
@@ -95,6 +102,27 @@ Two consequences:
    the rail, for the same button and the same shortcut. That pair, along with
    `Chambers`, `Relics` and the connection inspector's `Thread`, was fixed on
    2026-08-16.
+
+## The guard
+
+`src/renderer/ui/uiVocabulary.test.ts` fails the build if a forbidden word
+reaches a user-facing surface. It reads the renderer and the native menu and
+extracts only what a person reads — element text, `title`/`aria-label`/
+`placeholder`/`alt`, `inscribe` and `askInscription` messages, `label:` entries,
+and generated display names like the `` `Board ${n}` `` a new board is given.
+Identifiers, store fields, search haystacks and CSS variables are not read,
+because they are supposed to keep the archival vocabulary.
+
+Two deliberate escape hatches, both narrow:
+
+- `ALLOWED` holds exact strings that are style names rather than controls. It
+  contains one entry, `Relic`, the frame variant. Adding to it should come with
+  a change to this document.
+- Text inside a `${...}` hole is skipped, since that is an identifier and its
+  value is guarded wherever the value is authored.
+
+If the guard fires on something genuinely fine, widen `ALLOWED` and say why
+here — do not loosen the extractor, which is what makes it worth having.
 
 ## Before adding an icon-only control
 

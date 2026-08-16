@@ -306,7 +306,7 @@ export function getIndexResults(items: CanvasItem[], connections: Connection[], 
 }
 
 function withChamber<T extends SearchResult>(result: T, chamber: ChamberRef): T {
-  return { ...result, chamber, detail: `${result.detail}  |  chamber: ${chamber.name}` }
+  return { ...result, chamber, detail: `${result.detail}  |  board: ${chamber.name}` }
 }
 
 export function getArchiveIndexResults(

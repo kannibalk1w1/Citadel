@@ -442,7 +442,7 @@ export default function App(): React.ReactElement {
         scale: viewport.scale,
       })
       if (!event) {
-        inscribe('This board holds no more bookmarks')
+        inscribe('No more bookmarks on this board')
         return
       }
       useHistoryStore.getState().push('BOARD_STYLE', board.id, event.before, event.after)

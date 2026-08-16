@@ -86,7 +86,7 @@ function migrateBoard(value: unknown, index: number): CanvasBoard | null {
   const viewport = isObject(value.viewport) ? value.viewport : {}
   return {
     id: stringValue(value.id, `board-${index}`),
-    name: stringValue(value.name, `Chamber ${index + 1}`),
+    name: stringValue(value.name, `Board ${index + 1}`),
     items,
     connections,
     viewport: {
