@@ -7,12 +7,15 @@ import { create } from 'zustand'
 type PromptRequest = {
   title: string
   initial: string
+  multiline: boolean
   resolve: (value: string | null) => void
 }
 
+type PromptOptions = { multiline?: boolean }
+
 type InscriptionPromptState = {
   request: PromptRequest | null
-  ask: (title: string, initial?: string) => Promise<string | null>
+  ask: (title: string, initial?: string, options?: PromptOptions) => Promise<string | null>
   submit: (value: string) => void
   cancel: () => void
 }
@@ -20,10 +23,10 @@ type InscriptionPromptState = {
 export const useInscriptionPromptStore = create<InscriptionPromptState>((set, get) => ({
   request: null,
 
-  ask: (title, initial = '') => {
+  ask: (title, initial = '', options = {}) => {
     get().request?.resolve(null)
     return new Promise<string | null>((resolve) => {
-      set({ request: { title, initial, resolve } })
+      set({ request: { title, initial, multiline: options.multiline === true, resolve } })
     })
   },
 
@@ -38,6 +41,6 @@ export const useInscriptionPromptStore = create<InscriptionPromptState>((set, ge
   },
 }))
 
-export function askInscription(title: string, initial = ''): Promise<string | null> {
-  return useInscriptionPromptStore.getState().ask(title, initial)
+export function askInscription(title: string, initial = '', options?: PromptOptions): Promise<string | null> {
+  return useInscriptionPromptStore.getState().ask(title, initial, options)
 }

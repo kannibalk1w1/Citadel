@@ -5,7 +5,7 @@ import { useInscriptionPromptStore } from './inscriptionPromptStore'
 export function InscriptionPrompt(): React.ReactElement | null {
   const request = useInscriptionPromptStore((s) => s.request)
   const [draft, setDraft] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null!)
 
   useEffect(() => {
     if (request) {
@@ -49,26 +49,40 @@ export function InscriptionPrompt(): React.ReactElement | null {
         <div style={{ color: 'var(--text-accent)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {request.title}
         </div>
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            e.stopPropagation()
-            if (e.key === 'Enter') submit()
-            if (e.key === 'Escape') cancel()
-          }}
-          style={{
-            background: 'var(--bg-ui)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-body)',
-            fontSize: 'var(--text-lg)',
-            padding: '6px 8px',
-            outline: 'none',
-          }}
-        />
+        {request.multiline ? (
+          <textarea
+            ref={(element) => { inputRef.current = element }}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit()
+              if (e.key === 'Escape') cancel()
+            }}
+            rows={6}
+            aria-label={request.title}
+            style={{
+              background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', padding: '6px 8px', outline: 'none', resize: 'vertical', minHeight: 110,
+            }}
+          />
+        ) : (
+          <input
+            ref={(element) => { inputRef.current = element }}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === 'Enter') submit()
+              if (e.key === 'Escape') cancel()
+            }}
+            style={{
+              background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', padding: '6px 8px', outline: 'none',
+            }}
+          />
+        )}
+        {request.multiline && (
+          <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>Ctrl+Enter to save</span>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
           <button
             type="button"

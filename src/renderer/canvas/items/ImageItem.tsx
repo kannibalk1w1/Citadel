@@ -22,11 +22,14 @@ import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPa
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { canvasColor } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
+import { sourceCaptureReference } from '../sourceCapture'
 
 type Props = { item: CanvasItem }
 
 export function ImageItem({ item }: Props): React.ReactElement | null {
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const selectedIds = useCanvasStore((s) => s.selectedIds)
+  const allItems = useCanvasStore((s) => s.items())
   const scale = useCanvasStore((s) => s.viewport().scale)
   const meta = useAssetMetadata(item.src)
   const useThumb = preferThumbnail(item.width * scale, item.height * scale, isSelected)
@@ -185,6 +188,11 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const { flipX, flipY } = itemFlip(item.meta)
   const filenameLabel = filenameInscription(item.src, filenameLabelsVisible, scale)
   const waymarks = resolveWaymarks(item)
+  const captureRegions = allItems.flatMap((capture) => {
+    const source = sourceCaptureReference(capture)
+    if (!source?.region || source.sourceItemId !== item.id) return []
+    return isSelected || selectedIds.includes(capture.id) ? [{ id: capture.id, region: source.region }] : []
+  })
 
   return (
     <>
@@ -256,6 +264,20 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
             {...flipProps(flipX, flipY, fitRect?.width ?? item.width, fitRect?.height ?? item.height)}
           />
         )}
+        {captureRegions.map(({ id, region }) => (
+          <Rect
+            key={`source-region-${id}`}
+            x={region.x * item.width}
+            y={region.y * item.height}
+            width={region.width * item.width}
+            height={region.height * item.height}
+            fill="rgba(115,168,219,0.12)"
+            stroke={canvasColor('accent')}
+            strokeWidth={1.5}
+            dash={[5, 3]}
+            listening={false}
+          />
+        ))}
         <Rect
           x={0}
           y={0}

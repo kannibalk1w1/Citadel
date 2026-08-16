@@ -1,5 +1,5 @@
 import type { CanvasItem } from '../../types'
-import { createSourceCapture, sourceCaptureConnection } from '../canvas/sourceCapture'
+import { createSourceCapture, imageRegionFromPercent, sourceCaptureConnection } from '../canvas/sourceCapture'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { canvasColor } from '../theme/canvasColors'
@@ -17,12 +17,19 @@ function placementFor(source: CanvasItem | undefined): { x: number; y: number } 
 
 /** Captures a short excerpt or observation while preserving where it came from. */
 export async function startSourceCapture(source?: CanvasItem): Promise<void> {
-  const content = await askInscription('Capture text or description:')
+  const content = await askInscription('Capture text or description:', '', { multiline: true })
   if (!content) return
   const reference = await askInscription('Source URL or file path (optional):', source?.src ?? '')
   if (reference === null) return
   const locator = await askInscription('Page, section, or time (optional):')
   if (locator === null) return
+
+  const regionInput = source?.type === 'image'
+    ? await askInscription('Image region: left, top, width, height (%) — optional:')
+    : ''
+  if (regionInput === null) return
+  const region = imageRegionFromPercent(regionInput)
+  if (regionInput.trim() && !region) inscribe('Image region was not recognised; capture added without one', { tone: 'danger' })
 
   const canvas = useCanvasStore.getState()
   const boardId = canvas.activeBoardId
@@ -32,6 +39,7 @@ export async function startSourceCapture(source?: CanvasItem): Promise<void> {
     reference,
     locator: locator || undefined,
     sourceItemId: liveSource?.id,
+    region,
   }, placementFor(liveSource))
 
   canvas.addItem(boardId, capture)

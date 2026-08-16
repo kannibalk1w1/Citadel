@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSourceCapture, sourceCaptureConnection, sourceCaptureReference } from './sourceCapture'
+import { createSourceCapture, imageRegionFromPercent, imageRegionPercent, sourceCaptureConnection, sourceCaptureReference } from './sourceCapture'
 
 describe('source captures', () => {
   it('keeps both a human-readable source and the item it came from', () => {
@@ -13,5 +13,12 @@ describe('source captures', () => {
     expect(sourceCaptureConnection(capture.id, 'image-1', '#73a8db', 'connection-1')).toMatchObject({
       fromId: 'capture-1', toId: 'image-1', meaning: 'source',
     })
+  })
+
+  it('normalizes an optional image region from percentage coordinates', () => {
+    const region = imageRegionFromPercent('10, 20, 60, 40')
+    expect(region).toEqual({ x: 0.1, y: 0.2, width: 0.6, height: 0.4 })
+    expect(imageRegionPercent(region!)).toBe('10%, 20%, 60%, 40%')
+    expect(imageRegionFromPercent('left, top')).toBeUndefined()
   })
 })

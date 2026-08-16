@@ -10,7 +10,7 @@ import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
-import { sourceCaptureReference } from '../../canvas/sourceCapture'
+import { imageRegionPercent, sourceCaptureReference } from '../../canvas/sourceCapture'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -503,6 +503,11 @@ function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElemen
         {source.locator && (
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
             {source.locator}
+          </div>
+        )}
+        {source.region && (
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            Image region: {imageRegionPercent(source.region)}
           </div>
         )}
       </div>
