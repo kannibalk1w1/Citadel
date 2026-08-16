@@ -4,7 +4,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
-import { CODE_CARD_LAYOUT, gutterWidth, normalizeCodeLanguage, tokensForLine, type TokenKind } from './codeSnippet'
+import { CODE_CARD_LAYOUT, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
 import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
@@ -35,13 +35,14 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
   const language = normalizeCodeLanguage(item.meta?.language)
   const silhouette = preferCodeSilhouette(scale, isSelected, editing)
 
-  // Tokenizing runs a regex per line. Panning re-renders the card on every
-  // viewport change, so keep the pass tied to the code rather than the frame —
-  // and skip it outright while silhouetted, which is the point of the gate: a
-  // long snippet stops paying for a span per token nobody can read.
+  // The same call the export makes, so the card and its still cannot colour the
+  // same snippet differently. Tied to the code and language rather than the
+  // frame, since panning re-renders on every viewport change — and skipped
+  // outright while silhouetted, which is the point of that gate: a long snippet
+  // stops paying for a span per token nobody can read.
   const lines = useMemo(
-    () => (silhouette ? [] : code.split('\n').map(tokensForLine)),
-    [code, silhouette],
+    () => (silhouette ? [] : tokenizeSnippet(code, language)),
+    [code, language, silhouette],
   )
 
   // The card unmounts as soon as it leaves the viewport slice, which can happen

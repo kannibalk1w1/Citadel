@@ -88,6 +88,37 @@ describe('CodeItem', () => {
     expect(screen.getByText('const')).toBeTruthy()
   })
 
+  // The card must colour by the picked language, not by one fixed grammar.
+  describe('language-aware colouring', () => {
+    function kindOf(text: string): string | undefined {
+      return (screen.getByText(text) as HTMLElement).style.color
+    }
+
+    it('colours a python # comment as a comment', () => {
+      const python = { ...item, meta: { language: 'python', code: 'def run():  # go' } }
+      render(<CodeItem item={python} domOnly />)
+
+      expect(kindOf('# go')).toBe('var(--code-comment)')
+      expect(kindOf('def')).toBe('var(--code-keyword)')
+    })
+
+    it('leaves the same # alone in a language that has no such comment', () => {
+      const json = { ...item, meta: { language: 'json', code: '"a": "# go"' } }
+      render(<CodeItem item={json} domOnly />)
+
+      expect(screen.queryByText('# go')).toBeNull()
+      expect(kindOf('"# go"')).toBe('var(--code-string)')
+    })
+
+    it('renders plaintext with no highlighting at all', () => {
+      const plain = { ...item, meta: { language: 'plaintext', code: 'const a = 1' } }
+      const { container } = render(<CodeItem item={plain} domOnly />)
+
+      const colours = [...container.querySelectorAll('code span')].map((s) => (s as HTMLElement).style.color)
+      expect(new Set(colours)).toEqual(new Set(['var(--code-text)']))
+    })
+  })
+
   describe('far-zoom progressive detail', () => {
     it('drops syntax-highlighted lines for a silhouette once past the threshold', () => {
       setViewport(FAR_ZOOM)

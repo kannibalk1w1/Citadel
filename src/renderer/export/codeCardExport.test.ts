@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Viewport } from '../../types'
-import { tokensForLine } from '../canvas/items/codeSnippet'
+import { tokenizeSnippet, tokensForLine, type CodeLanguage } from '../canvas/items/codeSnippet'
+import { CODE_LANGUAGES } from '../canvas/items/codeSnippet'
 import {
   clipTokens,
   codeCardExportLayout,
@@ -65,24 +66,24 @@ describe('isExportableCodeItem', () => {
 
 describe('clipTokens', () => {
   it('keeps a line that fits', () => {
-    const tokens = tokensForLine('const a = 1')
+    const tokens = tokensForLine('const a = 1', 'typescript')
     expect(clipTokens(tokens, 80)).toEqual({ tokens, clipped: false })
   })
 
   it('cuts mid-token and reports the cut', () => {
-    const result = clipTokens(tokensForLine('const answer = 1'), 8)
+    const result = clipTokens(tokensForLine('const answer = 1', 'typescript'), 8)
     expect(result.clipped).toBe(true)
     expect(result.tokens.map((t) => t.text).join('')).toBe('const an')
   })
 
   it('preserves token kinds through the cut so colours survive', () => {
-    const result = clipTokens(tokensForLine("const t = 'citadel-archive-name'"), 14)
+    const result = clipTokens(tokensForLine("const t = 'citadel-archive-name'", 'typescript'), 14)
     expect(result.tokens[0]).toEqual({ text: 'const', kind: 'keyword' })
     expect(result.clipped).toBe(true)
   })
 
   it('drops everything when there is no room at all', () => {
-    expect(clipTokens(tokensForLine('const a = 1'), 0)).toEqual({ tokens: [], clipped: true })
+    expect(clipTokens(tokensForLine('const a = 1', 'typescript'), 0)).toEqual({ tokens: [], clipped: true })
   })
 
   it('does not claim a cut on an empty line with no room', () => {
@@ -251,5 +252,60 @@ describe('paintCodeCardsForExport', () => {
     paintCodeCardsForExport(ctx, [codeItem('const a = 1', { opacity: 0.4 })], viewport)
 
     expect(ctx.calls.some((c) => c.op === 'set:globalAlpha' && c.args[0] === 0.4)).toBe(true)
+  })
+})
+
+/**
+ * The card and its exported still must colour the same snippet identically —
+ * that is the whole reason the tokenizer is shared rather than reimplemented on
+ * the export side.
+ */
+describe('live and export parity', () => {
+  const samples: Record<string, string> = {
+    typescript: "const n = 42 // sum\nconst s = 'x'",
+    python: 'def run():\n    return None  # go',
+    json: '{\n  "name": "Citadel",\n  "ok": true\n}',
+    html: '<!-- note -->\n<a href="/x">t</a>',
+    css: '@media screen {\n  color: #fff; /* c */\n}',
+    bash: 'if [ -f x ]; then\n  echo "hi"  # check\nfi',
+    sql: "SELECT * FROM t -- note\nWHERE n = 'a'",
+    yaml: 'name: Citadel  # app\ncount: 12',
+    plaintext: 'const x = 1 // not code',
+  }
+
+  it.each(CODE_LANGUAGES)('gives %s the same tokens on both sides', (language) => {
+    const code = samples[language] ?? 'x'
+    // The card renders tokenizeSnippet directly; the export layout must carry
+    // those very tokens through, unclipped when the card is wide enough.
+    const live = tokenizeSnippet(code, language as CodeLanguage)
+    const layout = codeCardExportLayout(
+      codeItem(code, { width: 1400, height: 600, meta: { language, code } }),
+      viewport,
+    )!
+
+    expect(layout.lines).toHaveLength(live.length)
+    layout.lines.forEach((exported, index) => {
+      expect(exported.clipped, `${language} line ${index + 1} was clipped`).toBe(false)
+      expect(exported.tokens).toEqual(live[index])
+    })
+  })
+
+  it('carries the language through to the export, not a fixed default', () => {
+    const code = '# comment'
+    const asPython = codeCardExportLayout(codeItem(code, { meta: { language: 'python', code } }), viewport)!
+    const asJson = codeCardExportLayout(codeItem(code, { meta: { language: 'json', code } }), viewport)!
+
+    expect(asPython.lines[0].tokens[0].kind).toBe('comment')
+    expect(asJson.lines[0].tokens[0].kind).toBe('plain')
+  })
+
+  // Block comments and template literals only read correctly with state carried
+  // between lines, so the export must tokenize the snippet, not each line alone.
+  it('keeps multi-line constructs coloured in the export', () => {
+    const code = '/* one\ntwo */\nconst a = 1'
+    const layout = codeCardExportLayout(codeItem(code, { meta: { language: 'typescript', code } }), viewport)!
+
+    expect(layout.lines[1].tokens[0].kind).toBe('comment')
+    expect(layout.lines[2].tokens.some((token) => token.kind === 'keyword')).toBe(true)
   })
 })

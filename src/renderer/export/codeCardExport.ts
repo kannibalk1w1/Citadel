@@ -3,7 +3,7 @@ import {
   CODE_CARD_LAYOUT,
   gutterWidth,
   normalizeCodeLanguage,
-  tokensForLine,
+  tokenizeSnippet,
   type Token,
 } from '../canvas/items/codeSnippet'
 import { canvasColors } from '../theme/canvasColors'
@@ -93,7 +93,8 @@ export function codeCardExportLayout(
 
   const code = typeof item.meta?.code === 'string' ? item.meta.code : ''
   const language = normalizeCodeLanguage(item.meta?.language)
-  const allLines = code.split('\n')
+  // Same tokens the live card renders, so the still stays faithful to it.
+  const allLines = tokenizeSnippet(code, language)
 
   const headerHeight = Math.min(CODE_CARD_LAYOUT.headerHeight * unit, height)
   const fontPx = CODE_CARD_LAYOUT.fontPx * unit
@@ -115,8 +116,8 @@ export function codeCardExportLayout(
   const hidden = allLines.length - shown
 
   const maxChars = fontPx > 0 ? Math.floor(bodyWidth / (fontPx * MONO_ADVANCE_RATIO)) : 0
-  const lines: ExportCodeLine[] = allLines.slice(0, shown).map((line, index) => {
-    const { tokens, clipped } = clipTokens(tokensForLine(line), maxChars)
+  const lines: ExportCodeLine[] = allLines.slice(0, shown).map((lineTokens, index) => {
+    const { tokens, clipped } = clipTokens(lineTokens, maxChars)
     return { number: index + 1, tokens, clipped }
   })
 
