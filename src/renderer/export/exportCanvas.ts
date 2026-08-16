@@ -2,6 +2,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
 import type { ExportArea } from '../store/uiStore'
 import type { CanvasItem, Viewport } from '../../types'
+import { isExportableCodeItem, paintCodeCardsForExport } from './codeCardExport'
 
 type ExportCanvas = {
   canvas: HTMLCanvasElement
@@ -52,6 +53,45 @@ function scaledCanvas(source: HTMLCanvasElement, scale: number): HTMLCanvasEleme
   return out
 }
 
+/**
+ * Konva backs its canvas at device resolution while the viewport transform is
+ * in CSS pixels, so DOM-layer overlays have to be scaled by the same ratio to
+ * land where they sit on screen. Derived from the element rather than read from
+ * devicePixelRatio, so it stays right if Konva's pixelRatio is ever overridden.
+ */
+export function stagePixelRatio(canvas: Pick<HTMLCanvasElement, 'width' | 'clientWidth'>): number {
+  if (!canvas.clientWidth) return 1
+  const ratio = canvas.width / canvas.clientWidth
+  return Number.isFinite(ratio) && ratio > 0 ? ratio : 1
+}
+
+/**
+ * Code cards live in the DOM overlay, which the stage capture never sees, so
+ * they are repainted onto a copy of the captured bitmap. `scaledCanvas` hands
+ * back the live stage canvas at scale 1, and drawing on that would smear the
+ * card across the board the user is still looking at — so copy first, always.
+ */
+function withCodeCards(captured: HTMLCanvasElement, source: HTMLCanvasElement, exportScale: number): HTMLCanvasElement {
+  const canvasStore = useCanvasStore.getState()
+  const codeItems = canvasStore.items().filter(isExportableCodeItem)
+  if (codeItems.length === 0) return captured
+
+  const out = captured === source ? document.createElement('canvas') : captured
+  if (out !== captured) {
+    out.width = captured.width
+    out.height = captured.height
+    const copyCtx = out.getContext('2d')
+    if (!copyCtx) return captured
+    copyCtx.drawImage(captured, 0, 0)
+  }
+
+  const ctx = out.getContext('2d')
+  if (!ctx) return captured
+  const ratio = stagePixelRatio(source) * Math.max(1, exportScale)
+  paintCodeCardsForExport(ctx, codeItems, canvasStore.viewport(), ratio)
+  return out
+}
+
 function itemBounds(items: CanvasItem[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
   const visibleItems = items.filter((item) => item.visible !== false)
   if (visibleItems.length === 0) return null
@@ -82,8 +122,9 @@ function fitViewportToItems(items: CanvasItem[], width: number, height: number):
 
 async function captureViewportCanvas(scale: number): Promise<ExportCanvas> {
   const canvasEl = getStageCanvas()
+  const captured = scaledCanvas(canvasEl, scale)
   return {
-    canvas: scaledCanvas(canvasEl, scale),
+    canvas: withCodeCards(captured, canvasEl, scale),
     width: canvasEl.width,
     height: canvasEl.height,
   }

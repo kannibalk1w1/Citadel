@@ -4,33 +4,10 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
-import { gutterWidth, normalizeCodeLanguage } from './codeSnippet'
+import { CODE_CARD_LAYOUT, gutterWidth, normalizeCodeLanguage, tokensForLine, type TokenKind } from './codeSnippet'
 import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
-
-type TokenKind = 'plain' | 'keyword' | 'string' | 'number' | 'comment'
-type Token = { text: string; kind: TokenKind }
-
-const KEYWORDS = new Set([
-  'async', 'await', 'break', 'catch', 'class', 'const', 'continue', 'def', 'else', 'export',
-  'false', 'finally', 'for', 'from', 'function', 'if', 'import', 'in', 'let', 'new', 'null',
-  'return', 'switch', 'throw', 'true', 'try', 'type', 'undefined', 'while', 'with', 'yield',
-])
-
-function tokensForLine(line: string): Token[] {
-  const tokens: Token[] = []
-  const parts = line.split(/(\/\/.*|#.*|\/\*[\s\S]*?\*\/|'(?:\\.|[^'])*'|"(?:\\.|[^"])*"|`(?:\\.|[^`])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_$][\w$]*\b)/g)
-  for (const part of parts) {
-    if (!part) continue
-    const kind: TokenKind = /^\/\/|^#|^\/\*/.test(part) ? 'comment'
-      : /^['"`]/.test(part) ? 'string'
-        : /^\d/.test(part) ? 'number'
-          : KEYWORDS.has(part) ? 'keyword' : 'plain'
-    tokens.push({ text: part, kind })
-  }
-  return tokens
-}
 
 const tokenColor: Record<TokenKind, string> = {
   plain: 'var(--code-text)',
@@ -166,7 +143,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
           color: 'var(--code-text)', fontFamily: 'var(--font-mono)',
         }}
       >
-        <header style={{ height: 32, flex: '0 0 32px', display: 'flex', alignItems: 'center', gap: 8, padding: '0 9px', background: 'var(--code-bg-header)', borderBottom: '1px solid var(--code-border)' }}>
+        <header style={{ height: CODE_CARD_LAYOUT.headerHeight, flex: `0 0 ${CODE_CARD_LAYOUT.headerHeight}px`, display: 'flex', alignItems: 'center', gap: 8, padding: '0 9px', background: 'var(--code-bg-header)', borderBottom: '1px solid var(--code-border)' }}>
           <span aria-hidden="true" style={{ display: 'flex', gap: 4 }}>
             {['var(--code-alert)', 'var(--code-number)', 'var(--code-string)'].map((color) => (
               <i key={color} style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'block' }} />
@@ -201,13 +178,13 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
               if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); finishEdit(true) }
             }}
             spellCheck={false}
-            style={{ flex: 1, minHeight: 0, width: '100%', border: 0, outline: 0, resize: 'none', padding: '10px 12px', background: 'var(--code-bg)', color: 'var(--code-text)', font: '12px/1.55 var(--font-mono)', tabSize: 2 }}
+            style={{ flex: 1, minHeight: 0, width: '100%', border: 0, outline: 0, resize: 'none', padding: `${CODE_CARD_LAYOUT.padY}px ${CODE_CARD_LAYOUT.padX}px`, background: 'var(--code-bg)', color: 'var(--code-text)', font: `${CODE_CARD_LAYOUT.fontPx}px/${CODE_CARD_LAYOUT.lineHeight} var(--font-mono)`, tabSize: 2 }}
           />
         ) : (
-          <pre onDoubleClick={beginEdit} title="Double-click to edit" style={{ margin: 0, padding: '10px 12px', flex: 1, minHeight: 0, overflow: 'auto', fontFamily: 'inherit', fontSize: '12px', lineHeight: 1.55, tabSize: 2, whiteSpace: 'pre', cursor: 'text' }}>
+          <pre onDoubleClick={beginEdit} title="Double-click to edit" style={{ margin: 0, padding: `${CODE_CARD_LAYOUT.padY}px ${CODE_CARD_LAYOUT.padX}px`, flex: 1, minHeight: 0, overflow: 'auto', fontFamily: 'inherit', fontSize: `${CODE_CARD_LAYOUT.fontPx}px`, lineHeight: CODE_CARD_LAYOUT.lineHeight, tabSize: 2, whiteSpace: 'pre', cursor: 'text' }}>
             {lines.map((tokens, index) => (
               <span key={index} style={{ display: 'flex', minWidth: 'max-content' }}>
-                <span aria-hidden="true" style={{ width: gutter, flex: `0 0 ${gutter}px`, color: 'var(--code-gutter)', userSelect: 'none', textAlign: 'right', paddingRight: 10 }}>{index + 1}</span>
+                <span aria-hidden="true" style={{ width: gutter, flex: `0 0 ${gutter}px`, color: 'var(--code-gutter)', userSelect: 'none', textAlign: 'right', paddingRight: CODE_CARD_LAYOUT.gutterGap }}>{index + 1}</span>
                 <code>{tokens.map((token, tokenIndex) => <span key={tokenIndex} style={{ color: tokenColor[token.kind] }}>{token.text}</span>)}</code>
               </span>
             ))}

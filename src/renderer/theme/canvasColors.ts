@@ -23,6 +23,19 @@ export type CanvasColorName =
   | 'bgSunken'
   | 'border'
   | 'borderMuted'
+  // Code snippet card. Needed on this side because image and PDF export paint
+  // the card with the 2D context, which cannot read CSS variables either.
+  | 'codeBg'
+  | 'codeBgHeader'
+  | 'codeBorder'
+  | 'codeText'
+  | 'codeTextDim'
+  | 'codeGutter'
+  | 'codeKeyword'
+  | 'codeString'
+  | 'codeNumber'
+  | 'codeComment'
+  | 'codeAlert'
 
 const VARIABLES: Record<CanvasColorName, string> = {
   accent: '--accent',
@@ -37,6 +50,17 @@ const VARIABLES: Record<CanvasColorName, string> = {
   bgSunken: '--bg-sunken',
   border: '--border',
   borderMuted: '--border-muted',
+  codeBg: '--code-bg',
+  codeBgHeader: '--code-bg-header',
+  codeBorder: '--code-border',
+  codeText: '--code-text',
+  codeTextDim: '--code-text-dim',
+  codeGutter: '--code-gutter',
+  codeKeyword: '--code-keyword',
+  codeString: '--code-string',
+  codeNumber: '--code-number',
+  codeComment: '--code-comment',
+  codeAlert: '--code-alert',
 }
 
 // Used before styles resolve, and in tests without a document. These match
@@ -54,6 +78,17 @@ const FALLBACKS: Record<CanvasColorName, string> = {
   bgSunken: '#0a0907',
   border: '#3a3025',
   borderMuted: '#292117',
+  codeBg: '#11161f',
+  codeBgHeader: '#18212d',
+  codeBorder: '#2d3745',
+  codeText: '#d8dee9',
+  codeTextDim: '#aeb9c7',
+  codeGutter: '#596779',
+  codeKeyword: '#86b7ff',
+  codeString: '#9fda95',
+  codeNumber: '#e6bd8a',
+  codeComment: '#7d899a',
+  codeAlert: '#f07f7f',
 }
 
 let resolved: Record<CanvasColorName, string> = { ...FALLBACKS }
