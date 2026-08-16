@@ -234,6 +234,30 @@ const IDENT_START = /[A-Za-z_$@-]/
 const IDENT_PART = /[\w$-]/
 const DIGIT = /[0-9]/
 
+// Sticky rather than anchored, so they can be matched at an offset into the
+// line instead of against a freshly sliced tail. `lastIndex` is set at every
+// use; nothing reads it between.
+const TAG_RE = /<\/?[A-Za-z][\w:-]*/y
+const NUMBER_RE = /\d[\d_]*(\.\d+)?([eE][+-]?\d+)?[a-zA-Z%]*/y
+
+/**
+ * A spec's string rules, longest opener first, computed once.
+ *
+ * The order matters — Python's `'''` has to be tried before `'` — but the sort
+ * was inside the character loop, so a snippet at the documented ceiling
+ * (5000 lines x 2000 characters) copied and sorted this list ten million times.
+ * Specs are module constants, so one cached list per spec is all that is needed.
+ */
+const sortedStringRuleCache = new WeakMap<LanguageSpec, StringRule[]>()
+
+function sortedStringRules(spec: LanguageSpec): StringRule[] {
+  const cached = sortedStringRuleCache.get(spec)
+  if (cached) return cached
+  const sorted = [...spec.strings].sort((a, b) => b.open.length - a.open.length)
+  sortedStringRuleCache.set(spec, sorted)
+  return sorted
+}
+
 function pushToken(tokens: Token[], text: string, kind: TokenKind): void {
   if (!text) return
   const last = tokens[tokens.length - 1]
@@ -274,20 +298,25 @@ function scanLine(line: string, spec: LanguageSpec, state: { current: ScanState 
     i = end + rule.close.length
   }
 
-  while (i < line.length) {
-    const rest = line.slice(i)
+  // Longest opener first, so Python's ''' wins over '. Sorted once per spec:
+  // this used to copy and sort the rule list on every character of every line.
+  const stringRules = sortedStringRules(spec)
 
-    const lineComment = spec.lineComments.find((marker) => rest.startsWith(marker))
+  while (i < line.length) {
+    // Everything below tests `line` at `i` rather than slicing a tail off it.
+    // A per-character `line.slice(i)` is quadratic in the line length, which
+    // the 2000-character limit was papering over rather than fixing.
+    const lineComment = spec.lineComments.some((marker) => line.startsWith(marker, i))
     if (lineComment) {
-      pushToken(tokens, rest, 'comment')
+      pushToken(tokens, line.slice(i), 'comment')
       return tokens
     }
 
-    if (spec.blockComment && rest.startsWith(spec.blockComment.open)) {
+    if (spec.blockComment && line.startsWith(spec.blockComment.open, i)) {
       const close = spec.blockComment.close
       const end = line.indexOf(close, i + spec.blockComment.open.length)
       if (end === -1) {
-        pushToken(tokens, rest, 'comment')
+        pushToken(tokens, line.slice(i), 'comment')
         state.current = { mode: 'block-comment' }
         return tokens
       }
@@ -296,14 +325,11 @@ function scanLine(line: string, spec: LanguageSpec, state: { current: ScanState 
       continue
     }
 
-    // Longest opener first, so Python's ''' wins over '.
-    const rule = [...spec.strings]
-      .sort((a, b) => b.open.length - a.open.length)
-      .find((candidate) => rest.startsWith(candidate.open))
+    const rule = stringRules.find((candidate) => line.startsWith(candidate.open, i))
     if (rule) {
       const end = findClose(line, i + rule.open.length, rule)
       if (end === -1) {
-        pushToken(tokens, rest, 'string')
+        pushToken(tokens, line.slice(i), 'string')
         // Only a multiline literal stays open; anything else was simply
         // unterminated on this line and should not colour the rest of the file.
         if (rule.multiline) state.current = { mode: 'string', rule }
@@ -315,8 +341,10 @@ function scanLine(line: string, spec: LanguageSpec, state: { current: ScanState 
       continue
     }
 
-    if (spec.markup && rest.startsWith('<')) {
-      const tag = /^<\/?[A-Za-z][\w:-]*/.exec(rest)
+    if (spec.markup && line.startsWith('<', i)) {
+      // Sticky, so it anchors at `i` the way `^` anchored a fresh slice.
+      TAG_RE.lastIndex = i
+      const tag = TAG_RE.exec(line)
       if (tag) {
         pushToken(tokens, tag[0], 'keyword')
         i += tag[0].length
@@ -327,7 +355,8 @@ function scanLine(line: string, spec: LanguageSpec, state: { current: ScanState 
     const char = line[i]
 
     if (spec.numbers && DIGIT.test(char) && !IDENT_PART.test(line[i - 1] ?? '')) {
-      const number = /^\d[\d_]*(\.\d+)?([eE][+-]?\d+)?[a-zA-Z%]*/.exec(rest)
+      NUMBER_RE.lastIndex = i
+      const number = NUMBER_RE.exec(line)
       if (number) {
         pushToken(tokens, number[0], 'number')
         i += number[0].length
