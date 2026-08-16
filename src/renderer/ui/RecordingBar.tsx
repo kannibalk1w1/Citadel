@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useHistoryStore } from '../store/historyStore'
 import { useCanvasStore } from '../store/canvasStore'
-import { useMascotStore } from '../store/mascotStore'
 import type { RecordingSession, CanvasItem } from '../../types'
 
 type MovePatch = { id: string; x: number; y: number }
@@ -13,8 +12,6 @@ export function RecordingBar(): React.ReactElement | null {
   const saveRecording = useHistoryStore((s) => s.saveRecording)
   const deleteRecording = useHistoryStore((s) => s.deleteRecording)
   const recordings = useHistoryStore((s) => s.recordings)
-  const triggerEffect = useMascotStore((s) => s.triggerEffect)
-  const clearEffect = useMascotStore((s) => s.clearEffect)
 
   const [showList, setShowList] = useState(false)
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -24,11 +21,8 @@ export function RecordingBar(): React.ReactElement | null {
     if (isRecording) {
       const session = stopRecording()
       if (session) saveRecording(session)
-      clearEffect('eye-open')
-      triggerEffect('eye-close')
     } else {
       startRecording(`Recording ${new Date().toLocaleTimeString()}`)
-      triggerEffect('eye-open')
     }
   }
 
@@ -43,7 +37,6 @@ export function RecordingBar(): React.ReactElement | null {
     if (session.events.length === 0) return
 
     setPlayingId(session.id)
-    triggerEffect('lighthouse-beam')
 
     const canvas = useCanvasStore.getState()
     const origin = session.events[0].timestamp

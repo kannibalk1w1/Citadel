@@ -6,7 +6,6 @@ import { useUIStore } from '../store/uiStore'
 import { summarizeBoard } from './boardNavigatorModel'
 import { boardTemplates, createBoardTemplate, type BoardTemplateId } from './boardTemplates'
 import { boardMoodAccent, boardMoodId } from './boardMood'
-import { useMascotStore } from '../store/mascotStore'
 import {
   CHAMBER_MOOD_PRESETS,
   chamberIdentityEvent,
@@ -197,7 +196,6 @@ export function BoardNavigator(): React.ReactElement | null {
 
   const setBoardMood = (id: string, preset: ChamberMoodPreset) => {
     applyChamberPatch(id, { mood: preset.id, accent: preset.accent })
-    useMascotStore.getState().triggerEffect('rune-seal')
   }
 
   const pushWaystoneEvent = (boardId: string, event: { before: Record<string, unknown>; after: Record<string, unknown> } | null) => {

@@ -31,11 +31,6 @@
   --border-muted:  #292117;
   --border-bright: rgba(232, 221, 208, 0.10);
 
-  /* Effect palette — mascot animations only, never used in UI chrome */
-  --effect-primary: #ffffff;
-  --effect-mid:     #c8c8c8;
-  --effect-dim:     #505050;
-
   /* Typography */
   --font-display: 'Inter', 'DM Sans', sans-serif;
   --font-body:    'Inter', 'DM Sans', sans-serif;

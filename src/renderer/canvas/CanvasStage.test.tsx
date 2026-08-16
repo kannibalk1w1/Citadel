@@ -54,13 +54,6 @@ vi.mock('./overlays/RuntimeStatsSigil', () => ({
     />
   ),
 }))
-vi.mock('../arcade/HyperTypeEngine', () => ({ engine: { burst: vi.fn() } }))
-vi.mock('../arcade/dragonCursor', () => ({
-  DS_NORMAL: 'default',
-  DS_CROSS: 'crosshair',
-  DS_HAND: 'pointer',
-  DS_WHIP: 'crosshair',
-}))
 
 beforeEach(() => {
   Object.assign(window, {

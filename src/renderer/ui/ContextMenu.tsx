@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
-import { useMascotStore } from '../store/mascotStore'
 import { useHistoryStore } from '../store/historyStore'
 import { nanoid } from 'nanoid'
 import { copyImageSrcToClipboard } from '../utils/clipboardImage'
@@ -13,15 +12,6 @@ import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
-
-function itemEffectSource(items: { x: number; y: number; width: number; height: number }[]): { x: number; y: number } | null {
-  if (items.length === 0) return null
-  const minX = Math.min(...items.map((item) => item.x))
-  const minY = Math.min(...items.map((item) => item.y))
-  const maxX = Math.max(...items.map((item) => item.x + item.width))
-  const maxY = Math.max(...items.map((item) => item.y + item.height))
-  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
-}
 
 export function ContextMenu(): React.ReactElement | null {
   const contextMenu = useUIStore((s) => s.contextMenu)
@@ -37,7 +27,6 @@ export function ContextMenu(): React.ReactElement | null {
   const canLock = selectedUnlockedItems.length > 0
   const canUnlock = selectedLockedItems.length > 0
   const copyableImage = selectedItems.length === 1 && ['image', 'gif'].includes(selectedItems[0].type) && selectedItems[0].src
-  const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,7 +51,6 @@ export function ContextMenu(): React.ReactElement | null {
           useHistoryStore.getState().push('ITEM_DELETE', activeBoardId!, toDelete, toDelete.map((i) => ({ id: i.id })))
           canvas.removeItems(activeBoardId!, toDelete.map((i) => i.id))
           canvas.clearSelection()
-          triggerEffect('crumble', undefined, itemEffectSource(toDelete))
           closeContextMenu()
         },
       },
@@ -93,7 +81,6 @@ export function ContextMenu(): React.ReactElement | null {
             if (!name) return
             const template = createRelicTemplate(name, chosen, connections)
             useRelicTemplateStore.getState().saveTemplate(template)
-            triggerEffect('banner-raise')
             inscribe(`Template saved: ${template.name}`)
           })
         },
@@ -109,10 +96,10 @@ export function ContextMenu(): React.ReactElement | null {
         label: 'Copy Image',
         action: () => {
           copyImageSrcToClipboard(copyableImage)
-            .then((ok) => triggerEffect(ok ? 'banner-raise' : 'fracture'))
+            .then((ok) => inscribe(ok ? 'Image copied' : 'Could not copy image', ok ? undefined : { tone: 'danger' }))
             .catch((error) => {
               console.error('Failed to copy image:', error)
-              triggerEffect('fracture')
+              inscribe('Could not copy image', { tone: 'danger' })
             })
           closeContextMenu()
         },

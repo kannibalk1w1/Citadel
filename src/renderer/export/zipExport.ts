@@ -1,11 +1,9 @@
-import { useMascotStore } from '../store/mascotStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 
 export async function exportToZip(filename = 'citadel-archive.citadelz'): Promise<void> {
-  const mascot = useMascotStore.getState()
   const canvas = useCanvasStore.getState()
   const history = useHistoryStore.getState()
 
@@ -25,17 +23,14 @@ export async function exportToZip(filename = 'citadel-archive.citadelz'): Promis
     .filter((s): s is string => !!s && !s.startsWith('http'))
 
   useArchiveProgressStore.getState().beginRite('export')
-  mascot.triggerEffect('progress-fill', 0)
   try {
     const result = await window.ipc.invoke('export:zip', { projectJson, assetPaths, filename }) as
       { ok: boolean; reason?: string }
     if (result.ok) {
-      mascot.triggerEffect('lightning-out')
       inscribe('Archive exported (.citadelz)')
     } else if (result.reason) {
       // reason absent = user cancelled the save dialog; stay silent then.
       inscribe(`Archive export failed: ${result.reason}`, { tone: 'danger' })
-      mascot.triggerEffect('fracture')
     }
   } finally {
     useArchiveProgressStore.getState().endRite()

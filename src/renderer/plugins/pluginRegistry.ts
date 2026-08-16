@@ -1,5 +1,4 @@
 import type { Plugin, PluginAPI } from '../../types'
-import { useMascotStore } from '../store/mascotStore'
 import { pluginHooks } from './hooks'
 
 const registry = new Map<string, Plugin>()
@@ -13,9 +12,6 @@ export function buildPluginAPI(): PluginAPI {
     onEvent: (eventType, handler) => {
       return pluginHooks.on(eventType, handler)
     },
-    triggerMascotEffect: (name) => {
-      useMascotStore.getState().triggerEffect(name as never)
-    },
   }
 }
 
@@ -27,7 +23,6 @@ export function loadPlugin(plugin: Plugin): void {
   const api = buildPluginAPI()
   plugin.activate(api)
   registry.set(plugin.id, plugin)
-  useMascotStore.getState().triggerEffect('banner-raise')
   console.log(`[Citadel] Plugin loaded: ${plugin.name} v${plugin.version}`)
 }
 

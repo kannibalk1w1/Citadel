@@ -166,7 +166,6 @@ export type Plugin = {
 export type PluginAPI = {
   registerItemType: (type: string, component: unknown) => void
   onEvent: (type: CanvasEventType, handler: (event: CanvasEvent) => void) => () => void
-  triggerMascotEffect: (name: string) => void
 }
 
 // ─── DOM Layer Helpers ────────────────────────────────────────────────────────

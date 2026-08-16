@@ -8,7 +8,6 @@ import { useHistoryStore } from '../store/historyStore'
 import { parseProjectFile } from './projectSchema'
 import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
-import { useMascotStore } from '../store/mascotStore'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -255,7 +254,6 @@ export async function saveCurrentOrAs(): Promise<boolean> {
 function surfaceOpenFailure(error: unknown): void {
   const reason = error instanceof Error ? error.message : String(error)
   inscribe(`Could not open the project: ${reason}`, { tone: 'danger' })
-  useMascotStore.getState().triggerEffect('fracture')
 }
 
 export async function openProject(): Promise<boolean> {

@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { useMascotStore } from '../store/mascotStore'
 
 export type ArchiveRiteOp = 'import' | 'export'
 export type ArchiveRite = { op: ArchiveRiteOp; percent: number; label?: string }
@@ -38,6 +37,5 @@ export function registerArchiveProgressListener(): () => void {
   return ipc.on('archive:progress', (payload) => {
     const { percent, label } = payload as ProgressPayload
     useArchiveProgressStore.getState().updateRite(percent, label)
-    useMascotStore.getState().triggerEffect('progress-fill', Math.min(1, Math.max(0, percent / 100)))
   })
 }

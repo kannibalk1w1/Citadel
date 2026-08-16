@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 
-// Presenter quill palette: chamber accent first, then the effect tones.
-// CSS variables resolve inside the canvas container where the overlay mounts.
+// Presenter pen palette: board accent first, then two neutral inks. The accent
+// is a CSS variable because it resolves inside the canvas container where the
+// overlay mounts; the neutrals are literals so they read the same in both themes.
 export const QUILL_COLORS = [
   'var(--chamber-accent, #c8a96e)',
-  'var(--effect-primary, #ffffff)',
-  'var(--effect-mid, #c8c8c8)',
+  '#ffffff',
+  '#c8c8c8',
 ] as const
 
 export const QUILL_WIDTHS = [2.5, 5] as const

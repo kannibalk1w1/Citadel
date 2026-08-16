@@ -35,7 +35,6 @@ import { InscriptionPrompt } from './ui/prompt/InscriptionPrompt'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
-import { useMascotStore } from './store/mascotStore'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
@@ -56,15 +55,6 @@ const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 type MovePatch = { id: string; x: number; y: number }
-
-function itemEffectSource(items: CanvasItem[]): { x: number; y: number } | null {
-  if (items.length === 0) return null
-  const minX = Math.min(...items.map((item) => item.x))
-  const minY = Math.min(...items.map((item) => item.y))
-  const maxX = Math.max(...items.map((item) => item.x + item.width))
-  const maxY = Math.max(...items.map((item) => item.y + item.height))
-  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
-}
 
 function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
   const moves = Array.isArray(patch) ? patch : [patch]
@@ -155,7 +145,6 @@ function stepPresentation(direction: 1 | -1): void {
 }
 
 export default function App(): React.ReactElement {
-  const triggerEffect = useMascotStore((s) => s.triggerEffect)
   const initBoard = useCanvasStore((s) => s.initDefaultBoard)
   const resolverReady = useRef(false)
   const editingItemId = useUIStore((s) => s.editingItemId)
@@ -184,7 +173,6 @@ export default function App(): React.ReactElement {
 
   useEffect(() => {
     initBoard()
-    triggerEffect('rise-from-fog')
 
     // Check for crash recovery file on startup
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
@@ -329,7 +317,6 @@ export default function App(): React.ReactElement {
         const connection = event.after as Connection
         canvas.removeConnection(event.boardId, connection.id)
       }
-      triggerEffect('rewind-swirl')
     })
 
     resolver.register(Actions.REDO, () => {
@@ -358,7 +345,6 @@ export default function App(): React.ReactElement {
       } else if (event.type === 'CONNECTION_ADD') {
         canvas.addConnection(event.boardId, event.after as Connection)
       }
-      triggerEffect('forward-surge')
     })
 
     // Delete selected items
@@ -371,7 +357,6 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
-      triggerEffect('crumble', undefined, itemEffectSource(toDelete))
     })
 
     // Duplicate selected items
@@ -507,7 +492,6 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, comment)
       canvas.setSelection([comment.id])
       useUIStore.getState().setEditingItemId(comment.id)
-      triggerEffect('banner-raise', undefined, { x: comment.x + comment.width / 2, y: comment.y + comment.height / 2 })
     })
 
     // Zoom
@@ -537,7 +521,6 @@ export default function App(): React.ReactElement {
         ui.closeContextMenu()
         ui.setToolMode('pan')
         fitActiveBoard(true)
-        triggerEffect('lighthouse-beam')
       } else {
         ui.setToolMode('select')
       }
@@ -685,19 +668,17 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.SAVE, () => {
       saveCurrentOrAs().then((ok) => {
         if (!ok) return
-        triggerEffect('rune-seal')
         inscribe('Project saved')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
       saveProjectAs().then((p) => {
         if (!p) return
-        triggerEffect('rune-seal')
         inscribe('Project saved')
       })
     })
-    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) { triggerEffect('lightning-in'); inscribe('Project opened') } }) })
-    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) { triggerEffect('rise-from-fog'); inscribe('New project created') } })
+    resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) inscribe('Project opened') }) })
+    resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) inscribe('New project created') })
 
     // Copy / Paste / Cut
     resolver.register(Actions.COPY, () => {
@@ -807,16 +788,12 @@ export default function App(): React.ReactElement {
     // Recording
     resolver.register(Actions.RECORD_TOGGLE, () => {
       const { isRecording, startRecording, stopRecording, saveRecording } = useHistoryStore.getState()
-      const { triggerEffect: trigger, clearEffect } = useMascotStore.getState()
       if (isRecording) {
         const session = stopRecording()
         if (session) saveRecording(session)
-        clearEffect('eye-open')
-        trigger('eye-close')
         inscribe('Recording stopped')
       } else {
         startRecording(`Recording ${new Date().toLocaleTimeString()}`)
-        trigger('eye-open')
         inscribe('Recording started')
       }
     })
@@ -892,36 +869,15 @@ export default function App(): React.ReactElement {
   // ── Auto-save every 2 minutes ──────────────────────────────────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      autoSave().then((result) => {
-        if (result === 'saved') triggerEffect('base-pulse')
-      }).catch(() => {})
+      autoSave().catch(() => {})
     }, 2 * 60 * 1000)
     return () => clearInterval(id)
-  }, [])
-
-  // ── Idle 15s → ember-drift ────────────────────────────────────────────────
-  useEffect(() => {
-    const { clearEffect } = useMascotStore.getState()
-    let idleTimer: ReturnType<typeof setTimeout>
-    const resetIdle = () => {
-      clearEffect('ember-drift')
-      clearTimeout(idleTimer)
-      idleTimer = setTimeout(() => triggerEffect('ember-drift'), 15_000)
-    }
-    const EVENTS = ['mousemove', 'keydown', 'mousedown', 'wheel'] as const
-    EVENTS.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }))
-    resetIdle()
-    return () => {
-      clearTimeout(idleTimer)
-      EVENTS.forEach((e) => window.removeEventListener(e, resetIdle))
-    }
   }, [])
 
   const handleRecoveryRestore = () => {
     if (!recoveryData) return
     try {
       loadProjectData(recoveryData.project)
-      triggerEffect('lightning-in')
     } catch (e) { console.error('Recovery restore failed', e) }
     const ipc = (window as unknown as { ipc: { invoke: (ch: string) => Promise<unknown> } }).ipc
     ipc.invoke('recovery:clear').catch(() => {})
@@ -932,7 +888,6 @@ export default function App(): React.ReactElement {
     const ipc = (window as unknown as { ipc: { invoke: (ch: string) => Promise<unknown> } }).ipc
     ipc.invoke('recovery:clear').catch(() => {})
     setRecoveryData(null)
-    triggerEffect('fracture')
   }
 
   const recoveryBanner = recoveryData && (

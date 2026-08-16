@@ -3,7 +3,6 @@ import type { DragEvent } from 'react'
 import type { CanvasItem, ItemType } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
-import { useMascotStore } from '../store/mascotStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { renderPdfFirstPage } from '../utils/pdfPreview'
 
@@ -74,7 +73,6 @@ export function useFileDrop() {
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const viewport = useCanvasStore((s) => s.viewport())
   const pushEvent = useHistoryStore((s) => s.push)
-  const triggerEffect = useMascotStore((s) => s.triggerEffect)
 
   function handleDragOver(e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
@@ -118,7 +116,6 @@ export function useFileDrop() {
           { id: hitComparison.id, meta: hitComparison.meta },
           { id: hitComparison.id, meta: newMeta }
         )
-        triggerEffect('lightning-in', undefined, { x: dropX, y: dropY })
         return
       }
     }
@@ -164,7 +161,6 @@ export function useFileDrop() {
           offsetIndex++
         } catch (error) {
           console.error('PDF drop failed:', error)
-          triggerEffect('fracture', undefined, { x: dropX, y: dropY })
         }
         continue
       }
@@ -209,13 +205,6 @@ export function useFileDrop() {
     }
 
     setSelection(added.map((i) => i.id))
-    const source = added.length > 0
-      ? {
-          x: added.reduce((sum, item) => sum + item.x + item.width / 2, 0) / added.length,
-          y: added.reduce((sum, item) => sum + item.y + item.height / 2, 0) / added.length,
-        }
-      : { x: dropX, y: dropY }
-    triggerEffect('lightning-in', undefined, source)
   }
 
   return { handleDragOver, handleDrop }

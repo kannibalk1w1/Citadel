@@ -76,7 +76,7 @@ beforeEach(() => {
   Object.assign(window, {
     ipc: { invoke },
     confirm: () => true,
-    // jsdom ships no matchMedia; the mascot checks prefers-reduced-motion on every effect.
+    // jsdom ships no matchMedia; guard code paths that probe prefers-reduced-motion.
     matchMedia: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
   })
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })

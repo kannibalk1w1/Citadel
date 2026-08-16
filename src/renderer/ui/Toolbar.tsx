@@ -3,12 +3,12 @@ import { nanoid } from 'nanoid'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
-import { useMascotStore } from '../store/mascotStore'
 import type { CanvasItem, ToolMode } from '../../types'
 import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
 import { ToolIcon, type ToolIconName } from './icons/ToolIcon'
 import { activeArchiveRailWidth } from './shell/shellModel'
+import { inscribe } from './toasts/inscriptionToastStore'
 
 type ToolDef = { mode: ToolMode; label: string; key: string; icon: ToolIconName }
 
@@ -43,8 +43,6 @@ export function Toolbar(): React.ReactElement {
   const startRecording = useHistoryStore((s) => s.startRecording)
   const stopRecording = useHistoryStore((s) => s.stopRecording)
   const saveRecording = useHistoryStore((s) => s.saveRecording)
-  const triggerEffect = useMascotStore((s) => s.triggerEffect)
-  const clearEffect = useMascotStore((s) => s.clearEffect)
   const snapToGrid = useUIStore((s) => s.snapToGrid)
   const toggleSnapToGrid = useUIStore((s) => s.toggleSnapToGrid)
 
@@ -104,7 +102,6 @@ export function Toolbar(): React.ReactElement {
     useHistoryStore.getState().push('ITEM_ADD', boardId, null, item)
     useCanvasStore.getState().setSelection([item.id])
     useUIStore.getState().setToolMode('select')
-    triggerEffect('lightning-in', undefined, { x: item.x + item.width / 2, y: item.y + item.height / 2 })
     closeYouTube()
     setMoreOpen(false)
   }
@@ -151,7 +148,6 @@ export function Toolbar(): React.ReactElement {
     useCanvasStore.getState().addItem(boardId, item)
     useHistoryStore.getState().push('ITEM_ADD', boardId, null, item)
     useCanvasStore.getState().setSelection([item.id])
-    triggerEffect('lightning-in', undefined, { x: item.x + item.width / 2, y: item.y + item.height / 2 })
   }
 
   const stopVoiceMemo = () => {
@@ -179,10 +175,9 @@ export function Toolbar(): React.ReactElement {
       }
       recorder.start()
       setVoiceRecording(true)
-      triggerEffect('eye-open')
     } catch (error) {
       console.error('Voice memo recording failed:', error)
-      triggerEffect('fracture')
+      inscribe('Could not start the voice memo', { tone: 'danger' })
     }
   }
 
@@ -222,11 +217,8 @@ export function Toolbar(): React.ReactElement {
     if (isRecording) {
       const session = stopRecording()
       if (session) saveRecording(session)
-      clearEffect('eye-open')
-      triggerEffect('eye-close')
     } else {
       startRecording(`Recording ${new Date().toLocaleTimeString()}`)
-      triggerEffect('eye-open')
     }
   }
 
