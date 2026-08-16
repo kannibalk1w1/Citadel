@@ -45,7 +45,7 @@ describe('CodeItem', () => {
   it('renders a labelled terminal card with code and a copy control', () => {
     render(<CodeItem item={item} domOnly />)
 
-    expect(screen.getByLabelText('typescript code snippet')).toBeTruthy()
+    expect(screen.getByLabelText('TypeScript code snippet')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Copy code' })).toBeTruthy()
     expect(screen.getByText('const')).toBeTruthy()
     expect(screen.getByText('// archive')).toBeTruthy()
@@ -124,7 +124,7 @@ describe('CodeItem', () => {
       setViewport(FAR_ZOOM)
       render(<CodeItem item={item} domOnly />)
 
-      expect(screen.getByLabelText('typescript code snippet').dataset.silhouette).toBe('true')
+      expect(screen.getByLabelText('TypeScript code snippet').dataset.silhouette).toBe('true')
       expect(screen.queryByText('const')).toBeNull()
       expect(screen.queryByRole('button', { name: 'Copy code' })).toBeNull()
     })
@@ -132,7 +132,7 @@ describe('CodeItem', () => {
     it('keeps the full card at readable zoom', () => {
       render(<CodeItem item={item} domOnly />)
 
-      expect(screen.getByLabelText('typescript code snippet').dataset.silhouette).toBeUndefined()
+      expect(screen.getByLabelText('TypeScript code snippet').dataset.silhouette).toBeUndefined()
       expect(screen.getByText('const')).toBeTruthy()
     })
 
@@ -142,7 +142,7 @@ describe('CodeItem', () => {
       setViewport(FAR_ZOOM, [item.id])
       render(<CodeItem item={item} domOnly />)
 
-      expect(screen.getByLabelText('typescript code snippet').dataset.silhouette).toBeUndefined()
+      expect(screen.getByLabelText('TypeScript code snippet').dataset.silhouette).toBeUndefined()
       expect(screen.getByRole('button', { name: 'Copy code' })).toBeTruthy()
     })
 
@@ -150,7 +150,7 @@ describe('CodeItem', () => {
       setViewport(FAR_ZOOM)
       render(<CodeItem item={item} domOnly />)
 
-      fireEvent.doubleClick(screen.getByLabelText('typescript code snippet'))
+      fireEvent.doubleClick(screen.getByLabelText('TypeScript code snippet'))
 
       const editor = screen.getByLabelText('Edit code snippet') as HTMLTextAreaElement
       expect(editor.value).toBe(item.meta!.code)

@@ -143,6 +143,8 @@ export type PaletteKeyAction =
   | { type: 'close' }
   | { type: 'move'; delta: number }
   | { type: 'run' }
+  /** Swallowed to keep focus inside the dialog; nothing else happens. */
+  | { type: 'trap' }
   | { type: 'none' }
 
 /** Mirrors `indexKeyAction`, so the two panels answer the keyboard alike. */
@@ -153,6 +155,11 @@ export function paletteKeyAction(key: string): PaletteKeyAction {
   if (key === 'Home') return { type: 'move', delta: -Infinity }
   if (key === 'End') return { type: 'move', delta: Infinity }
   if (key === 'Enter') return { type: 'run' }
+  // The dialog says `aria-modal`, and the input is its only focusable element,
+  // so Tab had nowhere to go inside and moved focus onto the canvas behind —
+  // leaving an open modal that the keyboard was no longer driving. Holding Tab
+  // is the whole trap: there is nothing else in here to cycle between.
+  if (key === 'Tab') return { type: 'trap' }
   return { type: 'none' }
 }
 

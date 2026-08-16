@@ -4,7 +4,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
-import { CODE_CARD_LAYOUT, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
+import { CODE_CARD_LAYOUT, codeLanguageLabel, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
 import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
@@ -33,6 +33,10 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
 
   const code = typeof item.meta?.code === 'string' ? item.meta.code : ''
   const language = normalizeCodeLanguage(item.meta?.language)
+  // The identifier is what the header shows (uppercased) and what the export
+  // draws, so those two stay paired. The accessible name is read aloud, so it
+  // uses the written form — "TypeScript code snippet", not "typescript".
+  const languageLabel = codeLanguageLabel(language)
   const silhouette = preferCodeSilhouette(scale, isSelected, editing)
 
   // The same call the export makes, so the card and its still cannot colour the
@@ -100,7 +104,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
         style={{ borderRadius: 'var(--radius-md)' }}
       >
         <section
-          aria-label={`${language} code snippet`}
+          aria-label={`${languageLabel} code snippet`}
           data-silhouette="true"
           onDoubleClick={beginEdit}
           style={{
@@ -135,7 +139,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
       style={{ borderRadius: 'var(--radius-md)' }}
     >
       <section
-        aria-label={`${language} code snippet`}
+        aria-label={`${languageLabel} code snippet`}
         style={{
           width: '100%', height: '100%', minHeight: 0, overflow: 'hidden',
           display: 'flex', flexDirection: 'column',

@@ -168,6 +168,10 @@ describe('keyboard handling', () => {
     expect(paletteKeyAction('Backspace')).toEqual({ type: 'none' })
   })
 
+  it('holds Tab so focus cannot leave a dialog that claims to be modal', () => {
+    expect(paletteKeyAction('Tab')).toEqual({ type: 'trap' })
+  })
+
   it('clamps at the ends rather than wrapping around', () => {
     expect(nextPaletteIndex(0, 3, -1)).toBe(0)
     expect(nextPaletteIndex(2, 3, 1)).toBe(2)

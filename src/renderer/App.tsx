@@ -634,9 +634,11 @@ export default function App(): React.ReactElement {
       if (next.length > 0) setActiveBoard(next[Math.min(idx, next.length - 1)].id)
       inscribe('Board deleted')
     })
-    resolver.register(Actions.RECORD_PLAY, () => {
-      // RecordingBar manages its own playback UI — no-op here
-    })
+    // RECORD_PLAY is deliberately left unregistered: RecordingBar owns playback
+    // through its own UI, and there is nothing here to dispatch to. Registering
+    // a no-op to "claim" the action put a "Play recording" row in the command
+    // palette that did nothing when run — the palette lists exactly the actions
+    // that have a handler, so an empty handler is how a dead row gets in.
 
     // Panels
     resolver.register(Actions.PANEL_PROPERTIES, () => {

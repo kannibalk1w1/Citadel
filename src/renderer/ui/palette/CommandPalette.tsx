@@ -73,6 +73,8 @@ export function CommandPalette(): React.ReactElement | null {
   const onKeyDown = (event: React.KeyboardEvent) => {
     const action = paletteKeyAction(event.key)
     if (action.type === 'none') return
+    // Every remaining action is handled here, so none of them reach the canvas.
+    // `trap` needs nothing beyond that: swallowing Tab is what keeps focus in.
     event.preventDefault()
     event.stopPropagation()
     if (action.type === 'close') close()
