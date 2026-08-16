@@ -223,6 +223,33 @@ describe('paintCodeCard', () => {
 
     expect(ctx.calls.some((c) => c.op === 'clip')).toBe(true)
   })
+
+  /**
+   * `DOMItem` rotates the live card about its top-left corner. The export
+   * repaints rather than captures, so it has to rotate too — it did not, and a
+   * rotated card came out square-on, overlapping its neighbours.
+   */
+  it('turns the card about its top-left corner, before clipping', () => {
+    const ctx = recordingContext()
+    const layout = codeCardExportLayout(codeItem('const a = 1', { x: 40, y: 25, rotation: 30 }), viewport)!
+
+    expect(layout.rotation).toBe(30)
+    paintCodeCard(ctx, layout)
+
+    const ops = ctx.calls.map((c) => c.op)
+    expect(ops.indexOf('rotate')).toBeGreaterThan(-1)
+    expect(ops.indexOf('rotate')).toBeLessThan(ops.indexOf('clip'))
+    expect(ctx.calls.find((c) => c.op === 'rotate')!.args[0]).toBeCloseTo((30 * Math.PI) / 180)
+    expect(ctx.calls.filter((c) => c.op === 'translate').map((c) => c.args)).toEqual([[40, 25], [-40, -25]])
+  })
+
+  it('adds no transform for an unrotated card', () => {
+    const ctx = recordingContext()
+    paintCodeCard(ctx, codeCardExportLayout(codeItem('const a = 1'), viewport)!)
+
+    expect(ctx.calls.some((c) => c.op === 'rotate')).toBe(false)
+    expect(ctx.calls.some((c) => c.op === 'translate')).toBe(false)
+  })
 })
 
 describe('paintCodeCardsForExport', () => {

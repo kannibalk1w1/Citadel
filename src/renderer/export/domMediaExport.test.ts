@@ -199,6 +199,32 @@ describe('paintDomMediaCard', () => {
     expect(badges).toEqual(['VIDEO', 'YOUTUBE', 'AUDIO', '3D MODEL'])
   })
 
+  /**
+   * `DOMItem` rotates these items with CSS about their top-left corner. The
+   * export repaints rather than captures, so it has to rotate too — it did not,
+   * and a rotated video or 3D item came out square-on.
+   */
+  it('turns the item about its top-left corner, before clipping', () => {
+    const ctx = recordingContext()
+    const plan = domMediaExportPlan(mediaItem('video', 'a.mp4', { x: 60, y: 20, rotation: -45 }), viewport)!
+
+    expect(plan.rotation).toBe(-45)
+    paintDomMediaCard(ctx, plan, null)
+
+    const ops = ctx.calls.map((c) => c.op)
+    expect(ops.indexOf('rotate')).toBeGreaterThan(-1)
+    expect(ops.indexOf('rotate')).toBeLessThan(ops.indexOf('clip'))
+    expect(ctx.calls.find((c) => c.op === 'rotate')!.args[0]).toBeCloseTo((-45 * Math.PI) / 180)
+    expect(ctx.calls.filter((c) => c.op === 'translate').map((c) => c.args)).toEqual([[60, 20], [-60, -20]])
+  })
+
+  it('adds no transform for an unrotated item', () => {
+    const ctx = recordingContext()
+    paintDomMediaCard(ctx, domMediaExportPlan(mediaItem('video', 'a.mp4'), viewport)!, null)
+
+    expect(ctx.calls.some((c) => c.op === 'rotate')).toBe(false)
+  })
+
   it('carries the YouTube video id into the export', () => {
     const ctx = recordingContext()
     paintDomMediaCard(ctx, domMediaExportPlan(mediaItem('youtube', 'https://youtu.be/dQw4w9WgXcQ'), viewport)!, null)

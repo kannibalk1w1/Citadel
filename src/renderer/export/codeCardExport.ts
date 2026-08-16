@@ -7,6 +7,7 @@ import {
   type Token,
 } from '../canvas/items/codeSnippet'
 import { canvasColors } from '../theme/canvasColors'
+import { applyItemRotation, itemRotation } from './domLayerTransform'
 
 /**
  * Code cards are DOM-layer items. `prepareExportCanvas` captures the Konva stage
@@ -32,6 +33,8 @@ export type CodeCardExportLayout = {
   y: number
   width: number
   height: number
+  /** Degrees, about the card's top-left corner — as the live card rotates. */
+  rotation: number
   headerHeight: number
   fontPx: number
   lineHeight: number
@@ -127,6 +130,7 @@ export function codeCardExportLayout(
     y: item.y * viewport.scale * pixelRatio + viewport.y * pixelRatio,
     width,
     height,
+    rotation: itemRotation(item.rotation),
     headerHeight,
     fontPx,
     lineHeight,
@@ -153,6 +157,9 @@ export function paintCodeCard(ctx: CanvasRenderingContext2D, layout: CodeCardExp
   const { x, y, width, height } = layout
 
   ctx.save()
+  // Before the clip, so the clip rect turns with the card rather than cropping
+  // it to an axis-aligned box.
+  applyItemRotation(ctx, layout.rotation, { x, y })
   ctx.beginPath()
   ctx.rect(x, y, width, height)
   ctx.clip()

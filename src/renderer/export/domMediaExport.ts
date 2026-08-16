@@ -1,5 +1,6 @@
 import type { CanvasItem, Viewport } from '../../types'
 import { canvasColors } from '../theme/canvasColors'
+import { applyItemRotation, itemRotation } from './domLayerTransform'
 
 /**
  * Video, YouTube, audio and 3D items are DOM-layer overlays, so the Konva stage
@@ -38,6 +39,8 @@ export type DomMediaExportPlan = {
   y: number
   width: number
   height: number
+  /** Degrees, about the item's top-left corner — as the live item rotates. */
+  rotation: number
   opacity: number
 }
 
@@ -95,6 +98,7 @@ export function domMediaExportPlan(
     y: item.y * unit + viewport.y * pixelRatio,
     width,
     height,
+    rotation: itemRotation(item.rotation),
     opacity: item.opacity ?? 1,
   }
 }
@@ -140,6 +144,9 @@ export function paintDomMediaCard(
 
   ctx.save()
   ctx.globalAlpha = plan.opacity
+  // Before the clip, so the clip rect turns with the item rather than cropping
+  // it to an axis-aligned box.
+  applyItemRotation(ctx, plan.rotation, { x, y })
   ctx.beginPath()
   ctx.rect(x, y, width, height)
   ctx.clip()
