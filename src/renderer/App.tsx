@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import type { CanvasItem, Connection } from '../types'
+import type { CanvasItem } from '../types'
 
 // Module-level clipboard (persists across renders, not across restarts)
 let clipboard: CanvasItem[] = []
@@ -9,6 +9,7 @@ import { VisionFilterDefs } from './canvas/VisionFilterDefs'
 import { useVisionLayers } from './canvas/useVisionLayers'
 import { VisionStatusChip } from './ui/VisionStatusChip'
 import { StudySessionBar } from './ui/StudySessionBar'
+import { TimeMachine } from './ui/TimeMachine'
 import { useStudyStore } from './presentation/studyStore'
 import { visionStatusLabel, type VisionMode } from './canvas/visionModes'
 import { Toolbar } from './ui/Toolbar'
@@ -58,19 +59,13 @@ import { exportToZip } from './export/zipExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { focusViewportFor, nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
+import { replayEvent, revertEvent } from './store/canvasEventApply'
 import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 import { ToolIcon } from './ui/icons/ToolIcon'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
-type MovePatch = { id: string; x: number; y: number }
-
-function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
-  const moves = Array.isArray(patch) ? patch : [patch]
-  useCanvasStore.getState().moveItems(boardId, moves)
-}
-
 function fitActiveBoard(fullWidth = false): void {
   const canvas = useCanvasStore.getState()
   const allItems = canvas.items()
@@ -301,58 +296,14 @@ export default function App(): React.ReactElement {
       const { undo, canUndo } = useHistoryStore.getState()
       if (!canUndo()) return
       const event = undo()
-      if (!event) return
-      const canvas = useCanvasStore.getState()
-      if (event.type === 'ITEM_ADD') {
-        const item = event.after as { id: string }
-        canvas.removeItems(event.boardId, [item.id])
-      } else if (event.type === 'ITEM_DELETE') {
-        const items = event.before as CanvasItem[]
-        items.forEach((i) => canvas.addItem(event.boardId, i))
-      } else if (event.type === 'ITEM_MOVE') {
-        applyMovePatch(event.boardId, event.before as MovePatch | MovePatch[])
-      } else if (event.type === 'ITEM_STYLE') {
-        const patch = event.before as Partial<CanvasItem> & { id: string }
-        canvas.updateItem(event.boardId, patch.id, patch)
-      } else if (event.type === 'COMPARE_MERGE') {
-        const { items: originals } = event.before as { items: CanvasItem[] }
-        const merged = event.after as CanvasItem
-        canvas.removeItems(event.boardId, [merged.id])
-        originals.forEach((i) => canvas.addItem(event.boardId, i))
-      } else if (event.type === 'BOARD_STYLE') {
-        canvas.updateBoardMeta(event.boardId, event.before as Record<string, unknown>)
-      } else if (event.type === 'CONNECTION_ADD') {
-        const connection = event.after as Connection
-        canvas.removeConnection(event.boardId, connection.id)
-      }
+      if (event) revertEvent(event)
     })
 
     resolver.register(Actions.REDO, () => {
       const { redo, canRedo } = useHistoryStore.getState()
       if (!canRedo()) return
       const event = redo()
-      if (!event) return
-      const canvas = useCanvasStore.getState()
-      if (event.type === 'ITEM_ADD') {
-        canvas.addItem(event.boardId, event.after as CanvasItem)
-      } else if (event.type === 'ITEM_DELETE') {
-        const items = event.after as { id: string }[]
-        canvas.removeItems(event.boardId, items.map((i) => i.id))
-      } else if (event.type === 'ITEM_MOVE') {
-        applyMovePatch(event.boardId, event.after as MovePatch | MovePatch[])
-      } else if (event.type === 'ITEM_STYLE') {
-        const patch = event.after as Partial<CanvasItem> & { id: string }
-        canvas.updateItem(event.boardId, patch.id, patch)
-      } else if (event.type === 'COMPARE_MERGE') {
-        const { items: originals } = event.before as { items: CanvasItem[] }
-        const merged = event.after as CanvasItem
-        canvas.removeItems(event.boardId, originals.map((i) => i.id))
-        canvas.addItem(event.boardId, merged)
-      } else if (event.type === 'BOARD_STYLE') {
-        canvas.updateBoardMeta(event.boardId, event.after as Record<string, unknown>)
-      } else if (event.type === 'CONNECTION_ADD') {
-        canvas.addConnection(event.boardId, event.after as Connection)
-      }
+      if (event) replayEvent(event)
     })
 
     // Delete selected items
@@ -519,6 +470,7 @@ export default function App(): React.ReactElement {
       if (study.status === 'running') study.pause()
       else if (study.status === 'paused') study.resume()
     })
+    resolver.register(Actions.TIME_MACHINE_TOGGLE, () => useUIStore.getState().togglePanel('timeMachine'))
     resolver.register(Actions.STUDY_NEXT, () => useStudyStore.getState().advance(1))
     resolver.register(Actions.STUDY_PREV, () => useStudyStore.getState().advance(-1))
     resolver.register(Actions.STUDY_STOP, () => {
@@ -1084,6 +1036,7 @@ export default function App(): React.ReactElement {
           <VisionFilterDefs mode={visionMode} />
           <VisionStatusChip />
           <StudySessionBar />
+          <TimeMachine />
         </>
       )}
       archiveRail={<RightSidebar />}

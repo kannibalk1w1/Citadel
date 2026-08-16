@@ -57,6 +57,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.STUDY_NEXT]: ['shift+arrowright'],
   [Actions.STUDY_PREV]: ['shift+arrowleft'],
   [Actions.STUDY_STOP]: ['shift+escape'],
+  [Actions.TIME_MACHINE_TOGGLE]: ['shift+t'],
   [Actions.COMMENT_PIN_ADD]: ['ctrl+shift+m', 'meta+shift+m'],
 
   // Item ordering

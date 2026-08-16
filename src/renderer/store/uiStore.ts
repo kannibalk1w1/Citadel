@@ -13,6 +13,7 @@ type PanelState = {
   assetLibrary: boolean
   indexLedger: boolean
   archiveWorkbench: boolean
+  timeMachine: boolean
   onboarding: boolean
 }
 
@@ -337,6 +338,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     assetLibrary: false,
     indexLedger: false,
     archiveWorkbench: false,
+  timeMachine: false,
     onboarding: false,
   },
   openPanel: (panel) => set((s) => ({ panels: { ...s.panels, [panel]: true } })),

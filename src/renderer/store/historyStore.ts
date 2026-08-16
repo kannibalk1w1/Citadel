@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 import type { CanvasEvent, CanvasEventType, RecordingSession } from '../../types'
+import type { HistoryMarker } from '../ui/timeMachineModel'
 
 type HistoryState = {
   events: CanvasEvent[]
@@ -23,6 +24,11 @@ type HistoryState = {
   // Recording
   startRecording: (name: string) => void
   stopRecording: () => RecordingSession | null
+
+  // Named moments in the log, so a session can be scrubbed back to one.
+  markers: HistoryMarker[]
+  addMarker: (name: string) => HistoryMarker | null
+  removeMarker: (id: string) => void
 
   // Recordings library
   recordings: RecordingSession[]
@@ -83,7 +89,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   isDirty: () => get().cursor !== get().savedCursor,
   markSaved: () => set((s) => ({ savedCursor: s.cursor })),
   markDirty: () => set((s) => ({ savedCursor: s.cursor === s.savedCursor ? s.cursor - 1 : s.savedCursor })),
-  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false }),
+  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false, markers: [] }),
 
   startRecording: (name) => {
     set({
@@ -106,4 +112,19 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   deleteRecording: (id) => {
     set((s) => ({ recordings: s.recordings.filter((r) => r.id !== id) }))
   },
+
+  markers: [],
+
+  // Keyed by the event it sits after, not by position: a later edit truncates
+  // the redo stack and every index past it moves, but the event id does not.
+  addMarker: (name) => {
+    const { cursor, events, markers } = get()
+    const eventId = cursor >= 0 && cursor < events.length ? events[cursor].id : null
+    if (markers.some((marker) => marker.eventId === eventId)) return null
+    const marker: HistoryMarker = { id: nanoid(), eventId, name }
+    set({ markers: [...markers, marker] })
+    return marker
+  },
+
+  removeMarker: (id) => set((s) => ({ markers: s.markers.filter((marker) => marker.id !== id) })),
 }))

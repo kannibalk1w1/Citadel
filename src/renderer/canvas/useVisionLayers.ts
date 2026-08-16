@@ -14,14 +14,44 @@ import { visionFilter, visionInteractive, visionTransform, type VisionMode } fro
  */
 const DOM_LAYER_ID = 'dom-items-layer'
 
+/**
+ * The inline styles each layer had before any check touched it.
+ *
+ * These two layers do not rest in the same state — the canvas container has no
+ * inline `pointer-events`, while the DOM-item layer is created with
+ * `pointer-events: none` so clicks fall through it to the stage. Clearing that
+ * to `''` on the way out left the layer swallowing every click on the board.
+ * Restoring what was actually there is the only version of this that is safe
+ * for both.
+ */
+type LayerBaseline = { filter: string; transform: string; transformOrigin: string; pointerEvents: string }
+
+const baselines = new WeakMap<HTMLElement, LayerBaseline>()
+
+function baselineFor(element: HTMLElement): LayerBaseline {
+  const existing = baselines.get(element)
+  if (existing) return existing
+  const baseline: LayerBaseline = {
+    filter: element.style.filter,
+    transform: element.style.transform,
+    transformOrigin: element.style.transformOrigin,
+    pointerEvents: element.style.pointerEvents,
+  }
+  baselines.set(element, baseline)
+  return baseline
+}
+
 function applyVision(element: HTMLElement | null, mode: VisionMode, mirrored: boolean): void {
   if (!element) return
-  element.style.filter = visionFilter(mode)
-  element.style.transform = visionTransform(mirrored)
-  // `transform` on the canvas container would otherwise move the origin the
-  // absolutely-positioned layers are measured from.
-  element.style.transformOrigin = 'center center'
-  element.style.pointerEvents = visionInteractive(mirrored) ? '' : 'none'
+  const baseline = baselineFor(element)
+
+  const filter = visionFilter(mode)
+  element.style.filter = filter || baseline.filter
+  const transform = visionTransform(mirrored)
+  element.style.transform = transform || baseline.transform
+  element.style.transformOrigin = mirrored ? 'center center' : baseline.transformOrigin
+  // Only ever *added* while mirrored; otherwise the layer keeps whatever it had.
+  element.style.pointerEvents = visionInteractive(mirrored) ? baseline.pointerEvents : 'none'
 }
 
 export function useVisionLayers(canvasContainer: HTMLElement | null): void {

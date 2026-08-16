@@ -331,6 +331,7 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
+          <QuickBtn label="Time machine" title="Scrub back through everything that happened on this board (Shift+T)" onClick={() => resolver.dispatch(Actions.TIME_MACHINE_TOGGLE)} />
         </div>
       </div>
 

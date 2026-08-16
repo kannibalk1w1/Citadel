@@ -24,6 +24,8 @@ beforeEach(() => {
   document.body.appendChild(canvasContainer)
   domLayer = document.createElement('div')
   domLayer.id = 'dom-items-layer'
+  // Exactly as DOMItem creates it: clicks fall through to the Konva stage.
+  domLayer.style.pointerEvents = 'none'
   document.body.appendChild(domLayer)
   useUIStore.setState({ visionMode: 'none', mirrorView: false })
 })
@@ -41,6 +43,7 @@ describe('useVisionLayers', () => {
     expect(canvasContainer.style.filter).toBe('')
     expect(domLayer.style.filter).toBe('')
     expect(canvasContainer.style.pointerEvents).toBe('')
+    expect(domLayer.style.pointerEvents).toBe('none')
   })
 
   it('applies a check to the canvas and the DOM-item layer alike', () => {
@@ -82,7 +85,9 @@ describe('useVisionLayers', () => {
     expect(canvasContainer.style.pointerEvents).toBe('')
     expect(domLayer.style.filter).toBe('')
     expect(domLayer.style.transform).toBe('')
-    expect(domLayer.style.pointerEvents).toBe('')
+    // Back to what it was, not blank: clearing this left the DOM-item layer
+    // hit-testable, swallowing every click meant for the board.
+    expect(domLayer.style.pointerEvents).toBe('none')
   })
 
   it('restores the layers when the board unmounts mid-check', () => {
@@ -91,7 +96,7 @@ describe('useVisionLayers', () => {
     view.unmount()
 
     expect(canvasContainer.style.filter).toBe('')
-    expect(domLayer.style.pointerEvents).toBe('')
+    expect(domLayer.style.pointerEvents).toBe('none')
   })
 
   it('survives the DOM-item layer not existing yet', () => {

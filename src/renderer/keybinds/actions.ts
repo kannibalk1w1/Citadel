@@ -44,6 +44,9 @@ export const Actions = {
   STUDY_NEXT: 'study:next',
   STUDY_PREV: 'study:previous',
   STUDY_STOP: 'study:stop',
+
+  // ── History ───────────────────────────────────────────────────────────────
+  TIME_MACHINE_TOGGLE: 'history:timeMachine',
   COMMENT_PIN_ADD: 'annotation:commentPinAdd',
 
   // ── Item ordering ─────────────────────────────────────────────────────────

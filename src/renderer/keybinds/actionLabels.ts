@@ -48,6 +48,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.STUDY_NEXT]: 'Study session: next image',
   [Actions.STUDY_PREV]: 'Study session: previous image',
   [Actions.STUDY_STOP]: 'Study session: end',
+  [Actions.TIME_MACHINE_TOGGLE]: 'Time machine: scrub the board history',
   [Actions.COMMENT_PIN_ADD]: 'Add comment pin',
 
   [Actions.BRING_FRONT]: 'Bring to front',

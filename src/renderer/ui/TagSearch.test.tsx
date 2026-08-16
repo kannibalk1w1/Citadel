@@ -82,6 +82,7 @@ beforeEach(() => {
       assetLibrary: false,
       indexLedger: false,
       archiveWorkbench: false,
+      timeMachine: false,
       onboarding: false,
     },
     searchQuery: 'gate',
