@@ -100,7 +100,10 @@ Profiling notes:
 
 Active next-step queue:
 
-No unscoped feature work remains. Saved Index trails are intentionally deferred until multi-board archive use demonstrates a need.
+1. Add document support. Import Markdown and plain-text files as editable canvas text/notes while retaining their source paths; add Word document support (`.docx` first, with an honest read-only/conversion fallback for legacy `.doc`). Documents should be searchable, export clearly, preserve the original file, and fail visibly rather than silently dropping a file.
+2. Build the Obsidian handoff as a portable Markdown export for selected board items before considering a two-way Obsidian plugin.
+
+Saved Index trails remain intentionally deferred until multi-board archive use demonstrates a need.
 
 Deferred validation:
 
