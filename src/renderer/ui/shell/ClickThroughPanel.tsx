@@ -37,9 +37,19 @@ export function ClickThroughPanel(): React.ReactElement | null {
       reportRegion(null)
       return
     }
+    const node = ref.current
+    // Publish straight away so there is never a moment with click-through on
+    // and no way back, then again once the panel has settled: this surface
+    // carries `citadel-motion-surface`, whose enter animation starts it 6px low
+    // and slightly scaled. `getBoundingClientRect` reports the *transformed*
+    // box, so the first rect is where the panel is passing through, not where
+    // it comes to rest — and without a second reading it stayed wrong for the
+    // life of the panel, leaving the top of the Stop button unclickable.
     publish()
+    node?.addEventListener('animationend', publish)
     window.addEventListener('resize', publish)
     return () => {
+      node?.removeEventListener('animationend', publish)
       window.removeEventListener('resize', publish)
       reportRegion(null)
     }

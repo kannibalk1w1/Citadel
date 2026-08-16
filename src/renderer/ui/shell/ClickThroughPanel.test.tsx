@@ -67,6 +67,24 @@ describe('ClickThroughPanel', () => {
     expect(regionCalls()).toContainEqual({ x: 900, y: 640, width: 200, height: 56 })
   })
 
+  /**
+   * The panel carries `citadel-motion-surface`, so it enters 6px low and
+   * slightly scaled. `getBoundingClientRect` reports the transformed box, which
+   * means the first reading is where the panel is passing through rather than
+   * where it lands — and the region stayed wrong for as long as the panel was
+   * up, leaving the top edge of the Stop button unclickable.
+   */
+  it('re-reports its position once the enter animation settles', () => {
+    useUIStore.setState({ windowClickThrough: true })
+    render(<ClickThroughPanel />)
+    const settled = { left: 900, top: 634, width: 203, height: 57, right: 1103, bottom: 691, x: 900, y: 634, toJSON: () => ({}) } as DOMRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(settled)
+
+    fireEvent.animationEnd(screen.getByRole('status'))
+
+    expect(regionCalls().at(-1)).toEqual({ x: 900, y: 634, width: 203, height: 57 })
+  })
+
   it('re-reports its position when the window is resized', () => {
     useUIStore.setState({ windowClickThrough: true })
     render(<ClickThroughPanel />)
