@@ -3,6 +3,7 @@ import { Group, Rect, Text } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import {
   chromeFrameStyle,
   connectedItemIds,
@@ -12,12 +13,6 @@ import {
 } from './boardChromeViewModel'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d', 'code'])
-
-function canvasToken(value: string): string {
-  if (!value.startsWith('var(')) return value
-  const token = value.slice(4, -1).trim()
-  return getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#bd9652'
-}
 
 function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
   const viewport = useCanvasStore((s) => s.viewport())
@@ -30,7 +25,7 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
   const relatedIds = selectedIds.length === 1 ? connectedItemIds(selectedIds[0], connections) : new Set<string>()
   const isRelated = relatedIds.has(item.id)
   const frame = chromeFrameStyle({ selected: isSelected || isConnectSource, locked: item.locked })
-  const frameStroke = canvasToken(isConnectSource ? 'var(--text-primary)' : frame.stroke)
+  const frameStroke = isConnectSource ? canvasColor('textPrimary') : resolveCanvasColor(frame.stroke, 'accent')
   const variant = frameVariantStyle(frameVariant(item))
   const badge = itemTypeBadge(item)
 
@@ -43,7 +38,7 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
           width={item.width + 8 / viewport.scale}
           height={item.height + 8 / viewport.scale}
           rotation={item.rotation}
-          stroke={isRelated && !isSelected ? 'rgba(189,150,82,0.52)' : canvasToken('var(--accent)')}
+          stroke={isRelated && !isSelected ? 'rgba(189,150,82,0.52)' : canvasColor('accent')}
           strokeWidth={3 / viewport.scale}
           opacity={isConnectSource ? 0.32 : isRelated && !isSelected ? 0.18 : frame.glowOpacity}
           cornerRadius={2 / viewport.scale}

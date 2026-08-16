@@ -91,11 +91,51 @@ const FALLBACKS: Record<CanvasColorName, string> = {
   codeAlert: '#f07f7f',
 }
 
+// Type faces have the same problem as colours: `ctx.font = '16px var(--font-body)'`
+// is an invalid assignment, so the context keeps whatever font it last had.
+export type CanvasFontName = 'body' | 'mono' | 'display'
+
+const FONT_VARIABLES: Record<CanvasFontName, string> = {
+  body: '--font-body',
+  mono: '--font-mono',
+  display: '--font-display',
+}
+
+// Matching dark.css, where the type faces are declared for every theme.
+const FONT_FALLBACKS: Record<CanvasFontName, string> = {
+  body: "'Inter', 'DM Sans', sans-serif",
+  mono: "'JetBrains Mono', monospace",
+  display: "'Inter', 'DM Sans', sans-serif",
+}
+
 let resolved: Record<CanvasColorName, string> = { ...FALLBACKS }
+let resolvedFonts: Record<CanvasFontName, string> = { ...FONT_FALLBACKS }
+
+/**
+ * Custom properties that are not in the fixed lists above, read out of saved
+ * item data. Cached per token because a canvas redraw touches every shape, and
+ * `getComputedStyle` per shape per frame is not free. Cleared on refresh.
+ */
+const tokenCache = new Map<string, string>()
+
+const CSS_VAR = /^var\(\s*(--[a-z0-9_-]+)\s*\)$/i
+
+function readVariable(token: string): string {
+  const cached = tokenCache.get(token)
+  if (cached !== undefined) return cached
+  const value = typeof document === 'undefined' || typeof getComputedStyle !== 'function'
+    ? ''
+    : getComputedStyle(document.documentElement).getPropertyValue(token).trim()
+  tokenCache.set(token, value)
+  return value
+}
 
 export function refreshCanvasColors(root: HTMLElement | null = typeof document === 'undefined' ? null : document.documentElement): Record<CanvasColorName, string> {
+  tokenCache.clear()
+
   if (!root || typeof getComputedStyle !== 'function') {
     resolved = { ...FALLBACKS }
+    resolvedFonts = { ...FONT_FALLBACKS }
     return resolved
   }
 
@@ -106,6 +146,14 @@ export function refreshCanvasColors(root: HTMLElement | null = typeof document =
     next[name] = value || FALLBACKS[name]
   }
   resolved = next
+
+  const nextFonts = {} as Record<CanvasFontName, string>
+  for (const name of Object.keys(FONT_VARIABLES) as CanvasFontName[]) {
+    const value = computed.getPropertyValue(FONT_VARIABLES[name]).trim()
+    nextFonts[name] = value || FONT_FALLBACKS[name]
+  }
+  resolvedFonts = nextFonts
+
   return resolved
 }
 
@@ -115,4 +163,49 @@ export function canvasColor(name: CanvasColorName): string {
 
 export function canvasColors(): Record<CanvasColorName, string> {
   return resolved
+}
+
+export function canvasFont(name: CanvasFontName): string {
+  return resolvedFonts[name]
+}
+
+/**
+ * Turns a colour held in item `meta` into something a 2D context accepts.
+ *
+ * Saved projects contain `var(--text-primary)` strings, because that is what
+ * the text tool wrote for a long time, so this has to keep working rather than
+ * be migrated away — a project file is the user's, and reopening one must not
+ * silently repaint it. Named and literal colours pass straight through; only
+ * `var()` needs resolving, and an unknown token falls back to the theme.
+ */
+export function resolveCanvasColor(value: unknown, fallback: CanvasColorName): string {
+  if (typeof value !== 'string' || value.trim() === '') return canvasColor(fallback)
+  const trimmed = value.trim()
+  const match = CSS_VAR.exec(trimmed)
+  if (!match) return trimmed
+  return readVariable(match[1]) || canvasColor(fallback)
+}
+
+export function resolveCanvasFontFamily(value: unknown, fallback: CanvasFontName): string {
+  if (typeof value !== 'string' || value.trim() === '') return canvasFont(fallback)
+  const trimmed = value.trim()
+  const match = CSS_VAR.exec(trimmed)
+  if (!match) return trimmed
+  return readVariable(match[1]) || canvasFont(fallback)
+}
+
+/**
+ * Konva wants a number. Saved items may hold `'var(--text-xl)'`, which reaches
+ * the context as `"var(--text-xl)px"` and is thrown away whole, taking the font
+ * with it. The rhythm tokens are declared in px, so parsing the resolved value
+ * gives the size the theme intended.
+ */
+export function resolveCanvasFontSize(value: unknown, fallback: number): number {
+  if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? value : fallback
+  if (typeof value !== 'string') return fallback
+  const trimmed = value.trim()
+  const match = CSS_VAR.exec(trimmed)
+  const raw = match ? readVariable(match[1]) : trimmed
+  const parsed = Number.parseFloat(raw)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }

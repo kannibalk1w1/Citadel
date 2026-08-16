@@ -9,7 +9,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
-import { canvasColor } from '../../theme/canvasColors'
+import { canvasColor, canvasFont } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
@@ -152,7 +152,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
               width={swatchW(i) - 4}
               text={color.toUpperCase()}
               fontSize={9}
-              fontFamily="var(--font-mono)"
+              fontFamily={canvasFont('mono')}
               fill={color}
               align="center"
               listening={false}

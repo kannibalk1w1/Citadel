@@ -10,7 +10,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
-import { canvasColor } from '../../theme/canvasColors'
+import { canvasColor, canvasFont, resolveCanvasFontSize } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
@@ -45,7 +45,9 @@ export function StickyItem({ item }: Props): React.ReactElement {
 
   const bg = (item.meta?.color as string) ?? '#1e1b18'
   const content = (item.meta?.content as string) ?? ''
-  const fontSize = (item.meta?.fontSize as number) ?? 14
+  // Resolved, not cast: a stored `var(--text-*)` string would otherwise reach
+  // both Konva and the silhouette threshold's arithmetic.
+  const fontSize = resolveCanvasFontSize(item.meta?.fontSize, 14)
   const align = (item.meta?.align as string) ?? 'left'
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
   const isComment = item.meta?.kind === 'comment'
@@ -222,7 +224,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
                 text={isAttachedComment ? 'ATTACHED COMMENT' : 'COMMENT'}
                 fill={canvasColor("accent")}
                 fontSize={8}
-                fontFamily="var(--font-mono)"
+                fontFamily={canvasFont('mono')}
                 wrap="none"
               />
             )}
@@ -234,10 +236,10 @@ export function StickyItem({ item }: Props): React.ReactElement {
             width={item.width - 16}
             height={textHeight}
             text={content || 'Double-click to edit…'}
-            fill={content ? 'var(--text-primary)' : '#675f54'}
+            fill={content ? canvasColor('textPrimary') : '#675f54'}
             fontSize={fontSize}
             fontStyle={fontStyle}
-            fontFamily="var(--font-body)"
+            fontFamily={canvasFont('body')}
             align={align}
             wrap="word"
           />

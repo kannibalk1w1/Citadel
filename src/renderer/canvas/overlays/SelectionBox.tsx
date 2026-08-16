@@ -2,11 +2,8 @@ import React from 'react'
 import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { canvasColor } from '../../theme/canvasColors'
 import { selectionBounds } from './boardChromeViewModel'
-
-function canvasToken(name: string, fallback: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
-}
 
 type SelectionBoxProps = {
   items?: CanvasItem[]
@@ -31,7 +28,7 @@ export function SelectionBox({ items: providedItems }: SelectionBoxProps = {}): 
       y={bounds.y}
       width={bounds.width}
       height={bounds.height}
-      stroke={canvasToken('--accent', '#bd9652')}
+      stroke={canvasColor('accent')}
       strokeWidth={1}
       fill="rgba(189,150,82,0.045)"
       dash={[10, 5]}

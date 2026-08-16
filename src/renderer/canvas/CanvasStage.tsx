@@ -129,7 +129,7 @@ export function CanvasStage(): React.ReactElement {
         id: nanoid(), type: 'text' as const,
         x: cx, y: cy, width: 300, height: 40,
         rotation: 0, zIndex: Date.now(), locked: false, visible: true, opacity: 1,
-        tags: [], meta: { content: '', fontSize: 'var(--text-xl)', color: 'var(--text-primary)', align: 'left' },
+        tags: [], meta: { content: '', fontSize: 16, align: 'left' },
       }
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)

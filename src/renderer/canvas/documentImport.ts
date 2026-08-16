@@ -81,8 +81,9 @@ export function buildDocumentItem(extraction: DocumentExtraction, placement: Doc
     src: extraction.sourcePath,
     meta: {
       content: extraction.text,
+      // No colour is stored: the renderer resolves the theme's text colour, so
+      // an imported document follows a theme change like any other text item.
       fontSize: DOCUMENT_ITEM_LAYOUT.fontSize,
-      color: 'var(--text-primary)',
       align: 'left',
       documentFormat: extraction.format,
       documentName: extraction.sourceName,

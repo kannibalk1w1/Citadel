@@ -10,7 +10,7 @@ import { handleConnectRelicClick } from '../connections/connectInteraction'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
-import { canvasColor } from '../../theme/canvasColors'
+import { canvasColor, canvasFont, resolveCanvasColor, resolveCanvasFontSize } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
@@ -39,10 +39,12 @@ export function TextItem({ item }: Props): React.ReactElement {
   }, [isSelected])
 
   const content = (item.meta?.content as string) ?? ''
-  const fontSize = (item.meta?.fontSize as number) ?? 16
+  // Konva paints to a 2D context, which cannot read CSS variables — see
+  // theme/canvasColors.ts. Everything below is resolved before it gets there.
+  const fontSize = resolveCanvasFontSize(item.meta?.fontSize, 16)
   const fontStyle = (item.meta?.fontStyle as string) ?? 'normal'
   const align = (item.meta?.align as string) ?? 'left'
-  const color = (item.meta?.color as string) ?? 'var(--text-primary)'
+  const color = resolveCanvasColor(item.meta?.color, 'textPrimary')
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -164,7 +166,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         opacity={item.opacity}
         text={content || 'Double-click to edit…'}
         fontSize={fontSize}
-        fontFamily="var(--font-body)"
+        fontFamily={canvasFont('body')}
         fontStyle={content ? fontStyle : 'normal'}
         align={align}
         fill={content ? color : '#675f54'}

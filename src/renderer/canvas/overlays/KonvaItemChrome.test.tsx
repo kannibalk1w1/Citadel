@@ -69,7 +69,10 @@ describe('KonvaItemChrome', () => {
 
     render(<KonvaItemChrome />)
 
-    expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-stroke')).toBe('#bd9652')
+    // The theme's accent. This used to read '#bd9652' — a fallback hardcoded in
+    // a local copy of the token resolver, which differed from --accent and so
+    // painted the chrome a slightly different gold whenever it was reached.
+    expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-stroke')).toBe('#c8a96e')
     expect(screen.getAllByTestId('konva-rect')[0].getAttribute('data-opacity')).toBe('0.32')
   })
 })

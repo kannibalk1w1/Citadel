@@ -1,7 +1,7 @@
 import React from 'react'
 import { Line, Text } from 'react-konva'
 import { useUIStore } from '../../store/uiStore'
-import { canvasColor } from '../../theme/canvasColors'
+import { canvasColor, canvasFont } from '../../theme/canvasColors'
 
 export type SnapLine = {
   x1: number
@@ -38,7 +38,7 @@ export function SnapGuides(): React.ReactElement {
               y={line.labelY ?? line.y1}
               text={line.label}
               fontSize={10}
-              fontFamily="var(--font-mono)"
+              fontFamily={canvasFont('mono')}
               fill={canvasColor("textAccent")}
               listening={false}
             />

@@ -214,7 +214,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           y={0}
           width={item.width}
           height={item.height}
-          fill={fitMode === 'fit' ? 'var(--bg-canvas)' : 'rgba(0,0,0,0.001)'}
+          fill={fitMode === 'fit' ? canvasColor('bgCanvas') : 'rgba(0,0,0,0.001)'}
           opacity={fitMode === 'fit' ? 0.75 : 1}
         />
         {isMissing || !image ? (

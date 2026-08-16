@@ -7,7 +7,7 @@ import { resolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
 import type { CanvasItem } from '../../../types'
 import { activeArchiveRailWidth } from '../shell/shellModel'
-import { canvasColor } from '../../theme/canvasColors'
+import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
 
@@ -53,9 +53,15 @@ const ALIGN_ROWS: AlignAction[][] = [
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 
+/**
+ * A colour input needs a literal. Items saved before the canvas resolved its
+ * own tokens hold `var(--text-primary)`, so resolve rather than guess — the
+ * old guess showed one fixed swatch for every themed item.
+ */
 function cssVarToHex(val: string): string {
   if (val.startsWith('#')) return val
-  return '#e3ded4'
+  const resolved = resolveCanvasColor(val, 'textPrimary')
+  return resolved.startsWith('#') ? resolved : '#e3ded4'
 }
 
 function isCommentItem(item: CanvasItem): boolean {
