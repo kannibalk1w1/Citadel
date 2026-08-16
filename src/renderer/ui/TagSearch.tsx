@@ -147,7 +147,7 @@ export function TagSearch(): React.ReactElement | null {
 
   return (
     <div
-      className="citadel-floating-panel"
+      className="citadel-floating-panel citadel-motion-surface"
       style={{
         position: 'absolute',
         top: 48,

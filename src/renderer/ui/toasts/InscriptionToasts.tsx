@@ -25,6 +25,7 @@ export function InscriptionToasts(): React.ReactElement | null {
       {toasts.map((toast) => (
         <div
           key={toast.id}
+          className="citadel-motion-toast"
           style={{
             background: 'color-mix(in srgb, var(--bg-panel) 94%, transparent)',
             border: toast.tone === 'danger' ? '1px solid var(--accent-danger)' : '1px solid var(--border)',

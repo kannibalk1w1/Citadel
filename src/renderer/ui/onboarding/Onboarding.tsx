@@ -76,6 +76,7 @@ export function Onboarding(): React.ReactElement | null {
 
   return (
     <aside
+      className="citadel-motion-surface"
       aria-label="Getting started"
       style={{
         position: 'fixed',

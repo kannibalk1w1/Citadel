@@ -200,7 +200,7 @@ export function ContextMenu(): React.ReactElement | null {
   return (
     <div
       ref={ref}
-      className="citadel-context-menu"
+      className="citadel-context-menu citadel-motion-surface"
       style={{
         position: 'fixed',
         left: contextMenu.x,

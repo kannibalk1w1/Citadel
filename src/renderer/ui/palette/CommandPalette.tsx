@@ -99,6 +99,7 @@ export function CommandPalette(): React.ReactElement | null {
       }}
     >
       <div
+        className="citadel-motion-surface"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"

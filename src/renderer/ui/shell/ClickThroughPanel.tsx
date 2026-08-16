@@ -52,6 +52,7 @@ export function ClickThroughPanel(): React.ReactElement | null {
   return (
     <div
       ref={ref}
+      className="citadel-motion-surface"
       // Announced rather than merely coloured: the window looks unchanged when
       // click-through turns on, so the state has to be stated.
       role="status"

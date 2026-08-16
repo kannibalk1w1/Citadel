@@ -93,8 +93,10 @@
   --shadow-inset: inset 0 1px 0 rgba(255, 246, 231, 0.035);
 
   /* Motion */
-  --transition-fast: 140ms cubic-bezier(0.22, 0.8, 0.2, 1);
-  --transition-med: 220ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  --transition-fast: 140ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  --transition-med: 220ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  --motion-enter: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-toast: 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ── Global Reset ──────────────────────────────────────────────────────────── */
@@ -150,6 +152,11 @@ textarea {
 
 button {
   -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.985);
 }
 
 button:focus-visible,
@@ -190,6 +197,34 @@ button[disabled] {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* A compact, product-like motion language. These moves establish where a
+   transient surface came from and acknowledge an action; they never loop or
+   decorate the canvas. Components opt in with a class rather than inheriting
+   animation accidentally. */
+@keyframes citadel-surface-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes citadel-toast-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.citadel-motion-surface {
+  animation: citadel-surface-enter var(--motion-enter) both;
+  will-change: transform, opacity;
+}
+
+.citadel-motion-toast {
+  animation: citadel-toast-enter var(--motion-toast) both;
+  will-change: transform, opacity;
+}
+
+.citadel-dom-item[data-dragging='true'] {
+  filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--accent) 20%, transparent));
 }
 
 @media (prefers-reduced-motion: reduce) {

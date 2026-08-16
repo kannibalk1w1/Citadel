@@ -93,6 +93,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       clientY: event.clientY,
       item: { x: item.x, y: item.y, width: item.width, height: item.height },
     }
+    if (mode === 'move' && ref.current) ref.current.dataset.dragging = 'true'
     // Same contract as the Konva drag handlers: the snap engine reads nearby
     // items from the spatial index, so it has to be current before the move.
     if (mode === 'move') spatialIndex.rebuild(useCanvasStore.getState().items())
@@ -131,6 +132,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       }
     }
     pointerStart.current = null
+    if (ref.current) delete ref.current.dataset.dragging
     if (start.mode === 'move') {
       snapLines.length = 0
       useUIStore.getState().bumpSnap()
@@ -148,6 +150,7 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   return createPortal(
     <div
       ref={ref}
+      className="citadel-dom-item"
       style={{
         position: 'absolute',
         transformOrigin: 'top left',
