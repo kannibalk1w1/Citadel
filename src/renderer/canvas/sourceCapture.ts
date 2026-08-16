@@ -65,6 +65,18 @@ export function sourceCaptureReference(item: CanvasItem): SourceCaptureReference
   }
 }
 
+/** Capture notes linked directly to a source item, newest first. */
+export function sourceCapturesForItem(items: CanvasItem[], sourceItemId: string): CanvasItem[] {
+  return items
+    .filter((item) => sourceCaptureReference(item)?.sourceItemId === sourceItemId)
+    .sort((a, b) => captureTimestamp(b) - captureTimestamp(a))
+}
+
+function captureTimestamp(item: CanvasItem): number {
+  const capturedAt = item.meta?.capturedAt
+  return typeof capturedAt === 'number' && Number.isFinite(capturedAt) ? capturedAt : item.zIndex
+}
+
 function validRegion(value: unknown): ImageRegion | undefined {
   if (!value || typeof value !== 'object') return undefined
   const region = value as Record<string, unknown>

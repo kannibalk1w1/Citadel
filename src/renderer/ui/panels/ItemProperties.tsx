@@ -10,7 +10,7 @@ import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
-import { imageRegionPercent, sourceCaptureReference } from '../../canvas/sourceCapture'
+import { imageRegionPercent, sourceCaptureReference, sourceCapturesForItem } from '../../canvas/sourceCapture'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -534,6 +534,41 @@ function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElemen
   )
 }
 
+function SourceCapturesSection({ image, items }: { image: CanvasItem; items: CanvasItem[] }): React.ReactElement | null {
+  const captures = sourceCapturesForItem(items, image.id)
+  if (captures.length === 0) return null
+  return (
+    <>
+      <Divider label={`Captures (${captures.length})`} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        {captures.map((capture) => {
+          const content = typeof capture.meta?.content === 'string' ? capture.meta.content.trim() : ''
+          const locator = sourceCaptureReference(capture)?.locator
+          const title = content.split(/\r?\n/, 1)[0] || 'Untitled capture'
+          return (
+            <button
+              key={capture.id}
+              type="button"
+              title={content || 'Untitled capture'}
+              onClick={() => centerViewportOnItem(capture)}
+              style={{ width: '100%', textAlign: 'left', background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px 8px' }}
+            >
+              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-body)' }}>
+                {title}
+              </div>
+              {locator && (
+                <div style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)' }}>
+                  {locator}
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 
 function CommentAttachPanel({
@@ -765,6 +800,7 @@ export function ItemProperties(): React.ReactElement | null {
       {/* ── Swatch-specific ── */}
       {item.type === 'image' && (
         <>
+          <SourceCapturesSection image={item} items={items} />
           <Divider label="Image" />
           <Field label="Fit">
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>

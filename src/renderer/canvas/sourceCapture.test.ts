@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSourceCapture, imageRegionFromPercent, imageRegionPercent, sourceCaptureConnection, sourceCaptureReference, sourceCaptureRegionPatch } from './sourceCapture'
+import { createSourceCapture, imageRegionFromPercent, imageRegionPercent, sourceCaptureConnection, sourceCaptureReference, sourceCaptureRegionPatch, sourceCapturesForItem } from './sourceCapture'
 
 describe('source captures', () => {
   it('keeps both a human-readable source and the item it came from', () => {
@@ -31,5 +31,15 @@ describe('source captures', () => {
 
     expect(patch?.before).toEqual({ id: 'capture-1', meta: capture.meta })
     expect(sourceCaptureReference({ ...capture, meta: patch!.after.meta })?.region).toEqual({ x: 0.7, y: 0.8, width: 0.30000000000000004, height: 0.19999999999999996 })
+  })
+
+  it('lists captures for a source image newest first', () => {
+    const older = createSourceCapture('Older note', { reference: '', sourceItemId: 'image-1' }, { x: 0, y: 0 }, 'older')
+    const newer = createSourceCapture('Newer note', { reference: '', sourceItemId: 'image-1' }, { x: 0, y: 0 }, 'newer')
+    const other = createSourceCapture('Other note', { reference: '', sourceItemId: 'image-2' }, { x: 0, y: 0 }, 'other')
+    older.meta!.capturedAt = 100
+    newer.meta!.capturedAt = 200
+
+    expect(sourceCapturesForItem([older, other, newer], 'image-1').map((capture) => capture.id)).toEqual(['newer', 'older'])
   })
 })
