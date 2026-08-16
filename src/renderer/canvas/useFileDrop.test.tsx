@@ -148,6 +148,56 @@ describe('useFileDrop with Word documents', () => {
     expect(toastTexts()).toContain('blank.docx has no text to import.')
   })
 
+  it('imports a dropped .md through the same bridge and flow', async () => {
+    invoke.mockResolvedValue(extraction({
+      format: 'markdown',
+      sourcePath: '/home/scribe/outline.md',
+      sourceName: 'outline.md',
+      text: '# Outline\n\n- first',
+    }))
+    const { result } = renderHook(() => useFileDrop())
+
+    await result.current.handleDrop(dropEvent([{ name: 'outline.md', path: '/home/scribe/outline.md' }]))
+
+    expect(invoke).toHaveBeenCalledWith('document:extractText', { path: '/home/scribe/outline.md' })
+    const items = useCanvasStore.getState().items()
+    expect(items).toHaveLength(1)
+    expect(items[0].type).toBe('text')
+    expect(items[0].meta?.content).toBe('# Outline\n\n- first')
+    expect(items[0].meta?.documentFormat).toBe('markdown')
+    expect(useCanvasStore.getState().selectedIds).toEqual([items[0].id])
+    expect(useHistoryStore.getState().events).toHaveLength(1)
+    expect(toastTexts()[0]).toContain('does not render Markdown')
+  })
+
+  it('imports a dropped .txt the same way', async () => {
+    invoke.mockResolvedValue(extraction({
+      format: 'text',
+      sourcePath: '/home/scribe/log.txt',
+      sourceName: 'log.txt',
+      text: 'plain notes',
+    }))
+    const { result } = renderHook(() => useFileDrop())
+
+    await result.current.handleDrop(dropEvent([{ name: 'log.txt', path: '/home/scribe/log.txt' }]))
+
+    const items = useCanvasStore.getState().items()
+    expect(items).toHaveLength(1)
+    expect(items[0].meta?.documentFormat).toBe('text')
+    expect(items[0].src).toBe('/home/scribe/log.txt')
+    expect(toastTexts()).toEqual(['log.txt imported as text'])
+  })
+
+  it('leaves formats it does not import to the rest of the drop flow', async () => {
+    const { result } = renderHook(() => useFileDrop())
+
+    await result.current.handleDrop(dropEvent([{ name: 'sheet.xlsx', path: '/home/scribe/sheet.xlsx' }]))
+
+    expect(invoke).not.toHaveBeenCalled()
+    expect(useCanvasStore.getState().items()).toHaveLength(0)
+    expect(useInscriptionToastStore.getState().toasts).toHaveLength(0)
+  })
+
   it('tells the person when a long document was shortened', async () => {
     invoke.mockResolvedValue(extraction({ truncated: true, characters: 500_000 }))
     const { result } = renderHook(() => useFileDrop())

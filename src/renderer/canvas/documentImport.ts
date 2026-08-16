@@ -1,17 +1,18 @@
 import type { CanvasItem } from '../../types'
-import { DOCUMENT_LIMITS } from '../../types/documents'
-import type { DocumentExtraction, DocumentFailureCode } from '../../types/documents'
+import { DOCUMENT_LIMITS, documentFormatForFilename } from '../../types/documents'
+import type { DocumentExtraction, DocumentFailureCode, PathFormat } from '../../types/documents'
 
 /**
- * Turning a dropped Word document into an ordinary canvas text item.
+ * Turning a dropped document into an ordinary canvas text item.
  *
  * Nothing here reads a file: `useFileDrop` hands the path to the main process
  * over `document:extractText` and passes the answer through these pure
  * functions. What lands on the canvas is a plain `text` item — the same one the
  * text tool makes — so editing, search, undo, export, and saving need no
- * document-specific code anywhere else. The `.docx` path stays on `src` so the
- * origin survives the import and the original file is bundled by `.citadelz`
- * export, and a few `document*` meta fields record what was imported.
+ * document-specific code anywhere else. The document's path stays on `src` so
+ * the origin survives the import and the original file is bundled by
+ * `.citadelz` export, and a few `document*` meta fields record what was
+ * imported. Markdown arrives as its own source text; nothing renders it.
  */
 
 export const DOCUMENT_ITEM_LAYOUT = {
@@ -25,12 +26,13 @@ export const DOCUMENT_ITEM_LAYOUT = {
   charWidth: 8,
 } as const
 
-/** `docx` and `doc` are recognised at the drop; only one of them is imported. */
-export function documentDropFormat(filename: string): 'docx' | 'doc' | null {
-  const extension = filename.split('.').pop()?.toLowerCase() ?? ''
-  if (extension === 'docx') return 'docx'
-  if (extension === 'doc') return 'doc'
-  return null
+/**
+ * What a dropped file claims to be. `doc` is recognised here so the drop can be
+ * refused in the interface without troubling the main process for a file it
+ * would only refuse as well.
+ */
+export function documentDropFormat(filename: string): PathFormat | null {
+  return documentFormatForFilename(filename)
 }
 
 /**
@@ -95,6 +97,11 @@ export function documentImportedMessage(extraction: DocumentExtraction): string 
   if (extraction.truncated) {
     return `${extraction.sourceName} imported as text, shortened to fit. The original file is unchanged.`
   }
+  // Said once, at the moment it could mislead: a dropped .md is its own source,
+  // not a rendered page, and the item shows exactly what the file holds.
+  if (extraction.format === 'markdown') {
+    return `${extraction.sourceName} imported as Markdown source text — Citadel does not render Markdown.`
+  }
   return `${extraction.sourceName} imported as text`
 }
 
@@ -104,21 +111,27 @@ export function documentImportedMessage(extraction: DocumentExtraction): string 
  * one of these.
  */
 export function documentImportFailureMessage(filename: string, code: DocumentFailureCode): string {
+  const isWord = documentFormatForFilename(filename) === 'docx'
+
   switch (code) {
     case 'legacy-doc':
       return `${filename} is a legacy Word file. Citadel imports .docx only — open it in Word and save as .docx, then drop it again.`
     case 'ole-container':
       return `${filename} is either a legacy .doc renamed or a password-protected document. Save it as an unprotected .docx and drop it again.`
     case 'unsupported-format':
-      return `${filename} is not a .docx file, so Citadel did not import it.`
+      return `${filename} is not a document Citadel imports. It reads .docx, .md, and .txt.`
     case 'external-source':
-      return `Citadel imports Word documents from local files only, so ${filename} was not imported.`
+      return `Citadel imports documents from local files only, so ${filename} was not imported.`
     case 'missing':
       return `${filename} could not be found, so nothing was imported.`
     case 'too-large':
       return `${filename} is larger than ${Math.round(DOCUMENT_LIMITS.maxBytes / (1024 * 1024))} MB, so Citadel did not import it.`
+    case 'binary':
+      return `${filename} is not a text file, whatever its name says, so Citadel did not import it.`
     case 'unreadable':
-      return `${filename} could not be read as a Word document. It may be damaged.`
+      return isWord
+        ? `${filename} could not be read as a Word document. It may be damaged.`
+        : `${filename} could not be read. It may be damaged or in use by another program.`
     case 'empty':
       return `${filename} has no text to import.`
     case 'timeout':

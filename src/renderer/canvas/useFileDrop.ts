@@ -173,7 +173,7 @@ export function useFileDrop() {
         continue
       }
 
-      // ── Word documents ──────────────────────────────────────────────────
+      // ── Documents: .docx, .md, .txt ─────────────────────────────────────
       // The renderer never opens the file: main reads it and answers with
       // plain text or a named reason, and either way the person is told.
       const documentFormat = documentDropFormat(file.name)
@@ -181,7 +181,7 @@ export function useFileDrop() {
         inscribe(documentImportFailureMessage(file.name, 'legacy-doc'), { tone: 'danger' })
         continue
       }
-      if (documentFormat === 'docx') {
+      if (documentFormat !== null) {
         const STACK_OFFSET = 20
         let result: DocumentExtractionResult
         try {

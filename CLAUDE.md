@@ -298,7 +298,7 @@ Key tokens:
 | `export:zip` | r→m | `{ projectJson, assetPaths, filename }` → `{ ok, path? \| reason? }` |
 | `import:zip` | r→m | `{ zipPath }` → `{ ok, projectJson?, assetDir? \| reason? }` |
 | `archive:progress` | m→r | `{ op: 'import' \| 'export', percent }` — throttled push during zip rites |
-| `document:extractText` | r→m | `{ path }` → `{ ok, format, sourcePath, sourceName, text, characters, words, truncated } \| { ok: false, code, reason }` — local `.docx` plain text only; contract in `src/types/documents.ts` |
+| `document:extractText` | r→m | `{ path }` → `{ ok, format, sourcePath, sourceName, text, characters, words, truncated } \| { ok: false, code, reason }` — local `.docx`/`.md`/`.txt` plain text only, never rendered; contract and extension table in `src/types/documents.ts` |
 | `shell:openURL` | r→m | `{ url }` |
 | `settings:get` | r→m | `{ key }` → `{ value }` |
 | `settings:set` | r→m | `{ key, value }` |

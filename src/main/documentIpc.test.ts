@@ -92,6 +92,19 @@ describe('document:extractText channel', () => {
     })
   })
 
+  it('answers a Markdown path with its unrendered source', async () => {
+    const path = join(workDir, 'channel.md')
+    writeFileSync(path, '# Title\n\n- a list item\n')
+    const result = await callDocumentChannel({ path })
+
+    expect(result).toMatchObject({
+      ok: true,
+      format: 'markdown',
+      sourceName: 'channel.md',
+      text: '# Title\n\n- a list item',
+    })
+  })
+
   it('answers a bad request with a reason instead of throwing', async () => {
     await expect(callDocumentChannel({ path: join(workDir, 'gone.docx') }))
       .resolves.toMatchObject({ ok: false, code: 'missing' })

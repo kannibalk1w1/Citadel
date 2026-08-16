@@ -47,23 +47,29 @@ notes, and any project where connections are easier to see than to describe.
 | Code cards | Create copyable, syntax-coloured snippets; double-click to edit; choose TypeScript, JavaScript, Python, JSON, HTML, CSS, Bash, SQL, YAML, or plain text. Code content and language are searchable and export correctly. |
 | PDFs | Drop a PDF to add a cached preview of its first page. It is a visual reference, not a full PDF reader or text extractor. |
 | Word documents (`.docx`) | Drop a `.docx` to import its text as a normal canvas text block: editable, searchable, taggable, connectable, and included in exports. The path to the original document is kept on the item, and the file itself is never modified. |
+| Markdown (`.md`, `.markdown`) | Imported the same way, as its **source text**. Citadel does not render Markdown: headings, lists, and links arrive as the characters the file holds, and the item says so when it lands. |
+| Plain text (`.txt`) | Imported the same way. UTF-8 and UTF-16 files are both read, so a file saved from Notepad as "Unicode" arrives as text rather than as gibberish. |
 | Legacy Word (`.doc`) | Not supported. Dropping one shows a message asking you to save it as `.docx` in Word and drop it again; nothing is imported and nothing is silently dropped. |
-| Markdown, TXT, RTF, ODT | Not imported as documents yet. Paste their content into a text block, note, or code card instead. |
+| RTF, ODT | Not imported. Paste their content into a text block, note, or code card instead. |
 
 Citadel currently stores plain text and code inside the project; it does not
 interpret Markdown, offer rich-text editing, or round-trip office documents.
 
-**What `.docx` import does and does not do.** Import extracts plain text only.
-Headings, bold, italics, tables, images, footnotes, comments, and tracked
-changes are not carried across, and Citadel never writes back to the `.docx`.
-Table cells and list items arrive as ordinary paragraphs. Documents are read
-locally by the app's main process — nothing is uploaded and no network request
-is made. Two bounds apply: files over 25 MB are refused, and documents longer
-than 200,000 characters are imported up to that point with a visible line on
-the item saying so. Password-protected documents cannot be opened; Citadel says
-so and asks for an unprotected copy. Any other document that cannot be read —
-damaged, or not really a `.docx` — is reported in the app with the reason
-rather than skipped in silence.
+**What document import does and does not do.** Import produces plain text only.
+From a `.docx`, headings, bold, italics, tables, images, footnotes, comments,
+and tracked changes are not carried across; table cells and list items arrive
+as ordinary paragraphs. From a `.md` or `.txt`, the file arrives as written —
+only line endings are normalised, so Markdown's own hard line breaks and blank
+lines survive. Citadel never writes back to any of them.
+
+Documents are read locally by the app's main process — nothing is uploaded and
+no network request is made. Two bounds apply to every format: files over 25 MB
+are refused, and documents longer than 200,000 characters are imported up to
+that point with a visible line on the item saying so. Password-protected Word
+documents cannot be opened; Citadel says so and asks for an unprotected copy. A
+file that is not really text behind a `.txt` name is refused rather than pasted
+onto the canvas as noise. Any other document that cannot be read is reported in
+the app with the reason rather than skipped in silence.
 
 ### Media and references
 
@@ -80,7 +86,8 @@ Supported drag-and-drop extensions include:
 - Video: `mp4`, `webm`, `mov`, `mkv`, `avi`
 - Audio: `mp3`, `wav`, `ogg`, `flac`, `aac`, `m4a`
 - 3D: `glb`, `gltf`, `obj`, `fbx`
-- Documents: `pdf` (first-page preview), `docx` (text imported as a text block)
+- Documents: `pdf` (first-page preview), `docx`, `md`, `markdown`, `txt`
+  (text imported as a text block)
 
 ### Find and move quickly
 

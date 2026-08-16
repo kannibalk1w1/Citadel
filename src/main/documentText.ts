@@ -1,21 +1,22 @@
 import { promises as fsp } from 'fs'
 import { basename, isAbsolute } from 'path'
 import mammoth from 'mammoth'
-import { DOCUMENT_LIMITS } from '../types/documents'
+import { DOCUMENT_LIMITS, documentFormatForFilename } from '../types/documents'
 import type {
   DocumentExtractionFailure,
   DocumentExtractionResult,
   DocumentFailureCode,
+  DocumentFormat,
 } from '../types/documents'
 
 /**
- * Word document text extraction, main process only.
+ * Document text extraction, main process only.
  *
- * Scope is deliberately narrow: `.docx` in, plain text out. Mammoth is asked
- * for raw text rather than HTML, so nothing here interprets styles, images, or
- * embedded objects, and nothing is ever fetched — the only thing read is the
- * one local file path the renderer dropped. Legacy `.doc` is detected and
- * refused by name rather than half-parsed into nonsense.
+ * Scope is deliberately narrow: `.docx`, `.md`, and `.txt` in, plain text out.
+ * Mammoth is asked for raw text rather than HTML, Markdown is kept as its own
+ * source rather than rendered, and nothing is ever fetched — the only thing
+ * read is the one local file path the renderer dropped. Legacy `.doc` is
+ * detected and refused by name rather than half-parsed into nonsense.
  */
 
 function groupDigits(value: number): string {
@@ -41,13 +42,8 @@ export function isLegacyDocHeader(header: Uint8Array): boolean {
   return OLE_MAGIC.every((byte, index) => header[index] === byte)
 }
 
-/** `docx`, `doc`, or null for anything this module does not claim to read. */
-export function documentFormatForPath(path: string): 'docx' | 'doc' | null {
-  const extension = path.split(/[\\/]/).pop()?.split('.').pop()?.toLowerCase() ?? ''
-  if (extension === 'docx') return 'docx'
-  if (extension === 'doc') return 'doc'
-  return null
-}
+/** Re-exported so this module reads as one piece; the table itself is shared. */
+export const documentFormatForPath = documentFormatForFilename
 
 /**
  * True for anything carrying a URL scheme — `http:`, `file:`, `data:`. A
@@ -70,6 +66,47 @@ export function normalizeDocumentText(raw: string): string {
     .replace(/[^\S\n]+$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+}
+
+/**
+ * A `.md` or `.txt` file is already text, so it arrives as written. Only line
+ * endings are normalised and the trailing newline is trimmed: collapsing blank
+ * runs or stripping trailing spaces would edit Markdown's own meaning — two
+ * trailing spaces are a hard line break, and blank lines separate blocks.
+ */
+export function normalizePlainText(raw: string): string {
+  return raw.replace(/\r\n?/g, '\n').replace(/\s+$/, '')
+}
+
+/**
+ * Decodes a text file the way the editor that wrote it meant. Notepad's
+ * "Unicode" save is UTF-16 with a byte-order mark, and reading that as UTF-8
+ * would produce either mojibake or a false "this is binary" refusal.
+ */
+export function decodeTextBuffer(buffer: Buffer): string {
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return buffer.subarray(2).toString('utf16le')
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    // Node decodes little-endian only, so byte-swap a copy first.
+    return Buffer.from(buffer.subarray(2)).swap16().toString('utf16le')
+  }
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return buffer.subarray(3).toString('utf8')
+  }
+  return buffer.toString('utf8')
+}
+
+/**
+ * True for content no text file has. A NUL byte settles it outright; otherwise
+ * a scattering of replacement characters means the bytes were not the encoding
+ * they claimed, and pasting that onto a canvas would help nobody.
+ */
+export function looksBinary(text: string): boolean {
+  if (text.includes('\u0000')) return true
+  if (text.length === 0) return false
+  const replacements = text.match(/\ufffd/g)?.length ?? 0
+  return replacements > 0 && replacements / text.length > 0.01
 }
 
 export function capDocumentText(text: string, maxCharacters: number): { text: string; truncated: boolean } {
@@ -98,39 +135,22 @@ function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
   ])
 }
 
-export async function extractDocumentText(path: unknown): Promise<DocumentExtractionResult> {
-  if (typeof path !== 'string' || path.trim() === '') {
-    return fail('unsupported-format', 'No document path was given.')
+/** The one place a successful result is shaped, so every format reports alike. */
+function succeed(path: string, format: DocumentFormat, normalized: string): DocumentExtractionResult {
+  const capped = capDocumentText(normalized, DOCUMENT_LIMITS.maxCharacters)
+  return {
+    ok: true,
+    format,
+    sourcePath: path,
+    sourceName: basename(path),
+    text: capped.text,
+    characters: normalized.length,
+    words: countWords(normalized),
+    truncated: capped.truncated,
   }
-  if (isExternalSource(path)) {
-    return fail('external-source', 'Citadel reads Word documents from local files only.')
-  }
-  if (!isAbsolute(path)) {
-    return fail('external-source', 'A Word document must be given as a full local path.')
-  }
+}
 
-  const format = documentFormatForPath(path)
-  if (format === 'doc') {
-    return fail('legacy-doc', 'Legacy .doc files are not supported. Save the file as .docx and import it again.')
-  }
-  if (format !== 'docx') {
-    return fail('unsupported-format', 'Citadel imports Word documents in .docx format only.')
-  }
-
-  let size: number
-  try {
-    const stat = await fsp.stat(path)
-    if (!stat.isFile()) return fail('missing', 'That path is not a file.')
-    size = stat.size
-  } catch {
-    return fail('missing', 'The document could not be found.')
-  }
-
-  if (size === 0) return fail('unreadable', 'The document is empty.')
-  if (size > DOCUMENT_LIMITS.maxBytes) {
-    return fail('too-large', `The document is larger than ${Math.round(DOCUMENT_LIMITS.maxBytes / (1024 * 1024))} MB.`)
-  }
-
+async function readWordDocument(path: string): Promise<DocumentExtractionResult> {
   // A readable .docx is a zip. An OLE2 container under a .docx name is either a
   // renamed legacy .doc or a password-protected document — both are named for
   // what they are rather than reported as damage, because the fix is the same.
@@ -162,16 +182,72 @@ export async function extractDocumentText(path: unknown): Promise<DocumentExtrac
 
   const normalized = normalizeDocumentText(raw)
   if (!normalized) return fail('empty', 'The document has no text to import.')
+  return succeed(path, 'docx', normalized)
+}
 
-  const capped = capDocumentText(normalized, DOCUMENT_LIMITS.maxCharacters)
-  return {
-    ok: true,
-    format: 'docx',
-    sourcePath: path,
-    sourceName: basename(path),
-    text: capped.text,
-    characters: normalized.length,
-    words: countWords(normalized),
-    truncated: capped.truncated,
+/**
+ * `.md` and `.txt` need no parser — reading them is the whole job. They are
+ * still read here rather than in the renderer, because the renderer has no
+ * filesystem, and they are still held to the same bounds as a Word document.
+ */
+async function readPlainTextDocument(path: string, format: DocumentFormat): Promise<DocumentExtractionResult> {
+  let buffer: Buffer
+  try {
+    buffer = await withTimeout(fsp.readFile(path), DOCUMENT_LIMITS.timeoutMs)
+  } catch (error) {
+    if (error instanceof Error && error.message === 'timeout') {
+      return fail('timeout', 'The document took too long to read.')
+    }
+    return fail('unreadable', 'The document could not be opened.')
   }
+
+  const decoded = decodeTextBuffer(buffer)
+  if (looksBinary(decoded)) {
+    return fail('binary', 'That file is not text, whatever its name says.')
+  }
+
+  const normalized = normalizePlainText(decoded)
+  if (!normalized) return fail('empty', 'The document has no text to import.')
+  return succeed(path, format, normalized)
+}
+
+export async function extractDocumentText(path: unknown): Promise<DocumentExtractionResult> {
+  if (typeof path !== 'string' || path.trim() === '') {
+    return fail('unsupported-format', 'No document path was given.')
+  }
+  if (isExternalSource(path)) {
+    return fail('external-source', 'Citadel reads documents from local files only.')
+  }
+  if (!isAbsolute(path)) {
+    return fail('external-source', 'A document must be given as a full local path.')
+  }
+
+  const format = documentFormatForPath(path)
+  if (format === 'doc') {
+    return fail('legacy-doc', 'Legacy .doc files are not supported. Save the file as .docx and import it again.')
+  }
+  if (format === null) {
+    return fail('unsupported-format', 'Citadel imports .docx, .md, and .txt documents.')
+  }
+
+  let size: number
+  try {
+    const stat = await fsp.stat(path)
+    if (!stat.isFile()) return fail('missing', 'That path is not a file.')
+    size = stat.size
+  } catch {
+    return fail('missing', 'The document could not be found.')
+  }
+
+  if (size > DOCUMENT_LIMITS.maxBytes) {
+    return fail('too-large', `The document is larger than ${Math.round(DOCUMENT_LIMITS.maxBytes / (1024 * 1024))} MB.`)
+  }
+  // An empty text file is empty; an empty .docx is not a zip at all.
+  if (size === 0) {
+    return format === 'docx'
+      ? fail('unreadable', 'The document is empty.')
+      : fail('empty', 'The document has no text to import.')
+  }
+
+  return format === 'docx' ? readWordDocument(path) : readPlainTextDocument(path, format)
 }

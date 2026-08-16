@@ -25,11 +25,15 @@ const extraction: DocumentExtraction = {
 const placement = { id: 'doc-1', dropX: 500, dropY: 400, offsetIndex: 0, stackOffset: 20, zIndex: 12 }
 
 describe('documentDropFormat', () => {
-  it('claims .docx and .doc, and nothing else', () => {
+  it('claims the importable documents, and nothing else', () => {
     expect(documentDropFormat('brief.docx')).toBe('docx')
     expect(documentDropFormat('BRIEF.DOCX')).toBe('docx')
     expect(documentDropFormat('brief.doc')).toBe('doc')
+    expect(documentDropFormat('notes.md')).toBe('markdown')
+    expect(documentDropFormat('notes.markdown')).toBe('markdown')
+    expect(documentDropFormat('notes.txt')).toBe('text')
     expect(documentDropFormat('brief.pdf')).toBeNull()
+    expect(documentDropFormat('brief.rtf')).toBeNull()
     expect(documentDropFormat('brief.docx.png')).toBeNull()
     expect(documentDropFormat('brief')).toBeNull()
   })
@@ -115,6 +119,40 @@ describe('buildDocumentItem', () => {
   })
 })
 
+describe('Markdown and plain text', () => {
+  const markdown: DocumentExtraction = {
+    ...extraction,
+    format: 'markdown',
+    sourcePath: '/home/scribe/notes/outline.md',
+    sourceName: 'outline.md',
+    text: '# Outline\n\n- first  \n- second',
+  }
+
+  it('keeps Markdown as source text in an ordinary text item', () => {
+    const item = buildDocumentItem(markdown, placement)
+
+    expect(item.type).toBe('text')
+    // Unrendered: the markers are the content, not instructions to a renderer.
+    expect(item.meta?.content).toBe('# Outline\n\n- first  \n- second')
+    expect(item.meta?.documentFormat).toBe('markdown')
+    expect(item.meta?.documentName).toBe('outline.md')
+    expect(item.src).toBe('/home/scribe/notes/outline.md')
+  })
+
+  it('records a plain text file by its own format', () => {
+    const item = buildDocumentItem({ ...markdown, format: 'text', sourceName: 'log.txt' }, placement)
+    expect(item.meta?.documentFormat).toBe('text')
+    expect(item.meta?.documentName).toBe('log.txt')
+  })
+
+  it('finds Markdown by its text, markers and all', () => {
+    const item = buildDocumentItem(markdown, placement)
+    expect(getSearchResults([item], 'outline')).toHaveLength(1)
+    expect(getSearchResults([item], 'second')).toHaveLength(1)
+    expect(getSearchResults([item], 'outline.md')).toHaveLength(1)
+  })
+})
+
 describe('import messages', () => {
   it('confirms a plain import and flags a shortened one', () => {
     expect(documentImportedMessage(extraction)).toBe('brief.docx imported as text')
@@ -122,10 +160,23 @@ describe('import messages', () => {
       .toBe('brief.docx imported as text, shortened to fit. The original file is unchanged.')
   })
 
+  it('says plainly that Markdown is not rendered', () => {
+    const message = documentImportedMessage({ ...extraction, format: 'markdown', sourceName: 'outline.md' })
+    expect(message).toContain('outline.md')
+    expect(message).toContain('does not render Markdown')
+  })
+
+  it('does not blame Word for a text file that would not read', () => {
+    expect(documentImportFailureMessage('notes.md', 'unreadable')).not.toContain('Word')
+    expect(documentImportFailureMessage('brief.docx', 'unreadable')).toContain('Word')
+    expect(documentImportFailureMessage('not-really.txt', 'binary')).toContain('not a text file')
+    expect(documentImportFailureMessage('sheet.xlsx', 'unsupported-format')).toContain('.docx, .md, and .txt')
+  })
+
   it('names the file and the way out for every failure', () => {
     const codes = [
       'legacy-doc', 'ole-container', 'unsupported-format', 'external-source',
-      'missing', 'too-large', 'unreadable', 'empty', 'timeout',
+      'missing', 'too-large', 'binary', 'unreadable', 'empty', 'timeout',
     ] as const
 
     for (const code of codes) {
