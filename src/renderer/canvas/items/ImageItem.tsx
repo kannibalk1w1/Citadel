@@ -22,10 +22,78 @@ import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPa
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { canvasColor } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
-import { sourceCaptureReference, type ImageRegion } from '../sourceCapture'
+import { sourceCaptureReference, sourceCaptureRegionPatch, type ImageRegion } from '../sourceCapture'
 import { useSourceCaptureRegionStore } from '../../ui/sourceCaptureRegionStore'
 
 type Props = { item: CanvasItem }
+
+type CaptureRegionEditorProps = {
+  captureId: string
+  region: ImageRegion
+  imageWidth: number
+  imageHeight: number
+  onChange: (captureId: string, region: ImageRegion) => void
+}
+
+function CaptureRegionEditor({ captureId, region, imageWidth, imageHeight, onChange }: CaptureRegionEditorProps): React.ReactElement {
+  const rectRef = useRef<import('konva/lib/shapes/Rect').Rect>(null)
+  const transformerRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
+
+  useEffect(() => {
+    if (!rectRef.current || !transformerRef.current) return
+    transformerRef.current.nodes([rectRef.current])
+    transformerRef.current.getLayer()?.batchDraw()
+  }, [region])
+
+  const changedRegion = (): ImageRegion | null => {
+    const node = rectRef.current
+    if (!node) return null
+    const next = {
+      x: node.x() / imageWidth,
+      y: node.y() / imageHeight,
+      width: node.width() * node.scaleX() / imageWidth,
+      height: node.height() * node.scaleY() / imageHeight,
+    }
+    node.scaleX(1)
+    node.scaleY(1)
+    return next
+  }
+  const finish = (event: KonvaEventObject<DragEvent | Event>) => {
+    event.cancelBubble = true
+    const next = changedRegion()
+    if (next) onChange(captureId, next)
+  }
+
+  return (
+    <>
+      <Rect
+        ref={rectRef}
+        x={region.x * imageWidth}
+        y={region.y * imageHeight}
+        width={region.width * imageWidth}
+        height={region.height * imageHeight}
+        fill="rgba(115,168,219,0.18)"
+        stroke={canvasColor('accent')}
+        strokeWidth={1.5}
+        dash={[5, 3]}
+        draggable
+        onClick={(event) => { event.cancelBubble = true }}
+        onDragEnd={finish}
+        onTransformEnd={finish}
+      />
+      <Transformer
+        ref={transformerRef}
+        rotateEnabled={false}
+        keepRatio={false}
+        borderStroke={canvasColor('accent')}
+        anchorStroke={canvasColor('accent')}
+        anchorFill={canvasColor('bgPanel')}
+        anchorSize={8}
+        enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+      />
+    </>
+  )
+}
 
 export function ImageItem({ item }: Props): React.ReactElement | null {
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
@@ -68,6 +136,16 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     if (!patch) return
     useHistoryStore.getState().push('ITEM_STYLE', activeBoardId, patch.before, patch.after)
     updateItem(activeBoardId, item.id, { meta: patch.after.meta })
+  }
+
+  const applyCaptureRegion = (captureId: string, region: ImageRegion) => {
+    const canvas = useCanvasStore.getState()
+    const capture = canvas.items().find((candidate) => candidate.id === captureId)
+    if (!capture) return
+    const patch = sourceCaptureRegionPatch(capture, region)
+    if (!patch) return
+    useHistoryStore.getState().push('ITEM_STYLE', activeBoardId, patch.before, patch.after)
+    canvas.updateItem(activeBoardId, captureId, { meta: patch.after.meta })
   }
 
   const handleWaymarkClick = (mark: Waymark) => {
@@ -239,7 +317,9 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const captureRegions = allItems.flatMap((capture) => {
     const source = sourceCaptureReference(capture)
     if (!source?.region || source.sourceItemId !== item.id) return []
-    return isSelected || selectedIds.includes(capture.id) ? [{ id: capture.id, region: source.region }] : []
+    return isSelected || selectedIds.includes(capture.id)
+      ? [{ id: capture.id, region: source.region, editable: selectedIds.includes(capture.id) }]
+      : []
   })
 
   return (
@@ -312,7 +392,16 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
             {...flipProps(flipX, flipY, fitRect?.width ?? item.width, fitRect?.height ?? item.height)}
           />
         )}
-        {captureRegions.map(({ id, region }) => (
+        {captureRegions.map(({ id, region, editable }) => editable ? (
+          <CaptureRegionEditor
+            key={`source-region-${id}`}
+            captureId={id}
+            region={region}
+            imageWidth={item.width}
+            imageHeight={item.height}
+            onChange={applyCaptureRegion}
+          />
+        ) : (
           <Rect
             key={`source-region-${id}`}
             x={region.x * item.width}

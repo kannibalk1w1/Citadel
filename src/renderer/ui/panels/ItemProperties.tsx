@@ -506,9 +506,14 @@ function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElemen
           </div>
         )}
         {source.region && (
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            Image region: {imageRegionPercent(source.region)}
-          </div>
+          <>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              Image region: {imageRegionPercent(source.region)}
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+              Drag or resize the outline on the image to correct it.
+            </div>
+          </>
         )}
       </div>
     </>

@@ -31,6 +31,26 @@ export function imageRegionPercent(region: ImageRegion): string {
   return [region.x, region.y, region.width, region.height].map((value) => `${Math.round(value * 100)}%`).join(', ')
 }
 
+/** Updates only a capture's normalized image region, ready for one history event. */
+export function sourceCaptureRegionPatch(item: CanvasItem, region: ImageRegion): {
+  before: { id: string; meta: Record<string, unknown> }
+  after: { id: string; meta: Record<string, unknown> }
+} | null {
+  const source = sourceCaptureReference(item)
+  if (!source?.sourceItemId) return null
+  const x = Math.max(0, Math.min(1, region.x))
+  const y = Math.max(0, Math.min(1, region.y))
+  const width = Math.max(0.01, Math.min(1 - x, region.width))
+  const height = Math.max(0.01, Math.min(1 - y, region.height))
+  return {
+    before: { id: item.id, meta: item.meta ?? {} },
+    after: {
+      id: item.id,
+      meta: { ...item.meta, source: { ...source, region: { x, y, width, height } } },
+    },
+  }
+}
+
 export function sourceCaptureReference(item: CanvasItem): SourceCaptureReference | undefined {
   if (item.meta?.kind !== 'source-capture') return undefined
   const value = item.meta.source

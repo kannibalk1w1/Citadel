@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSourceCapture, imageRegionFromPercent, imageRegionPercent, sourceCaptureConnection, sourceCaptureReference } from './sourceCapture'
+import { createSourceCapture, imageRegionFromPercent, imageRegionPercent, sourceCaptureConnection, sourceCaptureReference, sourceCaptureRegionPatch } from './sourceCapture'
 
 describe('source captures', () => {
   it('keeps both a human-readable source and the item it came from', () => {
@@ -20,5 +20,16 @@ describe('source captures', () => {
     expect(region).toEqual({ x: 0.1, y: 0.2, width: 0.6, height: 0.4 })
     expect(imageRegionPercent(region!)).toBe('10%, 20%, 60%, 40%')
     expect(imageRegionFromPercent('left, top')).toBeUndefined()
+  })
+
+  it('creates a history-ready patch when an image region is corrected', () => {
+    const capture = createSourceCapture('Orange is the dominant value.', {
+      reference: 'https://example.com/study', sourceItemId: 'image-1', region: { x: 0.1, y: 0.2, width: 0.4, height: 0.3 },
+    }, { x: 20, y: 30 }, 'capture-1')
+
+    const patch = sourceCaptureRegionPatch(capture, { x: 0.7, y: 0.8, width: 0.5, height: 0.4 })
+
+    expect(patch?.before).toEqual({ id: 'capture-1', meta: capture.meta })
+    expect(sourceCaptureReference({ ...capture, meta: patch!.after.meta })?.region).toEqual({ x: 0.7, y: 0.8, width: 0.30000000000000004, height: 0.19999999999999996 })
   })
 })
