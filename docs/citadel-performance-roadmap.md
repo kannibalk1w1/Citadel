@@ -102,6 +102,9 @@ Profiling notes:
 Active next-step queue:
 
 1. Build the Obsidian handoff as a portable Markdown export for selected board items before considering a two-way Obsidian plugin. Import now keeps `documentFormat: 'markdown'` on items that came from a `.md`, which is the hook an export or a future renderer would use.
+2. Add text and location filtering to an image's source-capture list, with a compact large-list treatment once real archives prove the need.
+3. Add a packaged-Electron smoke fixture backed by a real local raster image, covering direct source-region draw and post-capture drag/resize; the current SVG fixture validates the source-capture flow but does not reliably mount an interactive image node in the harness.
+4. Add source-health checks for capture links so a deleted source item is clearly reported and a capture can be reattached without losing its note, location, or region.
 
 Saved Index trails remain intentionally deferred until multi-board archive use demonstrates a need.
 
