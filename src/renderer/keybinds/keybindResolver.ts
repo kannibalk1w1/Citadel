@@ -8,7 +8,8 @@ export function serializeEvent(e: KeyboardEvent): string {
   if (e.metaKey) parts.push('meta')
   if (e.altKey) parts.push('alt')
   if (e.shiftKey) parts.push('shift')
-  const key = e.key.toLowerCase()
+  const rawKey = e.key.toLowerCase()
+  const key = rawKey === ' ' ? 'space' : rawKey === '+' ? 'plus' : rawKey === '-' ? 'minus' : rawKey
   if (key !== 'control' && key !== 'meta' && key !== 'alt' && key !== 'shift') {
     parts.push(key)
   }

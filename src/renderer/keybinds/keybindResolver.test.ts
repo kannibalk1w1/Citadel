@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Actions } from './actions'
-import { KeybindResolver, normalizeKeybindOverrides } from './keybindResolver'
+import { KeybindResolver, normalizeKeybindOverrides, serializeEvent } from './keybindResolver'
 
 describe('keybind overrides', () => {
   it('keeps only valid, known actions while preserving an intentional unbind', () => {
@@ -32,5 +32,10 @@ describe('keybind overrides', () => {
 
     expect(keybinds.overridesForSettings()).toEqual({})
     expect(keybinds.bindingsFor(Actions.UNDO)).toContain('ctrl+z')
+  })
+
+  it('uses canonical names for keys that Electron menu accelerators also need', () => {
+    expect(serializeEvent({ ctrlKey: true, metaKey: false, altKey: false, shiftKey: false, key: ' ' } as KeyboardEvent)).toBe('ctrl+space')
+    expect(serializeEvent({ ctrlKey: true, metaKey: false, altKey: false, shiftKey: false, key: '+' } as KeyboardEvent)).toBe('ctrl+plus')
   })
 })

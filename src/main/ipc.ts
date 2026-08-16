@@ -29,6 +29,7 @@ import {
   shouldCaptureMouse,
   type Rect,
 } from './clickThroughRegion'
+import { buildMenu } from './menu'
 
 // Live window mode. Click-through is deliberately absent from settings.json.
 let windowMode: WindowModeState = { ...defaultWindowMode }
@@ -474,6 +475,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('keybinds:set', async (_e, { overrides }: { overrides?: unknown } = {}) => {
     if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) return { ok: false }
     writeSettingsFile(keybindsPath, overrides as Record<string, unknown>)
+    buildMenu()
     return { ok: true }
   })
 
