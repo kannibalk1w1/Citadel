@@ -10,6 +10,8 @@ import { inscribe } from './toasts/inscriptionToastStore'
 import { askInscription } from './prompt/inscriptionPromptStore'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
+import { extractImagePalette, paletteSourceConnection, paletteSwatchForImage } from '../assets/paletteExtraction'
+import { canvasColor } from '../theme/canvasColors'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
@@ -27,6 +29,9 @@ export function ContextMenu(): React.ReactElement | null {
   const canLock = selectedUnlockedItems.length > 0
   const canUnlock = selectedLockedItems.length > 0
   const copyableImage = selectedItems.length === 1 && ['image', 'gif'].includes(selectedItems[0].type) && selectedItems[0].src
+  const paletteImage = selectedItems.length === 1 && selectedItems[0].type === 'image' && selectedItems[0].src
+    ? selectedItems[0]
+    : null
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -102,6 +107,32 @@ export function ContextMenu(): React.ReactElement | null {
               inscribe('Could not copy image', { tone: 'danger' })
             })
           closeContextMenu()
+        },
+      }] : []),
+      ...(paletteImage ? [{
+        label: 'Pull palette',
+        action: () => {
+          const image = paletteImage
+          closeContextMenu()
+          void extractImagePalette(image.src!).then((colors) => {
+            if (colors.length === 0) throw new Error('Image has no visible pixels')
+            const canvas = useCanvasStore.getState()
+            const boardId = canvas.activeBoardId
+            if (!boardId) return
+            const current = canvas.items().find((item) => item.id === image.id)
+            if (!current) return
+            const swatch = paletteSwatchForImage(current, colors)
+            const connection = paletteSourceConnection(swatch.id, current.id, canvasColor('accent'))
+            canvas.addItem(boardId, swatch)
+            useHistoryStore.getState().push('ITEM_ADD', boardId, null, swatch)
+            canvas.addConnection(boardId, connection)
+            useHistoryStore.getState().push('CONNECTION_ADD', boardId, null, connection)
+            canvas.setSelection([swatch.id])
+            inscribe(`Palette pulled: ${colors.length} colours`)
+          }).catch((error) => {
+            console.error('Could not pull palette:', error)
+            inscribe('Could not pull palette. Check that the image file is available.', { tone: 'danger' })
+          })
         },
       }] : []),
       { divider: true, label: '', action: () => {} },
