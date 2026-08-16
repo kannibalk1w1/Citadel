@@ -60,6 +60,7 @@ Implemented performance decisions:
 - Text and sticky relics silhouette at far zoom: below a 5px on-screen font size (`textDetailPolicy.preferTextSilhouette`), unselected/unedited text relics render a dim rect and stickies skip glyph layout while keeping their chrome. Selection and editing always restore full text.
 - Chamber identity lives in `board.meta` and is normalized by `resolveChamberIdentity` (`src/renderer/canvas/chamberIdentity.ts`). Six persisted IDs remain compatible with existing projects, while their UI labels are neutral colour presets. Accent overrides and optional custom floor textures remain supported; legacy ambience fields are inert and no longer exposed in the UI. Identity edits push `BOARD_STYLE` events, so they undo/redo/record like any canvas mutation.
 - Chamber accent tones are exposed as `--chamber-accent`, `--chamber-accent-dim`, `--chamber-accent-glow` CSS variables scoped on the canvas stage container. Use them only for clear state and selection feedback—not decoration.
+- Code snippet cards follow the same far-zoom discipline through `textDetailPolicy.preferCodeSilhouette`, which delegates to `preferTextSilhouette` at the card's 12px font so there is one threshold across item types. The mechanism differs from Konva text and the comment there says so: `DOMItem` sizes the card in screen pixels with no CSS scale transform, so its glyphs never shrink — the box collapses around 12px text instead, and the user sees a few clipped characters rather than small ones. Below the threshold the card renders a constant-size silhouette (header strip plus five ragged bars) inside the same `DOMItem`, so selection chrome, dragging and resizing are untouched, and the tokenizer is skipped entirely rather than merely hidden. Measured on a 400-line snippet: 3210 rendered DOM nodes drop to 9, and the count no longer tracks snippet length. Selection and editing always wake the full card, which is what keeps Copy and double-click editing reachable at any zoom.
 - Filename inscriptions (`view:filenameLabels`, `shift+f`, Mark-section toggle) render the source basename under media relics via `filenameLabel.filenameInscription`; they follow the far-zoom discipline (hidden below the 5px screen-font threshold) and default off.
 - The Archive Workbench panel reviews uncategorized relics (suggested sigils from filenames, one-click apply) and missing assets, and ingests folders via `assets:scanFolder` + `workbenchIngest` grids — all mutations ride the normal event log.
 - The Ledger panel (`indexLedgerModel`) is the sortable/filterable table lens over every relic and thread in the archive with click-to-travel.
@@ -91,13 +92,13 @@ Active next-step queue:
 
 1. Validate critical interaction paths in the packaged desktop app: overlay opacity, immediate resize handles on imports, and code snippet copy/editing. This is the only item still gated on manual desktop QA.
 2. Keep Index marks capped and visibility-aware; consider saved trails only after multi-chamber archives are in real use.
-3. Consider a far-zoom gate for code snippets. Text and sticky items silhouette below a 5px on-screen font (`textDetailPolicy`); code cards render full syntax highlighting at any zoom. They are viewport-virtualized like the other DOM items, so this is legibility consistency rather than a measured cost — profile before building it.
 
 Closed in the clean-interface pass (2026-08-16):
 
 - Fantasy/gothic terminology, images, and dormant effect code are removed; UI feedback is static and direct. The remaining archival words are identifiers only.
 - Code snippets are a first-class item: language picker, tokenized highlighting, double-click editing, and a keyboard copy action.
 - Secondary icons across context menus, panels, and empty states run through `ToolIcon` with accessible names.
+- Code cards now honour progressive detail at far zoom, so every text-bearing item type shares one threshold.
 
 ## Rendering Strategy
 

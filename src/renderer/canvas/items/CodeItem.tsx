@@ -5,6 +5,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
 import { gutterWidth, normalizeCodeLanguage } from './codeSnippet'
+import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -39,18 +40,32 @@ const tokenColor: Record<TokenKind, string> = {
   comment: 'var(--code-comment)',
 }
 
+// Ragged widths so the silhouette reads as code rather than as a paragraph.
+// Percentages, not pixels: the card box shrinks with the viewport, so the bars
+// have to keep their proportions at any zoom.
+const SILHOUETTE_BARS = ['64%', '81%', '47%', '72%', '38%']
+
 export function CodeItem({ item, domOnly = false }: Props): React.ReactElement | null {
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const copyTimer = useRef<ReturnType<typeof setTimeout>>()
 
+  const scale = useCanvasStore((s) => s.viewport().scale)
+  const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+
   const code = typeof item.meta?.code === 'string' ? item.meta.code : ''
   const language = normalizeCodeLanguage(item.meta?.language)
+  const silhouette = preferCodeSilhouette(scale, isSelected, editing)
 
   // Tokenizing runs a regex per line. Panning re-renders the card on every
-  // viewport change, so keep the pass tied to the code rather than the frame.
-  const lines = useMemo(() => code.split('\n').map(tokensForLine), [code])
+  // viewport change, so keep the pass tied to the code rather than the frame —
+  // and skip it outright while silhouetted, which is the point of the gate: a
+  // long snippet stops paying for a span per token nobody can read.
+  const lines = useMemo(
+    () => (silhouette ? [] : code.split('\n').map(tokensForLine)),
+    [code, silhouette],
+  )
 
   // The card unmounts as soon as it leaves the viewport slice, which can happen
   // inside the confirmation window and would otherwise set state on a dead node.
@@ -93,6 +108,46 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
   }
 
   const gutter = gutterWidth(lines.length)
+
+  // Far zoom: a constant handful of nodes instead of one span per token. It
+  // stays inside DOMItem, so selection chrome, dragging and resizing are
+  // untouched, and it keeps the double-click target so editing still opens from
+  // here — editing wakes the card on the same render.
+  if (silhouette) {
+    return (
+      <DOMItem
+        item={item}
+        editableFrame
+        onClick={() => useCanvasStore.getState().setSelection([item.id])}
+        style={{ borderRadius: 'var(--radius-md)' }}
+      >
+        <section
+          aria-label={`${language} code snippet`}
+          data-silhouette="true"
+          onDoubleClick={beginEdit}
+          style={{
+            width: '100%', height: '100%', minHeight: 0, overflow: 'hidden',
+            display: 'flex', flexDirection: 'column',
+            background: 'var(--code-bg)', border: '1px solid var(--code-border)', borderRadius: 'var(--radius-md)',
+            opacity: 0.85,
+          }}
+        >
+          <div
+            aria-hidden="true"
+            style={{ flex: '0 0 20%', minHeight: 1, maxHeight: 32, background: 'var(--code-bg-header)', borderBottom: '1px solid var(--code-border)' }}
+          />
+          <div
+            aria-hidden="true"
+            style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', padding: '6% 8%' }}
+          >
+            {SILHOUETTE_BARS.map((width) => (
+              <span key={width} style={{ height: '11%', minHeight: 1, width, background: 'var(--code-gutter)', opacity: 0.5, borderRadius: 1 }} />
+            ))}
+          </div>
+        </section>
+      </DOMItem>
+    )
+  }
 
   return (
     <DOMItem
