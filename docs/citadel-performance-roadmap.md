@@ -101,7 +101,7 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Add document support. Import Markdown and plain-text files as editable canvas text/notes while retaining their source paths; add Word document support (`.docx` first, with an honest read-only/conversion fallback for legacy `.doc`). Documents should be searchable, export clearly, preserve the original file, and fail visibly rather than silently dropping a file.
+1. Finish document support. Word `.docx` import has landed (see below); Markdown and plain-text files are still not imported as editable canvas text/notes with their source paths retained. The same rules apply: searchable, exports clearly, original file preserved, and a visible failure rather than a silently dropped file.
 2. Build the Obsidian handoff as a portable Markdown export for selected board items before considering a two-way Obsidian plugin.
 
 Saved Index trails remain intentionally deferred until multi-board archive use demonstrates a need.
@@ -109,6 +109,16 @@ Saved Index trails remain intentionally deferred until multi-board archive use d
 Deferred validation:
 
 - Manual packaged-desktop QA for overlay opacity, immediate resize handles on import, and code snippet copy/editing is intentionally deferred; it is not a release blocker.
+
+Word document import (2026-08-16):
+
+- Dropping a `.docx` imports its text as an ordinary canvas text item: editable, searchable, taggable, connectable, undoable, selected with resize handles on arrival, and saved like any other text.
+- Extraction runs in the main process (`src/main/documentText.ts`) over the `document:extractText` channel using Mammoth's raw-text reader. The renderer still never touches `fs`, nothing is uploaded, and only the one dropped local path is read.
+- The item keeps the document's path on `src` and records `documentFormat`, `documentName`, `documentCharacters`, `documentWords`, and `documentTruncated` in `meta`. The `.docx` is never written to, and `.citadelz` export bundles it like any other asset.
+- Plain text only, by design: no headings, bold, tables, images, footnotes, or tracked changes, and no rich-text or HTML rendering anywhere.
+- Bounds: 25 MB per file, 200,000 characters per import (a visible line on the item marks a shortened one), and a 15-second read timeout.
+- Legacy `.doc` is refused by name with the conversion step, not half-parsed. A `.docx` whose bytes are an OLE2 container — a renamed `.doc` or a password-protected document — is named as such. Every other failure (missing, oversized, damaged, empty) is reported in the app with its reason.
+- Still open: Markdown/TXT/RTF/ODT import, any `.doc` conversion, and a packaged-desktop pass with real Word files from Word itself.
 
 Closed in the clean-interface pass (2026-08-16):
 

@@ -1,10 +1,18 @@
 import { nanoid } from 'nanoid'
 import type { DragEvent } from 'react'
 import type { CanvasItem, ItemType } from '../../types'
+import type { DocumentExtractionResult } from '../../types/documents'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
+import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { renderPdfFirstPage } from '../utils/pdfPreview'
+import {
+  buildDocumentItem,
+  documentDropFormat,
+  documentImportedMessage,
+  documentImportFailureMessage,
+} from './documentImport'
 
 // Electron exposes file.path on File objects dropped from the OS
 type ElectronFile = File & { path: string }
@@ -162,6 +170,49 @@ export function useFileDrop() {
         } catch (error) {
           console.error('PDF drop failed:', error)
         }
+        continue
+      }
+
+      // ── Word documents ──────────────────────────────────────────────────
+      // The renderer never opens the file: main reads it and answers with
+      // plain text or a named reason, and either way the person is told.
+      const documentFormat = documentDropFormat(file.name)
+      if (documentFormat === 'doc') {
+        inscribe(documentImportFailureMessage(file.name, 'legacy-doc'), { tone: 'danger' })
+        continue
+      }
+      if (documentFormat === 'docx') {
+        const STACK_OFFSET = 20
+        let result: DocumentExtractionResult
+        try {
+          result = await ((window as unknown as { ipc: IpcApi }).ipc.invoke('document:extractText', {
+            path: file.path,
+          }) as Promise<DocumentExtractionResult>)
+        } catch (error) {
+          console.error('Word import failed:', error)
+          inscribe(documentImportFailureMessage(file.name, 'unreadable'), { tone: 'danger' })
+          continue
+        }
+
+        if (!result?.ok) {
+          inscribe(documentImportFailureMessage(file.name, result?.code ?? 'unreadable'), { tone: 'danger' })
+          continue
+        }
+
+        const item = buildDocumentItem(result, {
+          id: nanoid(),
+          dropX,
+          dropY,
+          offsetIndex,
+          stackOffset: STACK_OFFSET,
+          zIndex: Date.now() + offsetIndex,
+        })
+
+        addItem(activeBoardId, item)
+        pushEvent('ITEM_ADD', activeBoardId, null, item)
+        added.push(item)
+        offsetIndex++
+        inscribe(documentImportedMessage(result))
         continue
       }
 

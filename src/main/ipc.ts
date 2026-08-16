@@ -13,6 +13,7 @@ import {
   walkProjectItems,
   writeCitadelProject,
 } from './projectPersistence'
+import { extractDocumentText } from './documentText'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 import {
@@ -435,6 +436,14 @@ export function registerIpcHandlers(): void {
       return { ok: false, reason: error instanceof Error ? error.message : String(error) }
     }
   })
+
+  // ── document:extractText ───────────────────────────────────────────────────
+  // Plain text out of a dropped .docx. The renderer hands over a path and gets
+  // back either text or a named reason; it never opens the file itself, and
+  // nothing here reaches past that one local file.
+  ipcMain.handle('document:extractText', async (_e, { path }: { path?: unknown } = {}) => (
+    extractDocumentText(path)
+  ))
 
   // ── shell:openURL ──────────────────────────────────────────────────────────
   ipcMain.handle('shell:openURL', async (_e, { url }: { url: string }) => {

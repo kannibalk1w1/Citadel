@@ -105,6 +105,7 @@ Shipped inside the packaged application:
 | jspdf | MIT |
 | jszip | MIT OR GPL-3.0-or-later (Citadel uses it under MIT) |
 | konva | MIT |
+| mammoth | BSD-2-Clause |
 | nanoid | MIT |
 | pdfjs-dist | Apache-2.0 |
 | react | MIT |
