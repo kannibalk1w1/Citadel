@@ -1,6 +1,18 @@
 import { defaultKeybinds } from './defaultKeybinds'
 import type { ActionName, KeybindMap } from '../../types'
 
+/** The modifier names a combo is written with — the prefix half of a combo. */
+export const MODIFIER_NAMES = ['ctrl', 'meta', 'alt', 'shift'] as const
+
+/**
+ * `KeyboardEvent.key` values for the modifiers themselves. A keydown for one of
+ * these carries no key half, so it must never become the key half of a combo.
+ * Note these are the DOM spellings ('Control'), not the combo spellings
+ * ('ctrl') — confusing the two let a bare Ctrl press be saved as the shortcut
+ * `ctrl`, which then fired on the way into every other Ctrl combination.
+ */
+const MODIFIER_EVENT_KEYS = ['control', 'meta', 'alt', 'shift', 'altgraph', 'os']
+
 // Serialize a KeyboardEvent into a canonical combo string
 export function serializeEvent(e: KeyboardEvent): string {
   const parts: string[] = []
@@ -10,7 +22,7 @@ export function serializeEvent(e: KeyboardEvent): string {
   if (e.shiftKey) parts.push('shift')
   const rawKey = e.key.toLowerCase()
   const key = rawKey === ' ' ? 'space' : rawKey === '+' ? 'plus' : rawKey === '-' ? 'minus' : rawKey
-  if (key !== 'control' && key !== 'meta' && key !== 'alt' && key !== 'shift') {
+  if (!MODIFIER_EVENT_KEYS.includes(key)) {
     parts.push(key)
   }
   return parts.join('+')
@@ -18,14 +30,22 @@ export function serializeEvent(e: KeyboardEvent): string {
 
 type Handler = () => void
 
+/**
+ * Whether a combo has a key half at all. A modifiers-only string is what
+ * `serializeEvent` returns while a chord is still being pressed, so it must be
+ * rejected everywhere a combo can be stored.
+ */
+export function hasNonModifierKey(combo: string): boolean {
+  const key = combo.split('+').at(-1)
+  return Boolean(key) && !(MODIFIER_NAMES as readonly string[]).includes(key!) && !MODIFIER_EVENT_KEYS.includes(key!)
+}
+
 function validCombo(value: unknown): value is string {
   if (typeof value !== 'string' || value.length === 0 || value.length > 80) return false
-  const parts = value.split('+')
-  const key = parts.at(-1)
-  if (!key || ['control', 'meta', 'alt', 'shift'].includes(key)) return false
-  const modifiers = parts.slice(0, -1)
+  if (!hasNonModifierKey(value)) return false
+  const modifiers = value.split('+').slice(0, -1)
   return new Set(modifiers).size === modifiers.length
-    && modifiers.every((part) => ['ctrl', 'meta', 'alt', 'shift'].includes(part))
+    && modifiers.every((part) => (MODIFIER_NAMES as readonly string[]).includes(part))
 }
 
 /**

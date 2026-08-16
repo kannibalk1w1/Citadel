@@ -2,6 +2,16 @@ import { Actions, ActionName } from './actions'
 
 // Each action maps to an array of key combos (any match triggers the action).
 // Format: modifier keys joined by '+', then the key. e.g. 'ctrl+shift+z', 'escape', 'delete'
+//
+// The key half must be what `serializeEvent` produces, not what the character
+// looks like: it canonicalises ' ' to 'space', '-' to 'minus' and '+' to 'plus'.
+// A literal 'ctrl+-' here never matches anything, because the event serialises
+// as 'ctrl+minus' — a whole shortcut silently does nothing. `defaultKeybinds`
+// is round-tripped through `serializeEvent` by its test for that reason.
+//
+// '+' also only reaches a keyboard event with Shift held on most layouts, which
+// serialises as 'ctrl+shift+plus'. Anything bound to a bare 'plus' is therefore
+// numpad-only, so combos that want the top-row key pair 'plus' with '='.
 
 export const defaultKeybinds: Record<ActionName, string[]> = {
   // Command palette
@@ -43,8 +53,8 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.SEND_BACKWARD]:  ['ctrl+[', 'meta+['],
 
   // Viewport
-  [Actions.ZOOM_IN]:        ['ctrl+=', 'meta+=', 'ctrl+shift+='],
-  [Actions.ZOOM_OUT]:       ['ctrl+-', 'meta+-'],
+  [Actions.ZOOM_IN]:        ['ctrl+=', 'meta+=', 'ctrl+plus', 'meta+plus'],
+  [Actions.ZOOM_OUT]:       ['ctrl+minus', 'meta+minus'],
   [Actions.ZOOM_FIT]:       ['f', 'ctrl+shift+h', 'meta+shift+h'],
   [Actions.ZOOM_RESET]:     ['ctrl+0', 'meta+0'],
   [Actions.PRESENTATION_TOGGLE]: ['f5'],
@@ -86,8 +96,10 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
 
   [Actions.WINDOW_ALWAYS_ON_TOP_TOGGLE]: ['ctrl+alt+t'],
   [Actions.WINDOW_CLICK_THROUGH_TOGGLE]: ['ctrl+alt+c'],
+  // The '=' half is what a laptop keyboard can actually reach; 'plus' is the
+  // numpad. Down needs only 'minus' because '-' is unshifted on both.
   [Actions.WINDOW_OPACITY_DOWN]:         ['ctrl+alt+minus'],
-  [Actions.WINDOW_OPACITY_UP]:           ['ctrl+alt+plus'],
+  [Actions.WINDOW_OPACITY_UP]:           ['ctrl+alt+=', 'ctrl+alt+plus'],
   [Actions.ALIGN_LEFT]:     [],
   [Actions.ALIGN_CENTER_H]: [],
   [Actions.ALIGN_RIGHT]:    [],

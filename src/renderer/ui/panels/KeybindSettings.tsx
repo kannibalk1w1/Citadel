@@ -18,7 +18,7 @@ import { useHistoryStore } from '../../store/historyStore'
 import { ToolIcon } from '../icons/ToolIcon'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { actionLabel } from '../../keybinds/actionLabels'
-import { resolver, serializeEvent } from '../../keybinds/keybindResolver'
+import { hasNonModifierKey, resolver, serializeEvent } from '../../keybinds/keybindResolver'
 import { prepareExportCanvas } from '../../export/exportCanvas'
 import { describeExportPreview } from '../../export/exportPreviewModel'
 
@@ -300,7 +300,11 @@ export function KeybindSettings(): React.ReactElement | null {
       return
     }
     const combo = serializeEvent(event.nativeEvent)
-    if (!combo) return
+    // Holding Ctrl on the way to Ctrl+K fires a keydown of its own. Waiting for
+    // a key half means the chord is captured, not the reach for it — saving the
+    // reach bound the action to a bare modifier, which then fired on the way
+    // into every other combination that used it.
+    if (!combo || !hasNonModifierKey(combo)) return
     const occupiedBy = resolver.actionForCombo(combo)
     if (occupiedBy && occupiedBy !== action) {
       setKeybindMessage(`${combo} is already used by ${actionLabel(occupiedBy)}`)
