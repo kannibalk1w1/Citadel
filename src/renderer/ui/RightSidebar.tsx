@@ -31,7 +31,8 @@ function WindowModes(): React.ReactElement {
       <div className="citadel-sidebar-section-title">Window</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', width: '100%' }}>
         <QuickBtn
-          label={alwaysOnTop ? 'On top ✓' : 'On top'}
+          label="On top"
+          pressed={alwaysOnTop}
           title="Keep Citadel above other windows (Ctrl+Alt+T)"
           onClick={() => applyWindowMode({ alwaysOnTop: !alwaysOnTop })}
         />
@@ -52,7 +53,8 @@ function WindowModes(): React.ReactElement {
           <span style={{ minWidth: 26, textAlign: 'right' }}>{Math.round(opacity * 100)}%</span>
         </label>
         <QuickBtn
-          label={clickThrough ? 'Click through ✓' : 'Click through'}
+          label="Click through"
+          pressed={clickThrough}
           title={clickThrough
             ? 'Clicks are passing through — press Ctrl+Alt+C to take the mouse back'
             : 'Let clicks reach the app underneath (Ctrl+Alt+C to undo)'}
@@ -63,13 +65,17 @@ function WindowModes(): React.ReactElement {
   )
 }
 
+// `pressed` marks a mode that is currently on. It drives aria-pressed and a
+// check mark, so the state is not carried by colour alone.
 function QuickBtn({
-  label, title, onClick,
-}: { label: React.ReactNode; title: string; onClick: () => void }): React.ReactElement {
+  label, title, onClick, pressed,
+}: { label: React.ReactNode; title: string; onClick: () => void; pressed?: boolean }): React.ReactElement {
   return (
     <button
+      type="button"
       className="citadel-panel-button"
       title={title}
+      aria-pressed={pressed}
       onClick={onClick}
       style={{
         width: '100%',
@@ -82,7 +88,10 @@ function QuickBtn({
         fontFamily: 'var(--font-body)',
         cursor: 'pointer',
         transition: 'var(--transition-fast)',
-        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 'var(--space-2)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = 'var(--accent)'
@@ -94,6 +103,7 @@ function QuickBtn({
       }}
     >
       {label}
+      {pressed && <ToolIcon name="check" size={12} />}
     </button>
   )
 }

@@ -20,9 +20,9 @@ describe('inscriptionToastStore', () => {
   it('inscribes a toast with unique ids', () => {
     const { inscribe } = useInscriptionToastStore.getState()
     inscribe('Archive opened')
-    inscribe('Chamber raised')
+    inscribe('Board created')
     const toasts = useInscriptionToastStore.getState().toasts
-    expect(toasts.map((t) => t.text)).toEqual(['Archive opened', 'Chamber raised'])
+    expect(toasts.map((t) => t.text)).toEqual(['Archive opened', 'Board created'])
     expect(new Set(toasts.map((t) => t.id)).size).toBe(2)
   })
 

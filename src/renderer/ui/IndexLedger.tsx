@@ -92,14 +92,15 @@ export function IndexLedger(): React.ReactElement | null {
           <button
             type="button"
             title="Close"
+            aria-label="Close"
             onClick={() => useUIStore.getState().closePanel('indexLedger')}
             style={{
               width: 22, height: 22,
               background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-md)', padding: 0,
+              color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            x
+            <ToolIcon name="close" size={13} />
           </button>
         </div>
       </div>

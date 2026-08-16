@@ -3,6 +3,7 @@ import type { CanvasBoard } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { boardMoodAccent } from './boardMood'
+import { ToolIcon } from './icons/ToolIcon'
 
 const THUMB_W = 52
 const THUMB_H = 28
@@ -194,12 +195,19 @@ export function BoardTabs(): React.ReactElement {
             board.name
           )}
           {boards.length > 1 && editingId !== board.id && (
-            <span
+            <button
+              type="button"
+              title={`Close ${board.name}`}
+              aria-label={`Close ${board.name}`}
               onClick={(e) => { e.stopPropagation(); removeBoard(board.id); markDirty() }}
-              style={{ opacity: 0.35, fontSize: 'var(--text-lg)', lineHeight: 1, marginLeft: 2, paddingBottom: 1 }}
+              style={{
+                opacity: 0.35, marginLeft: 2, padding: 0,
+                background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+              }}
             >
-              ×
-            </span>
+              <ToolIcon name="close" size={12} />
+            </button>
           )}
         </div>
       ))}

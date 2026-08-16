@@ -370,6 +370,7 @@ export function BoardNavigator(): React.ReactElement | null {
                 <button
                   type="button"
                   title="Return to the project floor"
+                  aria-label="Return to the project floor"
                   onClick={() => applyChamberPatch(activeChamber.id, { texture: null })}
                   style={{
                     width: 20,
@@ -379,12 +380,11 @@ export function BoardNavigator(): React.ReactElement | null {
                     borderRadius: 'var(--radius-sm)',
                     color: 'var(--text-muted)',
                     cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'var(--text-sm)',
                     padding: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  x
+                  <ToolIcon name="close" size={12} />
                 </button>
               )}
             </div>

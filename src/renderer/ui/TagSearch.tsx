@@ -181,20 +181,22 @@ export function TagSearch(): React.ReactElement | null {
           }}
         />
         <button
+          type="button"
           onClick={close}
           title="Close (Escape)"
+          aria-label="Close (Escape)"
           style={{
             background: 'transparent',
             border: 'none',
             color: 'var(--text-muted)',
             cursor: 'pointer',
-            fontSize: 'var(--text-xl)',
-            lineHeight: 1,
             padding: '2px 4px',
             borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          x
+          <ToolIcon name="close" size={16} />
         </button>
       </div>
 

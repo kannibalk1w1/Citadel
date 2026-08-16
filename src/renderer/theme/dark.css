@@ -31,6 +31,24 @@
   --border-muted:  #292117;
   --border-bright: rgba(232, 221, 208, 0.10);
 
+  /* Code snippet card — a terminal surface, so it keeps its own dark palette in
+     both themes the way an editor keeps its scheme. Declared here rather than
+     inlined so a custom palette can reach it. */
+  --code-bg:            #11161f;
+  --code-bg-header:     #18212d;
+  --code-bg-button:     #202b38;
+  --code-bg-confirm:    #263d35;
+  --code-border:        #2d3745;
+  --code-border-button: #3e4d60;
+  --code-text:          #d8dee9;
+  --code-text-dim:      #aeb9c7;
+  --code-gutter:        #596779;
+  --code-keyword:       #86b7ff;
+  --code-string:        #9fda95;
+  --code-number:        #e6bd8a;
+  --code-comment:       #7d899a;
+  --code-alert:         #f07f7f;
+
   /* Typography */
   --font-display: 'Inter', 'DM Sans', sans-serif;
   --font-body:    'Inter', 'DM Sans', sans-serif;

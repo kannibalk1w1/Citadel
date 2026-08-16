@@ -5,6 +5,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { activeArchiveRailWidth } from './shell/shellModel'
+import { ToolIcon } from './icons/ToolIcon'
 
 function itemLabel(item: CanvasItem): string {
   const content = typeof item.meta?.content === 'string' ? item.meta.content.trim().replace(/\s+/g, ' ') : ''
@@ -89,11 +90,13 @@ export function PresentationSequence(): React.ReactElement | null {
           Sequence
         </h3>
         <button
+          type="button"
           onClick={() => closePanel('presentationSequence')}
           title="Close"
-          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 'var(--text-xl)', lineHeight: 1 }}
+          aria-label="Close"
+          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          x
+          <ToolIcon name="close" size={16} />
         </button>
       </div>
 

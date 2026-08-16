@@ -2,6 +2,7 @@ import React from 'react'
 import { normalizeThreadMeaning, threadMeaningOptions } from '../../canvas/connections/threadMeaning'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { ToolIcon } from '../icons/ToolIcon'
 
 export function ConnectionProperties(): React.ReactElement | null {
   const isOpen = useUIStore((s) => s.panels.connectionProperties)
@@ -22,18 +23,19 @@ export function ConnectionProperties(): React.ReactElement | null {
     <div className="citadel-floating-panel citadel-context-inspector" style={panelStyle}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)', marginBottom: 10 }}>
         <h3 style={{ margin: 0, fontSize: 'var(--text-md)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Thread
+          Connection
         </h3>
         <button
           type="button"
           title="Close"
+          aria-label="Close"
           onClick={() => {
             useUIStore.getState().setActiveConnectionId(null)
             useUIStore.getState().closePanel('connectionProperties')
           }}
-          style={iconButtonStyle}
+          style={{ ...iconButtonStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          x
+          <ToolIcon name="close" size={14} />
         </button>
       </div>
 
@@ -86,7 +88,7 @@ export function ConnectionProperties(): React.ReactElement | null {
 
       <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 'var(--space-4)' }}>
         <input type="checkbox" checked={conn.dashed} onChange={(e) => update({ dashed: e.target.checked })} />
-        Dashed branch
+        Dashed line
       </label>
 
       <div style={previewStyle}>
