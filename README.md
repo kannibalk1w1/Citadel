@@ -1,83 +1,174 @@
 # Citadel
 
-An atmospheric archive for memory, research, reference, introspection, and nonlinear thought.
+**A private, local-first infinite canvas for collecting references, notes, code, media, and ideas.**
 
-## What it is
+Citadel helps you place the things you are working with next to the thoughts
+they create. Arrange items freely, connect related material, search across
+boards, and save the result as a portable project.
 
-Citadel is a Windows desktop app for collecting files, memories, research, fragments, and thoughts, then marking, arranging, annotating, searching, and binding them into visible patterns. It can support worldbuilding, game design, art direction, academic research, personal archives, and creative investigation, but its core identity is a dark archival canvas rather than a worldbuilding-only tool.
+> Status: active early release (`0.1.0`). Windows is the current packaged
+> release target. The app is usable today; manual packaged-app smoke testing is
+> still planned before a public release.
 
-Drop images, GIFs, video, audio, 3D models, PDFs, and notes onto an infinite canvas. Connect them with threads, search them through the Index, and preserve the archive as a `.citadel` project or portable `.citadelz` bundle.
+## Why Citadel
 
-## Features
+Most research and reference tools force everything into folders or linear
+documents. Citadel is for work that needs spatial context: visual development,
+creative research, game and product work, study, personal archives, writing
+notes, and any project where connections are easier to see than to describe.
 
-- **Infinite canvas** — pan, zoom, and arrange anything freely with Konva.js
-- **Media types** — images, GIFs, video, YouTube embeds, audio with waveform, 3D models (Three.js), text, stickies, colour swatches, and A/B comparison widgets
-- **Connections** — bezier/straight/elbow arrows between any two items with labels and arrow heads
-- **Snapping** — smart alignment guides with a spatial index for performance
-- **Undo/redo + session recording** — the same event log drives both; record a walkthrough and play it back
-- **Multi-board** — tabbed boards within a single project file
-- **Export** — PDF (jsPDF), PNG/JPG, and `.citadelz` zip archives with bundled assets
-- **Plugin system** — register custom item types and hooks
-- **Fully rebindable keybinds** — every action is a named string, no hardcoded shortcuts
-- **Mascot** — a chess rook tower that reacts to app events with animations
+- Keep files, notes, code, and media on one board.
+- Use multiple boards inside one project without losing the wider archive.
+- Connect items, label relationships, and find them later through the Index.
+- Work offline with files you control. No account, telemetry, or cloud is
+  required.
 
-## Theme
+## What it can do
 
-Dark fantasy. Stone tones, aged gold (`#c8a96e`) text, arcane details. Display font: Cinzel. UI font: Inter / DM Sans. Mono: JetBrains Mono. Never generic/material/flat.
+### Canvas and organisation
 
-## Stack
+- Infinite pan-and-zoom canvas with multi-select, lasso, smart snapping,
+  alignment guides, grouping, locking, ordering, flip controls, and resize
+  handles immediately after import.
+- Multiple boards, board bookmarks, board duplication, templates, a minimap,
+  automatic grid arrangement, and a presentation mode with an optional pen.
+- Connections between items with straight, bezier, or elbow paths, labels,
+  meanings, arrows, dots, diamonds, and undo/redo support.
+- Tags, attached comments, image waymarks, filename labels, comparison items,
+  colour swatches, and a media-review workspace for uncategorised or missing
+  assets.
 
-| Concern | Library |
-|---|---|
-| Desktop shell | Electron |
-| UI | React + TypeScript |
-| Canvas | Konva.js + react-konva |
-| State | Zustand |
-| Build | electron-vite |
-| Package | electron-builder (NSIS + portable .exe) |
-| Tests | Vitest + Playwright |
+### Notes, text, and code
 
-## Getting started
+| Format | What Citadel does today |
+| --- | --- |
+| Text blocks | Create and edit plain text directly on the canvas; resize, rotate, style, tag, search, and connect it. |
+| Notes | Create editable sticky notes or attach a comment note to an item. Notes are searchable across every board. |
+| Code cards | Create copyable, syntax-coloured snippets; double-click to edit; choose TypeScript, JavaScript, Python, JSON, HTML, CSS, Bash, SQL, YAML, or plain text. Code content and language are searchable and export correctly. |
+| PDFs | Drop a PDF to add a cached preview of its first page. It is a visual reference, not a full PDF reader or text extractor. |
+| Markdown, TXT, DOC/DOCX, RTF, ODT | Not imported as documents yet. Paste their content into a text block, note, or code card instead. |
 
-```bash
-npm install
-npm run dev       # Vite + Electron with HMR
-npm run build     # Production build
-npm run package   # Production build + Windows installer/portable artifacts
-npm run test      # Unit and integration tests (Vitest)
-npm run e2e       # Playwright — no suite committed yet, see the checklist below
-```
+Citadel currently stores plain text and code inside the project; it does not
+interpret Markdown, offer rich-text editing, or round-trip office documents.
 
-For local alpha packaging and smoke testing, see [Citadel Release Readiness Lite](docs/release-readiness-lite.md).
-For the state of the paid early-access release, see the
-[release-candidate checklist](docs/release-candidate-checklist.md).
+### Media and references
 
-## Project file format
+- Drag in images, GIFs, video, audio, 3D models, and PDFs.
+- Add YouTube URLs as embedded references.
+- Image, GIF, video, and 3D previews use a local thumbnail pipeline so large
+  boards stay responsive.
+- Video, audio, YouTube, 3D, and code cards are supported in board exports:
+  static previews are used where a live frame cannot be captured safely.
 
-- `.citadel` — JSON project file, assets referenced by relative path
-- `.citadelz` — zip archive with project JSON + bundled assets
+Supported drag-and-drop extensions include:
+
+- Images: `jpg`, `jpeg`, `png`, `webp`, `bmp`, `tiff`, `tif`, `svg`, `gif`
+- Video: `mp4`, `webm`, `mov`, `mkv`, `avi`
+- Audio: `mp3`, `wav`, `ogg`, `flac`, `aac`, `m4a`
+- 3D: `glb`, `gltf`, `obj`, `fbx`
+- Documents: `pdf` (first-page preview)
+
+### Find and move quickly
+
+- The **Index** searches items, notes, comments, tags, connections, code-card
+  contents, code languages, and every board in the current project.
+- Filter by item type, tag, board, visibility, lock state, source file, and
+  connection meaning.
+- Use the keyboard-first **Command palette** (`Ctrl/Cmd+K`) for available
+  actions and board navigation.
+- Customise shortcuts in Settings. Overrides are stored locally and update both
+  the app and the native menu.
+
+### Overlay, export, and projects
+
+- Keep Citadel above other windows, change opacity, or enable click-through
+  mode. Click-through retains a small interactive Stop panel and a fixed
+  `Ctrl+Alt+C` escape hatch.
+- Export the viewport, selection, or active board as PNG/JPG or PDF.
+- Save normal `.citadel` projects with relative asset paths, or make a portable
+  `.citadelz` archive that bundles project assets.
+- Automatic recovery snapshots, recent projects, preview-cache maintenance,
+  missing-asset relinking, and archive import/export progress are built in.
 
 ## Privacy and network use
 
-Your archive is yours. Citadel stores everything on your own disk: `.citadel`
-projects, `.citadelz` bundles, settings, preview caches, and crash recovery all
-live in local files. Nothing you place on the canvas is uploaded anywhere, and
-there is no account, no telemetry, and no analytics.
+Citadel is local-first. Projects, archives, settings, keybindings, previews,
+and recovery files stay on your device. There is no account, telemetry, or
+analytics.
 
-Citadel reaches the network in exactly three cases, all of them visible to you:
+Network access happens only when you explicitly use a remote source, add a
+YouTube reference, or the app checks for an update. Interface fonts are bundled
+so the app remains usable offline.
 
-| What | When | Notes |
-|---|---|---|
-| Update check | Once, ~5 seconds after launch | Asks the release host whether a newer version exists. No project data is sent. |
-| YouTube relics | Only if you place one | The embed loads from YouTube in an isolated webview. |
-| Remote sources | Only if you point a relic at a URL | Loads whatever address you gave it. |
+## Getting started
 
-Typefaces are bundled with the app, so the interface renders identically with the
-machine offline. Third-party works shipped inside Citadel are listed in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+### Use a release build
+
+Windows release artifacts are intended to be distributed as an NSIS installer
+or a portable `.exe`. Open a `.citadel` project directly, or start a new board
+and drag in references.
+
+On first run, Citadel shows a small, skippable Getting started guide. It never
+blocks opening an existing project.
+
+### Build from source
+
+Prerequisites: Node.js 20+ and npm.
+
+```bash
+git clone https://github.com/kannibalk1w1/Citadel.git
+cd Citadel
+npm install
+npm run dev
+```
+
+Useful commands:
+
+```bash
+npm run typecheck   # TypeScript project check
+npx vitest run      # Full non-watch test run
+npm run build       # Production build
+npm run package     # Windows installer and portable artifacts
+```
+
+The packaged configuration currently targets Windows x64. Other platforms may
+run from source, but are not release targets yet.
+
+## Project format
+
+- `.citadel` — JSON project file. Local assets are referenced relative to the
+  project where possible.
+- `.citadelz` — portable zip archive containing the project and bundled assets.
+
+Project data is designed to remain readable and portable. Preview thumbnails,
+recovery data, and custom keybindings are derived local data rather than content
+you need to share with a project.
+
+## Technology
+
+Electron, React, TypeScript, Konva, Zustand, Three.js, pdf.js, jsPDF,
+html2canvas, JSZip, Vitest, and Playwright.
+
+## Development notes
+
+- Renderer code never reads the filesystem directly; file operations use the
+  Electron IPC bridge.
+- Undo/redo and recording share one event log.
+- Keyboard actions are named and routed through one resolver.
+- The visual language is clean and high-contrast. Motion is short, purposeful,
+  and reduced-motion safe—never decorative or theme-driven.
+- The plugin API is early-stage: it currently supports custom item types and
+  event hooks. Treat it as experimental until it has a documented compatibility
+  policy.
+
+## Contributing
+
+Issues and focused pull requests are welcome. Before opening a change, run
+`npm run typecheck`, `npx vitest run`, and `npm run build`. Keep filesystem work
+in the main process, route keyboard behavior through the action system, and add
+tests for behaviour changes.
 
 ## License
 
-Citadel's source is intended to be MIT. A `LICENSE` file has not been added yet —
-see [the release-candidate checklist](docs/release-candidate-checklist.md) for the
-open licensing decision.
+[MIT](LICENSE). Third-party attribution is collected in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
