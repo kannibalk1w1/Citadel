@@ -76,12 +76,12 @@ function itemLabel(item: CanvasItem | undefined): string {
   return content || src || `${item.type} ${item.id.slice(0, 6)}`
 }
 
-function centerViewportOnItem(item: CanvasItem): void {
+function centerViewportOnItem(item: CanvasItem, selectedId = item.id): void {
   const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
   const sidebarW = activeArchiveRailWidth(useUIStore.getState().archiveRailCollapsed, expandedRailWidth)
   const canvasW = window.innerWidth - sidebarW
   const viewport = useCanvasStore.getState().viewport()
-  useCanvasStore.getState().setSelection([item.id])
+  useCanvasStore.getState().setSelection([selectedId])
   useCanvasStore.getState().updateViewport({
     x: canvasW / 2 - (item.x + item.width / 2) * viewport.scale,
     y: window.innerHeight / 2 - (item.y + item.height / 2) * viewport.scale,
@@ -493,6 +493,11 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
 function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElement | null {
   const source = sourceCaptureReference(item)
   if (!source) return null
+  const openSource = () => {
+    if (!source.sourceItemId) return
+    const linkedItem = useCanvasStore.getState().items().find((candidate) => candidate.id === source.sourceItemId)
+    if (linkedItem) centerViewportOnItem(linkedItem, item.id)
+  }
   return (
     <>
       <Divider label="Source" />
@@ -514,6 +519,15 @@ function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElemen
               Drag or resize the outline on the image to correct it.
             </div>
           </>
+        )}
+        {source.sourceItemId && (
+          <button
+            type="button"
+            onClick={openSource}
+            style={{ alignSelf: 'flex-start', background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+          >
+            Open source
+          </button>
         )}
       </div>
     </>

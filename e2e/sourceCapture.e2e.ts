@@ -57,5 +57,7 @@ test('a capture keeps its source, location, and connection', async () => {
   await expect(page.getByText('Source capture added and linked')).toBeVisible()
   await expect(page.getByText('https://example.com/reference-study')).toBeVisible()
   await expect(page.getByText('Figure 2')).toBeVisible()
+  await page.getByRole('button', { name: 'Open source' }).click({ force: true })
+  await expect(page.getByRole('button', { name: 'Open source' })).toBeVisible()
   await expect.poll(() => page.locator('svg path').count()).toBeGreaterThan(connectionPathsBefore)
 })
