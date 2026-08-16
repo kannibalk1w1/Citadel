@@ -65,17 +65,22 @@ Ordered by how much each one costs a buyer's trust.
 
 ### 1. Licence declaration
 
-`README.md`, `AGENTS.md`, and `package.json` all say MIT, but no `LICENSE` file
-exists and `package.json` sets `"private": true` with an empty `author`.
+`LICENSE` now exists and carries the MIT text, matching `README.md`, `AGENTS.md`,
+and `package.json`. Two things in it are still placeholders:
 
-**Owner decision, not an engineering one.** MIT source plus a paid binary is a
-legitimate model, but it means a buyer may rebuild and redistribute the app for
-free, and it cannot be walked back once published. Decide, then act:
+- Its copyright line reads "Citadel contributors" rather than the holder's legal
+  name, which is what a licence has to name to be enforceable.
+- `package.json` still sets `"private": true` with an empty `author`.
 
-- If MIT stands — add `LICENSE` with the MIT text and the copyright holder's
-  legal name and year, fill in `package.json`'s `author`, and drop `"private"`.
-- If the release is to be source-available or proprietary — correct `README.md`
-  and `AGENTS.md` before any public tag, and pick a licence that matches.
+**The remaining decision is the owner's, not an engineering one.** MIT source
+plus a paid binary is a legitimate model, but it means a buyer may rebuild and
+redistribute the app for free, and it cannot be walked back once published.
+Decide, then act:
+
+- If MIT stands — replace the placeholder copyright holder with a legal name and
+  year, fill in `package.json`'s `author`, and drop `"private"`.
+- If the release is to be source-available or proprietary — replace `LICENSE`,
+  and correct `README.md` and `AGENTS.md` before any public tag.
 
 Either way this must be settled before the first paid build, because the licence
 that ships with v1 is the licence buyers keep.
@@ -227,6 +232,10 @@ before publishing any paid artifact.
 - [ ] Whatever first-run experience ships appears, and can be dismissed.
 - [ ] Drag and drop an image onto the canvas; it renders.
 - [ ] Add an inscription, a sigil, and a thread between two relics.
+- [ ] Add a code card, connect it to something, save, reopen — the snippet and
+      its thread are both still there. (This is the one that failed silently:
+      `code` was missing from the save schema's accepted types, so every code
+      card and every connection touching one was discarded on load.)
 - [ ] Save a `.citadel`, close the app, reopen it, and load the file — everything is intact.
 - [ ] Save a chamber holding a relic from outside the project folder; confirm `assets/` was created beside the `.citadel` and the reopened relic still renders.
 - [ ] Export a `.citadelz`, then import it into a fresh project.
@@ -235,6 +244,10 @@ before publishing any paid artifact.
 - [ ] Record a session and play it back.
 - [ ] Switch themes, including a custom palette, and confirm it survives a restart.
 - [ ] Rebind a keybind and confirm it survives a restart.
+- [ ] Zoom in and out from the keyboard, and check the View menu's shortcuts
+      match what the keybind panel lists. (Ctrl+− was dead in both places at
+      once: the resolver held it under a spelling no keypress produced, and the
+      menu offered Electron a key name it rejects.)
 
 ### Trust and recovery
 
