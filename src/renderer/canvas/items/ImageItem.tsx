@@ -22,7 +22,8 @@ import { addWaymarkPatch, removeWaymarkPatch, resolveWaymarks, setWaymarkLabelPa
 import { askInscription } from '../../ui/prompt/inscriptionPromptStore'
 import { canvasColor } from '../../theme/canvasColors'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
-import { sourceCaptureReference } from '../sourceCapture'
+import { sourceCaptureReference, type ImageRegion } from '../sourceCapture'
+import { useSourceCaptureRegionStore } from '../../ui/sourceCaptureRegionStore'
 
 type Props = { item: CanvasItem }
 
@@ -43,10 +44,13 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   const openContextMenu = useUIStore((s) => s.openContextMenu)
   const isConnectSource = useUIStore((s) => s.connectFromId === item.id)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const regionSelectionRequest = useSourceCaptureRegionStore((s) => s.request)
   const groupRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number; rotation: number } | null>(null)
+  const [regionStart, setRegionStart] = React.useState<{ x: number; y: number } | null>(null)
+  const [regionPreview, setRegionPreview] = React.useState<ImageRegion | null>(null)
 
   useEffect(() => {
     if (isSelected && trRef.current && groupRef.current) {
@@ -177,7 +181,51 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     }
   }
 
-  if (!image && !isMissing) return null
+  const isRegionSelectionSource = regionSelectionRequest?.sourceItemId === item.id
+  const pointerRegionPoint = (target: KonvaEventObject<MouseEvent>['target']): { x: number; y: number } | null => {
+    // Ask the active hit rectangle for its local pointer location. This also
+    // accounts for a rotated source image.
+    const point = target.getRelativePointerPosition()
+    if (!point) return null
+    return {
+      x: Math.max(0, Math.min(1, point.x / item.width)),
+      y: Math.max(0, Math.min(1, point.y / item.height)),
+    }
+  }
+  const regionBetween = (start: { x: number; y: number }, end: { x: number; y: number }): ImageRegion => ({
+    x: Math.min(start.x, end.x),
+    y: Math.min(start.y, end.y),
+    width: Math.abs(end.x - start.x),
+    height: Math.abs(end.y - start.y),
+  })
+  const handleRegionStart = (e: KonvaEventObject<MouseEvent>) => {
+    e.cancelBubble = true
+    const point = pointerRegionPoint(e.target)
+    if (!point) return
+    setRegionStart(point)
+    setRegionPreview({ x: point.x, y: point.y, width: 0, height: 0 })
+  }
+  const handleRegionMove = (e: KonvaEventObject<MouseEvent>) => {
+    e.cancelBubble = true
+    if (!regionStart) return
+    const point = pointerRegionPoint(e.target)
+    if (point) setRegionPreview(regionBetween(regionStart, point))
+  }
+  const handleRegionEnd = (e: KonvaEventObject<MouseEvent>) => {
+    e.cancelBubble = true
+    if (!regionStart) return
+    const point = pointerRegionPoint(e.target)
+    const region = point ? regionBetween(regionStart, point) : null
+    setRegionStart(null)
+    setRegionPreview(null)
+    if (!region || region.width < 0.01 || region.height < 0.01) return
+    useSourceCaptureRegionStore.getState().complete(region)
+  }
+
+  // A capture can begin while an imported image is still decoding. Keep its
+  // bounds interactive for region selection rather than making the flow wait
+  // on a browser image-load event.
+  if (!image && !isMissing && !isRegionSelectionSource) return null
 
   const fitMode = ((item.meta?.fitMode as ImageFitMode | undefined) ?? 'stretch')
   const imageWidth = image ? (image.naturalWidth || image.width) : item.width
@@ -203,7 +251,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         width={item.width}
         height={item.height}
         rotation={item.rotation}
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={toolMode === 'select' && !item.locked && !isRegionSelectionSource}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.evt.preventDefault()
@@ -278,6 +326,31 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
             listening={false}
           />
         ))}
+        {regionPreview && (
+          <Rect
+            x={regionPreview.x * item.width}
+            y={regionPreview.y * item.height}
+            width={regionPreview.width * item.width}
+            height={regionPreview.height * item.height}
+            fill="rgba(115,168,219,0.18)"
+            stroke={canvasColor('accent')}
+            strokeWidth={1.5}
+            dash={[5, 3]}
+            listening={false}
+          />
+        )}
+        {isRegionSelectionSource && (
+          <Rect
+            x={0}
+            y={0}
+            width={item.width}
+            height={item.height}
+            fill="rgba(0,0,0,0.001)"
+            onMouseDown={handleRegionStart}
+            onMouseMove={handleRegionMove}
+            onMouseUp={handleRegionEnd}
+          />
+        )}
         <Rect
           x={0}
           y={0}
@@ -338,7 +411,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
           </React.Fragment>
         ))}
       </Group>
-      {isSelected && !item.locked && (
+      {isSelected && !item.locked && !isRegionSelectionSource && (
         <Transformer
           ref={trRef}
           rotateEnabled

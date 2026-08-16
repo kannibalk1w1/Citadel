@@ -42,6 +42,7 @@ import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { IndexLedger } from './ui/IndexLedger'
 import { ArchiveWorkbench } from './archive/ArchiveWorkbench'
 import { InscriptionPrompt } from './ui/prompt/InscriptionPrompt'
+import { SourceCaptureRegionPicker } from './ui/SourceCaptureRegionPicker'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
@@ -1066,6 +1067,7 @@ export default function App(): React.ReactElement {
           <Onboarding />
           <CommandPalette />
           <InscriptionPrompt />
+          <SourceCaptureRegionPicker />
         </>
       )}
     />

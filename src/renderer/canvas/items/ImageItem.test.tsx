@@ -1,16 +1,21 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { clearAssetMetadataForTest, recordAssetMetadata } from '../../assets/assetMetadata'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
+import { useSourceCaptureRegionStore } from '../../ui/sourceCaptureRegionStore'
 import { ImageItem } from './ImageItem'
 
 const imageState = vi.hoisted(() => ({
   image: { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement | null,
   lastUrl: '' as string,
+  regionHandlers: {} as {
+    down?: (event: { cancelBubble: boolean; target: { getRelativePointerPosition: () => { x: number; y: number } } }) => void
+    up?: (event: { cancelBubble: boolean; target: { getRelativePointerPosition: () => { x: number; y: number } } }) => void
+  },
 }))
 
 vi.mock('use-image', () => ({
@@ -33,9 +38,15 @@ vi.mock('react-konva', () => ({
     return <div data-testid="image-group">{children}</div>
   }),
   Image: () => <div data-testid="konva-image" />,
-  Rect: ({ listening }: { listening?: boolean }) => (
-    <div data-testid="konva-rect" data-listening={String(listening ?? true)} />
-  ),
+  Rect: ({ listening, onMouseDown, onMouseUp }: { listening?: boolean; onMouseDown?: unknown; onMouseUp?: unknown }) => {
+    if (onMouseDown) {
+      imageState.regionHandlers = {
+        down: onMouseDown as typeof imageState.regionHandlers.down,
+        up: onMouseUp as typeof imageState.regionHandlers.up,
+      }
+    }
+    return <div data-testid="konva-rect" data-listening={String(listening ?? true)} data-region-selector={String(Boolean(onMouseDown))} />
+  },
   Text: ({ text }: { text?: string }) => <div data-testid="konva-text">{text}</div>,
   Transformer: React.forwardRef(function Transformer(props: { anchorSize?: number }, ref: React.ForwardedRef<unknown>) {
     React.useImperativeHandle(ref, () => ({ nodes: vi.fn(), getLayer: () => ({ batchDraw: vi.fn() }) }))
@@ -62,6 +73,7 @@ const imageItem: CanvasItem = {
 beforeEach(() => {
   clearAssetMetadataForTest()
   imageState.lastUrl = ''
+  imageState.regionHandlers = {}
   imageState.image = { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement
   useCanvasStore.setState({
     boards: [{
@@ -75,9 +87,13 @@ beforeEach(() => {
     selectedIds: [],
   })
   useUIStore.setState({ toolMode: 'select', connectFromId: null })
+  useSourceCaptureRegionStore.setState({ request: null })
 })
 
-afterEach(() => cleanup())
+afterEach(() => {
+  useSourceCaptureRegionStore.getState().cancel()
+  cleanup()
+})
 
 describe('ImageItem hit testing', () => {
   it('keeps a listening hit target so direct clicks can select or connect images', () => {
@@ -97,6 +113,26 @@ describe('ImageItem hit testing', () => {
     expect(() => rerender(<ImageItem item={imageItem} />)).not.toThrow()
     expect(screen.getByTestId('konva-image')).toBeTruthy()
     expect(screen.getByTestId('image-transformer').getAttribute('data-anchor-size')).toBe('10')
+  })
+
+  it('returns a directly dragged region even while the source image is importing', async () => {
+    imageState.image = null
+    const choice = useSourceCaptureRegionStore.getState().choose(imageItem.id)
+
+    render(<ImageItem item={imageItem} />)
+
+    expect(screen.getByTestId('image-group')).toBeTruthy()
+    expect(screen.getAllByTestId('konva-rect').some((rect) => rect.dataset.regionSelector === 'true')).toBe(true)
+
+    const start = { x: 32, y: 36 }
+    const event = { cancelBubble: false, target: { getRelativePointerPosition: () => start } }
+    act(() => imageState.regionHandlers.down?.(event))
+    const end = { x: 224, y: 108 }
+    act(() => imageState.regionHandlers.up?.({ cancelBubble: false, target: { getRelativePointerPosition: () => end } }))
+
+    const region = await choice
+    expect(region).toMatchObject({ x: 0.1, y: 0.2, width: 0.6 })
+    expect(region?.height).toBeCloseTo(0.4)
   })
 })
 

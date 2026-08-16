@@ -1,9 +1,10 @@
 import type { CanvasItem } from '../../types'
-import { createSourceCapture, imageRegionFromPercent, sourceCaptureConnection } from '../canvas/sourceCapture'
+import { createSourceCapture, sourceCaptureConnection } from '../canvas/sourceCapture'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { canvasColor } from '../theme/canvasColors'
 import { askInscription } from './prompt/inscriptionPromptStore'
+import { chooseSourceCaptureRegion } from './sourceCaptureRegionStore'
 import { inscribe } from './toasts/inscriptionToastStore'
 
 function placementFor(source: CanvasItem | undefined): { x: number; y: number } {
@@ -24,12 +25,10 @@ export async function startSourceCapture(source?: CanvasItem): Promise<void> {
   const locator = await askInscription('Page, section, or time (optional):')
   if (locator === null) return
 
-  const regionInput = source?.type === 'image'
-    ? await askInscription('Image region: left, top, width, height (%) — optional:')
-    : ''
-  if (regionInput === null) return
-  const region = imageRegionFromPercent(regionInput)
-  if (regionInput.trim() && !region) inscribe('Image region was not recognised; capture added without one', { tone: 'danger' })
+  const region = source?.type === 'image'
+    ? await chooseSourceCaptureRegion(source.id)
+    : undefined
+  if (region === null) return
 
   const canvas = useCanvasStore.getState()
   const boardId = canvas.activeBoardId
