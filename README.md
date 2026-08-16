@@ -128,8 +128,16 @@ Useful commands:
 npm run typecheck   # TypeScript project check
 npx vitest run      # Full non-watch test run
 npm run build       # Production build
+npm run e2e         # Build, then run isolated Electron smoke tests
+npm run a11y        # Build, then run accessibility checks in Electron
+npm run analyze     # Write reports/bundle-stats.html; never opens a browser
 npm run package     # Windows installer and portable artifacts
 ```
+
+See [testing.md](docs/testing.md) for the portable test setup. The Electron
+tests use Citadel's locally installed Electron binary and an isolated temporary
+profile, so they need no system browser, global package, personal settings, or
+machine-specific path.
 
 The packaged configuration currently targets Windows x64. Other platforms may
 run from source, but are not release targets yet.
@@ -147,7 +155,7 @@ you need to share with a project.
 ## Technology
 
 Electron, React, TypeScript, Konva, Zustand, Three.js, pdf.js, jsPDF,
-html2canvas, JSZip, Vitest, and Playwright.
+html2canvas, JSZip, Vitest, Playwright, axe-core, and Rollup Visualizer.
 
 ## Development notes
 

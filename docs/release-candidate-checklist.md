@@ -12,7 +12,7 @@ Ref Flow — the product a buyer will price it against — see
 **Scope of the first release: Windows x64 only.** Everything below is written
 against that. Linux and macOS are addressed in [Platform scope](#platform-scope).
 
-Last reviewed: 2026-08-15.
+Last reviewed: 2026-08-16.
 
 ---
 
@@ -20,12 +20,11 @@ Last reviewed: 2026-08-15.
 
 Not yet shippable as a paid build. The archive itself is in good order — the
 save/open path is covered by tests, the `.citadelz` rites are hardened, and the
-interface no longer depends on the network. What is missing is the apparatus
-around it: nothing is signed, an update check runs against a host that does not
-exist, the licence is undeclared, and a first-run buyer lands in an empty chamber
-with nothing to look at. A tag now builds and drafts a release on its own
-(item 4), which leaves the certificate as the only thing standing between the
-current pipeline and a downloadable artifact that does not frighten anyone.
+interface no longer depends on the network. The remaining apparatus is mostly
+release-side: builds are unsigned, the update check has no configured host, and
+the final clean-Windows packaged-app pass has not yet happened. A tag now builds
+and drafts a release on its own (item 4), and the first-run guide and baseline
+desktop automation are in place.
 
 None of the remaining items is large. They are listed in priority order in
 [Blocking work](#blocking-work).
@@ -52,6 +51,11 @@ None of the remaining items is large. They are listed in priority order in
   previously ran `tsc --noEmit` against a root config of `"files": []`, which
   checked nothing and always exited 0; the build gate below was a false green
   for as long as it existed. It now runs `tsc --build` across both projects.
+- **First run.** A small non-modal Getting started guide appears for a fresh
+  profile and can be dismissed without blocking normal work.
+- **Desktop and accessibility automation.** `npm run e2e` launches the built
+  Electron app with a temporary profile; `npm run a11y` audits onboarding and
+  the command palette in that real app window. See [Testing Citadel](./testing.md).
 
 ---
 
@@ -123,24 +127,24 @@ pass below. Full detail in [Release Signing](./release-signing.md).
 Untested against GitHub's runners: the first tag push is the real proof, and
 should be a throwaway version on a scratch tag rather than the first paid one.
 
-### 5. First-run experience
+### 5. First-run experience — baseline complete
 
-A new buyer opens Citadel to an empty chamber and no instruction. Board templates
-exist but are hidden behind the navigator, so the app looks like it does nothing.
+A fresh profile now opens a small, non-modal Getting started guide. It introduces
+the board, importing, writing, search, and safe overlay controls; it can be
+dismissed immediately and never blocks opening an existing project.
 
-The cheapest credible fix is a bundled sample archive — a small `.citadelz`
-demonstrating relics, threads, sigils, and an inscription — opened automatically
-on first launch, with a visible way to dismiss it and start empty. A guided
-walkthrough can follow later; the sample archive alone changes the first
-impression from "blank" to "this is what it is for."
+A bundled example project remains a product decision, not a release blocker.
+It would be useful only if it teaches something the existing guide cannot.
 
-### 6. Packaged-app smoke automation
+### 6. Desktop smoke automation — baseline complete
 
-`package.json` has an `e2e` script but no Playwright configuration or test files
-are committed, so `npm run e2e` fails. Either commit a minimal
-`@playwright/test` Electron suite that launches the packaged app, opens a
-chamber, and seals a `.citadel`, or remove the script until one exists. Until
-then the manual checklist below is the only packaging gate.
+`npm run e2e` builds Citadel, launches that built Electron app with an isolated
+temporary profile, and protects the actual first-run guide and command-palette
+shortcut. `npm run a11y` uses axe-core in the Electron window to guard the
+onboarding and command-palette surfaces. This does not replace a manual test of
+the installer or OS-native dialogs; it makes regressions in ordinary desktop
+flows visible before that pass. The portable setup is documented in
+[Testing Citadel](./testing.md).
 
 ---
 
@@ -205,6 +209,8 @@ before publishing any paid artifact.
 - [ ] `npm run typecheck` exits 0.
 - [ ] `npm test -- --run` exits 0.
 - [ ] `npm run build` exits 0.
+- [ ] `npm run e2e` exits 0.
+- [ ] `npm run a11y` exits 0.
 - [ ] `npm run package` exits 0 and `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
 - [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds both executables.
 

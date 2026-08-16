@@ -1,8 +1,9 @@
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+import { visualizer } from 'rollup-plugin-visualizer'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   main: {
     plugins: [externalizeDepsPlugin()],
     resolve: {
@@ -16,7 +17,20 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
-    plugins: [react()],
+    plugins: [
+      react(),
+      // Kept out of regular builds. `npm run analyze` writes a self-contained
+      // report that is useful in any worktree and never needs a global tool.
+      ...(mode === 'analyze'
+        ? [visualizer({
+          filename: resolve('reports/bundle-stats.html'),
+          template: 'treemap',
+          gzipSize: true,
+          brotliSize: true,
+          open: false,
+        })]
+        : []),
+    ],
     assetsInclude: ['**/*.cur'],
     resolve: {
       alias: {
@@ -36,4 +50,4 @@ export default defineConfig({
       postcss: './postcss.config.js',
     },
   },
-})
+}))

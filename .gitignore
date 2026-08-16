@@ -7,3 +7,6 @@ dist/
 Thumbs.db
 .superpowers/
 *.tsbuildinfo
+playwright-report/
+test-results/
+reports/
