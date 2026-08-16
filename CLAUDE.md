@@ -9,7 +9,12 @@
 - **Name:** Citadel
 - **Type:** Electron desktop app (Windows)
 - **Purpose:** Infinite canvas creative reference tool — spiritual clone of Ref Flow with major extensions
-- **Theme:** Dark fantasy. Stone tones, aged gold text, arcane details. Never generic/material/flat.
+- **Look:** Dark, quiet, and neutral. Warm parchment text on near-black, one cool
+  blue accent, no ornament. The fantasy styling was deliberately removed — the
+  canvas is the subject, the interface stays out of its way. Never generic
+  material/flat either: it is restrained, not styleless.
+- **Words:** Plain names for controls (`docs/citadel-ui-vocabulary.md` is the
+  authority). Archival terms survive only as identifiers in code.
 - **File extensions:** `.citadel` (JSON project), `.citadelz` (zip archive with bundled assets)
 - **License:** MIT. Open source from day one.
 
@@ -25,8 +30,10 @@
 | Arrows/overlays | React SVG (not Konva) |
 | 3D viewer | Three.js (DOM layer canvas) |
 | GIF playback | gifler |
-| State | Zustand (4 slices — see below) |
+| State | Zustand (3 slices: canvas, history, ui) |
 | Undo/Recording | Custom event log (shared system) |
+| PDF preview | pdf.js (`pdfjs-dist`) — first page only |
+| Word/Markdown/text import | Mammoth (`.docx`), plain read (`.md`, `.txt`) |
 | PDF export | jsPDF + html2canvas |
 | Zip | JSZip |
 | Styling | CSS Variables + Tailwind |
@@ -38,76 +45,51 @@
 
 ## Folder Structure
 
+Directories only, with what each is for. The files inside change; this list is
+here so new code lands in the right place, not to be an inventory.
+
 ```
 src/
+  types/
+    index.ts              ← CanvasItem, Connection, boards, events, ITEM_TYPES
+    documents.ts          ← document:extractText contract, compiled by BOTH projects
   main/
     index.ts              ← Electron bootstrap
-    ipc.ts                ← All IPC handlers (file, export, settings)
-    menu.ts               ← Native app menu
-    autoUpdater.ts
-    crashRecovery.ts
+    ipc.ts                ← all IPC handlers
+    menu.ts, autoUpdater.ts, crashRecovery.ts
+    projectPersistence.ts ← .citadel / .citadelz read + write
+    archiveZip.ts         ← zip extraction, with path-traversal guards
+    documentText.ts       ← .docx / .md / .txt → plain text (Mammoth)
+    previewCache.ts, settingsStore.ts, windowModes.ts, clickThroughRegion.ts
+  preload/
+    index.ts              ← the only bridge; exposes window.ipc
   renderer/
-    App.tsx
-    store/
-      canvasStore.ts      ← items, boards, connections, selection
-      historyStore.ts     ← event log, undo/redo, recording sessions
-      uiStore.ts          ← toolMode, theme, panels, search
-      mascotStore.ts      ← effect queue, persistent effects, position
+    App.tsx, main.tsx
+    store/                ← canvasStore, historyStore, uiStore (three, not four)
     canvas/
-      CanvasStage.tsx     ← Konva Stage, pan/zoom
+      CanvasStage.tsx     ← Konva Stage, pan/zoom, tool-mode click handling
       ItemRenderer.tsx    ← routes item.type → component
-      items/
-        ImageItem.tsx
-        GifItem.tsx
-        VideoItem.tsx
-        YouTubeItem.tsx   ← Electron <webview>
-        AudioItem.tsx     ← waveform + controls
-        Model3DItem.tsx   ← Three.js DOM canvas
-        StickyItem.tsx
-        TextItem.tsx
-        SwatchItem.tsx
-        ComparisonItem.tsx
-      overlays/
-        ConnectionLayer.tsx   ← SVG bezier arrows
-        SnapGuides.tsx
-        SelectionBox.tsx
-        LassoOverlay.tsx
-      snapping/
-        snapEngine.ts
-        spatialIndex.ts       ← grid bucketing for perf
-        alignmentGuides.ts
+      useFileDrop.ts      ← every drag-and-drop import path
+      items/              ← one file per ItemType, plus DOMItem for the DOM layer
+      overlays/           ← SVG connections, snap guides, selection, action strips
+      connections/, annotations/, arrange/, snapping/, visibility/
     ui/
-      Toolbar.tsx
-      ContextMenu.tsx
-      BoardTabs.tsx
-      Minimap.tsx
-      RecordingBar.tsx
-      TagSearch.tsx
-      MascotWidget.tsx
-      panels/
-        ItemProperties.tsx
-        ConnectionProperties.tsx
-        KeybindSettings.tsx
-    export/
-      pdfExport.ts
-      imageExport.ts
-      zipExport.ts
-    plugins/
-      pluginRegistry.ts
-      pluginAPI.ts
-      hooks.ts
-    keybinds/
-      actions.ts            ← all named ActionName strings
-      defaultKeybinds.ts
-      keybindResolver.ts    ← keydown → ActionName → handler
+      Toolbar.tsx, ContextMenu.tsx, BoardTabs.tsx, Minimap.tsx, IndexLedger.tsx
+      panels/             ← ItemProperties, ConnectionProperties, KeybindSettings
+      toasts/             ← inscriptionToastStore + InscriptionToasts (all feedback)
+      palette/, shell/, icons/, onboarding/, prompt/
+    archive/              ← media-review workbench for uncategorised assets
+    assets/               ← thumbnail pipeline, asset health, preview scheduling
+    export/, presentation/, performance/, plugins/, keybinds/
     theme/
       ThemeProvider.tsx
-      dark.css
-      light.css
-    mascot/
-      MascotWidget.tsx
-      effects/              ← one file per effect animation
+      canvasColors.ts     ← REQUIRED for any colour or font Konva will paint
+      dark.css, light.css, graphite.css, cleanArchive.css, fonts.css
+    utils/                ← projectFile, projectSchema, pathToUrl, pdfPreview
 ```
+
+Tests sit beside what they test (`foo.ts` → `foo.test.ts`). Playwright cases use
+`.e2e.ts` so `vitest run` never picks them up.
 
 ---
 
@@ -115,7 +97,9 @@ src/
 
 ### CanvasItem
 ```ts
-type ItemType = 'image' | 'gif' | 'video' | 'youtube' | 'audio' | 'model3d' | 'text' | 'sticky' | 'comparison' | 'swatch'
+// Derived from the ITEM_TYPES array in src/types/index.ts — add to that list,
+// never to a union, or the project-file validator will drop the new type on load.
+type ItemType = 'image' | 'gif' | 'video' | 'youtube' | 'audio' | 'model3d' | 'text' | 'sticky' | 'comparison' | 'swatch' | 'code'
 
 type CanvasItem = {
   id: string
@@ -146,7 +130,8 @@ type Connection = {
   color: string; width: number
   arrowHead: 'none' | 'arrow' | 'dot' | 'diamond'
   label?: string
-  dashed: boolean
+  meaning?: ThreadMeaning   // reference | memory | source | echo | contradiction
+  dashed: boolean           // | question | proof | inspiration | warning | sequence
 }
 ```
 
@@ -168,7 +153,10 @@ type CanvasEvent = {
   id: string
   timestamp: number       // ms since recording epoch
   boardId: string
-  type: 'ITEM_ADD' | 'ITEM_DELETE' | 'ITEM_MOVE' | 'ITEM_RESIZE' | 'ITEM_STYLE' | 'CONNECTION_ADD' | 'CONNECTION_DELETE' | 'CONNECTION_STYLE' | 'VIEWPORT_CHANGE' | ...
+  type: 'ITEM_ADD' | 'ITEM_DELETE' | 'ITEM_MOVE' | 'ITEM_RESIZE' | 'ITEM_STYLE'
+      | 'CONNECTION_ADD' | 'CONNECTION_DELETE' | 'CONNECTION_STYLE'
+      | 'VIEWPORT_CHANGE' | 'BOARD_ADD' | 'BOARD_DELETE' | 'BOARD_RENAME'
+      | 'BOARD_STYLE' | 'SELECTION_CHANGE' | 'COMPARE_MERGE'
   before: unknown
   after: unknown
 }
@@ -194,7 +182,7 @@ Actions are named strings defined in `keybinds/actions.ts`. Default bindings in 
 ### Tool modes gate all canvas interactions
 Active tool mode lives in `uiStore.toolMode`. Never let interactions bleed between modes.
 ```ts
-type ToolMode = 'select' | 'connect' | 'pan' | 'lasso' | 'text' | 'sticky' | 'link' | 'tag' | 'record'
+type ToolMode = 'select' | 'connect' | 'pan' | 'lasso' | 'text' | 'sticky' | 'link' | 'tag' | 'swatch' | 'record' | 'comparison' | 'code'
 ```
 
 ### Video, YouTube, 3D, and Audio are DOM layer — not Konva
@@ -219,68 +207,79 @@ Assets are referenced as paths relative to the `.citadel` file. On save, prompt 
 
 ---
 
-## Mascot System
+## User Feedback
 
-The mascot is a chess-rook tower SVG in the UI corner. It reacts to app events with animations.
+The mascot and its canvas-effect subsystem were removed in the clean-interface
+pass. There is no `mascotStore`, no `triggerEffect`, no `--effect-*` palette,
+and no `src/renderer/mascot/`. **Do not reintroduce them.**
 
-**Strict colour palette — no exceptions except the two marked:**
-- Tower body: `#0a0a0a`
-- Effect primary (lightning, runes, beams): `#ffffff`
-- Effect mid (secondary particles): `#c8c8c8`
-- Effect dim (afterglow): `#505050`
-- Background bloom: `#2a2a2a`
-- Recording eye: `#8b0000` ← only intentional colour
-- Error fracture: `#5a0000` ← only intentional colour
+Feedback is static and direct. A completed or refused action says so in words:
 
-**Trigger effects via `mascotStore.triggerEffect(name)`** — never animate the mascot directly from feature code. Decoupling is mandatory.
+```ts
+import { inscribe } from '@ui/toasts/inscriptionToastStore'
 
-**Effect triggers (key ones):**
-| Action | Effect name |
-|---|---|
-| Export | `lightning-out` |
-| Import / file open | `lightning-in` |
-| Save | `rune-seal` |
-| Auto-save | `base-pulse` |
-| Undo | `rewind-swirl` |
-| Redo | `forward-surge` |
-| Delete | `crumble` |
-| Recording start | `eye-open` (persistent) |
-| Recording stop | `eye-close` |
-| Playback | `lighthouse-beam` |
-| Long operation | `progress-fill` (takes 0–1 progress value) |
-| Error/crash recovery | `fracture` |
-| App startup | `rise-from-fog` |
-| Idle 15s+ | `ember-drift` (persistent) |
-| Plugin loaded | `banner-raise` |
+inscribe('Board exported')                                   // confirmation
+inscribe('report.doc is a legacy Word file…', { tone: 'danger' })  // refusal
+```
 
-All effects fade through `#c8c8c8` → `#505050` → transparent. Never blend into colour.
-Respect `prefers-reduced-motion` — replace all effects with a single brightness pulse.
+Only `InscriptionToasts.tsx` renders the stack; feature code just calls
+`inscribe()`. Danger-toned messages live longer than ordinary ones. Say what
+happened and, where there is one, the step that fixes it — never a bare
+"something went wrong".
 
 ---
 
 ## Theme
 
-Primary theme is dark fantasy. CSS variables are the source of truth — never hardcode colours.
+Dark, restrained, and neutral. CSS variables are the source of truth — never
+hardcode colours. `src/renderer/theme/dark.css` is the authority; the values
+below are copied from it and a test fails if they drift.
 
 Key tokens:
 ```css
 --bg-canvas: #0f0d0b
---bg-ui: #1a1612
---bg-panel: #221d18
+--bg-panel: #1d1813
+--bg-sunken: #0a0907
 --text-primary: #e8ddd0      /* warm parchment */
---text-accent: #c8a96e       /* aged gold — for labels, not UI chrome */
---accent: #c8a96e
---accent-danger: #8b2020
---border: #2e2820
---effect-primary: #ffffff
---effect-mid: #c8c8c8
---effect-dim: #505050
+--text-secondary: #b9ad9f
+--text-muted: #81766a
+--text-accent: #9fc3e6
+--accent: #73a8db
+--accent-soft: rgba(115, 168, 219, 0.16)
+--accent-danger: #d36472
+--border: #3a3025
+--border-muted: #292117
 ```
 
-**Fonts:**
-- Display/headers: `Cinzel` (Google Fonts)
-- UI body: `Inter` or `DM Sans`
-- Mono (hex values, keybinds): `JetBrains Mono`
+The code card keeps its own dark editor palette (`--code-*`) in both themes.
+
+**Fonts** — only two ship, subset locally in `theme/fonts/`. There is no
+Cinzel, no display face, and no Google Fonts request:
+- UI and display: `Inter` (falls back to `DM Sans`, `sans-serif`)
+- Mono (hex values, keybinds, code): `JetBrains Mono`
+
+### Konva cannot read CSS variables
+
+A 2D canvas context silently ignores `ctx.fillStyle = 'var(--accent)'` and keeps
+the colour the *previously drawn shape* set, so the wrong colour shifts with
+draw order. `ctx.font = '16px var(--font-body)'` is dropped whole, size and all.
+
+Anything painted by Konva must resolve tokens first, via
+`src/renderer/theme/canvasColors.ts`:
+
+```ts
+import { canvasColor, canvasFont, resolveCanvasColor, resolveCanvasFontSize } from '@theme/canvasColors'
+
+<Text fill={canvasColor('textPrimary')} fontFamily={canvasFont('body')} />
+
+// Values out of item meta may be a legacy `var(--…)` string from an old project.
+const color = resolveCanvasColor(item.meta?.color, 'textPrimary')
+const size  = resolveCanvasFontSize(item.meta?.fontSize, 16)   // Konva needs a number
+```
+
+DOM `style={{}}` and SVG attributes take `var(--…)` normally — this rule is
+only for Konva props. `konvaPaint.test.tsx` scans every react-konva component
+and fails if a `var()` string reaches a paint attribute.
 
 ---
 
@@ -330,9 +329,14 @@ Release: push a semver tag (`v1.x.x`) → GitHub Actions builds NSIS installer +
 
 Before writing any new feature, confirm:
 - [ ] Does it use the correct layer? (Konva vs DOM vs SVG overlay)
-- [ ] Does it go through the IPC bridge if it touches the filesystem?
+- [ ] Does it go through the IPC bridge if it touches the filesystem? The
+      renderer has no `fs`, ever.
 - [ ] Does it dispatch a `CanvasEvent` so undo/redo and recording work?
 - [ ] Does it use `ActionName` if it's keyboard-triggerable?
-- [ ] Does it trigger a mascot effect via `mascotStore`?
-- [ ] Does it use CSS variables for any colours?
-- [ ] Is the effect palette strictly black/white/grey?
+- [ ] Does it use CSS variables for DOM colours, and `canvasColor()` /
+      `resolveCanvasColor()` for anything Konva paints?
+- [ ] Does it say something with `inscribe()` when it succeeds or refuses,
+      rather than failing silently?
+- [ ] Does a new item type go in the `ITEM_TYPES` array, not a bare union?
+- [ ] Does an icon-only control have its own `aria-label`? `ToolIcon` is
+      `aria-hidden`, so `title` is not an accessible name.
