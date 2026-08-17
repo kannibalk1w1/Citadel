@@ -119,6 +119,7 @@ beforeEach(() => {
     connectFromId: null,
     presentationMode: false,
     searchHighlightId: null,
+    boardLoadVisible: true,
   })
 })
 
@@ -148,5 +149,23 @@ describe('CanvasStage viewport rendering', () => {
     expect(stats.mountedRelics).toBe(String(renderedIds.length))
     expect(stats.awakeDomMedia).toBe('2')
     expect(stats.sleepingAnimatedRelics).toBe('1')
+  })
+})
+
+describe('the board load readout', () => {
+  it('is shown while it is turned on', () => {
+    render(<CanvasStage />)
+
+    expect(screen.queryByTestId('runtime-stats-sigil')).toBeTruthy()
+  })
+
+  it('disappears from the canvas once it is turned off', () => {
+    useUIStore.setState({ boardLoadVisible: false })
+
+    render(<CanvasStage />)
+
+    expect(screen.queryByTestId('runtime-stats-sigil')).toBeNull()
+    // The rest of the canvas is untouched — this hides a readout, not content.
+    expect(screen.getAllByTestId('canvas-stage-item').length).toBeGreaterThan(0)
   })
 })

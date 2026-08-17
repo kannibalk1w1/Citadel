@@ -215,6 +215,7 @@ export function RightSidebar(): React.ReactElement {
   const commentPinsVisible = useUIStore((s) => s.commentPinsVisible)
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
+  const boardLoadVisible = useUIStore((s) => s.boardLoadVisible)
   const visionMode = useUIStore((s) => s.visionMode)
   const setVisionMode = useUIStore((s) => s.setVisionMode)
   const mirrorView = useUIStore((s) => s.mirrorView)
@@ -330,6 +331,7 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
+          <QuickBtn label={boardLoadVisible ? 'Hide board load' : 'Show board load'} title="Show or hide the board load readout in the corner of the canvas (Shift+L)" onClick={() => resolver.dispatch(Actions.BOARD_LOAD_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
           <QuickBtn label="Time machine" title="Scrub back through everything that happened on this board (Shift+T)" onClick={() => resolver.dispatch(Actions.TIME_MACHINE_TOGGLE)} />
         </div>

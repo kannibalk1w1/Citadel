@@ -44,6 +44,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.FLIP_H]:         ['shift+h'],
   [Actions.FLIP_V]:         ['shift+v'],
   [Actions.FILENAME_LABELS_TOGGLE]: ['shift+f'],
+  [Actions.BOARD_LOAD_TOGGLE]: ['shift+l'],
   // Grouped on Y for "your eyes": step, value, squint, mirror, and off.
   // Value is shift+G for greyscale — shift+V already flips an item vertically.
   [Actions.VISION_CYCLE]: ['y'],

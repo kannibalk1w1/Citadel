@@ -247,6 +247,10 @@ type UIState = {
   toggleMirrorView: () => void
   clearVisionChecks: () => void
 
+  // The Board Load readout in the corner of the canvas
+  boardLoadVisible: boolean
+  toggleBoardLoad: () => void
+
   // Filename inscriptions under media relics
   filenameLabelsVisible: boolean
   windowAlwaysOnTop: boolean
@@ -491,6 +495,14 @@ export const useUIStore = create<UIState>((set, get) => ({
   mirrorView: false,
   toggleMirrorView: () => set((s) => ({ mirrorView: !s.mirrorView })),
   clearVisionChecks: () => set({ visionMode: 'none', mirrorView: false }),
+
+  boardLoadVisible: true,
+  toggleBoardLoad: () => {
+    const boardLoadVisible = !get().boardLoadVisible
+    set({ boardLoadVisible })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.boardLoadVisible', value: boardLoadVisible }).catch(console.error)
+  },
 
   filenameLabelsVisible: false,
   toggleFilenameLabels: () => set((s) => ({ filenameLabelsVisible: !s.filenameLabelsVisible })),

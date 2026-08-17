@@ -71,6 +71,7 @@ export function CanvasStage(): React.ReactElement {
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
+  const boardLoadVisible = useUIStore((s) => s.boardLoadVisible)
   const cursorPack = useUIStore((s) => s.cursorPack)
   const CURSOR = useMemo(() => cursorPackCss(cursorPack, STANDARD_CURSORS), [cursorPack])
 
@@ -259,7 +260,14 @@ export function CanvasStage(): React.ReactElement {
   })), [connectFromId, height, searchHighlightId, selectedIds, sortedItems, viewport, width])
   const renderedItems = useMemo(() => sortedItems.filter((item) => visibleIds.has(item.id)), [sortedItems, visibleIds])
   const renderedDOMItems = useMemo(() => renderedItems.filter(isDOMLayerItem), [renderedItems])
-  const runtimeStats = useMemo(() => canvasRuntimeStats(sortedItems, renderedItems), [renderedItems, sortedItems])
+  // Only measured when it is going to be shown: this walks every item on the
+  // board and builds a Set of the rendered ones, and renderedItems changes on
+  // every pan frame. On a large chamber that is real work per frame to feed a
+  // readout the user may have turned off.
+  const runtimeStats = useMemo(
+    () => (boardLoadVisible ? canvasRuntimeStats(sortedItems, renderedItems) : null),
+    [boardLoadVisible, renderedItems, sortedItems],
+  )
 
   // Compute rubber-band endpoints in screen space
   const connectSource = connectFromId ? items.find((i) => i.id === connectFromId) : null
@@ -345,7 +353,7 @@ export function CanvasStage(): React.ReactElement {
       {renderedDOMItems.map((item) => (
         <DOMLayerItemRenderer key={`dom-${item.id}`} item={item} />
       ))}
-      <RuntimeStatsSigil stats={runtimeStats} />
+      {runtimeStats && <RuntimeStatsSigil stats={runtimeStats} />}
       <ConnectorQuickToolbar />
       <SelectedActionStrip />
     </div>

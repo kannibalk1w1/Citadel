@@ -32,6 +32,7 @@ export const Actions = {
   FLIP_H: 'item:flipH',
   FLIP_V: 'item:flipV',
   FILENAME_LABELS_TOGGLE: 'view:filenameLabels',
+  BOARD_LOAD_TOGGLE: 'view:boardLoad',
   VISION_CYCLE: 'view:visionCycle',
   VISION_VALUE: 'view:visionValue',
   VISION_SQUINT: 'view:visionSquint',

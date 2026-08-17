@@ -190,6 +190,7 @@ export default function App(): React.ReactElement {
         'ui.youSavedEnabled',
         'ui.hyperTypeEnabled',
         'ui.cursorPack',
+        'ui.boardLoadVisible',
         'ui.theme',
         'ui.themeOverrides',
         'ui.savedThemePalettes',
@@ -211,6 +212,7 @@ export default function App(): React.ReactElement {
       if (values['ui.hyperTypeEnabled'] === true) nextState.hyperTypeEnabled = true
       // Re-validated on the way in: settings.json is a file a person can edit.
       nextState.cursorPack = normalizeCursorPack(values['ui.cursorPack'])
+      if (typeof values['ui.boardLoadVisible'] === 'boolean') nextState.boardLoadVisible = values['ui.boardLoadVisible']
       const theme = values['ui.theme']
       if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'
@@ -443,6 +445,11 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.FILENAME_LABELS_TOGGLE, () => {
       useUIStore.getState().toggleFilenameLabels()
       inscribe(useUIStore.getState().filenameLabelsVisible ? 'Filenames shown' : 'Filenames hidden')
+    })
+
+    resolver.register(Actions.BOARD_LOAD_TOGGLE, () => {
+      useUIStore.getState().toggleBoardLoad()
+      inscribe(useUIStore.getState().boardLoadVisible ? 'Board load shown' : 'Board load hidden')
     })
 
     // ── Vision checks ───────────────────────────────────────────────────────

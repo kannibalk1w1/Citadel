@@ -38,6 +38,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.FLIP_H]: 'Flip horizontally',
   [Actions.FLIP_V]: 'Flip vertically',
   [Actions.FILENAME_LABELS_TOGGLE]: 'Show or hide filenames',
+  [Actions.BOARD_LOAD_TOGGLE]: 'Show or hide the board load readout',
   [Actions.VISION_CYCLE]: 'Vision check: step through',
   [Actions.VISION_VALUE]: 'Vision check: value (greyscale)',
   [Actions.VISION_SQUINT]: 'Vision check: squint (blur)',
