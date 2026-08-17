@@ -33,6 +33,7 @@ import { ItemProperties } from './ui/panels/ItemProperties'
 import { ConnectionProperties } from './ui/panels/ConnectionProperties'
 import { KeybindSettings } from './ui/panels/KeybindSettings'
 import { TextEditOverlay } from './canvas/TextEditOverlay'
+import { YouSavedBanner } from './ui/YouSavedBanner'
 import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { ArchiveRiteOverlay } from './ui/ArchiveRiteOverlay'
@@ -46,6 +47,9 @@ import { SourceCaptureRegionPicker } from './ui/SourceCaptureRegionPicker'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
+import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
+import { engine, lastMouse } from './arcade/HyperTypeEngine'
+import { getCaretScreenPos } from './arcade/caretPos'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
@@ -144,6 +148,8 @@ export default function App(): React.ReactElement {
   const editingItem = useCanvasStore((s) => s.items().find((i) => i.id === editingItemId))
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
+  const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
+  useEffect(() => { engine.setEnabled(hyperTypeEnabled) }, [hyperTypeEnabled])
   const windowOpacity = useUIStore((s) => s.windowOpacity)
   const windowOpacityUsesRendererFallback = useUIStore((s) => s.windowOpacityUsesRendererFallback)
   const activeBoard = useCanvasStore((s) => s.activeBoard())
@@ -180,6 +186,9 @@ export default function App(): React.ReactElement {
 
     ipc.invoke('settings:getMany', {
       keys: [
+        'ui.youSavedEnabled',
+        'ui.hyperTypeEnabled',
+        'ui.dragonCursorEnabled',
         'ui.theme',
         'ui.themeOverrides',
         'ui.savedThemePalettes',
@@ -197,6 +206,9 @@ export default function App(): React.ReactElement {
     }).then((res) => {
       const { values } = res as { values: Record<string, unknown> }
       const nextState: Partial<ReturnType<typeof useUIStore.getState>> = {}
+      if (values['ui.youSavedEnabled'] === true) nextState.youSavedEnabled = true
+      if (values['ui.hyperTypeEnabled'] === true) nextState.hyperTypeEnabled = true
+      if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
       const theme = values['ui.theme']
       if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'
@@ -298,6 +310,7 @@ export default function App(): React.ReactElement {
       if (!canUndo()) return
       const event = undo()
       if (event) revertEvent(event)
+      engine.burst('↩', lastMouse.x, lastMouse.y)
     })
 
     resolver.register(Actions.REDO, () => {
@@ -305,6 +318,7 @@ export default function App(): React.ReactElement {
       if (!canRedo()) return
       const event = redo()
       if (event) replayEvent(event)
+      engine.burst('↪', lastMouse.x, lastMouse.y)
     })
 
     // Delete selected items
@@ -317,6 +331,7 @@ export default function App(): React.ReactElement {
       useHistoryStore.getState().push('ITEM_DELETE', activeBoardId, toDelete, toDelete.map((i) => ({ id: i.id })))
       canvas.removeItems(activeBoardId, toDelete.map((i) => i.id))
       canvas.clearSelection()
+      engine.burst('✕', lastMouse.x, lastMouse.y, 'slice')
     })
 
     // Duplicate selected items
@@ -681,13 +696,15 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.SAVE, () => {
       saveCurrentOrAs().then((ok) => {
         if (!ok) return
-        inscribe('Project saved')
+        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+        else inscribe('Project saved')
       })
     })
     resolver.register(Actions.SAVE_AS, () => {
       saveProjectAs().then((p) => {
         if (!p) return
-        inscribe('Project saved')
+        if (useUIStore.getState().youSavedEnabled) useUIStore.getState().showYouSaved()
+        else inscribe('Project saved')
       })
     })
     resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) inscribe('Project opened') }) })
@@ -818,6 +835,13 @@ export default function App(): React.ReactElement {
       const target = e.target as HTMLElement
       const tag = target.tagName
       const inText = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable
+      let spawnX = lastMouse.x
+      let spawnY = lastMouse.y
+      if (inText) {
+        const pos = getCaretScreenPos(target)
+        if (pos) { spawnX = pos.x; spawnY = pos.y }
+      }
+      engine.keyStroke(e.key, spawnX, spawnY)
       if (useUIStore.getState().presentationMode && e.key === 'Escape') {
         e.preventDefault()
         // Escape rests a raised quill before it exits the presentation.
@@ -832,9 +856,15 @@ export default function App(): React.ReactElement {
       if (inText) return
       resolver.resolve(e)
     }
+    const onMouseMove = (e: MouseEvent) => {
+      lastMouse.x = e.clientX
+      lastMouse.y = e.clientY
+    }
     window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
     return () => {
       window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('mousemove', onMouseMove)
     }
   }, [])
 
@@ -1061,12 +1091,14 @@ export default function App(): React.ReactElement {
       presentationOverlay={presentationOverlay}
       globalOverlays={(
         <>
+          <YouSavedBanner />
           <InscriptionToasts />
           <ArchiveRiteOverlay />
           <ClickThroughPanel />
           <Onboarding />
           <CommandPalette />
           <InscriptionPrompt />
+          <HyperTypeOverlay />
           <SourceCaptureRegionPicker />
         </>
       )}
