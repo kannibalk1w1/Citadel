@@ -3,6 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, rea
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import JSZip from 'jszip'
 import { createProgressThrottle, extractCitadelZip, inspectCitadelZip } from './archiveZip'
+import { isExternallyOpenable } from './externalLinks'
 import type { PortableProject } from './projectPersistence'
 import {
   isCitadelArchivePath,
@@ -446,7 +447,12 @@ export function registerIpcHandlers(): void {
   ))
 
   // ── shell:openURL ──────────────────────────────────────────────────────────
+  // A relic's `link` rides along inside .citadel/.citadelz files, which are made
+  // to be handed around. Handing an arbitrary scheme to openExternal would let a
+  // shared archive launch a local executable (file:), so only browser-safe
+  // schemes get through.
   ipcMain.handle('shell:openURL', async (_e, { url }: { url: string }) => {
+    if (!isExternallyOpenable(url)) return { ok: false, reason: 'Unsupported link scheme' }
     await shell.openExternal(url)
     return { ok: true }
   })

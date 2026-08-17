@@ -1,4 +1,4 @@
-import type { AnchorSide, CanvasBoard, CanvasItem, Connection, ItemType, ProjectFile } from '../../types'
+import type { AnchorSide, CanvasBoard, CanvasItem, Connection, ItemType, KeybindMap, ProjectFile } from '../../types'
 import { ITEM_TYPES } from '../../types'
 import { normalizeThreadMeaning } from '../canvas/connections/threadMeaning'
 import { canvasColor } from '../theme/canvasColors'
@@ -17,6 +17,19 @@ export type ProjectValidationResult =
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+// Keybind overrides come straight out of an untrusted project file. The cast
+// this replaced let any shape through — a non-array value reached the resolver
+// as if it were a key list. Drop anything that is not an array of key strings.
+function migrateKeybindOverrides(value: unknown): Partial<KeybindMap> | undefined {
+  if (!isObject(value)) return undefined
+  const overrides: Partial<KeybindMap> = {}
+  for (const [action, combos] of Object.entries(value)) {
+    if (!Array.isArray(combos)) continue
+    overrides[action] = combos.filter((combo): combo is string => typeof combo === 'string')
+  }
+  return overrides
 }
 
 function finiteNumber(value: unknown, fallback: number): number {
@@ -116,7 +129,7 @@ export function migrateProjectFile(value: unknown): ProjectFile {
     boards,
     activeBoardId,
     recordings: Array.isArray(source.recordings) ? source.recordings as ProjectFile['recordings'] : [],
-    keybindOverrides: isObject(source.keybindOverrides) ? source.keybindOverrides as ProjectFile['keybindOverrides'] : undefined,
+    keybindOverrides: migrateKeybindOverrides(source.keybindOverrides),
   }
 }
 

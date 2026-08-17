@@ -40,6 +40,16 @@ describe('projectSchema', () => {
     expect(migrated.boards[0].items.map((item) => item.type)).toEqual([...ITEM_TYPES])
   })
 
+  it('drops keybind overrides that are not lists of key strings', () => {
+    const migrated = migrateProjectFile({
+      boards: [],
+      keybindOverrides: { SAVE: ['ctrl+s'], UNDO: 'ctrl+z', REDO: ['ctrl+y', 7, null] },
+    })
+
+    // A bare string used to reach the resolver as if it were a key list.
+    expect(migrated.keybindOverrides).toEqual({ SAVE: ['ctrl+s'], REDO: ['ctrl+y'] })
+  })
+
   it('rejects malformed project files with readable errors', () => {
     const result = validateProjectFile({ ...validProject, boards: [{ id: 'bad' }] })
 

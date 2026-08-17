@@ -8,6 +8,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
+import { isExternallyOpenable } from './externalLinks'
 import { buildMenu } from './menu'
 import { initAutoUpdater } from './autoUpdater'
 import { initCrashRecovery } from './crashRecovery'
@@ -51,7 +52,7 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (isExternallyOpenable(url)) shell.openExternal(url)
     return { action: 'deny' }
   })
 
