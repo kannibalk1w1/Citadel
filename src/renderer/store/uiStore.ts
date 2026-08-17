@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ToolMode } from '../../types'
+import { normalizeCursorPack, type CursorPack } from '../cursors/cursorPack'
 import { nextVisionMode, type VisionMode } from '../canvas/visionModes'
 
 type PanelState = {
@@ -206,9 +207,10 @@ type UIState = {
   hyperTypeEnabled: boolean
   setHyperTypeEnabled: (enabled: boolean) => void
 
-  // Dragon cursor
-  dragonCursorEnabled: boolean
-  setDragonCursorEnabled: (enabled: boolean) => void
+  // Cursor pack. Cursor art ships as a separate data file rather than inside
+  // the app, so null here means the standard pointers.
+  cursorPack: CursorPack | null
+  setCursorPack: (pack: unknown) => boolean
 
   // UI scale
   uiScale: number
@@ -407,11 +409,16 @@ export const useUIStore = create<UIState>((set, get) => ({
     ipc.invoke('settings:set', { key: 'ui.hyperTypeEnabled', value: enabled }).catch(console.error)
   },
 
-  dragonCursorEnabled: false,
-  setDragonCursorEnabled: (enabled) => {
-    set({ dragonCursorEnabled: enabled })
+  cursorPack: null,
+  // Takes unknown because the value comes from a file someone was handed, or
+  // from a hand-editable settings.json. Returns whether it was usable.
+  setCursorPack: (pack) => {
+    const normalized = pack === null ? null : normalizeCursorPack(pack)
+    if (pack !== null && !normalized) return false
+    set({ cursorPack: normalized })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'ui.dragonCursorEnabled', value: enabled }).catch(console.error)
+    ipc.invoke('settings:set', { key: 'ui.cursorPack', value: normalized }).catch(console.error)
+    return true
   },
 
   uiScale: 1.0,

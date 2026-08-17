@@ -47,6 +47,7 @@ import { SourceCaptureRegionPicker } from './ui/SourceCaptureRegionPicker'
 import { askInscription } from './ui/prompt/inscriptionPromptStore'
 import { QuillControls } from './presentation/QuillControls'
 import { useQuillStore } from './presentation/quillStore'
+import { normalizeCursorPack } from './cursors/cursorPack'
 import { HyperTypeOverlay } from './arcade/HyperTypeOverlay'
 import { engine, lastMouse } from './arcade/HyperTypeEngine'
 import { getCaretScreenPos } from './arcade/caretPos'
@@ -188,7 +189,7 @@ export default function App(): React.ReactElement {
       keys: [
         'ui.youSavedEnabled',
         'ui.hyperTypeEnabled',
-        'ui.dragonCursorEnabled',
+        'ui.cursorPack',
         'ui.theme',
         'ui.themeOverrides',
         'ui.savedThemePalettes',
@@ -208,7 +209,8 @@ export default function App(): React.ReactElement {
       const nextState: Partial<ReturnType<typeof useUIStore.getState>> = {}
       if (values['ui.youSavedEnabled'] === true) nextState.youSavedEnabled = true
       if (values['ui.hyperTypeEnabled'] === true) nextState.hyperTypeEnabled = true
-      if (values['ui.dragonCursorEnabled'] === true) nextState.dragonCursorEnabled = true
+      // Re-validated on the way in: settings.json is a file a person can edit.
+      nextState.cursorPack = normalizeCursorPack(values['ui.cursorPack'])
       const theme = values['ui.theme']
       if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'

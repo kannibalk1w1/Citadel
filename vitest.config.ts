@@ -1,10 +1,21 @@
+import { resolve } from 'path'
 import { defineConfig } from 'vitest/config'
 
-// Vitest does not read electron.vite.config.ts, so anything the renderer build
-// teaches Vite has to be repeated here. `.cur` is not one of Vite's built-in
-// asset types, and the cursor set is imported at module scope by
-// arcade/dragonCursor.ts — without this, any test that reaches CanvasStage
-// fails to parse the binary as JavaScript.
+// Vitest does not read electron.vite.config.ts, so the renderer aliases defined
+// there have to be repeated. Without this a test importing through `@/…` fails
+// to resolve, which is a confusing way to find out.
 export default defineConfig({
-  assetsInclude: ['**/*.cur'],
+  resolve: {
+    alias: {
+      '@': resolve('src/renderer'),
+      '@store': resolve('src/renderer/store'),
+      '@canvas': resolve('src/renderer/canvas'),
+      '@ui': resolve('src/renderer/ui'),
+      '@keybinds': resolve('src/renderer/keybinds'),
+      '@theme': resolve('src/renderer/theme'),
+      '@export': resolve('src/renderer/export'),
+      '@plugins': resolve('src/renderer/plugins'),
+      '@types': resolve('src/types'),
+    },
+  },
 })

@@ -14,7 +14,6 @@ Object.defineProperty(window, 'ipc', { value: { invoke }, writable: true })
 const TOGGLES = [
   { label: 'YOU SAVED banner on manual save', flag: 'youSavedEnabled', key: 'ui.youSavedEnabled' },
   { label: 'HyperType mode', flag: 'hyperTypeEnabled', key: 'ui.hyperTypeEnabled' },
-  { label: 'Dragon Scimitar cursor', flag: 'dragonCursorEnabled', key: 'ui.dragonCursorEnabled' },
 ] as const
 
 describe('fun settings', () => {
@@ -26,7 +25,7 @@ describe('fun settings', () => {
       panels: { ...useUIStore.getState().panels, keybindSettings: true },
       youSavedEnabled: false,
       hyperTypeEnabled: false,
-      dragonCursorEnabled: false,
+      cursorPack: null,
     })
   })
 
@@ -45,6 +44,7 @@ describe('fun settings', () => {
 
     expect(fresh.youSavedEnabled).toBe(false)
     expect(fresh.hyperTypeEnabled).toBe(false)
-    expect(fresh.dragonCursorEnabled).toBe(false)
+    // Cursor art is a separate download, so a fresh install has none.
+    expect(fresh.cursorPack).toBeNull()
   })
 })

@@ -109,8 +109,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const setYouSavedEnabled = useUIStore((s) => s.setYouSavedEnabled)
   const hyperTypeEnabled = useUIStore((s) => s.hyperTypeEnabled)
   const setHyperTypeEnabled = useUIStore((s) => s.setHyperTypeEnabled)
-  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
-  const setDragonCursorEnabled = useUIStore((s) => s.setDragonCursorEnabled)
+  const cursorPack = useUIStore((s) => s.cursorPack)
+  const setCursorPack = useUIStore((s) => s.setCursorPack)
   const uiScale = useUIStore((s) => s.uiScale)
   const setUiScale = useUIStore((s) => s.setUiScale)
   const exportScale = useUIStore((s) => s.exportScale)
@@ -132,6 +132,7 @@ export function KeybindSettings(): React.ReactElement | null {
   const [cacheMessage, setCacheMessage] = useState('')
   const [relinkBusy, setRelinkBusy] = useState(false)
   const [relinkMessage, setRelinkMessage] = useState('')
+  const [cursorMessage, setCursorMessage] = useState('')
   const [sourceChanges, setSourceChanges] = useState<SourceChangeIndex | null>(null)
   const [sourceBusy, setSourceBusy] = useState(false)
   const [sourceMessage, setSourceMessage] = useState('')
@@ -291,6 +292,20 @@ export function KeybindSettings(): React.ReactElement | null {
       setPaletteMessage('palette saved locally')
     } else {
       setPaletteMessage('name the palette first')
+    }
+  }
+
+  const importCursorPack = async (): Promise<void> => {
+    const result = await getIpc().invoke('file:openDialog', {
+      filters: [{ name: 'Citadel Cursor Pack', extensions: ['citadel-cursors.json', 'json'] }],
+    }) as { path?: string | null }
+    if (!result?.path) return
+    try {
+      const loaded = await getIpc().invoke('file:load', { path: result.path }) as { data?: string }
+      const parsed = loaded.data ? JSON.parse(loaded.data) : null
+      setCursorMessage(setCursorPack(parsed) ? 'cursor pack applied' : 'not a valid cursor pack')
+    } catch {
+      setCursorMessage('could not read that cursor pack')
     }
   }
 
@@ -637,20 +652,24 @@ export function KeybindSettings(): React.ReactElement | null {
             by Thanh-Huy1104<br />MIT
           </span>
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', cursor: 'pointer', marginTop: 6 }}>
-          <input
-            type="checkbox"
-            checked={dragonCursorEnabled}
-            onChange={(e) => setDragonCursorEnabled(e.target.checked)}
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 6 }}>
           <span style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}>
-            Dragon Scimitar cursor
+            Cursor pack
           </span>
-          <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginLeft: 'auto', textAlign: 'right' }}>
-            rw-designer.com<br />CC Attribution / PD
+          <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {cursorPack ? cursorPack.name : 'system cursors'}
           </span>
-        </label>
+          <button type="button" onClick={() => importCursorPack().catch(console.error)} style={paletteButtonStyle}>Import…</button>
+          <button
+            type="button"
+            onClick={() => { setCursorPack(null); setCursorMessage('using system cursors') }}
+            disabled={!cursorPack}
+            style={paletteButtonStyle}
+          >
+            Clear
+          </button>
+        </div>
+        {cursorMessage && <div role="status" style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)' }}>{cursorMessage}</div>}
       </div>
       <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 6 }}>

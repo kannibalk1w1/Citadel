@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => ({
         })]
         : []),
     ],
-    assetsInclude: ['**/*.cur'],
     resolve: {
       alias: {
         '@': resolve('src/renderer'),

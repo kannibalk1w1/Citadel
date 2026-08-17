@@ -4,7 +4,7 @@ Citadel bundles the works listed below. Each entry names the source, the licence
 and the attribution the licence requires. Distributed builds of Citadel must ship
 this file.
 
-Last audited: 2026-08-15.
+Last audited: 2026-08-17.
 
 ---
 
@@ -63,18 +63,23 @@ SOFTWARE.
 
 ## Cursors
 
-Bundled in `src/renderer/assets/cursors/`, used by `src/renderer/arcade/dragonCursor.ts`.
+**No cursor artwork ships in Citadel.** The app uses the operating system's own
+pointers. Cursor art is distributed as a separate `.citadel-cursors.json` pack,
+imported by the user from Fun Settings, and any pack carries its own attribution
+wherever it is published.
+
+The Dragon Scimitar pack published alongside Citadel is built from:
 
 - **Dragon Scimitar cursor set** (`ds-normal.cur`, `ds-cross.cur`, `ds-hand.cur`) — from [rw-designer.com](https://www.rw-designer.com/cursor-set/dragon-scimitar), Creative Commons Attribution, published 20 November 2010.
 - **Abyssal Whip cursor** (`abyssal-whip.cur`) — by RWCEditor For RuneScape2006, from [rw-designer.com](https://www.rw-designer.com/cursor-detail/31818), Public Domain, published 26 December 2011.
 
 Licence text: https://creativecommons.org/licenses/by/3.0/
 
-> **Owner decision required before a paid release.** These cursors depict weapons
-> from *Old School RuneScape*. The rw-designer licence covers the cursor artwork's
-> author, not Jagex's underlying trade dress. Shipping them in a product sold for
-> money carries a trademark/IP exposure that the CC-BY grant does not clear. See
-> `docs/release-candidate-checklist.md`.
+> These cursors depict weapons from *Old School RuneScape*. The rw-designer
+> licence covers the cursor artwork's author, not Jagex's underlying trade
+> dress. That exposure no longer touches the product sold for money, because
+> the pack is a free, separate download rather than something bundled into a
+> paid build — but whoever publishes the pack still owns that call.
 
 ---
 
@@ -123,9 +128,9 @@ Do not delete it from a distributed build.
 
 ## Unverified provenance
 
-These assets ship in the app but have no recorded source. The owner must confirm
-they are original work or supply their licence before a paid release.
+`resources/icon.ico` has no recorded source. The owner must confirm it is
+original work or supply its licence before a paid release.
 
-- `src/renderer/assets/arcane-stone-canvas-tile.png` (2.8 MB canvas texture)
-- `src/renderer/assets/CitadelTower.png`
-- `resources/icon.ico`
+The two images previously listed here — `arcane-stone-canvas-tile.png` and
+`CitadelTower.png` — no longer ship: the canvas moved to a procedural dot grid
+and the mascot was removed.

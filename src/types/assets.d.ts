@@ -5,10 +5,6 @@
 // inside a module are scoped to it rather than global. The copies there were
 // inert, which is why importing a cursor was a type error while `npm run
 // typecheck` was quietly checking nothing.
-declare module '*.cur' {
-  const src: string
-  export default src
-}
 
 declare module '*.mp3' {
   const src: string

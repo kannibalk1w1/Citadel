@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
-import { DS_NORMAL, DS_CROSS, DS_HAND, DS_WHIP } from '../arcade/dragonCursor'
+import { cursorPackCss } from '../cursors/cursorPack'
 import { DOMLayerItemRenderer, isDOMLayerItem, ItemRenderer } from './ItemRenderer'
 import { ConnectionLayer } from './overlays/ConnectionLayer'
 import { GroupLayer } from './overlays/GroupLayer'
@@ -30,23 +30,6 @@ const ZOOM_FACTOR = 1.1
 const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 const VIEWPORT_OVERSCAN_PX = 240
-
-// Cursor art is opt-in and falls back to the standard cursor on every entry, so
-// a missing or blocked .cur never leaves the pointer invisible.
-const DRAGON_CURSORS: Record<string, string> = {
-  select:     DS_NORMAL,
-  lasso:      DS_WHIP,
-  connect:    DS_CROSS,
-  text:       DS_NORMAL,
-  code:       DS_NORMAL,
-  sticky:     DS_NORMAL,
-  link:       DS_HAND,
-  tag:        DS_NORMAL,
-  swatch:     DS_NORMAL,
-  comparison: DS_NORMAL,
-  record:     DS_NORMAL,
-  default:    DS_NORMAL,
-}
 
 const STANDARD_CURSORS: Record<string, string> = {
   pan:        'grab',
@@ -88,8 +71,8 @@ export function CanvasStage(): React.ReactElement {
   const searchHighlightId = useUIStore((s) => s.searchHighlightId)
   const presentationMode = useUIStore((s) => s.presentationMode)
   const archiveRailCollapsed = useUIStore((s) => s.archiveRailCollapsed)
-  const dragonCursorEnabled = useUIStore((s) => s.dragonCursorEnabled)
-  const CURSOR = dragonCursorEnabled ? DRAGON_CURSORS : STANDARD_CURSORS
+  const cursorPack = useUIStore((s) => s.cursorPack)
+  const CURSOR = useMemo(() => cursorPackCss(cursorPack, STANDARD_CURSORS), [cursorPack])
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 

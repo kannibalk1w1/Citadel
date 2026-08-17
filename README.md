@@ -130,7 +130,14 @@ Supported drag-and-drop extensions include:
   colour. Save a palette locally, or export one as a `.citadel-theme.json` to
   share.
 - Optional flourishes under **Fun Settings**, all off by default: a save
-  banner, HyperType mode, and an alternate cursor set.
+  banner and HyperType mode.
+- **Cursor packs.** Citadel ships with the system pointers and no cursor art of
+  its own. A pack is a small `.citadel-cursors.json` file holding one image per
+  cursor slot, imported from Fun Settings and published separately from the
+  app. Packs are data, never code: images must be `data:` URIs of a real image
+  type, are size-bounded, and every custom cursor keeps the standard one as its
+  fallback, so a pack can neither reach the network nor leave you without a
+  pointer.
 - Adjustable UI scale, and a canvas background that can be the default dot
   grid, flat, your own image, or nothing at all.
 
@@ -222,9 +229,11 @@ html2canvas, JSZip, Vitest, Playwright, axe-core, and Rollup Visualizer.
 - Keyboard actions are named and routed through one resolver.
 - The visual language is clean and high-contrast. Motion is short, purposeful,
   and reduced-motion safe—never decorative or theme-driven.
-- The plugin API is early-stage: it currently supports custom item types and
-  event hooks. Treat it as experimental until it has a documented compatibility
-  policy.
+- The plugin scaffolding in `src/renderer/plugins` is not wired up: nothing
+  calls `loadPlugin`, no hooks are emitted, and there is no loader that reads a
+  plugin from disk. Treat it as a sketch rather than an API. Features that need
+  to ship separately use data files instead — see cursor packs and
+  `.citadel-theme.json` palettes.
 
 ## Contributing
 
