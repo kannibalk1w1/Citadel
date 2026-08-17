@@ -51,6 +51,29 @@ describe('ClickThroughPanel', () => {
     expect(stop.getAttribute('aria-label')).toContain('Ctrl+Alt+C')
   })
 
+  /**
+   * While click-through is on, Citadel is the background window — a press on a
+   * background window can be eaten activating it, and then no click ever
+   * arrives. The one control that must always work cannot wait for the release.
+   */
+  it('leaves click-through on the press, without waiting for a click', () => {
+    useUIStore.setState({ windowClickThrough: true })
+    render(<ClickThroughPanel />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: /stop click-through/i }), { button: 0 })
+
+    expect(invoke).toHaveBeenCalledWith('window:setMode', { clickThrough: false })
+  })
+
+  it('ignores a right-press, which is a context menu rather than a decision', () => {
+    useUIStore.setState({ windowClickThrough: true })
+    render(<ClickThroughPanel />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: /stop click-through/i }), { button: 2 })
+
+    expect(invoke).not.toHaveBeenCalledWith('window:setMode', { clickThrough: false })
+  })
+
   it('leaves click-through through the same window mode path as everything else', () => {
     useUIStore.setState({ windowClickThrough: true })
     render(<ClickThroughPanel />)

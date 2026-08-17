@@ -59,6 +59,18 @@ export function ClickThroughPanel(): React.ReactElement | null {
 
   const exit = () => { void applyWindowMode({ clickThrough: false }) }
 
+  // Acts on press, not on click. While click-through is on the user is working
+  // in another application, so Citadel is the background window — and a press
+  // on a background window can be consumed activating it, leaving no `click` to
+  // follow. Waiting for the full press-and-release is how the one control that
+  // must always work ends up doing nothing. `onClick` stays for the keyboard,
+  // where Enter and Space fire it without any mousedown.
+  const exitOnPress = (event: React.MouseEvent) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    exit()
+  }
+
   return (
     <div
       ref={ref}
@@ -99,6 +111,7 @@ export function ClickThroughPanel(): React.ReactElement | null {
       </span>
       <button
         type="button"
+        onMouseDown={exitOnPress}
         onClick={exit}
         title={`Stop click-through (${CLICK_THROUGH_EXIT_HINT})`}
         aria-label={`Stop click-through (${CLICK_THROUGH_EXIT_HINT})`}

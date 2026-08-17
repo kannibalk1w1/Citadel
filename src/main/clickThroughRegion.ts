@@ -18,11 +18,29 @@ export type Rect = { x: number; y: number; width: number; height: number }
 export type Point = { x: number; y: number }
 
 /**
- * Cursor sampling interval. Fast enough that reaching for the panel feels
- * immediate, slow enough to be nothing on a modern machine, and it only runs
- * while click-through is actually on.
+ * Cursor sampling interval. The window only takes the mouse back on a tick, so
+ * this is also the worst-case lag between the cursor arriving and the panel
+ * becoming clickable — see CLICK_THROUGH_CAPTURE_MARGIN_PX. It only runs while
+ * click-through is actually on.
  */
-export const CLICK_THROUGH_POLL_MS = 100
+export const CLICK_THROUGH_POLL_MS = 50
+
+/**
+ * How far outside the panel the window starts taking the mouse back.
+ *
+ * Without this the panel was effectively unclickable: the cursor had to land on
+ * it before any tick could notice, so a click arriving inside one poll interval
+ * hit whatever was behind the window instead — and because click-through exists
+ * to work with the app underneath, that click went to a focused background app
+ * and looked like the button doing nothing.
+ *
+ * A halo means the reclaim happens while the cursor is still approaching. At a
+ * gentle 600 px/s, 48px buys about 80ms of head start against a 50ms tick, so
+ * the window already holds the mouse by the time the pointer is over the
+ * button. The cost is a small ring around the panel where clicks stop passing
+ * through, which is the right way for a safety control to fail.
+ */
+export const CLICK_THROUGH_CAPTURE_MARGIN_PX = 48
 
 /**
  * Renderer CSS pixels to screen coordinates.
@@ -38,6 +56,17 @@ export function regionToScreenRect(region: Rect, contentBounds: Rect, zoomFactor
     y: contentBounds.y + region.y * zoom,
     width: region.width * zoom,
     height: region.height * zoom,
+  }
+}
+
+/** Grows a rect on every side, clamped so a margin can never invert it. */
+export function expandRect(rect: Rect, margin: number): Rect {
+  const grow = Math.max(0, margin)
+  return {
+    x: rect.x - grow,
+    y: rect.y - grow,
+    width: rect.width + grow * 2,
+    height: rect.height + grow * 2,
   }
 }
 
@@ -59,9 +88,11 @@ export function shouldCaptureMouse(
   contentBounds: Rect,
   region: Rect | null,
   zoomFactor = 1,
+  margin = CLICK_THROUGH_CAPTURE_MARGIN_PX,
 ): boolean {
   if (!region) return false
-  return pointInRect(cursor, regionToScreenRect(region, contentBounds, zoomFactor))
+  const onScreen = regionToScreenRect(region, contentBounds, zoomFactor)
+  return pointInRect(cursor, expandRect(onScreen, margin))
 }
 
 /** Rejects malformed rects from the renderer rather than trusting them. */

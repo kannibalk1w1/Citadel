@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CLICK_THROUGH_CAPTURE_MARGIN_PX,
   CLICK_THROUGH_POLL_MS,
+  expandRect,
   normalizeRegion,
   pointInRect,
   regionToScreenRect,
@@ -70,8 +72,46 @@ describe('shouldCaptureMouse', () => {
 
   it('follows the window when it moves', () => {
     const moved = { ...bounds, x: 0, y: 0 }
-    expect(shouldCaptureMouse({ x: 1150, y: 780 }, moved, panel)).toBe(false)
+    // Well clear of the panel and its approach halo at the moved position.
+    expect(shouldCaptureMouse({ x: 400, y: 300 }, moved, panel)).toBe(false)
     expect(shouldCaptureMouse({ x: 1050, y: 730 }, moved, panel)).toBe(true)
+  })
+
+  /**
+   * The panel used to be effectively unclickable. The window only takes the
+   * mouse back on a poll tick, so a click landing within one interval of the
+   * cursor arriving went to the app behind instead — and since click-through
+   * exists to work with that app, the click was swallowed by a focused window
+   * and the button looked dead. Capturing across a halo means the reclaim has
+   * already happened by the time the pointer is on the button.
+   */
+  it('takes the mouse back while the cursor is still approaching the panel', () => {
+    const justAbove = { x: 1150, y: 750 - CLICK_THROUGH_CAPTURE_MARGIN_PX + 4 }
+    const justLeft = { x: 1100 - CLICK_THROUGH_CAPTURE_MARGIN_PX + 4, y: 780 }
+
+    expect(shouldCaptureMouse(justAbove, bounds, panel)).toBe(true)
+    expect(shouldCaptureMouse(justLeft, bounds, panel)).toBe(true)
+  })
+
+  it('still lets clicks through beyond the halo', () => {
+    const wellAbove = { x: 1150, y: 750 - CLICK_THROUGH_CAPTURE_MARGIN_PX - 4 }
+
+    expect(shouldCaptureMouse(wellAbove, bounds, panel)).toBe(false)
+  })
+
+  it('gives the halo a head start over the poll interval', () => {
+    // At a gentle 600 px/s approach the halo must be worth more than one tick,
+    // or the cursor can still arrive before the window has taken the mouse.
+    const headStartMs = (CLICK_THROUGH_CAPTURE_MARGIN_PX / 600) * 1000
+
+    expect(headStartMs).toBeGreaterThan(CLICK_THROUGH_POLL_MS)
+  })
+
+  it('can be asked for the unpadded region, which is what the panel covers', () => {
+    const justOutside = { x: 1150, y: 750 - 4 }
+
+    expect(shouldCaptureMouse(justOutside, bounds, panel, 1, 0)).toBe(false)
+    expect(shouldCaptureMouse({ x: 1150, y: 780 }, bounds, panel, 1, 0)).toBe(true)
   })
 })
 
@@ -95,6 +135,22 @@ describe('normalizeRegion', () => {
 
   it('drops extra fields instead of passing them along', () => {
     expect(normalizeRegion({ ...panel, evil: true })).toEqual(panel)
+  })
+})
+
+describe('expandRect', () => {
+  const rect = { x: 100, y: 100, width: 50, height: 20 }
+
+  it('grows on every side', () => {
+    expect(expandRect(rect, 10)).toEqual({ x: 90, y: 90, width: 70, height: 40 })
+  })
+
+  it('leaves a rect alone for no margin', () => {
+    expect(expandRect(rect, 0)).toEqual(rect)
+  })
+
+  it('refuses to shrink a rect, which could make the panel unreachable', () => {
+    expect(expandRect(rect, -30)).toEqual(rect)
   })
 })
 
