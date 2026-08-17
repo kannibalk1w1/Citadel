@@ -77,6 +77,12 @@ the app with the reason rather than skipped in silence.
 - Add YouTube URLs as embedded references.
 - Image, GIF, video, and 3D previews use a local thumbnail pipeline so large
   boards stay responsive.
+- Pull a colour palette straight out of a reference image. The swatch appears
+  connected back to the image it came from, so the relationship stays visible.
+- Keep a capture beside the thing it came from: a note can record a URL or file
+  reference, an excerpt, and a region drawn directly on the image. Regions can
+  be moved and resized later, an image lists the captures taken from it, and
+  Open source recentres the board on the original.
 - Video, audio, YouTube, 3D, and code cards are supported in board exports:
   static previews are used where a live frame cannot be captured safely.
 
@@ -99,6 +105,34 @@ Supported drag-and-drop extensions include:
   actions and board navigation.
 - Customise shortcuts in Settings. Overrides are stored locally and update both
   the app and the native menu.
+
+### Reviewing and studying
+
+- **Vision checks** (`Y` cycles, `Shift+Y` clears) redraw the whole board to
+  test a picture rather than describe it: Value for greyscale, Squint for a
+  blurred read of the composition, and deuteranopia, protanopia, and
+  tritanopia simulations. `Shift+M` mirrors the board, which surfaces drawing
+  errors the eye has stopped seeing.
+- **Study sessions** (`Shift+D`) run timed reference practice over a queue of
+  items, with pause, skip, and a chosen interval.
+- The **Time machine** (`Shift+T`) scrubs the board through its own history.
+  Undo and recording were built as one event log, so the whole session is
+  already there — drag and the board assembles and disassembles itself. Name a
+  moment to come back to it, and every manual save leaves a thumbnail in the
+  filmstrip so the states you chose to keep are visible without travelling to
+  each one.
+- **Recording** (`Ctrl/Cmd+R`) captures a session from that same log and plays
+  it back from the recording bar.
+
+### Making it yours
+
+- Three theme presets (Citadel, Graphite, Parchment light), each tunable by
+  colour. Save a palette locally, or export one as a `.citadel-theme.json` to
+  share.
+- Optional flourishes under **Fun Settings**, all off by default: a save
+  banner, HyperType mode, and an alternate cursor set.
+- Adjustable UI scale, and a canvas background that can be the default dot
+  grid, flat, your own image, or nothing at all.
 
 ### Overlay, export, and projects
 
@@ -129,8 +163,10 @@ Windows release artifacts are intended to be distributed as an NSIS installer
 or a portable `.exe`. Open a `.citadel` project directly, or start a new board
 and drag in references.
 
-On first run, Citadel shows a small, skippable Getting started guide. It never
-blocks opening an existing project.
+On first run, Citadel shows a small, skippable Getting started guide covering
+the spine of the app — boards, importing, notes and code, connecting items
+together, the Index, reviewing work, and overlay mode. It never blocks opening
+an existing project.
 
 ### Build from source
 

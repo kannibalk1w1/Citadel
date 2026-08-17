@@ -31,6 +31,47 @@ describe('Onboarding', () => {
     expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'ui.onboardingComplete', value: true })
   })
 
+  it('only offers actions the resolver actually knows', () => {
+    const known = new Set<string>(Object.values(Actions))
+    const dispatch = vi.spyOn(resolver, 'dispatch').mockImplementation(() => true)
+    render(<Onboarding />)
+
+    // Every action button on the card, driven in turn. A step wired to a typo'd
+    // or removed action would dispatch something the resolver cannot route.
+    const labels = screen.getAllByRole('button')
+      .map((button) => button.textContent ?? '')
+      .filter((label) => label && label !== 'Continue to board')
+
+    for (const label of labels) {
+      cleanup()
+      render(<Onboarding />)
+      const button = screen.queryByRole('button', { name: label })
+      if (button) fireEvent.click(button)
+    }
+
+    const dispatched = dispatch.mock.calls.map(([action]) => action)
+    expect(dispatched.length).toBeGreaterThan(0)
+    for (const action of dispatched) expect(known).toContain(action)
+    dispatch.mockRestore()
+  })
+
+  // The card is orientation, not a catalogue — but it went a long stretch
+  // describing a build that had grown past it. This pins the spine it must
+  // still cover, so adding a headline feature is a conscious decision to
+  // mention it here or not.
+  it.each([
+    ['importing existing work', /drag in|open a saved/i],
+    ['writing on the board', /note|code card/i],
+    ['connecting items together', /connection/i],
+    ['searching the archive', /index|search/i],
+    ['reviewing work', /vision|study|history/i],
+    ['overlay safety', /click-through/i],
+  ])('orients the reader on %s', (_subject, pattern) => {
+    render(<Onboarding />)
+
+    expect(screen.getByLabelText('Getting started').textContent).toMatch(pattern)
+  })
+
   it('routes a first-run action through the existing action resolver', () => {
     const dispatch = vi.spyOn(resolver, 'dispatch')
     render(<Onboarding />)

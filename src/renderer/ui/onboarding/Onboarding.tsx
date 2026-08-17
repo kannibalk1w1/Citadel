@@ -32,16 +32,19 @@ export function Onboarding(): React.ReactElement | null {
     persistCompletion()
   }
 
+  // The spine of the app, not a catalogue of it. Each line is one sentence, and
+  // anything with a keyboard route names the key so the card teaches the
+  // shortcut rather than just the button.
   const steps: Step[] = [
     {
       icon: 'plus',
       title: 'Start with a board',
-      detail: 'Pan with Space, then arrange items where they help you think.',
+      detail: 'Pan with Space, zoom with the wheel, then arrange items where they help you think.',
     },
     {
-      icon: 'search',
+      icon: 'select',
       title: 'Bring in existing work',
-      detail: 'Import files or open a saved Citadel project whenever you are ready.',
+      detail: 'Drag in images, video, audio, 3D, PDFs, and documents, or open a saved Citadel project.',
       action: { label: 'Open project', run: () => resolver.dispatch(Actions.OPEN) },
     },
     {
@@ -51,13 +54,25 @@ export function Onboarding(): React.ReactElement | null {
       action: { label: 'Choose a tool', run: () => resolver.dispatch(Actions.TOOL_STICKY) },
     },
     {
+      icon: 'connect',
+      title: 'Connect what belongs together',
+      detail: 'Draw a connection between two items and give it a meaning, so the relationship survives the rearranging.',
+      action: { label: 'Connect items', run: () => resolver.dispatch(Actions.TOOL_CONNECT) },
+    },
+    {
       icon: 'search',
-      title: 'Find connections',
-      detail: 'Search scans every board. Ctrl/Cmd+K opens commands when you prefer the keyboard.',
+      title: 'Find anything later',
+      detail: 'The Index searches every board — items, notes, tags, threads, and code. Ctrl/Cmd+K opens commands.',
       action: { label: 'Open search', run: () => resolver.dispatch(Actions.PANEL_SEARCH) },
     },
     {
-      icon: 'select',
+      icon: 'theme',
+      title: 'Check your work as you go',
+      detail: 'Y cycles value, squint, and colour-blindness views. Shift+D runs a timed study session; Shift+T scrubs the board back through its own history.',
+      action: { label: 'Try a vision check', run: () => resolver.dispatch(Actions.VISION_CYCLE) },
+    },
+    {
+      icon: 'lock',
       title: 'Use overlay mode safely',
       detail: 'Window controls include opacity and click-through. Click-through always leaves a Stop panel and Ctrl+Alt+C exit.',
       action: {
@@ -84,6 +99,8 @@ export function Onboarding(): React.ReactElement | null {
         bottom: 20,
         zIndex: 'var(--z-modal)' as unknown as number,
         width: 'min(400px, calc(100vw - 40px))',
+        maxHeight: 'calc(100vh - 40px)',
+        overflowY: 'auto',
         background: 'var(--bg-panel)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
