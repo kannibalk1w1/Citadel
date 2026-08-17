@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 import type { CanvasEvent, CanvasEventType, RecordingSession } from '../../types'
 import type { HistoryMarker } from '../ui/timeMachineModel'
+import { addBoardSnapshot, type BoardSnapshot } from '../ui/boardSnapshots'
 
 type HistoryState = {
   events: CanvasEvent[]
@@ -29,6 +30,12 @@ type HistoryState = {
   markers: HistoryMarker[]
   addMarker: (name: string) => HistoryMarker | null
   removeMarker: (id: string) => void
+
+  // A picture of the board at each manual save, anchored the same way markers
+  // are. Session-scoped, like the log they point into.
+  snapshots: BoardSnapshot[]
+  addSnapshot: (snapshot: Omit<BoardSnapshot, 'id' | 'eventId'>) => BoardSnapshot
+  clearSnapshots: () => void
 
   // Recordings library
   recordings: RecordingSession[]
@@ -89,7 +96,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   isDirty: () => get().cursor !== get().savedCursor,
   markSaved: () => set((s) => ({ savedCursor: s.cursor })),
   markDirty: () => set((s) => ({ savedCursor: s.cursor === s.savedCursor ? s.cursor - 1 : s.savedCursor })),
-  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false, markers: [] }),
+  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false, markers: [], snapshots: [] }),
 
   startRecording: (name) => {
     set({
@@ -127,4 +134,16 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   },
 
   removeMarker: (id) => set((s) => ({ markers: s.markers.filter((marker) => marker.id !== id) })),
+
+  snapshots: [],
+
+  addSnapshot: (snapshot) => {
+    const { cursor, events, snapshots } = get()
+    const eventId = cursor >= 0 && cursor < events.length ? events[cursor].id : null
+    const next: BoardSnapshot = { id: nanoid(), eventId, ...snapshot }
+    set({ snapshots: addBoardSnapshot(snapshots, next) })
+    return next
+  },
+
+  clearSnapshots: () => set({ snapshots: [] }),
 }))

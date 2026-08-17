@@ -155,6 +155,41 @@ async function captureFittedCanvas(area: Extract<ExportArea, 'board' | 'selectio
   }
 }
 
+/**
+ * A small picture of the board as it currently sits on screen, for the time
+ * machine's filmstrip.
+ *
+ * Deliberately captures the live viewport rather than fitting the whole board:
+ * the fitted path moves the viewport, waits two frames and moves it back, which
+ * would flash the canvas on every Ctrl+S. Framing it the way the user had it is
+ * also the more useful record — it shows where they were working when they
+ * decided the state was worth saving.
+ *
+ * JPEG rather than PNG because these are held in memory for the session and a
+ * board of flat colour still costs hundreds of KB as lossless.
+ */
+export function captureBoardThumbnail(maxWidth = 320): { dataUrl: string; width: number; height: number } | null {
+  const source = document.querySelector('canvas') as HTMLCanvasElement | null
+  if (!source?.width || !source.height) return null
+
+  const scale = Math.min(1, maxWidth / source.width)
+  const out = document.createElement('canvas')
+  out.width = Math.max(1, Math.round(source.width * scale))
+  out.height = Math.max(1, Math.round(source.height * scale))
+  const ctx = out.getContext('2d')
+  if (!ctx) return null
+
+  // The stage canvas is transparent where the board shows through; without a
+  // ground the JPEG encoder fills those pixels with black.
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-canvas').trim() || '#111214'
+  ctx.fillRect(0, 0, out.width, out.height)
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(source, 0, 0, out.width, out.height)
+
+  return { dataUrl: out.toDataURL('image/jpeg', 0.7), width: out.width, height: out.height }
+}
+
 export async function prepareExportCanvas(): Promise<ExportCanvas> {
   const ui = useUIStore.getState()
   const { exportScale, exportArea, includeCommentsInExport, commentPinsVisible } = ui

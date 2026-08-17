@@ -95,10 +95,18 @@ export type HistoryMarker = {
   name: string
 }
 
-export function markerCursor(marker: HistoryMarker, events: CanvasEvent[]): number {
-  if (marker.eventId === null) return HISTORY_START
-  const index = events.findIndex((event) => event.id === marker.eventId)
+/**
+ * Where an event-keyed thing sits on the scrubber. Markers and save snapshots
+ * are both anchored this way, so they share one lookup.
+ */
+export function cursorForEvent(eventId: string | null, events: CanvasEvent[]): number {
+  if (eventId === null) return HISTORY_START
+  const index = events.findIndex((event) => event.id === eventId)
   return index === -1 ? HISTORY_START : index
+}
+
+export function markerCursor(marker: HistoryMarker, events: CanvasEvent[]): number {
+  return cursorForEvent(marker.eventId, events)
 }
 
 /** Markers whose event is still in the log, in the order they occur. */

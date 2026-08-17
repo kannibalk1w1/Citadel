@@ -8,6 +8,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { parseProjectFile } from './projectSchema'
 import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
+import { captureBoardThumbnail } from '../export/exportCanvas'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -223,11 +224,29 @@ async function loadProjectFromPath(path: string): Promise<boolean> {
   return true
 }
 
+/**
+ * A frame for the time machine's filmstrip, taken at the moment of a manual
+ * save. Best-effort on purpose: there is no canvas at all in tests and in
+ * headless runs, and a board picture is never worth failing a save over.
+ */
+function captureSaveSnapshot(): void {
+  try {
+    const boardId = useCanvasStore.getState().activeBoardId
+    if (!boardId) return
+    const thumbnail = captureBoardThumbnail()
+    if (!thumbnail) return
+    useHistoryStore.getState().addSnapshot({ boardId, takenAt: Date.now(), ...thumbnail })
+  } catch {
+    /* a missing or tainted canvas just means no frame for this save */
+  }
+}
+
 export async function saveProject(path: string): Promise<boolean> {
   try {
     await ipc().invoke('file:save', { path, data: serialize() })
     currentFilePath = path
     useHistoryStore.getState().markSaved()
+    captureSaveSnapshot()
     resetRecoveryAutosaveCache()
     setSaveActivity({ lastManualSaveAt: Date.now() })
     notifyProjectPathChanged()

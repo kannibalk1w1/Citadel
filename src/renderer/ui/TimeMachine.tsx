@@ -2,6 +2,8 @@ import React from 'react'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
 import { travelHistoryTo } from '../store/historyTravel'
+import { liveBoardSnapshots, snapshotCursor, snapshotLabel, snapshotsForBoard } from './boardSnapshots'
+import { useCanvasStore } from '../store/canvasStore'
 import {
   HISTORY_START,
   defaultMarkerName,
@@ -35,6 +37,8 @@ export function TimeMachine(): React.ReactElement | null {
   const markers = useHistoryStore((s) => s.markers)
   const addMarker = useHistoryStore((s) => s.addMarker)
   const removeMarker = useHistoryStore((s) => s.removeMarker)
+  const snapshots = useHistoryStore((s) => s.snapshots)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
 
   if (!open) return null
 
@@ -42,6 +46,7 @@ export function TimeMachine(): React.ReactElement | null {
   const firstTimestamp = events[0]?.timestamp ?? 0
   const atEvent = cursor >= 0 && cursor < total ? events[cursor] : null
   const shown = liveMarkers(markers, events)
+  const frames = liveBoardSnapshots(snapshotsForBoard(snapshots, activeBoardId), events)
 
   const travel = (target: number): void => { travelHistoryTo(target) }
 
@@ -92,6 +97,44 @@ export function TimeMachine(): React.ReactElement | null {
         </p>
       ) : (
         <>
+          {frames.length > 0 && (
+            <div
+              aria-label="Saved states"
+              style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 2 }}
+            >
+              {frames.map((frame) => {
+                const target = snapshotCursor(frame, events)
+                return (
+                  <button
+                    key={frame.id}
+                    type="button"
+                    onClick={() => travel(target)}
+                    title={snapshotLabel(frame, events)}
+                    aria-label={snapshotLabel(frame, events)}
+                    aria-current={target === cursor}
+                    style={{
+                      flex: '0 0 auto',
+                      padding: 0,
+                      background: 'none',
+                      cursor: 'pointer',
+                      lineHeight: 0,
+                      borderRadius: 'var(--radius-sm)',
+                      border: `1px solid ${target === cursor ? 'var(--accent)' : 'var(--border-muted)'}`,
+                    }}
+                  >
+                    <img
+                      src={frame.dataUrl}
+                      alt=""
+                      width={72}
+                      height={Math.max(1, Math.round((frame.height / frame.width) * 72))}
+                      style={{ display: 'block', borderRadius: 'calc(var(--radius-sm) - 1px)' }}
+                    />
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
           <input
             type="range"
             aria-label="Board history"
