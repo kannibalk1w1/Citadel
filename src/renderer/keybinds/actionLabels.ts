@@ -72,6 +72,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.SAVE_AS]: 'Save project as…',
   [Actions.OPEN]: 'Open project',
   [Actions.NEW_PROJECT]: 'New project',
+  [Actions.OPEN_SHOWCASE]: 'Open the example project',
   [Actions.EXPORT_PDF]: 'Export PDF',
   [Actions.EXPORT_IMAGE]: 'Export image',
   [Actions.EXPORT_ZIP]: 'Export archive (.citadelz)',

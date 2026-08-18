@@ -102,6 +102,15 @@
         "name": "Citadel Archive",
         "description": "Citadel bundled archive"
       }
+    ],
+    "extraResources": [
+      {
+        "from": "examples",
+        "to": "examples",
+        "filter": [
+          "**/*"
+        ]
+      }
     ]
   }
 }

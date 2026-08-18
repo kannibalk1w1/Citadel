@@ -60,6 +60,7 @@ describe('Onboarding', () => {
   // still cover, so adding a headline feature is a conscious decision to
   // mention it here or not.
   it.each([
+    ['the guided tour', /example project/i],
     ['importing existing work', /drag in|open a saved/i],
     ['writing on the board', /note|code card/i],
     ['connecting items together', /connection/i],

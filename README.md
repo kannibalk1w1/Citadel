@@ -170,7 +170,14 @@ Windows release artifacts are intended to be distributed as an NSIS installer
 or a portable `.exe`. Open a `.citadel` project directly, or start a new board
 and drag in references.
 
-On first run, Citadel shows a small, skippable Getting started guide covering
+On first run, Citadel offers a guided tour — `examples/showcase.citadel`, five
+boards carrying every kind of item, connection and review tool with notes
+explaining each. It opens without taking its own path, so saving asks where to
+put your copy and the shipped original stays intact. Regenerate it with
+`node scripts/buildShowcase.mjs`; its media is synthesised by ffmpeg and rides
+inside the file as data URIs, so there are no assets to lose.
+
+Citadel also shows a small, skippable Getting started guide covering
 the spine of the app — boards, importing, notes and code, connecting items
 together, the Index, reviewing work, and overlay mode. It never blocks opening
 an existing project.

@@ -571,6 +571,26 @@ export function registerIpcHandlers(): void {
     return { ok: true, region: interactiveRegion }
   })
 
+  // ── showcase:load ──────────────────────────────────────────────────────────
+  // The guided example project. Shipped as an extraResource, so it lives beside
+  // the app rather than inside the asar, and is read-only where the app is
+  // installed — the renderer deliberately opens it without adopting its path,
+  // so Ctrl+S asks where to save rather than failing against Program Files.
+  ipcMain.handle('showcase:load', async () => {
+    const candidates = [
+      join(process.resourcesPath ?? '', 'examples', 'showcase.citadel'),
+      join(app.getAppPath(), 'examples', 'showcase.citadel'),
+      join(app.getAppPath(), '..', 'examples', 'showcase.citadel'),
+    ]
+    const found = candidates.find((path) => existsSync(path))
+    if (!found) return { data: null }
+    try {
+      return { data: readFileSync(found, 'utf-8') }
+    } catch {
+      return { data: null }
+    }
+  })
+
   // ── window:setMenuBarVisible ───────────────────────────────────────────────
   // Driven by the hover strip in the renderer. Auto-hide stays on underneath,
   // so Alt reveals the menu whether or not the pointer is anywhere near it.

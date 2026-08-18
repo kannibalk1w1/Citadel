@@ -84,6 +84,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.SAVE_AS]:        ['ctrl+shift+s', 'meta+shift+s'],
   [Actions.OPEN]:           ['ctrl+o', 'meta+o'],
   [Actions.NEW_PROJECT]:    ['ctrl+n', 'meta+n'],
+  [Actions.OPEN_SHOWCASE]:  [],
   [Actions.EXPORT_PDF]:     [],
   [Actions.EXPORT_IMAGE]:   [],
   [Actions.EXPORT_ZIP]:     [],

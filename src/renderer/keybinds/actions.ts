@@ -73,6 +73,7 @@ export const Actions = {
   SAVE_AS: 'file:saveAs',
   OPEN: 'file:open',
   NEW_PROJECT: 'file:new',
+  OPEN_SHOWCASE: 'file:openShowcase',
   EXPORT_PDF: 'export:pdf',
   EXPORT_IMAGE: 'export:image',
   EXPORT_ZIP: 'export:zip',

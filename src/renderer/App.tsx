@@ -58,7 +58,7 @@ import { normalizeCanvasBackground, normalizeSavedThemePalettes, normalizeThemeO
 import { normalizeKeybindOverrides, resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
-import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clearRecoveryIfClean, loadProjectData, parseRecoveryData, type ParsedRecovery } from './utils/projectFile'
+import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clearRecoveryIfClean, loadProjectData, parseRecoveryData, type ParsedRecovery, openShowcase } from './utils/projectFile'
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
@@ -719,6 +719,7 @@ export default function App(): React.ReactElement {
       })
     })
     resolver.register(Actions.OPEN,        () => { openProject().then((ok) => { if (ok) inscribe('Project opened') }) })
+    resolver.register(Actions.OPEN_SHOWCASE, () => { void openShowcase().catch(console.error) })
     resolver.register(Actions.NEW_PROJECT, () => { if (newProject()) inscribe('New project created') })
 
     // Copy / Paste / Cut

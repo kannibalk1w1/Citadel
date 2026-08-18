@@ -42,6 +42,12 @@ export function Onboarding(): React.ReactElement | null {
       detail: 'Pan with Space, zoom with the wheel, then arrange items where they help you think.',
     },
     {
+      icon: 'duplicate',
+      title: 'Take the guided tour',
+      detail: 'Open the example project: five boards showing every kind of item, connection and review tool, with notes explaining each one.',
+      action: { label: 'Open the tour', run: () => resolver.dispatch(Actions.OPEN_SHOWCASE) },
+    },
+    {
       icon: 'select',
       title: 'Bring in existing work',
       detail: 'Drag in images, video, audio, 3D, PDFs, and documents, or open a saved Citadel project.',

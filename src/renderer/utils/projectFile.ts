@@ -297,6 +297,36 @@ export async function openRecentProject(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * Opens the shipped example project as a tour.
+ *
+ * Deliberately does not adopt its path the way opening a normal project does.
+ * The example lives in the app's own resources, which are read-only wherever
+ * the app is properly installed — taking its path would point Ctrl+S at a file
+ * the user cannot write. Left pathless, the tour behaves like unsaved work:
+ * saving asks where to put it, and their copy is their own.
+ */
+export async function openShowcase(): Promise<boolean> {
+  if (!confirmDiscardUnsaved()) return false
+  try {
+    const loaded = await ipc().invoke('showcase:load') as { data: string | null }
+    if (!loaded?.data) {
+      inscribe('The example project is not installed alongside this build', { tone: 'danger' })
+      return false
+    }
+    applyProject(deserialize(loaded.data))
+    currentFilePath = null
+    resetSaveActivity()
+    resetRecoveryAutosaveCache()
+    notifyProjectPathChanged()
+    inscribe('Example project opened — save a copy to keep your changes')
+    return true
+  } catch (error) {
+    surfaceOpenFailure(error)
+    return false
+  }
+}
+
 export function newProject(): boolean {
   if (!confirmDiscardUnsaved()) return false
   currentFilePath = null
