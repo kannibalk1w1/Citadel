@@ -28,10 +28,12 @@ first-run guide ships with a guided example project (item 5), and desktop and
 accessibility automation run against the built app (item 6). The update path is
 settled: there is no update check, and updates are manual downloads (item 3).
 
-**Three things block a paid build, and two of them are purchases or decisions
-rather than code:** naming a licence holder (item 1), buying a signing
-certificate (item 2), and walking the manual smoke pass below on a clean
-Windows machine. One asset — `resources/icon.ico` — still has no provenance.
+**One thing blocks a release now: the manual smoke pass on a clean Windows
+machine.** The licence is settled (item 1), signing is optional under the itch
+model (item 2), and the update path, release automation, first-run experience
+and desktop automation are all done. One asset — `resources/icon.ico` — still
+has no provenance on record, and the commercial-clarity questions below want
+answering before the listing goes up.
 
 Last reviewed against the code on 2026-08-18.
 
@@ -74,42 +76,55 @@ Last reviewed against the code on 2026-08-18.
 
 Ordered by how much each one costs a buyer's trust.
 
-### 1. Licence declaration
+### 1. Licence declaration — resolved
 
-`LICENSE` now exists and carries the MIT text, matching `README.md`, `AGENTS.md`,
-and `package.json`. Two things in it are still placeholders:
+MIT, and staying MIT. Settled 2026-08-18 after weighing source-available
+alternatives (PolyForm Noncommercial, Small Business, Perimeter; BUSL; FSL).
 
-- Its copyright line reads "Citadel contributors" rather than the holder's legal
-  name, which is what a licence has to name to be enforceable.
-- `package.json` still sets `"private": true` with an empty `author`.
+The deciding factor was the release model: Citadel goes out on itch.io at
+name-your-price, self-building from source is explicitly fine by the author, and
+a paid signed build is a later question if it ever takes off. A licence that
+restricts commercial use would make working artists technically infringing to
+protect revenue nobody is chasing, and would cost the "open source" label that
+actually helps a niche creative tool get found.
 
-**The remaining decision is the owner's, not an engineering one.** MIT source
-plus a paid binary is a legitimate model, but it means a buyer may rebuild and
-redistribute the app for free, and it cannot be walked back once published.
-Decide, then act:
+Relicensing is reversible **forward**, so this is not a one-way door: everything
+published up to a given commit stays MIT at those versions no matter what
+happens later, and a future paid build can ship under different terms alongside
+the signing certificate. What cannot be undone is the past — 72 unique sources
+had already cloned the repo when this was decided, so the MIT grant on existing
+versions is permanent regardless of any repository surgery.
 
-- If MIT stands — replace the placeholder copyright holder with a legal name and
-  year, fill in `package.json`'s `author`, and drop `"private"`.
-- If the release is to be source-available or proprietary — replace `LICENSE`,
-  and correct `README.md` and `AGENTS.md` before any public tag.
+`LICENSE` now names Kieran Beckenkrager as the holder, `package.json` carries
+the same name in `author`, and `build.copyright` states it explicitly rather
+than letting electron-builder derive a line from what used to be an empty field.
+No email appears in either: a copyright line needs a holder, not a contact
+route, and a support address is a separate decision under Commercial clarity.
 
-Either way this must be settled before the first paid build, because the licence
-that ships with v1 is the licence buyers keep.
+**`"private": true` deliberately stays.** Earlier drafts of this checklist said
+to drop it. That advice was wrong: it exists to block `npm publish`, which is
+exactly what should never happen to an Electron application's source tree, and
+it has no effect on electron-builder, on itch distribution, or on the licence
+being coherently declared. The licence is declared by `LICENSE`, `license` and
+`author` — all three now agree.
 
-### 2. Code signing
+### 2. Code signing — optional, not blocking
 
-Builds are unsigned. Windows SmartScreen will warn on every install and portable
-launch, and an unsigned paid download reads as malware to a first-time buyer.
+Downgraded 2026-08-18 when the release model became itch.io at name-your-price.
 
-The release workflow is now signing-ready: it passes `CSC_LINK` and
-`CSC_KEY_PASSWORD` through to electron-builder from the `WINDOWS_CERT_BASE64`
-and `WINDOWS_CERT_PASSWORD` repository secrets, and warns loudly in the job
-summary when they are absent. **What remains is a purchase, not code.**
+Builds are unsigned, so SmartScreen warns on install and on the portable launch.
+That is a serious problem for a paid download and an unremarkable one on itch,
+where most of the catalogue is unsigned and the itch app handles delivery. Say
+so on the listing and ship.
 
-Obtain an OV or EV code-signing certificate — the choice changes the workflow's
-shape, so read [Release Signing](./release-signing.md#which-certificate) first —
-add the two secrets, set `win.publisherName` to the certificate subject, and
-re-verify SmartScreen behaviour on a machine that has never seen the app.
+The workflow stays signing-ready: it passes `CSC_LINK` and `CSC_KEY_PASSWORD`
+through to electron-builder from the `WINDOWS_CERT_BASE64` and
+`WINDOWS_CERT_PASSWORD` secrets, and warns in the job summary when they are
+absent. If Citadel ever justifies a paid build, buy an OV or EV certificate —
+read [Release Signing](./release-signing.md#which-certificate) first, since the
+choice changes the workflow's shape — add the two secrets, set
+`win.publisherName` to the certificate subject, and re-verify SmartScreen on a
+machine that has never seen the app.
 
 ### 3. Update path — resolved, updates are manual
 

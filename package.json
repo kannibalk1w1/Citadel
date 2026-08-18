@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Infinite canvas creative reference tool",
   "main": "out/main/index.js",
-  "author": "",
+  "author": "Kieran Beckenkrager (https://github.com/kannibalk1w1)",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -111,6 +111,7 @@
           "**/*"
         ]
       }
-    ]
+    ],
+    "copyright": "Copyright \u00a9 2026 Kieran Beckenkrager"
   }
 }
