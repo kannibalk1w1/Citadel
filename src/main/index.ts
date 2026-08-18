@@ -9,6 +9,7 @@ protocol.registerSchemesAsPrivileged([
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { isExternallyOpenable } from './externalLinks'
+import { isPermissionAllowed } from './permissions'
 import { buildMenu } from './menu'
 import { initCrashRecovery } from './crashRecovery'
 
@@ -64,6 +65,26 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.citadel.app')
+
+  // ── Permissions ────────────────────────────────────────────────────────────
+  // Electron grants everything when no handler is installed. Deny by default
+  // and allow only what Citadel does: the microphone for voice memos, writing
+  // to the clipboard, and fullscreen for a video item. The YouTube webview runs
+  // somebody else's page in this session, so this governs it too.
+  const decide = (permission: string, details?: { mediaTypes?: readonly string[]; mediaType?: string }): boolean => {
+    const allowed = isPermissionAllowed(permission, details)
+    if (!allowed && is.dev) console.log(`[Citadel] refused permission: ${permission}`)
+    return allowed
+  }
+
+  session.defaultSession.setPermissionRequestHandler((_contents, permission, callback, details) => {
+    callback(decide(permission, details as { mediaTypes?: readonly string[] }))
+  })
+
+  // The synchronous counterpart, asked before a request is even made.
+  session.defaultSession.setPermissionCheckHandler((_contents, permission, _origin, details) => (
+    decide(permission, details as { mediaType?: string })
+  ))
 
   // ── Content Security Policy ────────────────────────────────────────────────
   // There was none, which is what Electron's "Insecure Content-Security-Policy"

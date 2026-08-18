@@ -158,6 +158,13 @@ Citadel is local-first. Projects, archives, settings, keybindings, previews,
 and recovery files stay on your device. There is no account, telemetry, or
 analytics.
 
+The renderer is held to an explicit permission allowlist: the microphone (for
+voice memos), writing to the clipboard, and fullscreen. Everything else —
+camera, geolocation, notifications, USB, serial, HID, screen capture — is
+refused, including for the YouTube embed, which is somebody else's page running
+in your window. A Content Security Policy refuses anything loaded over the
+network.
+
 Network access happens only when you explicitly use a remote source or add a
 YouTube reference. Citadel makes no outbound request on launch: there is no
 update check, no telemetry, and interface fonts are bundled, so a launch with
