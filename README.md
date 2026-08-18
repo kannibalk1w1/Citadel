@@ -6,9 +6,9 @@ Citadel helps you place the things you are working with next to the thoughts
 they create. Arrange items freely, connect related material, search across
 boards, and save the result as a portable project.
 
-> Status: active early release (`0.1.0`). Windows is the current packaged
-> release target. The app is usable today; manual packaged-app smoke testing is
-> still planned before a public release.
+> Status: active early release (`0.1.0`), heading for itch.io at name-your-price.
+> Windows and Linux are both packaged release targets. The app is usable today;
+> a manual packaged-app pass on each platform is the remaining step.
 
 ## Why Citadel
 
@@ -168,9 +168,10 @@ downloads for now.
 
 ### Use a release build
 
-Windows release artifacts are intended to be distributed as an NSIS installer
-or a portable `.exe`. Open a `.citadel` project directly, or start a new board
-and drag in references.
+On Windows, an NSIS installer or a portable `.exe`. On Linux, an AppImage that
+runs without installing, or a tar.gz to unpack yourself. Builds are unsigned, so
+Windows SmartScreen will warn on first run. Open a `.citadel` project directly,
+or start a new board and drag in references.
 
 On first run, Citadel offers a guided tour — `examples/showcase.citadel`, five
 boards carrying every kind of item, connection and review tool with notes
@@ -212,8 +213,13 @@ tests use Citadel's locally installed Electron binary and an isolated temporary
 profile, so they need no system browser, global package, personal settings, or
 machine-specific path.
 
-The packaged configuration currently targets Windows x64. Other platforms may
-run from source, but are not release targets yet.
+Packaged targets are Windows x64 (NSIS installer and portable `.exe`) and Linux
+x64 (AppImage and tar.gz). Build Linux artifacts with `npx electron-builder
+--linux`. macOS may run from source but is not a release target — it needs an
+Apple Developer account and notarisation.
+
+Application icons are generated from `resources/icon.svg` by
+`node scripts/buildIcons.mjs`.
 
 ## Project format
 

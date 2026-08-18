@@ -126,11 +126,19 @@ Do not delete it from a distributed build.
 
 ---
 
-## Unverified provenance
+## Unverified provenance — none
 
-`resources/icon.ico` has no recorded source. The owner must confirm it is
-original work or supply its licence before a paid release.
+Every asset that ships is now original work generated from a source in this
+repository:
 
-The two images previously listed here — `arcane-stone-canvas-tile.png` and
-`CitadelTower.png` — no longer ship: the canvas moved to a procedural dot grid
-and the mascot was removed.
+- `resources/icon.ico` and `resources/icon.png` are rendered from
+  `resources/icon.svg` by `scripts/buildIcons.mjs`. The icon is the same rook
+  that appears on the project rail, drawn in the app's own palette.
+- `examples/showcase.citadel` carries its media inline as data URIs, synthesised
+  by ffmpeg from its own generators (gradients, test patterns, a sine tone) via
+  `scripts/buildShowcase.mjs`.
+
+The three assets previously listed here are gone: `arcane-stone-canvas-tile.png`
+(the canvas moved to a procedural dot grid), `CitadelTower.png` (the mascot is
+now drawn as inline SVG), and the placeholder `resources/icon.ico` replaced
+above.

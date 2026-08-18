@@ -95,12 +95,14 @@
       {
         "ext": "citadel",
         "name": "Citadel Project",
-        "description": "Citadel project file"
+        "description": "Citadel project file",
+        "mimeType": "application/x-citadel"
       },
       {
         "ext": "citadelz",
         "name": "Citadel Archive",
-        "description": "Citadel bundled archive"
+        "description": "Citadel bundled archive",
+        "mimeType": "application/x-citadelz"
       }
     ],
     "extraResources": [
@@ -112,6 +114,29 @@
         ]
       }
     ],
-    "copyright": "Copyright \u00a9 2026 Kieran Beckenkrager"
+    "copyright": "Copyright \u00a9 2026 Kieran Beckenkrager",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icon.png",
+      "category": "Graphics",
+      "synopsis": "Infinite canvas for references, notes, code and ideas",
+      "desktop": {
+        "StartupWMClass": "Citadel",
+        "MimeType": "application/x-citadel;application/x-citadelz;"
+      }
+    }
   }
 }

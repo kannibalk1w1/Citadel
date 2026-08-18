@@ -31,9 +31,9 @@ settled: there is no update check, and updates are manual downloads (item 3).
 **One thing blocks a release now: the manual smoke pass on a clean Windows
 machine.** The licence is settled (item 1), signing is optional under the itch
 model (item 2), and the update path, release automation, first-run experience
-and desktop automation are all done. One asset — `resources/icon.ico` — still
-has no provenance on record, and the commercial-clarity questions below want
-answering before the listing goes up.
+and desktop automation are all done. Every asset that ships is now
+original and generated from a source in the repository, and the
+commercial-clarity questions below are answered.
 
 Last reviewed against the code on 2026-08-18.
 
@@ -202,12 +202,10 @@ flows visible before that pass. The portable setup is documented in
   Fun Settings, so the *Old School RuneScape* exposure no longer touches a
   product sold for money. Whoever publishes that pack still owns the call, and
   `THIRD_PARTY_NOTICES.md` carries its attribution.
-- **Unattributed image assets — one left.** `arcane-stone-canvas-tile.png` and
-  `CitadelTower.png` no longer ship: the canvas moved to a procedural dot grid
-  and the mascot was removed. **`resources/icon.ico` still has no provenance on
-  record and ships in every build.** If it is original work, say so in
-  `THIRD_PARTY_NOTICES.md`. If it came from a stock or AI source, confirm that
-  licence permits commercial redistribution inside a paid application.
+- **Unattributed image assets — resolved 2026-08-18.** Nothing unattributed
+  ships any more. `resources/icon.ico` and `icon.png` are generated from
+  `resources/icon.svg` by `scripts/buildIcons.mjs` — the rail mascot redrawn as
+  an app icon, original work in the app's palette. The other two are long gone.
 
 ---
 
@@ -218,24 +216,39 @@ flows visible before that pass. The portable setup is documented in
 The only supported target. `package.json` builds NSIS and portable x64, and
 `resources/icon.ico` is present. Everything in this document is written for it.
 
-### Linux — not in early access
+### Linux — planned release alongside Windows
 
-The codebase is close to portable but the release is not. Nothing in the
-renderer is Windows-specific, and the main process now builds paths through
-`path` rather than assuming a separator, so the suite passes on Linux. What is
-missing is release-side, not code-side:
+Promoted 2026-08-18. The whole suite, the Playwright desktop pass and the
+accessibility pass all run on Linux, and a packaged AppImage now builds and
+launches there.
 
-- No `linux` target in the electron-builder config (AppImage and `.deb` would be
-  the obvious pair).
-- Settings, preview cache, and recovery resolve through `app.getPath('userData')`,
-  which is correct on Linux but has never been exercised there in a packaged build.
-- File associations for `.citadel` and `.citadelz` need a desktop entry and MIME
-  registration, which the current config does not provide.
-- No Linux machine is in the manual smoke loop.
+Verified on 2026-08-18, on this machine, against `dist/Citadel-0.1.0.AppImage`:
 
-Do not advertise Linux support, "coming soon" included, until a packaged
-AppImage has passed the manual checklist below on a clean machine. Say
-"Windows only" in the store listing.
+- `npx electron-builder --linux` produces an **AppImage** (148 MB) and a
+  **tar.gz** (140 MB).
+- The desktop entry carries the icon, `Categories=Graphics`,
+  `StartupWMClass=Citadel`, and `MimeType=application/x-citadel;application/x-citadelz;`.
+- `usr/share/mime/citadel.xml` declares both types with `*.citadel` and
+  `*.citadelz` globs — the MIME registration this section previously said was
+  missing.
+- The AppImage launches under a clean `HOME` on a virtual display, stays up, and
+  logs nothing of substance.
+
+**Deliberately no `.deb` or `.rpm`.** Both are fpm targets and refuse to build
+without a maintainer email in `package.json`, and the author does not want a
+personal address in published package metadata. AppImage plus tar.gz covers the
+itch audience — run it anywhere, or unpack it yourself — with no inbox attached.
+
+**Still unproven, and part of the manual pass rather than done:**
+
+- Settings, preview cache and recovery under `app.getPath('userData')` in the
+  *packaged* build. A clean launch writes nothing, which is correct — the app
+  only writes when something changes — so this needs a human to change a
+  setting, restart, and confirm it stuck.
+- Whether the file associations actually register on a real desktop, which
+  AppImage leaves to the user's integration tooling rather than doing itself.
+  The tar.gz does not register anything at all.
+- The manual checklist below, walked on Linux.
 
 ### macOS — out of scope
 
@@ -257,6 +270,7 @@ before publishing any paid artifact.
 - [ ] `npm run e2e` exits 0.
 - [ ] `npm run a11y` exits 0.
 - [ ] `npm run package` exits 0 and `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
+- [ ] `npx electron-builder --linux` exits 0 and `dist/` holds `Citadel-<version>.AppImage` and `citadel-<version>.tar.gz`.
 - [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds both executables.
 
 ### Install and launch
@@ -310,16 +324,44 @@ before publishing any paid artifact.
 
 ---
 
-## Commercial clarity
+## Commercial clarity — settled 2026-08-18
 
-Settle before the store listing, not after:
+**Where it ships.** itch.io, at name-your-price. Windows and Linux.
 
-- The price, and what "early access" buys — which features are present now, which
-  are promised, and what happens to the price at 1.0.
-- Refund terms.
-- A support address that a buyer can reach.
-- Where updates come from (see item 3), and whether early-access buyers get 1.0.
-- An explicit statement that Citadel is Windows-only today.
+**What the money buys.** Citadel in its current state. Name-your-price on itch
+means the minimum is whatever is set, and a buyer can take the download without
+paying — so this is a tip jar attached to a working tool, not a licence sale.
+Nobody is buying permission: the source is MIT and building it yourself is
+explicitly fine.
+
+**What is promised.** Bug fixes on a reasonable cadence, and feature requests
+taken and considered. Neither is a service-level commitment, and the listing
+should say as much in plain words rather than implying a support contract.
+
+**Refunds.** itch handles them in both payment modes — "itch.io will refund
+payments on your behalf when necessary" — whether payments go direct to the
+creator's Stripe/PayPal or are collected by itch. There is nothing to write, but
+the listing should not promise terms that contradict itch's own handling.
+
+**Support route.** itch imposes no requirement to publish a contact address.
+GitHub Issues plus the itch page's comment thread covers it, and both are public
+— which suits a project whose source is public anyway. No personal email
+appears anywhere in the repository or the package metadata, and it should stay
+that way; register a project address if one is ever genuinely needed.
+
+**Updates.** Manual downloads. There is no update check in the app (item 3), and
+itch's own app handles re-downloading for anyone who uses it. Say so on the
+listing.
+
+**Platforms.** Windows x64 and Linux x64. macOS remains out of scope: it needs
+an Apple Developer account and notarisation, which is the same class of purchase
+as Windows signing and buys less.
+
+**One thing to decide before the page goes up.** itch distinguishes people who
+paid — they get ownership and a download key — from people who took the free
+download and get neither. That distinction only matters if Citadel ever moves to
+a paid model, at which point the free downloaders have no claim. Worth knowing
+now rather than discovering later.
 
 ---
 

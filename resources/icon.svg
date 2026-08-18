@@ -1,0 +1,32 @@
+<!--
+  Citadel's application icon: the same rook that sits on the project rail,
+  recomposed square and given a ground.
+
+  Drawn rather than sourced. The icon it replaces had no provenance on record —
+  the last of the three assets the third-party notices audit flagged — and this
+  one is original work in the app's own palette, generated into every raster
+  size by scripts/buildIcons.mjs.
+
+  Geometry is deliberately heavier than the rail mascot: battlements are wider
+  and the gate larger, because the shape has to survive being drawn at 16px.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="106" fill="#12171c"/>
+  <rect x="16" y="16" width="480" height="480" rx="92" fill="none" stroke="#243039" stroke-width="8"/>
+
+  <g fill="#cbdae6">
+    <!-- Battlements -->
+    <rect x="112" y="120" width="60" height="76" rx="8"/>
+    <rect x="196" y="100" width="60" height="96" rx="8"/>
+    <rect x="280" y="100" width="60" height="96" rx="8"/>
+    <rect x="364" y="120" width="60" height="76" rx="8"/>
+    <!-- Body -->
+    <rect x="112" y="188" width="312" height="228" rx="16"/>
+  </g>
+
+  <!-- Gate, cut back to the ground so the tower reads as a silhouette -->
+  <path d="M212 416 V320 Q268 258 324 320 V416 Z" fill="#12171c"/>
+
+  <!-- The one lit detail, matching the mascot's accent -->
+  <circle cx="268" cy="268" r="34" fill="#4b8ec4"/>
+</svg>
