@@ -3,6 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, promises as fsp, readFileSync, rea
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'path'
 import JSZip from 'jszip'
 import { createProgressThrottle, extractCitadelZip, inspectCitadelZip } from './archiveZip'
+import { parseDataUrl } from './dataUrl'
 import { isExternallyOpenable } from './externalLinks'
 import type { PortableProject } from './projectPersistence'
 import {
@@ -174,9 +175,9 @@ function resolveImportedZipProject(projectJson: string, assetDir: string): strin
 }
 
 function writeDataUrlAsset(dataUrl: string, filename: string): { path: string } {
-  const match = dataUrl.match(/^data:([a-z0-9+.-]+)\/([a-z0-9+.-]+);base64,(.+)$/i)
-  if (!match) throw new Error('Unsupported asset data')
-  const ext = match[2].toLowerCase().replace('jpeg', 'jpg')
+  const parsed = parseDataUrl(dataUrl)
+  if (!parsed) throw new Error('Unsupported asset data')
+  const ext = parsed.extension
   const assetDir = join(app.getPath('userData'), 'captured-assets')
   if (!existsSync(assetDir)) mkdirSync(assetDir, { recursive: true })
   const safeBase = filename
@@ -185,7 +186,7 @@ function writeDataUrlAsset(dataUrl: string, filename: string): { path: string } 
     .replace(/^-+|-+$/g, '') || 'capture'
   const used = new Set(readdirSync(assetDir).map((entry) => entry.toLowerCase()))
   const asset = uniqueAssetPath(assetDir, used, `${safeBase}.${ext}`)
-  writeFileSync(asset.path, Buffer.from(match[3], 'base64'))
+  writeFileSync(asset.path, parsed.bytes)
   return { path: asset.path }
 }
 

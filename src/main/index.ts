@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, protocol, net, globalShortcut } from 'electron'
+import { app, BrowserWindow, shell, protocol, net, globalShortcut, session } from 'electron'
 import { join } from 'path'
 
 // Must be called before app.whenReady() — marks 'local' as a secure scheme
@@ -64,6 +64,43 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.citadel.app')
+
+  // ── Content Security Policy ────────────────────────────────────────────────
+  // There was none, which is what Electron's "Insecure Content-Security-Policy"
+  // warning in the dev console was telling us. The renderer loads a user's own
+  // files, so the policy has to allow the local: protocol and data:/blob: URIs
+  // — the bundled example carries its media inline as data URIs — while still
+  // shutting the door on anything arriving over the network.
+  //
+  // Vite's dev server serves modules over http and needs eval for HMR, so the
+  // development policy is deliberately looser. The packaged app gets the strict
+  // one, and that is the only one a user ever runs under.
+  const cspDirectives = (dev: boolean): string => [
+    "default-src 'self'",
+    dev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+    // React sets styles as attributes throughout, which style-src governs.
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: local:",
+    "media-src 'self' data: blob: local:",
+    "font-src 'self' data:",
+    dev
+      ? "connect-src 'self' data: blob: local: ws: http://localhost:*"
+      : "connect-src 'self' data: blob: local:",
+    // pdf.js runs its worker from a blob.
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'none'",
+  ].join('; ')
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [cspDirectives(is.dev)],
+      },
+    })
+  })
 
   // Serve local asset files via local:// so the renderer can load them
   // regardless of whether it's running from localhost (dev) or file (prod).
