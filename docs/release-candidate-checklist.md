@@ -147,11 +147,14 @@ events, and a certificate.
 
 ### 4. Release automation — done
 
-`.github/workflows/release.yml` runs on `v*` tags and on manual dispatch. It
-installs with `npm ci`, refuses a tag that disagrees with `package.json`'s
-version, runs `npm run typecheck` and `npm test -- --run`, packages for Windows
-x64, and attaches `Citadel-<version>-setup.exe` and
-`Citadel-<version>-portable.exe` to a **draft** GitHub Release. Signing (item 2)
+`.github/workflows/release.yml` runs on `v*` tags and on manual dispatch. Two
+jobs — `windows-latest` and `ubuntu-latest` — each install with `npm ci`, refuse
+a tag that disagrees with `package.json`'s version, run `npm run typecheck` and
+`npm test -- --run`, package for their own platform, and attach the results to a
+**draft** GitHub Release. They run on separate runners because neither
+packager cross-builds reliably: NSIS from Linux needs Wine, and AppImage from
+Windows is not supported at all. Either job creates the draft if the other has
+not yet. Signing (item 2)
 plugs into the same workflow through repository secrets.
 
 The draft is deliberate — publishing stays a human act, after the manual smoke
@@ -276,8 +279,8 @@ Run the gate first, then walk the list on each platform you are shipping.
 - [ ] `npm run build` exits 0.
 - [ ] `npm run e2e` exits 0 — this is the bulk of the old manual list.
 - [ ] `npm run a11y` exits 0.
-- [ ] `npm run package` exits 0; `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
-- [ ] `npx electron-builder --linux` exits 0; `dist/` holds `Citadel-<version>.AppImage` and `citadel-<version>.tar.gz`.
+- [ ] `npm run package -- --win --x64` exits 0; `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
+- [ ] `npm run package -- --linux --x64` exits 0; `dist/` holds `Citadel-<version>.AppImage` and `citadel-<version>.tar.gz`.
 - [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds the artifacts.
 
 ### Windows — install and launch

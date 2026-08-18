@@ -1,8 +1,13 @@
 name: Release
 
-# Builds the Windows x64 artifacts for a tagged release and attaches them to a
-# draft GitHub Release. Nothing is published automatically: the draft is the
-# owner's last chance to check the installer before a buyer can download it.
+# Builds the Windows and Linux x64 artifacts for a tagged release and attaches
+# them to a draft GitHub Release. Nothing is published automatically: the draft
+# is the owner's last chance to check the installers before a buyer can download
+# them.
+#
+# The two jobs run on their own runners because neither platform's packager is
+# reliable cross-built: NSIS from Linux needs Wine, and AppImage from Windows is
+# not supported at all.
 #
 # Signing is wired in but optional — see docs/release-signing.md. Without the
 # certificate secrets the build still succeeds and produces unsigned artifacts,
@@ -111,3 +116,68 @@ jobs:
           $files = Get-ChildItem dist -Filter *.exe | ForEach-Object { $_.FullName }
           gh release upload $tag $files --clobber
           "`n:package: Artifacts attached to the **draft** release ``$tag``. Review and publish it by hand." >> $env:GITHUB_STEP_SUMMARY
+
+  linux:
+    name: Linux x64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Confirm the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag $TAG does not match package.json version $PKG. Bump the version, commit, and retag."
+            exit 1
+          fi
+          echo "Building Citadel $PKG"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --run
+
+      # Linux builds are never signed; there is no equivalent of Authenticode
+      # for an AppImage, so nothing here reads the certificate secrets.
+      - name: Package
+        run: npm run package -- --linux --x64 --publish never
+
+      - name: List artifacts
+        run: ls -lh dist/*.AppImage dist/*.tar.gz
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: citadel-linux-x64
+          path: |
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attach to draft release
+        if: github.ref_type == 'tag' && (github.event_name == 'push' || inputs.publish_draft)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # The Windows job may have created the draft already; either job can be
+          # first, so both create-if-missing rather than assuming an order.
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --draft --generate-notes --title "Citadel $TAG"
+          gh release upload "$TAG" dist/*.AppImage dist/*.tar.gz --clobber
+          echo ":penguin: Linux artifacts attached to the **draft** release \`$TAG\`." >> "$GITHUB_STEP_SUMMARY"
