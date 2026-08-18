@@ -12,6 +12,7 @@
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
     "test": "vitest",
+    "mutation": "node scripts/mutationSweep.mjs",
     "e2e": "npm run build && playwright test",
     "a11y": "npm run build && playwright test --grep @a11y",
     "analyze": "electron-vite build --mode analyze",

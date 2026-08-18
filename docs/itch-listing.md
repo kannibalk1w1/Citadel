@@ -115,6 +115,9 @@ genuinely fine, and the instructions are in the repository.
     reference on the right with notes and a palette. Captured by hand on a real
     desktop rather than by the script, because it is a photograph of two
     applications.
-- **A cover image** (630×500). The rook icon on the canvas dot grid would do it.
+- **A cover image** (630×500). The rook icon on the canvas dot grid would do it;
+  `docs/itch-assets/page-background.png` tiles as that grid.
+- **Page styling** — see [itch-page-theme.md](./itch-page-theme.md) for the
+  theme-editor values that match the published draft.
 - **Choose the revenue share.** itch lets the creator set the platform's cut;
   pick it deliberately rather than accepting whatever the form offers.
