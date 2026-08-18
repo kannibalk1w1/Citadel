@@ -15,10 +15,18 @@ export type CitadelSession = {
   app: ElectronApplication
   page: Page
   userDataDir: string
+  /** True when the caller supplied the profile and is responsible for it. */
+  borrowed: boolean
 }
 
-export async function launchCitadel(): Promise<CitadelSession> {
-  const userDataDir = await mkdtemp(join(tmpdir(), 'citadel-e2e-'))
+/**
+ * `reuseUserDataDir` keeps a profile across launches, which is the only way to
+ * test the things a manual pass checks by quitting and reopening — that a theme,
+ * a rebound key or a dismissed first run actually stuck. Callers that reuse a
+ * directory own removing it; closeCitadel only deletes the ones it made.
+ */
+export async function launchCitadel(reuseUserDataDir?: string): Promise<CitadelSession> {
+  const userDataDir = reuseUserDataDir ?? await mkdtemp(join(tmpdir(), 'citadel-e2e-'))
   const app = await electron.launch({
     args: [
       projectRoot,
@@ -38,13 +46,13 @@ export async function launchCitadel(): Promise<CitadelSession> {
   await app.browserWindow(page).then((window) => window.evaluate((w) => {
     w.webContents.setBackgroundThrottling(false)
   }))
-  return { app, page, userDataDir }
+  return { app, page, userDataDir, borrowed: reuseUserDataDir !== undefined }
 }
 
 export async function closeCitadel(session: CitadelSession | undefined): Promise<void> {
   if (!session) return
   await session.app.close().catch(() => {})
-  await rm(session.userDataDir, { recursive: true, force: true })
+  if (!session.borrowed) await rm(session.userDataDir, { recursive: true, force: true })
 }
 
 /**

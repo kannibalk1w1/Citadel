@@ -259,70 +259,58 @@ signing identity.
 
 ## Manual smoke checklist
 
-Run on a clean Windows machine — one that has never had a development build —
-before publishing any paid artifact.
+Everything a machine can check has been moved into `npm run e2e` — twenty specs
+covering the save/open round trip, `.citadelz` import, corrupt-file handling,
+recovery, settings surviving a restart, the profile directory's contents, the
+bundled example opening from the first-run card, and the claim that launching
+makes no request off the machine. What is left below needs an installer, a real
+desktop, or a human eye. Nothing here is manual because nobody tried to automate
+it.
 
-### Build gate
+Run the gate first, then walk the list on each platform you are shipping.
+
+### Build gate — automated
 
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test -- --run` exits 0.
+- [ ] `npx vitest run` exits 0.
 - [ ] `npm run build` exits 0.
-- [ ] `npm run e2e` exits 0.
+- [ ] `npm run e2e` exits 0 — this is the bulk of the old manual list.
 - [ ] `npm run a11y` exits 0.
-- [ ] `npm run package` exits 0 and `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
-- [ ] `npx electron-builder --linux` exits 0 and `dist/` holds `Citadel-<version>.AppImage` and `citadel-<version>.tar.gz`.
-- [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds both executables.
+- [ ] `npm run package` exits 0; `dist/` holds `Citadel-<version>-setup.exe` and `Citadel-<version>-portable.exe`.
+- [ ] `npx electron-builder --linux` exits 0; `dist/` holds `Citadel-<version>.AppImage` and `citadel-<version>.tar.gz`.
+- [ ] For a tagged build: the Actions run is green, the job summary reports the signing state expected, and the draft release holds the artifacts.
 
-### Install and launch
+### Windows — install and launch
 
 - [ ] The NSIS installer completes and the installed app launches.
 - [ ] The portable `.exe` launches without installation.
-- [ ] SmartScreen behaviour is what signing (or the lack of it) predicts — no surprises.
+- [ ] SmartScreen warns as an unsigned build should — no worse, and no surprises.
+- [ ] The window title and taskbar icon read as Citadel, not Electron, and the icon is the rook.
+- [ ] Double-click a `.citadel` in Explorer; it opens in Citadel.
+- [ ] Uninstall via Add/Remove Programs leaves no running process.
+
+### Linux — install and launch
+
+- [ ] The AppImage runs on a machine that has never had Citadel, without installing anything.
+- [ ] The tar.gz unpacks and its binary runs.
+- [ ] After AppImage desktop integration, Citadel appears in the launcher with the rook icon under Graphics.
+- [ ] Double-click a `.citadel` in the file manager; it opens in Citadel.
+- [ ] Change a setting, quit, relaunch — it stuck, and `~/.config/Citadel` holds settings and nothing unexpected.
+
+### Things only a person can judge
+
 - [ ] The app opens to a usable canvas with the toolbar and rail visible.
-- [ ] The window title and taskbar icon read as Citadel, not Electron.
-
-### The path a buyer walks
-
-- [ ] Whatever first-run experience ships appears, and can be dismissed.
-- [ ] Drag and drop an image onto the canvas; it renders.
-- [ ] Add an inscription, a sigil, and a thread between two relics.
-- [ ] Add a code card, connect it to something, save, reopen — the snippet and
-      its thread are both still there. (This is the one that failed silently:
-      `code` was missing from the save schema's accepted types, so every code
-      card and every connection touching one was discarded on load.)
-- [ ] Save a `.citadel`, close the app, reopen it, and load the file — everything is intact.
-- [ ] Save a chamber holding a relic from outside the project folder; confirm `assets/` was created beside the `.citadel` and the reopened relic still renders.
-- [ ] Export a `.citadelz`, then import it into a fresh project.
-- [ ] Export a PDF and a PNG; open both outside Citadel.
-- [ ] Undo and redo across a dozen operations.
+- [ ] Drag an image from the desktop onto the canvas; it lands where the cursor was and renders.
+- [ ] Drag in a GIF, a video, an audio file, a PDF and a 3D model; each plays or renders.
+- [ ] A YouTube item loads and stays inside its webview.
+- [ ] Export a PDF and a PNG through the real save dialog; open both outside Citadel.
+- [ ] Save through the real dialog to a folder holding an asset from elsewhere; confirm `assets/` was created beside the `.citadel` and the reopened item still renders.
 - [ ] Record a session and play it back.
-- [ ] Switch themes, including a custom palette, and confirm it survives a restart.
-- [ ] Rebind a keybind and confirm it survives a restart.
-- [ ] Zoom in and out from the keyboard, and check the View menu's shortcuts
-      match what the keybind panel lists. (Ctrl+− was dead in both places at
-      once: the resolver held it under a spelling no keypress produced, and the
-      menu offered Electron a key name it rejects.)
-
-### Trust and recovery
-
-- [ ] Replacing a dirty project prompts an unsaved-change guard.
-- [ ] Force-close with unsaved work; the next launch offers recovery.
-- [ ] Open a deliberately corrupt `.citadel`; the app reports it and keeps the open chamber.
-- [ ] Move a saved project folder to another drive and reopen it; relics still resolve.
-- [ ] With the network disconnected, launch the app — the interface renders identically and nothing hangs.
-
-### Offline and privacy
-
-- [ ] No font or stylesheet request appears in DevTools' network panel on launch.
-- [ ] The only outbound request on launch is the update check, and only if item 3 kept it.
-- [ ] `%APPDATA%/Citadel` contains settings, caches, and recovery — and nothing unexpected.
-
-### Media coverage (as sample files allow)
-
-- [ ] GIF, video, audio, PDF, and 3D relics each import and play or render.
-- [ ] A YouTube relic loads and is contained within its webview.
-
----
+- [ ] Overlay mode: turn on always-on-top and click-through, then **stop it using the panel rather than the shortcut**. This is the one control that must work, and it was reported broken once.
+- [ ] Move a saved project folder to another drive and reopen it; items still resolve.
+- [ ] Force-close with unsaved work; the next launch offers recovery and restores it.
+- [ ] With the network cable out, launch and use the app — nothing hangs, nothing looks different.
+- [ ] Read the first-run card and take the tour. Does the example teach the app to someone who has never seen it?
 
 ## Commercial clarity — settled 2026-08-18
 
