@@ -62,8 +62,8 @@ function ItemChrome({ item }: { item: CanvasItem }): React.ReactElement {
         [item.x + item.width + 2 / viewport.scale, item.y + item.height + 2 / viewport.scale, -1, -1],
       ].map(([x, y, sx, sy], index) => (
         <Group key={index} x={x} y={y} rotation={item.rotation} opacity={variant.lineOpacity}>
-          <Rect x={sx < 0 ? -variant.cornerSize / viewport.scale : 0} y={0} width={variant.cornerSize / viewport.scale} height={1 / viewport.scale} fill={frameStroke} />
-          <Rect x={0} y={sy < 0 ? -variant.cornerSize / viewport.scale : 0} width={1 / viewport.scale} height={variant.cornerSize / viewport.scale} fill={frameStroke} />
+          <Rect x={sx < 0 ? -variant.cornerSize / viewport.scale : 0} y={0} width={variant.cornerSize / viewport.scale} height={variant.cornerThickness / viewport.scale} fill={frameStroke} />
+          <Rect x={0} y={sy < 0 ? -variant.cornerSize / viewport.scale : 0} width={variant.cornerThickness / viewport.scale} height={variant.cornerSize / viewport.scale} fill={frameStroke} />
         </Group>
       ))}
       <Group x={item.x + 6 / viewport.scale} y={item.y - 12 / viewport.scale} rotation={item.rotation}>

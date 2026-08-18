@@ -1,4 +1,5 @@
 import type { CanvasItem, Connection, Viewport } from '../../../types'
+import { canvasColor } from '../../theme/canvasColors'
 
 export type ChromeFrameStyle = {
   stroke: string
@@ -29,7 +30,10 @@ export type AnchorHandle = {
 export type FrameVariant = 'plain' | 'relic' | 'dossier' | 'sketch' | 'evidence'
 
 export type FrameVariantStyle = {
+  /** Length of each corner mark, in CSS pixels at 100%. */
   cornerSize: number
+  /** Thickness of those marks. A heavier frame has to actually be heavier. */
+  cornerThickness: number
   badgeFill: string
   lineOpacity: number
 }
@@ -126,13 +130,35 @@ export function frameVariant(item: CanvasItem): FrameVariant {
   return 'plain'
 }
 
+/**
+ * How each frame actually looks.
+ *
+ * These used to differ by 1px of corner length and two or three units of an
+ * already near-black badge fill — `#14110d` against `#120f0b` — so choosing a
+ * frame changed nothing anybody could see, and the colours were leftovers from
+ * the warm palette the app no longer uses. The spread below is deliberately
+ * wide enough to read at a glance, and the fills come from theme tokens so they
+ * hold up in both themes rather than only against the old brown canvas.
+ *
+ * The order is a progression from quietest to loudest, which is the only thing
+ * the five names have ever really meant.
+ */
 export function frameVariantStyle(variant: FrameVariant): FrameVariantStyle {
   switch (variant) {
-    case 'relic': return { cornerSize: 12, badgeFill: '#21180e', lineOpacity: 0.52 }
-    case 'dossier': return { cornerSize: 7, badgeFill: '#14110d', lineOpacity: 0.42 }
-    case 'sketch': return { cornerSize: 9, badgeFill: '#171512', lineOpacity: 0.34 }
-    case 'evidence': return { cornerSize: 10, badgeFill: '#1a1110', lineOpacity: 0.48 }
-    default: return { cornerSize: 8, badgeFill: '#120f0b', lineOpacity: 0.36 }
+    // Barely there: a hint of a corner, for boards where the items are the point.
+    case 'sketch':
+      return { cornerSize: 8, cornerThickness: 1, badgeFill: canvasColor('bgSunken'), lineOpacity: 0.3 }
+    // A filed document: square, legible, unremarkable.
+    case 'dossier':
+      return { cornerSize: 14, cornerThickness: 2, badgeFill: canvasColor('bgPanel'), lineOpacity: 0.62 }
+    // Flagged for attention.
+    case 'evidence':
+      return { cornerSize: 18, cornerThickness: 2, badgeFill: canvasColor('accentDanger'), lineOpacity: 0.8 }
+    // The heaviest, and the only one that borrows the accent.
+    case 'relic':
+      return { cornerSize: 24, cornerThickness: 3, badgeFill: canvasColor('accent'), lineOpacity: 0.95 }
+    default:
+      return { cornerSize: 10, cornerThickness: 1, badgeFill: canvasColor('bgPanel'), lineOpacity: 0.45 }
   }
 }
 

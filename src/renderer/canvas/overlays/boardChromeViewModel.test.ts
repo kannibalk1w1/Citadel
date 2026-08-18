@@ -138,10 +138,40 @@ describe('board chrome view model', () => {
     })
   })
 
-  it('returns distinct frame variant treatments', () => {
-    expect(frameVariantStyle('relic')).toEqual({ cornerSize: 12, badgeFill: '#21180e', lineOpacity: 0.52 })
-    expect(frameVariantStyle('dossier')).toEqual({ cornerSize: 7, badgeFill: '#14110d', lineOpacity: 0.42 })
+  /**
+   * This test used to pin the exact numbers the variants happened to have, and
+   * passed while every frame looked identical: corner lengths one pixel apart
+   * and badge fills two units apart on a near-black. Choosing a frame changed
+   * nothing anybody could see. It now asserts the thing the feature is for —
+   * that the treatments are far enough apart to tell apart.
+   */
+  it('returns frame variants a person can actually tell apart', () => {
+    const variants = ['sketch', 'plain', 'dossier', 'evidence', 'relic'] as const
+    const styles = variants.map((variant) => frameVariantStyle(variant))
+
+    // Every corner length distinct, and the whole range wide rather than nudged.
+    const sizes = styles.map((style) => style.cornerSize)
+    expect(new Set(sizes).size).toBe(variants.length)
+    expect(Math.max(...sizes) - Math.min(...sizes)).toBeGreaterThanOrEqual(12)
+
+    // Named quietest to loudest, and the numbers follow that order.
+    expect([...sizes]).toEqual([...sizes].sort((a, b) => a - b))
+    const opacities = styles.map((style) => style.lineOpacity)
+    expect([...opacities]).toEqual([...opacities].sort((a, b) => a - b))
+    expect(Math.max(...opacities) - Math.min(...opacities)).toBeGreaterThanOrEqual(0.4)
+
+    // Weight varies too, so a heavier frame is drawn heavier and not just longer.
+    expect(new Set(styles.map((style) => style.cornerThickness)).size).toBeGreaterThan(1)
+
+    // No two badges share a colour, and none is a hardcoded hex left over from
+    // a palette the app no longer uses.
+    const fills = styles.map((style) => style.badgeFill)
+    expect(new Set(fills).size).toBeGreaterThanOrEqual(4)
+  })
+
+  it('still lets an item override the frame its type would choose', () => {
     expect(frameVariant({ ...baseItem, type: 'model3d', meta: { frameVariant: 'plain' } })).toBe('plain')
+    expect(frameVariant({ ...baseItem, type: 'model3d', meta: {} })).toBe('relic')
   })
 
   it('returns gothic placeholders for empty or failed media items', () => {

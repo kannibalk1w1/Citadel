@@ -264,14 +264,14 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
           const horizontal: React.CSSProperties = {
             position: 'absolute',
             width: variant.cornerSize,
-            height: 1,
+            height: variant.cornerThickness,
             background: frame.stroke,
             [corner.includes('Right') ? 'right' : 'left']: 0,
             [corner.includes('bottom') ? 'bottom' : 'top']: 0,
           }
           const vertical: React.CSSProperties = {
             position: 'absolute',
-            width: 1,
+            width: variant.cornerThickness,
             height: variant.cornerSize,
             background: frame.stroke,
             [corner.includes('Right') ? 'right' : 'left']: 0,
