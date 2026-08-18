@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useHistoryStore } from '../store/historyStore'
 import { useUIStore } from '../store/uiStore'
+import { MascotTower } from './mascot/MascotTower'
 import { resolver } from '../keybinds/keybindResolver'
 import { Actions } from '../keybinds/actions'
 import { VISION_MODES } from '../canvas/visionModes'
@@ -11,10 +12,16 @@ import { inscribe } from './toasts/inscriptionToastStore'
 import { ToolIcon } from './icons/ToolIcon'
 
 // ── App badge ─────────────────────────────────────────────────────────────────
+// Holds the rook when the mascot is on and a plain letter when it is not, so
+// the rail keeps the same shape either way.
 function AppBadge(): React.ReactElement {
+  const mascotVisible = useUIStore((s) => s.mascotVisible)
   return (
-    <div aria-label="Citadel" style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16 }}>
-      C
+    <div
+      aria-label={mascotVisible ? undefined : 'Citadel'}
+      style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 16 }}
+    >
+      {mascotVisible ? <MascotTower size={22} /> : 'C'}
     </div>
   )
 }
@@ -216,6 +223,7 @@ export function RightSidebar(): React.ReactElement {
   const toggleCommentPinsVisible = useUIStore((s) => s.toggleCommentPinsVisible)
   const filenameLabelsVisible = useUIStore((s) => s.filenameLabelsVisible)
   const boardLoadVisible = useUIStore((s) => s.boardLoadVisible)
+  const mascotVisible = useUIStore((s) => s.mascotVisible)
   const visionMode = useUIStore((s) => s.visionMode)
   const setVisionMode = useUIStore((s) => s.setVisionMode)
   const mirrorView = useUIStore((s) => s.mirrorView)
@@ -331,6 +339,7 @@ export function RightSidebar(): React.ReactElement {
           <QuickBtn label="Comment" title="Add a comment pin (Ctrl+Shift+M)" onClick={() => resolver.dispatch(Actions.COMMENT_PIN_ADD)} />
           <QuickBtn label={commentPinsVisible ? 'Hide notes' : 'Show notes'} title="Show or hide comment pins" onClick={toggleCommentPinsVisible} />
           <QuickBtn label={filenameLabelsVisible ? 'Hide names' : 'Show names'} title="Show or hide filenames under media items (Shift+F)" onClick={() => resolver.dispatch(Actions.FILENAME_LABELS_TOGGLE)} />
+          <QuickBtn label={mascotVisible ? 'Hide mascot' : 'Show mascot'} title="Show or hide the tower on this rail" onClick={() => useUIStore.getState().toggleMascot()} />
           <QuickBtn label={boardLoadVisible ? 'Hide board load' : 'Show board load'} title="Show or hide the board load readout in the corner of the canvas (Shift+L)" onClick={() => resolver.dispatch(Actions.BOARD_LOAD_TOGGLE)} />
           <QuickBtn label="Sequence" title="Presentation sequence" onClick={() => useUIStore.getState().togglePanel('presentationSequence')} />
           <QuickBtn label="Time machine" title="Scrub back through everything that happened on this board (Shift+T)" onClick={() => resolver.dispatch(Actions.TIME_MACHINE_TOGGLE)} />

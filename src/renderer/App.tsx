@@ -192,6 +192,7 @@ export default function App(): React.ReactElement {
         'ui.hyperTypeEnabled',
         'ui.cursorPack',
         'ui.boardLoadVisible',
+        'ui.mascotVisible',
         'ui.theme',
         'ui.themeOverrides',
         'ui.savedThemePalettes',
@@ -214,6 +215,7 @@ export default function App(): React.ReactElement {
       // Re-validated on the way in: settings.json is a file a person can edit.
       nextState.cursorPack = normalizeCursorPack(values['ui.cursorPack'])
       if (typeof values['ui.boardLoadVisible'] === 'boolean') nextState.boardLoadVisible = values['ui.boardLoadVisible']
+      if (typeof values['ui.mascotVisible'] === 'boolean') nextState.mascotVisible = values['ui.mascotVisible']
       const theme = values['ui.theme']
       if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'

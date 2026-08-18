@@ -247,6 +247,10 @@ type UIState = {
   toggleMirrorView: () => void
   clearVisionChecks: () => void
 
+  // The rook on the project rail
+  mascotVisible: boolean
+  toggleMascot: () => void
+
   // The Board Load readout in the corner of the canvas
   boardLoadVisible: boolean
   toggleBoardLoad: () => void
@@ -495,6 +499,14 @@ export const useUIStore = create<UIState>((set, get) => ({
   mirrorView: false,
   toggleMirrorView: () => set((s) => ({ mirrorView: !s.mirrorView })),
   clearVisionChecks: () => set({ visionMode: 'none', mirrorView: false }),
+
+  mascotVisible: true,
+  toggleMascot: () => {
+    const mascotVisible = !get().mascotVisible
+    set({ mascotVisible })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:set', { key: 'ui.mascotVisible', value: mascotVisible }).catch(console.error)
+  },
 
   boardLoadVisible: true,
   toggleBoardLoad: () => {
