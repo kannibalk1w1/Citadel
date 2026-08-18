@@ -10,7 +10,6 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { isExternallyOpenable } from './externalLinks'
 import { buildMenu } from './menu'
-import { initAutoUpdater } from './autoUpdater'
 import { initCrashRecovery } from './crashRecovery'
 
 let mainWindow: BrowserWindow | null = null
@@ -82,7 +81,6 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  initAutoUpdater(mainWindow!)
   initCrashRecovery()
 
   app.on('activate', () => {

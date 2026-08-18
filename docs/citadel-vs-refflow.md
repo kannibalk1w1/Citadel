@@ -187,7 +187,13 @@ Nothing on Ref Flow's pages corresponds to these:
 - **Themes**, including user-defined palettes.
 - **Crash recovery** of unsaved work.
 - **Item templates, bookmarks, comment pins, waymarks on images.**
-- **A plugin registry.**
+- ~~A plugin registry.~~ **Withdrawn 2026-08-18** — the scaffolding in
+  `src/renderer/plugins` is inert. Nothing calls `loadPlugin`, no hooks are
+  emitted, `ItemRenderer` never reads the registered item types, and there is no
+  loader that reads a plugin from disk. It is not an advantage over anything
+  until it runs, and it should not appear in a comparison or a store listing.
+  Features that need to ship separately use data files instead — cursor packs
+  and `.citadel-theme.json` palettes.
 
 The strategic risk is not that Citadel lacks substance. It is that all of the
 substance sits behind a first run that shows none of it.

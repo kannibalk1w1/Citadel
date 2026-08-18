@@ -158,9 +158,11 @@ Citadel is local-first. Projects, archives, settings, keybindings, previews,
 and recovery files stay on your device. There is no account, telemetry, or
 analytics.
 
-Network access happens only when you explicitly use a remote source, add a
-YouTube reference, or the app checks for an update. Interface fonts are bundled
-so the app remains usable offline.
+Network access happens only when you explicitly use a remote source or add a
+YouTube reference. Citadel makes no outbound request on launch: there is no
+update check, no telemetry, and interface fonts are bundled, so a launch with
+the network disconnected behaves identically to one without. Updates are manual
+downloads for now.
 
 ## Getting started
 

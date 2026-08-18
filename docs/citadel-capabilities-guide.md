@@ -41,6 +41,7 @@ Citadel currently supports these canvas item types:
 | Sticky | Notes, comments, and written observations |
 | Swatch | Color palette strips |
 | Comparison | A/B image comparison with a split view |
+| Code | Syntax-coloured, copyable snippets in ten languages |
 
 ## Importing Content
 
@@ -246,6 +247,30 @@ Citadel includes appearance and UI comfort settings:
 - UI scale from 75% to 150%
 - Optional visual flourishes such as the save banner, HyperType mode, and themed cursor
 
+## Reviewing Your Work
+
+- **Vision checks** — `Y` cycles them, `Shift+Y` clears. Value renders the board
+  in greyscale to judge tone without colour; Squint blurs it to test whether the
+  composition reads at a glance; deuteranopia, protanopia and tritanopia
+  simulate colour blindness. `Shift+M` mirrors the board, which surfaces drawing
+  errors the eye has stopped noticing. These change how the board is displayed
+  and never alter it.
+- **Study sessions** — `Shift+D` runs timed reference practice over a queue of
+  items, with pause, skip and a chosen interval.
+- **The time machine** — `Shift+T` scrubs the board through its own history.
+  Undo and recording share one event log, so the whole session is already there:
+  drag and the board assembles and disassembles itself. Name a moment to return
+  to it, and every manual save leaves a thumbnail in the filmstrip.
+
+## Handing Work to Other Tools
+
+Beyond image, PDF and `.citadelz` export, a board leaves as one ordinary
+Markdown file — no plugin, nothing to install on the other side. Reading order,
+item text, code with its language, tags, links, source captures with their
+citation, and the connections between exported items all survive. Position,
+size, rotation, colour and z-order do not: Markdown has nowhere to put them, and
+inventing a place would produce a file only Citadel could read.
+
 ## Maintenance Tools
 
 The settings panel includes maintenance tools for project health:
@@ -257,31 +282,20 @@ The settings panel includes maintenance tools for project health:
 
 These tools help keep large projects portable and reduce stale cached data.
 
-## Plugin Surface
+## Extending Citadel
 
-Citadel has an early plugin API surface. Plugins can:
+Citadel does not have a working plugin system. The scaffolding under
+`src/renderer/plugins` is inert: nothing calls `loadPlugin`, no hooks are
+emitted, `ItemRenderer` never reads the registered item types, and there is no
+loader that reads a plugin from disk. Treat it as a sketch, not an API.
 
-- Register custom item types
-- Listen to canvas events
-- Trigger mascot effects
+What ships separately today does so as **data files**, which need no runtime and
+cannot execute:
 
-This is intended for future extension without changing the core app.
-
-## Mascot Feedback
-
-The Citadel mascot reacts to important app events:
-
-- Import/open: lightning-in
-- Export: lightning-out
-- Save: rune-seal
-- Autosave: base-pulse
-- Undo/redo: rewind and forward effects
-- Delete: crumble
-- Recording: eye-open and eye-close
-- Playback/presentation: lighthouse-beam
-- Errors: fracture
-
-The mascot is feedback, not the source of app behavior. Features trigger mascot effects through the mascot store.
+- **Cursor packs** — `.citadel-cursors.json`, imported from Fun Settings.
+- **Theme palettes** — `.citadel-theme.json`, exported and imported from the
+  theme settings, or passed around as a short share code.
+- **Projects and archives** — `.citadel` and `.citadelz`.
 
 ## Suggested Workflow
 

@@ -18,16 +18,22 @@ Last reviewed: 2026-08-16.
 
 ## Verdict
 
-Not yet shippable as a paid build. The archive itself is in good order — the
-save/open path is covered by tests, the `.citadelz` rites are hardened, and the
-interface no longer depends on the network. The remaining apparatus is mostly
-release-side: builds are unsigned, the update check has no configured host, and
-the final clean-Windows packaged-app pass has not yet happened. A tag now builds
-and drafts a release on its own (item 4), and the first-run guide and baseline
-desktop automation are in place.
+Not yet shippable as a paid build, but what remains is almost entirely yours to
+decide rather than ours to build.
 
-None of the remaining items is large. They are listed in priority order in
-[Blocking work](#blocking-work).
+The archive itself is in good order — the save/open path is covered by tests,
+the `.citadelz` rites are hardened, and the interface makes no outbound request
+at all now. Release automation drafts a release from a tag (item 4), the
+first-run guide ships with a guided example project (item 5), and desktop and
+accessibility automation run against the built app (item 6). The update path is
+settled: there is no update check, and updates are manual downloads (item 3).
+
+**Three things block a paid build, and two of them are purchases or decisions
+rather than code:** naming a licence holder (item 1), buying a signing
+certificate (item 2), and walking the manual smoke pass below on a clean
+Windows machine. One asset — `resources/icon.ico` — still has no provenance.
+
+Last reviewed against the code on 2026-08-18.
 
 ---
 
@@ -43,7 +49,7 @@ None of the remaining items is large. They are listed in priority order in
   `src/main/archiveZip.test.ts` runs on Windows and POSIX alike.
 - **Offline rendering.** Typefaces are bundled; no stylesheet, font, or asset is
   fetched at launch. Guarded by `src/renderer/theme/fonts.test.ts`.
-- **Third-party notices.** Audited 2026-08-15; see `THIRD_PARTY_NOTICES.md`.
+- **Third-party notices.** Audited 2026-08-17; see `THIRD_PARTY_NOTICES.md`. No cursor art, mascot art or canvas texture ships any more.
 - **Crash recovery.** Dirty work is written to a recovery snapshot and offered
   back on the next launch.
 - **Test suite.** `npm test -- --run` is fully green on Linux and Windows.
@@ -51,8 +57,13 @@ None of the remaining items is large. They are listed in priority order in
   previously ran `tsc --noEmit` against a root config of `"files": []`, which
   checked nothing and always exited 0; the build gate below was a false green
   for as long as it existed. It now runs `tsc --build` across both projects.
-- **First run.** A small non-modal Getting started guide appears for a fresh
-  profile and can be dismissed without blocking normal work.
+- **First run.** A non-modal Getting started guide appears for a fresh profile
+  and can be dismissed without blocking normal work, and it opens a bundled
+  example project that demonstrates every item type, connection meaning and
+  review tool the app has.
+- **No launch-time network use.** The auto-updater is dormant by decision and
+  guarded by `src/main/autoUpdater.test.ts`, so a launch with the network
+  disconnected is indistinguishable from one without.
 - **Desktop and accessibility automation.** `npm run e2e` launches the built
   Electron app with a temporary profile; `npm run a11y` audits onboarding and
   the command palette in that real app window. See [Testing Citadel](./testing.md).
@@ -100,22 +111,24 @@ shape, so read [Release Signing](./release-signing.md#which-certificate) first �
 add the two secrets, set `win.publisherName` to the certificate subject, and
 re-verify SmartScreen behaviour on a machine that has never seen the app.
 
-### 3. Update path
+### 3. Update path — resolved, updates are manual
 
-`src/main/autoUpdater.ts` calls `checkForUpdates()` five seconds after launch,
-but `package.json` declares no `publish` target, so the check fails every time
-and the error is swallowed. The renderer never listens for `updater:available`
-or `updater:downloaded`, so even a successful check would tell the buyer nothing.
+Resolved 2026-08-18 by removing the check rather than by building a feed.
 
-Choose one:
+`initAutoUpdater` used to run five seconds after every launch against a build
+with no `publish` target, so it could only fail, and the renderer listened for
+neither `updater:available` nor `updater:downloaded` — the middle state this
+checklist called the only unacceptable one. `src/main/index.ts` no longer calls
+it, and `src/main/autoUpdater.test.ts` fails if that call comes back.
 
-- **Ship updates** — add a `publish` provider, generate `latest.yml` in the
-  release build, and surface both updater events in the interface.
-- **Do not ship updates yet** — remove the `initAutoUpdater` call so early access
-  makes no outbound request it cannot honour, and say in the store listing that
-  updates are manual downloads.
+Removal rather than a feed because shipping updates depends on two things that
+are not settled: whether release binaries are public at all (item 1), and
+signing (item 2) — an unsigned auto-update is a warning dialog on every install.
 
-The current middle state is the only unacceptable one.
+**The store listing must say updates are manual downloads.** Re-enabling later
+is three steps, not one, and they are written at the top of
+`src/main/autoUpdater.ts`: a publish provider, renderer handling for both
+events, and a certificate.
 
 ### 4. Release automation — done
 
@@ -132,20 +145,33 @@ pass below. Full detail in [Release Signing](./release-signing.md).
 Untested against GitHub's runners: the first tag push is the real proof, and
 should be a throwaway version on a scratch tag rather than the first paid one.
 
-### 5. First-run experience — baseline complete
+### 5. First-run experience — done
 
-A fresh profile now opens a small, non-modal Getting started guide. It introduces
-the board, importing, writing, search, and safe overlay controls; it can be
-dismissed immediately and never blocks opening an existing project.
+A fresh profile opens a small, non-modal Getting started guide covering boards,
+importing, notes and code, connecting items, the Index, reviewing work, and safe
+overlay controls. It can be dismissed immediately and never blocks opening an
+existing project.
 
-A bundled example project remains a product decision, not a release blocker.
-It would be useful only if it teaches something the existing guide cannot.
+The bundled example is no longer a hypothetical: `examples/showcase.citadel`
+ships as an extraResource and is one click from the guide. Five boards carrying
+every item type, every connection meaning, all ten code languages, source
+captures anchored to image regions, comment pins, bookmarks and board moods,
+each with a note saying what it is — and a last board left empty. It opens
+without adopting its own path, so saving asks where to put the user's copy and
+the shipped original stays intact.
 
-### 6. Desktop smoke automation — baseline complete
+It is generated by `scripts/buildShowcase.mjs` rather than hand-kept, and
+`src/renderer/utils/showcase.test.ts` fails if it stops covering what the app
+declares it can do. Its media is synthesised by ffmpeg and inlined as data URIs,
+so it carries no third-party licence and has no assets to lose.
+
+### 6. Desktop smoke automation — done
 
 `npm run e2e` builds Citadel, launches that built Electron app with an isolated
-temporary profile, and protects the actual first-run guide and command-palette
-shortcut. `npm run a11y` uses axe-core in the Electron window to guard the
+temporary profile, and covers the first-run guide, the command palette, palette
+extraction, source captures and their editable image regions, study sessions,
+the time machine, and the vision checks — twelve specs, last run green on
+2026-08-18. `npm run a11y` uses axe-core in the Electron window to guard the
 onboarding and command-palette surfaces. This does not replace a manual test of
 the installer or OS-native dialogs; it makes regressions in ordinary desktop
 flows visible before that pass. The portable setup is documented in
@@ -155,19 +181,18 @@ flows visible before that pass. The portable setup is documented in
 
 ## Owner decisions carried from the notices audit
 
-Neither is safe to resolve without the owner.
-
-- **Cursor trade dress.** The bundled cursor set depicts *Old School RuneScape*
-  weapons. The rw-designer licence covers the cursor author's work, not Jagex's
-  underlying IP, and selling a product that ships them is a different exposure
-  from giving it away. Options: keep and accept the risk, replace with original
-  cursor art in the Citadel palette, or ship them disabled behind Fun Settings
-  with the assets absent from the paid build.
-- **Unattributed image assets.** `arcane-stone-canvas-tile.png`,
-  `CitadelTower.png`, and `resources/icon.ico` have no provenance on record. If
-  they are original work, say so in `THIRD_PARTY_NOTICES.md`. If they came from
-  a stock or AI source, confirm that source's licence permits commercial
-  redistribution inside a paid application.
+- **Cursor trade dress — resolved 2026-08-18.** No cursor artwork ships in
+  Citadel at all; the app uses the operating system's pointers. Cursor art is
+  distributed as a separate `.citadel-cursors.json` pack the user imports from
+  Fun Settings, so the *Old School RuneScape* exposure no longer touches a
+  product sold for money. Whoever publishes that pack still owns the call, and
+  `THIRD_PARTY_NOTICES.md` carries its attribution.
+- **Unattributed image assets — one left.** `arcane-stone-canvas-tile.png` and
+  `CitadelTower.png` no longer ship: the canvas moved to a procedural dot grid
+  and the mascot was removed. **`resources/icon.ico` still has no provenance on
+  record and ships in every build.** If it is original work, say so in
+  `THIRD_PARTY_NOTICES.md`. If it came from a stock or AI source, confirm that
+  licence permits commercial redistribution inside a paid application.
 
 ---
 
