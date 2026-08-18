@@ -314,3 +314,9 @@ Settle before the store listing, not after:
 - Playwright suite against the packaged app (item 6), added as a job to that workflow.
 - Linux packaging once the Windows loop is boring.
 - Release-notes generation from tags.
+- **Plugins — shelved to post-release, 2026-08-18.** The scaffolding under
+  `src/renderer/plugins` is inert and is no longer claimed as a feature
+  anywhere. Making it real means a loader, contribution points, and a trust
+  model for third-party code in a renderer that holds the IPC bridge — none of
+  which blocks a paid build. Until then, anything that needs to ship separately
+  uses a data file, as cursor packs and theme palettes do.
