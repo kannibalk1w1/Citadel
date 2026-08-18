@@ -103,14 +103,18 @@ genuinely fine, and the instructions are in the repository.
   `node scripts/captureScreenshots.mjs`. Suggested order on the page:
   `01-board-research` (connections and their meanings), `04-vision-value` (the
   greyscale check, the most distinctive thing in the app), `02-board-media`,
-  `05-time-machine`, `03-board-code`, `06-board-start`.
+  `07-overlay-mode` (the PureRef-style workflow, and the clearest
+  single argument for the app), `05-time-machine`, `03-board-code`,
+  `06-board-start`.
   - **`02-board-media` has Google's cookie-consent screen inside the YouTube
     embed.** That is what a YouTube item honestly looks like on first load, but
     it reads badly as a store image. Either drop that shot, or accept the embed
     showing a consent prompt.
-  - **Overlay mode over a drawing program is not captured.** It needs Citadel
-    sitting on top of another real application on a real desktop, which is a
-    photograph of two programs rather than something a headless run can stage.
+  - **`07-overlay-mode`** is Citadel floating over Aseprite at 90% opacity, both
+    showing the Citadel mark — the drawing on the left, the same image as
+    reference on the right with notes and a palette. Captured by hand on a real
+    desktop rather than by the script, because it is a photograph of two
+    applications.
 - **A cover image** (630×500). The rook icon on the canvas dot grid would do it.
 - **Choose the revenue share.** itch lets the creator set the platform's cut;
   pick it deliberately rather than accepting whatever the form offers.

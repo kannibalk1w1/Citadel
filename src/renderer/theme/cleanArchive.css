@@ -255,14 +255,23 @@
   border-bottom-color: var(--chrome-edge-muted) !important;
 }
 
+/* The rail's controls are full-width and centred, so a left-aligned heading
+   above them reads as a mistake rather than a choice. Centred, with the section
+   spacing that had been left to the gap between groups. */
 .citadel-sidebar-section-title {
   color: var(--chrome-text-muted) !important;
+  text-align: center;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
 }
 
 .citadel-sidebar-disclosure {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Centred with the section headings above it. The chevron stays beside the
+     label rather than pinned to the edge, so it still reads as expandable. */
+  justify-content: center;
+  gap: 4px;
   width: 100%;
   padding: 5px 2px 2px;
   border: 0;
@@ -272,7 +281,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.08em;
-  text-align: left;
+  text-align: center;
   text-transform: uppercase;
 }
 
