@@ -4,7 +4,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
-import { CODE_CARD_LAYOUT, codeLanguageLabel, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
+import { CODE_CARD_LAYOUT, CODE_LANGUAGES, codeLanguageLabel, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
 import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
@@ -60,6 +60,18 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
     event.stopPropagation()
     setDraft(code)
     setEditing(true)
+  }
+
+  // Changing the language from the card itself. The properties panel can still
+  // do it, but reaching for a sidebar to say "this is C#" is a long way round
+  // when the card already shows the answer.
+  const setLanguage = (next: string) => {
+    const canvas = useCanvasStore.getState()
+    const boardId = canvas.activeBoardId
+    if (!boardId || next === language) return
+    const meta = { ...item.meta, language: normalizeCodeLanguage(next) }
+    useHistoryStore.getState().push('ITEM_STYLE', boardId, item, { ...item, meta })
+    canvas.updateItem(boardId, item.id, { meta })
   }
 
   const finishEdit = (save: boolean) => {
@@ -154,7 +166,25 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
               <i key={color} style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'block' }} />
             ))}
           </span>
-          <span style={{ flex: 1, color: 'var(--code-text-dim)', fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{language}</span>
+          <select
+            value={language}
+            onChange={(event) => setLanguage(event.target.value)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+            title="Language"
+            aria-label="Snippet language"
+            style={{
+              flex: 1, minWidth: 0,
+              border: 0, background: 'transparent', cursor: 'pointer',
+              color: 'var(--code-text-dim)', fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase',
+              padding: 0, appearance: 'none', textOverflow: 'ellipsis',
+            }}
+          >
+            {CODE_LANGUAGES.map((option) => (
+              <option key={option} value={option}>{codeLanguageLabel(option)}</option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={copy}

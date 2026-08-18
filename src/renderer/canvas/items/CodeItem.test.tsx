@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
+import { useHistoryStore } from '../../store/historyStore'
 import { CodeItem } from './CodeItem'
 
 // Records the props the card hands its wrapper, so the far-zoom branch can be
@@ -185,5 +186,46 @@ describe('CodeItem', () => {
       expect(farProps.item).toEqual(nearProps.item)
       expect(typeof farProps.onClick).toBe('function')
     })
+  })
+})
+
+describe('changing the language from the card', () => {
+  // A sibling describe does not inherit the cleanup above it.
+  afterEach(cleanup)
+
+  const renderCard = () => {
+    setViewport(NEAR_ZOOM)
+    useHistoryStore.getState().resetHistory()
+    return render(<CodeItem item={item} domOnly />)
+  }
+
+  it('offers every language on the card itself, not only in the sidebar', () => {
+    renderCard()
+
+    const picker = screen.getByLabelText('Snippet language') as HTMLSelectElement
+    expect(picker.tagName).toBe('SELECT')
+    expect(picker.value).toBe('typescript')
+    // The game languages are the reason this exists; check they are reachable.
+    const values = [...picker.options].map((option) => option.value)
+    expect(values).toEqual(expect.arrayContaining(['csharp', 'cpp', 'gdscript', 'lua', 'hlsl', 'glsl', 'rust']))
+  })
+
+  it('writes the change through the history log, so it can be undone', () => {
+    renderCard()
+
+    fireEvent.change(screen.getByLabelText('Snippet language'), { target: { value: 'gdscript' } })
+
+    const item = useCanvasStore.getState().items().find((candidate) => candidate.id === 'code-1')
+    expect(item?.meta?.language).toBe('gdscript')
+    expect(useHistoryStore.getState().events.at(-1)?.type).toBe('ITEM_STYLE')
+  })
+
+  it('ignores a change to the language it already has', () => {
+    renderCard()
+    const before = useHistoryStore.getState().events.length
+
+    fireEvent.change(screen.getByLabelText('Snippet language'), { target: { value: 'typescript' } })
+
+    expect(useHistoryStore.getState().events.length).toBe(before)
   })
 })

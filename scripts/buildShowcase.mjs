@@ -169,6 +169,15 @@ const LANGUAGE_SAMPLES = [
   ['sql', 'select name, tags\nfrom relics\nwhere board = $1;'],
   ['yaml', 'name: citadel\non:\n  push:\n    tags: ["v*"]'],
   ['plaintext', 'A code card set to plaintext is just a monospace block.'],
+  // Game work, which is a large part of who this is for.
+  ['csharp', 'public class Player : MonoBehaviour\n{\n    void Update() => transform.Translate(Vector3.forward);\n}'],
+  ['cpp', '#include "GameFramework/Actor.h"\n\nvoid AGate::BeginPlay()\n{\n    Super::BeginPlay();\n}'],
+  ['c', '#include <raylib.h>\n\nint main(void) {\n    InitWindow(800, 450, "citadel");\n}'],
+  ['rust', 'fn spawn(mut commands: Commands) {\n    commands.spawn(Camera2dBundle::default());\n}'],
+  ['lua', '-- love2d\nfunction love.draw()\n  love.graphics.print("Citadel", 16, 16)\nend'],
+  ['gdscript', 'extends Node2D\n\nfunc _ready() -> void:\n    print("ready")'],
+  ['hlsl', 'float4 frag(v2f i) : SV_Target\n{\n    return tex2D(_MainTex, i.uv) * _Tint;\n}'],
+  ['glsl', 'uniform vec4 tint;\n\nvoid main() {\n    gl_FragColor = texture2D(tex, uv) * tint;\n}'],
 ]
 
 const codeItems = [

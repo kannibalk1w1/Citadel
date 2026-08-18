@@ -1,5 +1,7 @@
 export const CODE_LANGUAGES = [
   'plaintext', 'typescript', 'javascript', 'python', 'json', 'html', 'css', 'bash', 'sql', 'yaml',
+  // Game work: Unity, Unreal, Godot, the Lua engines, Bevy, and shaders.
+  'csharp', 'cpp', 'c', 'rust', 'lua', 'gdscript', 'hlsl', 'glsl',
 ] as const
 
 export type CodeLanguage = typeof CODE_LANGUAGES[number]
@@ -20,6 +22,14 @@ export const CODE_LANGUAGE_LABELS: Record<CodeLanguage, string> = {
   bash: 'Bash',
   sql: 'SQL',
   yaml: 'YAML',
+  csharp: 'C#',
+  cpp: 'C++',
+  c: 'C',
+  rust: 'Rust',
+  lua: 'Lua',
+  gdscript: 'GDScript',
+  hlsl: 'HLSL',
+  glsl: 'GLSL',
 }
 
 export function codeLanguageLabel(value: unknown): string {
@@ -121,6 +131,56 @@ const SQL_KEYWORDS = words(`
   foreign references default unique constraint with returning
 `)
 
+const CSHARP_KEYWORDS = words(`
+  abstract as async await base bool break byte case catch char checked class const continue decimal
+  default delegate do double else enum event explicit extern false finally fixed float for foreach
+  get goto if implicit in int interface internal is lock long namespace new null object operator out
+  override params private protected public readonly ref return sbyte sealed set short sizeof
+  stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe
+  ushort using var virtual void volatile while yield record var nameof when where
+`)
+
+// Unreal and engine C++. Includes the C keywords, so the C spec reuses this.
+const CPP_KEYWORDS = words(`
+  alignas alignof and asm auto bool break case catch char class compl concept const consteval
+  constexpr const_cast continue co_await co_return co_yield decltype default delete do double
+  dynamic_cast else enum explicit export extern false float for friend goto if inline int long
+  mutable namespace new noexcept not nullptr operator or private protected public register
+  reinterpret_cast requires return short signed sizeof static static_assert static_cast struct
+  switch template this thread_local throw true try typedef typeid typename union unsigned using
+  virtual void volatile wchar_t while xor include define ifdef ifndef endif pragma
+`)
+
+const RUST_KEYWORDS = words(`
+  as async await break const continue crate dyn else enum extern false fn for if impl in let loop
+  match mod move mut pub ref return self Self static struct super trait true type unsafe use where
+  while abstract become box do final macro override priv typeof unsized virtual yield
+`)
+
+const LUA_KEYWORDS = words(`
+  and break do else elseif end false for function goto if in local nil not or repeat return then
+  true until while self
+`)
+
+// Godot. Close to Python, with the engine's own additions.
+const GDSCRIPT_KEYWORDS = words(`
+  and as assert await break breakpoint class class_name const continue elif else enum export
+  extends false for func if in is match not null onready or pass preload print range return
+  self setget signal static super tool true var void while yield PI TAU INF NAN
+`)
+
+// Shared by HLSL and GLSL: the C-like core plus the vector and matrix types and
+// the qualifiers that make shader code readable at a glance.
+const SHADER_KEYWORDS = words(`
+  attribute break case const continue default discard do else false for if in inout out precision
+  return struct switch true uniform varying void while layout flat smooth noperspective centroid
+  bool int uint float double vec2 vec3 vec4 bvec2 bvec3 bvec4 ivec2 ivec3 ivec4 uvec2 uvec3 uvec4
+  mat2 mat3 mat4 sampler1D sampler2D sampler3D samplerCube texture2D texture3D
+  float2 float3 float4 int2 int3 int4 half half2 half3 half4 matrix float2x2 float3x3 float4x4
+  cbuffer register SV_POSITION SV_Target Texture2D SamplerState technique pass
+  gl_Position gl_FragColor gl_FragCoord gl_PointSize
+`)
+
 const CSS_AT_KEYWORDS = words(`
   media supports keyframes import charset font-face namespace page layer container property
 `)
@@ -219,6 +279,90 @@ const SPECS: Record<CodeLanguage, LanguageSpec> = {
     keywords: words('true false null yes no on off'),
     numbers: true,
     colonKeys: true,
+  },
+
+  // ── Game work ──────────────────────────────────────────────────────────────
+  // C-family engines share one shape: // and /* */, escaped single and double
+  // quotes, numbers. What differs is the keyword set, so that is all that
+  // varies below.
+  csharp: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [
+      // Verbatim strings (@"C:\path") open on the quote, so the ordinary rule
+      // covers them; what it cannot do is honour their doubled-quote escaping.
+      { open: '"', close: '"', escape: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: CSHARP_KEYWORDS,
+    numbers: true,
+  },
+  cpp: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [
+      { open: '"', close: '"', escape: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: CPP_KEYWORDS,
+    numbers: true,
+  },
+  c: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [
+      { open: '"', close: '"', escape: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: CPP_KEYWORDS,
+    numbers: true,
+  },
+  rust: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [
+      { open: '"', close: '"', escape: true, multiline: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: RUST_KEYWORDS,
+    numbers: true,
+  },
+  lua: {
+    lineComments: ['--'],
+    // Lua's block comment is --[[ ]], which starts with the line comment. The
+    // scanner tries the block form first, so the longer match wins.
+    blockComment: { open: '--[[', close: ']]' },
+    strings: [
+      { open: '[[', close: ']]', multiline: true },
+      { open: '"', close: '"', escape: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: LUA_KEYWORDS,
+    numbers: true,
+  },
+  gdscript: {
+    lineComments: ['#'],
+    strings: [
+      { open: '"""', close: '"""', multiline: true },
+      { open: '"', close: '"', escape: true },
+      { open: "'", close: "'", escape: true },
+    ],
+    keywords: GDSCRIPT_KEYWORDS,
+    numbers: true,
+  },
+  hlsl: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [{ open: '"', close: '"', escape: true }],
+    keywords: SHADER_KEYWORDS,
+    numbers: true,
+  },
+  glsl: {
+    lineComments: ['//'],
+    blockComment: { open: '/*', close: '*/' },
+    strings: [{ open: '"', close: '"', escape: true }],
+    keywords: SHADER_KEYWORDS,
+    numbers: true,
   },
 }
 
