@@ -34,7 +34,7 @@ export type ChamberMoodPreset = {
 export const CHAMBER_MOOD_PRESETS: readonly ChamberMoodPreset[] = [
   // IDs are persisted in existing projects; labels and colours are clean UI
   // presets rather than the former fantasy-themed names.
-  { id: 'gothic', label: 'Neutral', accent: '#73a8db', accentDim: '#38546f', accentGlow: '#a8cdf0' },
+  { id: 'gothic', label: 'Neutral', accent: '#a6adb5', accentDim: '#4c5157', accentGlow: '#d2d7dc' },
   { id: 'ember', label: 'Coral', accent: '#d67878', accentDim: '#714142', accentGlow: '#efaaaa' },
   { id: 'verdant', label: 'Green', accent: '#78aa8b', accentDim: '#3f5e4b', accentGlow: '#a9d8b8' },
   { id: 'frost', label: 'Blue', accent: '#78a9d6', accentDim: '#405b75', accentGlow: '#a9d0f2' },

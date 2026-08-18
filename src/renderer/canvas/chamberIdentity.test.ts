@@ -24,6 +24,33 @@ describe('CHAMBER_MOOD_PRESETS', () => {
       expect(preset.accentGlow).toMatch(/^#[0-9a-f]{6}$/i)
     }
   })
+
+  /**
+   * The check above only asks whether each mood has *a* colour, which every
+   * mood would pass if they were all the same one — and two of them were.
+   * "Neutral" was #73a8db and "Blue" #78a9d6, seven units apart in RGB, so
+   * picking between them changed nothing anybody could see. A mood is a colour;
+   * if two moods share it, one of them is dead.
+   */
+  it('gives every mood a colour distinct from the others', () => {
+    const rgb = (hex: string): [number, number, number] => [
+      parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16),
+    ]
+    const distance = (a: string, b: string): number => {
+      const [ar, ag, ab] = rgb(a)
+      const [br, bg, bb] = rgb(b)
+      return Math.hypot(ar - br, ag - bg, ab - bb)
+    }
+
+    // 40 is roughly where two swatches stop being tellable apart side by side.
+    const tooClose = CHAMBER_MOOD_PRESETS.flatMap((a, i) =>
+      CHAMBER_MOOD_PRESETS.slice(i + 1)
+        .filter((b) => distance(a.accent, b.accent) <= 40)
+        .map((b) => `${a.label} (${a.accent}) vs ${b.label} (${b.accent})`))
+
+    // Named rather than counted, so a failure says which two moods collided.
+    expect(tooClose).toEqual([])
+  })
 })
 
 describe('resolveChamberIdentity', () => {

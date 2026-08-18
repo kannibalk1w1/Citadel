@@ -16,6 +16,19 @@ import {
 } from './visionModes'
 
 describe('vision filters', () => {
+  /**
+   * The assertion below reads `blur(${SQUINT_BLUR_PX}px)` on both sides, so it
+   * holds even when the constant is 0 — the squint check would blur nothing and
+   * stay green. The point of the check is that a composition stops resolving,
+   * so the amount is the behaviour and needs its own bound.
+   */
+  it('blurs enough for a squint test to mean anything', () => {
+    expect(SQUINT_BLUR_PX).toBeGreaterThanOrEqual(4)
+    expect(SQUINT_BLUR_PX).toBeLessThanOrEqual(24)
+    expect(visionFilter('squint')).not.toBe('blur(0px)')
+    expect(visionFilter('squint')).not.toBe(visionFilter('none'))
+  })
+
   it('turns value and squint into plain CSS', () => {
     expect(visionFilter('value')).toBe('grayscale(1)')
     expect(visionFilter('squint')).toBe(`blur(${SQUINT_BLUR_PX}px)`)

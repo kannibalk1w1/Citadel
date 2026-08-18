@@ -31,6 +31,20 @@ const frame = (over: Partial<BoardSnapshot> = {}): BoardSnapshot => ({
   ...over,
 })
 
+describe('the snapshot cap', () => {
+  /**
+   * The eviction tests below build a list of SNAPSHOT_MAX and expect
+   * SNAPSHOT_MAX back, which passes for any value the constant takes — raising
+   * it to 100,000 keeps them green while the memory budget it exists for is
+   * gone. Frames are base64 images held for the session, so the number itself
+   * is the behaviour.
+   */
+  it('is a number small enough to hold in memory', () => {
+    expect(SNAPSHOT_MAX).toBeGreaterThanOrEqual(4)
+    expect(SNAPSHOT_MAX).toBeLessThanOrEqual(64)
+  })
+})
+
 describe('addBoardSnapshot', () => {
   it('keeps one frame per moment when the same state is saved twice', () => {
     const first = frame({ id: 'a', eventId: 'e1', takenAt: 1 })
