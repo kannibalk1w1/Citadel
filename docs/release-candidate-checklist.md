@@ -160,8 +160,17 @@ plugs into the same workflow through repository secrets.
 The draft is deliberate — publishing stays a human act, after the manual smoke
 pass below. Full detail in [Release Signing](./release-signing.md).
 
-Untested against GitHub's runners: the first tag push is the real proof, and
-should be a throwaway version on a scratch tag rather than the first paid one.
+First run on GitHub's runners: 2026-08-18, by manual dispatch rather than a tag.
+Linux passed. Windows failed, and the failure was in the part this checklist had
+called done — packaging read `CSC_LINK` as an empty string and refused with
+"cannot resolve: D:\a\Citadel\Citadel not a file", because electron-builder
+treats a blank certificate path as a path rather than as "unsigned". The
+unsigned path had never worked. Signed and unsigned packaging are now separate
+steps chosen by an output, so the variable is absent rather than blank.
+
+Use `gh workflow run release.yml` to exercise the workflow without a tag: the
+version check and the draft-release step are both tag-gated, so a dispatch
+builds and uploads artifacts and creates nothing.
 
 ### 5. First-run experience — done
 

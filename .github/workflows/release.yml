@@ -63,29 +63,42 @@ jobs:
       - name: Test
         run: npm test -- --run
 
+      # Decides signed-or-not once, as an output, so the packaging step can be
+      # chosen rather than handed a variable it cannot interpret. Setting
+      # CSC_LINK to an empty string does not mean "unsigned" to
+      # electron-builder — it reads it as a path and fails with
+      # "cannot resolve: D:\\a\\Citadel\\Citadel not a file". The variable has
+      # to be absent, not blank.
       - name: Report signing configuration
+        id: signing
         shell: pwsh
         env:
-          CSC_LINK: ${{ secrets.WINDOWS_CERT_BASE64 }}
+          CERT: ${{ secrets.WINDOWS_CERT_BASE64 }}
         run: |
-          if ([string]::IsNullOrEmpty($env:CSC_LINK)) {
+          if ([string]::IsNullOrEmpty($env:CERT)) {
+            "signed=false" >> $env:GITHUB_OUTPUT
             Write-Warning "No signing certificate configured - artifacts will be UNSIGNED and SmartScreen will warn on install."
             "### :warning: Unsigned build`n`nNo ``WINDOWS_CERT_BASE64`` secret is set, so the installer and portable exe are unsigned. See ``docs/release-signing.md``." >> $env:GITHUB_STEP_SUMMARY
           } else {
+            "signed=true" >> $env:GITHUB_OUTPUT
             Write-Host "Signing certificate present."
             "### Signed build`n`nArtifacts were signed with the repository certificate." >> $env:GITHUB_STEP_SUMMARY
           }
 
-      - name: Package
+      # `--publish never` keeps electron-builder out of the release: the upload
+      # below is explicit, and no latest.yml is generated because no update feed
+      # exists yet (release-candidate-checklist.md, item 3).
+      - name: Package (unsigned)
+        if: steps.signing.outputs.signed == 'false'
+        shell: pwsh
+        run: npm run package -- --win --x64 --publish never
+
+      - name: Package (signed)
+        if: steps.signing.outputs.signed == 'true'
         shell: pwsh
         env:
-          # Consumed directly by electron-builder. Empty when the secrets are
-          # unset, which is the unsigned path.
           CSC_LINK: ${{ secrets.WINDOWS_CERT_BASE64 }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
-        # `--publish never` keeps electron-builder out of the release: the upload
-        # below is explicit, and no latest.yml is generated because no update
-        # feed exists yet (release-candidate-checklist.md, item 3).
         run: npm run package -- --win --x64 --publish never
 
       - name: List artifacts
