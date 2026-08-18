@@ -16,6 +16,8 @@ const imageState = vi.hoisted(() => ({
     down?: (event: { cancelBubble: boolean; target: { getRelativePointerPosition: () => { x: number; y: number } } }) => void
     up?: (event: { cancelBubble: boolean; target: { getRelativePointerPosition: () => { x: number; y: number } } }) => void
   },
+  groupHandlers: {} as { dragEnd?: (event: unknown) => void },
+  groupNode: null as unknown,
 }))
 
 vi.mock('use-image', () => ({
@@ -31,10 +33,15 @@ vi.mock('../../assets/thumbnailPipeline', () => ({
 
 vi.mock('react-konva', () => ({
   Group: React.forwardRef(function Group(
-    { children }: { children: React.ReactNode },
+    { children, onDragEnd }: { children: React.ReactNode; onDragEnd?: (event: unknown) => void },
     ref: React.ForwardedRef<unknown>,
   ) {
-    React.useImperativeHandle(ref, () => ({ getLayer: () => ({ batchDraw: vi.fn() }) }))
+    React.useImperativeHandle(ref, () => {
+      const node = { getLayer: () => ({ batchDraw: vi.fn() }), x: () => 400, y: () => 500 }
+      imageState.groupNode = node
+      return node
+    })
+    if (onDragEnd) imageState.groupHandlers = { dragEnd: onDragEnd }
     return <div data-testid="image-group">{children}</div>
   }),
   Image: () => <div data-testid="konva-image" />,
@@ -74,6 +81,8 @@ beforeEach(() => {
   clearAssetMetadataForTest()
   imageState.lastUrl = ''
   imageState.regionHandlers = {}
+  imageState.groupHandlers = {}
+  imageState.groupNode = null
   imageState.image = { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement
   useCanvasStore.setState({
     boards: [{
@@ -133,6 +142,19 @@ describe('ImageItem hit testing', () => {
     const region = await choice
     expect(region).toMatchObject({ x: 0.1, y: 0.2, width: 0.6 })
     expect(region?.height).toBeCloseTo(0.4)
+  })
+
+  it('ignores a drag that came from a child, so a capture region cannot move the image', () => {
+    render(<ImageItem item={imageItem} />)
+
+    // Konva bubbles a child's drag up to the group. The capture-region outline
+    // is such a child, and its local coordinates are nothing to do with where
+    // the image belongs on the board.
+    act(() => imageState.groupHandlers.dragEnd?.({ target: { x: () => 140, y: () => 105 } }))
+    expect(useCanvasStore.getState().items()[0]).toMatchObject({ x: 20, y: 30 })
+
+    act(() => imageState.groupHandlers.dragEnd?.({ target: imageState.groupNode }))
+    expect(useCanvasStore.getState().items()[0]).toMatchObject({ x: 400, y: 500 })
   })
 })
 

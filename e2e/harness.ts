@@ -20,10 +20,25 @@ export type CitadelSession = {
 export async function launchCitadel(): Promise<CitadelSession> {
   const userDataDir = await mkdtemp(join(tmpdir(), 'citadel-e2e-'))
   const app = await electron.launch({
-    args: [projectRoot, `--user-data-dir=${userDataDir}`],
+    args: [
+      projectRoot,
+      `--user-data-dir=${userDataDir}`,
+      // A test window is usually behind something, or on a display nobody is
+      // looking at, and Chromium answers that by stopping the frame clock. The
+      // canvas is drawn from `requestAnimationFrame`, so a throttled window
+      // renders nothing and Konva hit-tests every pointer as a miss — the
+      // canvas is live, but untouchable. These keep the frame clock running.
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
+    ],
     env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: 'true' },
   })
-  return { app, page: await app.firstWindow(), userDataDir }
+  const page = await app.firstWindow()
+  await app.browserWindow(page).then((window) => window.evaluate((w) => {
+    w.webContents.setBackgroundThrottling(false)
+  }))
+  return { app, page, userDataDir }
 }
 
 export async function closeCitadel(session: CitadelSession | undefined): Promise<void> {

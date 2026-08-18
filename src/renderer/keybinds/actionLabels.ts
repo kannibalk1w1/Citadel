@@ -75,6 +75,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.EXPORT_PDF]: 'Export PDF',
   [Actions.EXPORT_IMAGE]: 'Export image',
   [Actions.EXPORT_ZIP]: 'Export archive (.citadelz)',
+  [Actions.EXPORT_MARKDOWN]: 'Export Markdown (Obsidian)',
 
   [Actions.BOARD_NEW]: 'New board',
   [Actions.BOARD_DUPLICATE]: 'Duplicate board',

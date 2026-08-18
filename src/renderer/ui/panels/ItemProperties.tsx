@@ -10,7 +10,18 @@ import { activeArchiveRailWidth } from '../shell/shellModel'
 import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
-import { imageRegionPercent, sourceCaptureReference, sourceCapturesForItem } from '../../canvas/sourceCapture'
+import { inscribe } from '../toasts/inscriptionToastStore'
+import {
+  imageRegionPercent,
+  sourceCaptureConnection,
+  sourceCaptureContent,
+  sourceCaptureHealth,
+  sourceCaptureListModel,
+  sourceCaptureReattachPatch,
+  sourceCaptureReference,
+  sourceCaptureTitle,
+  sourceCapturesForItem,
+} from '../../canvas/sourceCapture'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -490,14 +501,116 @@ function TagsSection({ item, boardId }: { item: CanvasItem; boardId: string }): 
   )
 }
 
+const smallButtonStyle: React.CSSProperties = {
+  alignSelf: 'flex-start',
+  background: 'var(--bg-ui)',
+  border: '1px solid var(--accent)',
+  borderRadius: 'var(--radius-sm)',
+  color: 'var(--text-accent)',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--text-sm)',
+  padding: '4px 8px',
+}
+
+/**
+ * Puts a broken capture back on a source without touching what the user wrote.
+ * The link is the only thing that moves; the note, reference, location and
+ * region ride along on `meta.source`.
+ */
+function reattachCaptureSource(capture: CanvasItem, sourceItemId: string | null): void {
+  const canvas = useCanvasStore.getState()
+  const boardId = canvas.activeBoardId
+  if (!boardId) return
+  const patch = sourceCaptureReattachPatch(capture, sourceItemId)
+  if (!patch) return
+  useHistoryStore.getState().push('ITEM_STYLE', boardId, patch.before, patch.after)
+  canvas.updateItem(boardId, capture.id, { meta: patch.after.meta })
+
+  if (!sourceItemId) {
+    inscribe('Capture unlinked from its source')
+    return
+  }
+  // Deleting the source took its source thread with it, so the thread is
+  // rebuilt here rather than left for the user to redraw by hand.
+  const board = canvas.boards.find((candidate) => candidate.id === boardId)
+  const alreadyThreaded = board?.connections.some((connection) =>
+    (connection.fromId === capture.id && connection.toId === sourceItemId)
+    || (connection.fromId === sourceItemId && connection.toId === capture.id))
+  if (!alreadyThreaded) {
+    const connection = sourceCaptureConnection(capture.id, sourceItemId, canvasColor('accent'))
+    canvas.addConnection(boardId, connection)
+    useHistoryStore.getState().push('CONNECTION_ADD', boardId, null, connection)
+  }
+  inscribe('Capture reattached to its source')
+}
+
+/**
+ * A capture whose source item was deleted. Named plainly and given the one
+ * control that fixes it, because the note itself is still perfectly good — the
+ * only thing lost is which item it came from.
+ */
+function BrokenSourceNotice({ capture, items }: { capture: CanvasItem; items: CanvasItem[] }): React.ReactElement {
+  const candidates = items
+    .filter((candidate) => candidate.id !== capture.id && !sourceCaptureReference(candidate))
+    .sort((a, b) => (a.type === 'image' ? 0 : 1) - (b.type === 'image' ? 0 : 1))
+
+  return (
+    <>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-danger)', fontFamily: 'var(--font-body)' }}>
+        Source item is missing — it was deleted from the archive.
+      </div>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+        The note, reference, location, and region are kept. Pick a new source to reattach it.
+      </div>
+      {candidates.length > 0 ? (
+        <select
+          aria-label="Reattach capture to source"
+          defaultValue=""
+          onChange={(e) => {
+            if (!e.target.value) return
+            reattachCaptureSource(capture, e.target.value)
+          }}
+          style={{ ...inputStyle, fontSize: 'var(--text-sm)' }}
+        >
+          <option value="">Reattach to…</option>
+          {candidates.map((candidate) => (
+            <option key={candidate.id} value={candidate.id}>{itemLabel(candidate)}</option>
+          ))}
+        </select>
+      ) : (
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+          Nothing on this board can hold it yet.
+        </div>
+      )}
+      <button type="button" onClick={() => reattachCaptureSource(capture, null)} style={{ ...smallButtonStyle, borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+        Keep as a standalone note
+      </button>
+    </>
+  )
+}
+
 function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElement | null {
+  const boards = useCanvasStore((s) => s.boards)
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
+  const items = useCanvasStore((s) => s.items())
   const source = sourceCaptureReference(item)
   if (!source) return null
+
+  const health = sourceCaptureHealth(item, boards, activeBoardId)
   const openSource = () => {
-    if (!source.sourceItemId) return
-    const linkedItem = useCanvasStore.getState().items().find((candidate) => candidate.id === source.sourceItemId)
-    if (linkedItem) centerViewportOnItem(linkedItem, item.id)
+    if (health.state !== 'linked') return
+    // A source can sit in another chamber; travel there first, the way the
+    // Living Index does, rather than centring on a board that does not hold it.
+    // The capture stays selected only when it is on the board being shown.
+    if (health.sameBoard) {
+      centerViewportOnItem(health.source, item.id)
+      return
+    }
+    useCanvasStore.getState().setActiveBoard(health.boardId)
+    centerViewportOnItem(health.source)
   }
+
   return (
     <>
       <Divider label="Source" />
@@ -520,43 +633,59 @@ function SourceCaptureSection({ item }: { item: CanvasItem }): React.ReactElemen
             </div>
           </>
         )}
-        {source.sourceItemId && (
-          <button
-            type="button"
-            onClick={openSource}
-            style={{ alignSelf: 'flex-start', background: 'var(--bg-ui)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', color: 'var(--text-accent)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', padding: '4px 8px' }}
-          >
-            Open source
-          </button>
+        {health.state === 'linked' && (
+          <>
+            {!health.sameBoard && (
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                Source lives on {health.boardName}.
+              </div>
+            )}
+            <button type="button" onClick={openSource} style={smallButtonStyle}>
+              Open source
+            </button>
+          </>
         )}
+        {health.state === 'broken' && <BrokenSourceNotice capture={item} items={items} />}
       </div>
     </>
   )
 }
 
 function SourceCapturesSection({ image, items }: { image: CanvasItem; items: CanvasItem[] }): React.ReactElement | null {
+  const [query, setQuery] = React.useState('')
   const captures = sourceCapturesForItem(items, image.id)
-  if (captures.length === 0) return null
+  const list = sourceCaptureListModel(captures, query)
+  if (list.total === 0) return null
+
   return (
     <>
-      <Divider label={`Captures (${captures.length})`} />
+      <Divider label={`Captures (${list.total})`} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-        {captures.map((capture) => {
-          const content = typeof capture.meta?.content === 'string' ? capture.meta.content.trim() : ''
+        {list.showFilter && (
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter by text or location"
+            aria-label="Filter captures by text or location"
+            style={{ ...inputStyle, fontSize: 'var(--text-sm)' }}
+          />
+        )}
+        {list.rows.map((capture) => {
+          const title = sourceCaptureTitle(capture)
           const locator = sourceCaptureReference(capture)?.locator
-          const title = content.split(/\r?\n/, 1)[0] || 'Untitled capture'
           return (
             <button
               key={capture.id}
               type="button"
-              title={content || 'Untitled capture'}
+              title={sourceCaptureContent(capture) || title}
               onClick={() => centerViewportOnItem(capture)}
-              style={{ width: '100%', textAlign: 'left', background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', cursor: 'pointer', padding: '6px 8px' }}
+              style={{ width: '100%', textAlign: 'left', background: 'var(--bg-ui)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', cursor: 'pointer', padding: list.compact ? '3px 8px' : '6px 8px' }}
             >
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-body)' }}>
                 {title}
               </div>
-              {locator && (
+              {locator && !list.compact && (
                 <div style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)' }}>
                   {locator}
                 </div>
@@ -564,6 +693,16 @@ function SourceCapturesSection({ image, items }: { image: CanvasItem; items: Can
             </button>
           )
         })}
+        {list.matched === 0 && (
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+            No capture matches “{query.trim()}”.
+          </div>
+        )}
+        {list.hidden > 0 && (
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            +{list.hidden} more — narrow the filter to reach them.
+          </div>
+        )}
       </div>
     </>
   )

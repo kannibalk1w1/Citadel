@@ -65,6 +65,7 @@ export function buildMenu(): void {
         { label: 'Export PDF…', click: () => send('menu:exportPdf') },
         { label: 'Export Image…', click: () => send('menu:exportImage') },
         { label: 'Export Archive (.citadelz)…', click: () => send('menu:exportZip') },
+        { label: 'Export Markdown (Obsidian)…', click: () => send('menu:exportMarkdown') },
         { type: 'separator' },
         { role: 'quit' },
       ],

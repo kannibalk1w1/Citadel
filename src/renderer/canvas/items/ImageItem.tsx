@@ -203,12 +203,24 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     }
   }
 
-  const handleDragStart = () => {
+  /**
+   * Konva bubbles drag and transform events up from every child, and the group
+   * holds draggable children of its own — the capture-region outline and its
+   * transformer. Without this the region's drag arrived here as the image's
+   * own: the group snapped itself to the outline's local coordinates and slid
+   * across the board, and a region resize wrote an unchanged ITEM_STYLE into
+   * undo. Each handler acts only on the group it belongs to.
+   */
+  const isOwnEvent = (e: KonvaEventObject<unknown>): boolean => e.target === groupRef.current
+
+  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
+    if (!isOwnEvent(e)) return
     dragStart.current = { x: item.x, y: item.y }
     spatialIndex.rebuild(useCanvasStore.getState().items())
   }
 
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    if (!isOwnEvent(e)) return
     const node = e.target
     const dragged = { ...item, x: node.x(), y: node.y() }
     const viewport = useCanvasStore.getState().viewport()
@@ -219,6 +231,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
   }
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
+    if (!isOwnEvent(e)) return
     snapLines.length = 0
     useUIStore.getState().bumpSnap()
     const newX = e.target.x()
@@ -233,11 +246,13 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
     }
   }
 
-  const handleTransformStart = () => {
+  const handleTransformStart = (e: KonvaEventObject<Event>) => {
+    if (!isOwnEvent(e)) return
     transformStart.current = { x: item.x, y: item.y, width: item.width, height: item.height, rotation: item.rotation }
   }
 
-  const handleTransformEnd = () => {
+  const handleTransformEnd = (e: KonvaEventObject<Event>) => {
+    if (!isOwnEvent(e)) return
     const node = groupRef.current
     if (!node) return
     const after = {

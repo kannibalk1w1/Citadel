@@ -101,12 +101,12 @@ Profiling notes:
 
 Active next-step queue:
 
-1. Build the Obsidian handoff as a portable Markdown export for selected board items before considering a two-way Obsidian plugin. Import now keeps `documentFormat: 'markdown'` on items that came from a `.md`, which is the hook an export or a future renderer would use.
-2. Add text and location filtering to an image's source-capture list, with a compact large-list treatment once real archives prove the need.
-3. Add a packaged-Electron smoke fixture backed by a real local raster image, covering direct source-region draw and post-capture drag/resize; the current SVG fixture validates the source-capture flow but does not reliably mount an interactive image node in the harness.
-4. Add source-health checks for capture links so a deleted source item is clearly reported and a capture can be reattached without losing its note, location, or region.
-
-Saved Index trails remain intentionally deferred until multi-board archive use demonstrates a need.
+The queue is empty. What was on it closed on 2026-08-16; see "Closed in the
+source-capture pass" below. The open work that remains is recorded where it
+belongs rather than restated here: RTF/ODT import and Markdown *rendering*
+under "Document import", the thumbnail worker gate under Phase 3, and saved
+Index trails, which stay intentionally deferred until multi-board archive use
+demonstrates a need.
 
 Deferred validation:
 
@@ -122,6 +122,61 @@ Document import — `.docx`, `.md`, `.txt` (2026-08-16):
 - Legacy `.doc` is refused by name with the conversion step, not half-parsed. A `.docx` whose bytes are an OLE2 container — a renamed `.doc` or a password-protected document — is named as such. A binary file behind a `.txt` name is refused rather than pasted as noise. Every other failure (missing, oversized, damaged, empty) is reported in the app with its reason.
 - The importable extension table lives once, in `src/types/documents.ts`, and both processes read it; the reason codes are in the same file for the same reason.
 - Still open: RTF and ODT import, any `.doc` conversion, Markdown rendering or export, and a packaged-desktop pass with real files from Word and Notepad.
+
+Closed in the source-capture pass (2026-08-16):
+
+- **Obsidian handoff.** `export:markdown` (File menu, command palette, no default
+  binding) writes the selection — or the whole board when nothing is selected —
+  as one ordinary Markdown file. No plugin, no vault assumptions: an export a
+  person can drop into any vault, editor, or repo is worth more than a two-way
+  plugin nobody can try yet, and it is what will tell us whether the two-way
+  version is wanted at all. `export/markdownExport.ts` holds it. Items read in
+  board order (down the board in 120-unit bands, left to right inside a band).
+  Text arrives verbatim, Markdown syntax included, so a `.md` imported into
+  Citadel leaves as itself and a `[[phrase]]` inscription reference lands as an
+  Obsidian wikilink without translation. Code cards become fenced blocks in
+  their own language, media becomes relative links resolved against the chosen
+  destination (absolute when they cannot be related — a different drive, a URL),
+  captures become a blockquote with their citation, and threads between exported
+  items become a closing list. Frontmatter carries the title, export time, item
+  count, and the union of tags. Deliberately dropped, because Markdown has no
+  place to put them and inventing one would make a file only Citadel can read:
+  position, size, rotation, colour, and z-order.
+- **Capture list filtering.** An image's Captures section filters on note text,
+  location, and source reference; every term must match, so two words narrow.
+  The filter box and the compact row appear together once a list reaches six
+  captures, and a list draws at most twelve rows and reports the rest as a
+  count. The thresholds and the whole list shape live in
+  `sourceCaptureListModel`, not in the panel.
+- **Capture source health.** `sourceCaptureHealth` answers with `linked`,
+  `unlinked` (written without a source — a legitimate state, not a fault), or
+  `broken`. A source that moved to another chamber is found and named, and
+  "Open source" travels there through `setActiveBoard` first. A deleted source
+  is reported in the panel and offers a source to reattach to, or keeping the
+  capture as a standalone note; `sourceCaptureReattachPatch` moves only
+  `sourceItemId`, so the note, reference, location, and region are never the
+  price of fixing a link, and the source thread that died with the old item is
+  rebuilt. Regions are stored in fractions, so they survive a source of a
+  different size and can be corrected with the existing region editor.
+- **Real-image smoke coverage.** `e2e/fixtures/capture-source.png` is a real
+  400×300 raster (its size is load-bearing: the drop clamp leaves it alone, so
+  the item on the board is exactly the fixture's pixels). One e2e case draws a
+  region directly on it, then drags and resizes that region, asserting the
+  percentages the panel prints; a second deletes the source out from under a
+  capture and repairs it through the panel, asserting the note's reference and
+  location are still there afterwards.
+- **Two things the real-image test found.** The harness was launching a window
+  Chromium treated as occluded, so the frame clock never ran: Konva drew
+  nothing and hit-tested every pointer as a miss — the canvas was live but
+  untouchable, which is why the SVG fixture could never mount an interactive
+  image node. `launchCitadel` now disables occlusion/renderer backgrounding and
+  turns off background throttling. (Do not call `showInactive()` there; it
+  leaves the window sized 0×0, and the stage's buffer canvas follows it down.)
+  With frames running, the test showed that dragging a capture region dragged
+  the source image across the board: Konva bubbles a child's drag up, and
+  `ImageItem` treated it as the image's own, snapping the group to the outline's
+  local coordinates — a region resize also wrote an unchanged `ITEM_STYLE` into
+  undo. The group's drag and transform handlers now act only on their own node.
 
 Closed in the clean-interface pass (2026-08-16):
 
@@ -402,6 +457,9 @@ Support broad file ingestion without turning Citadel into an editor for every fo
 - PDFs and documents
 - audio and video
 - Godot, Unity, and Blender metadata where practical
-- Obsidian and Markdown import and export
+- Obsidian and Markdown import and export — import lands `.md` as plain source
+  text; export writes a board or selection as one portable Markdown file
+  (`export:markdown`). A two-way plugin stays unbuilt until the one-way handoff
+  proves it is wanted.
 
 The principle: Citadel preserves, previews, annotates, searches, and connects files. It does not need to replace specialist creation tools.

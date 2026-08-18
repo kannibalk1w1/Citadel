@@ -87,6 +87,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.EXPORT_PDF]:     [],
   [Actions.EXPORT_IMAGE]:   [],
   [Actions.EXPORT_ZIP]:     [],
+  [Actions.EXPORT_MARKDOWN]: [],
 
   // Boards
   [Actions.BOARD_NEW]:      ['ctrl+shift+n', 'meta+shift+n'],

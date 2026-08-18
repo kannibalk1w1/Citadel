@@ -76,6 +76,7 @@ export const Actions = {
   EXPORT_PDF: 'export:pdf',
   EXPORT_IMAGE: 'export:image',
   EXPORT_ZIP: 'export:zip',
+  EXPORT_MARKDOWN: 'export:markdown',
 
   // ── Boards ────────────────────────────────────────────────────────────────
   BOARD_NEW: 'board:new',

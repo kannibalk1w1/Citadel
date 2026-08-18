@@ -62,6 +62,7 @@ import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clea
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
 import { exportToZip } from './export/zipExport'
+import { exportSelectionToMarkdown } from './export/markdownExport'
 import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { focusViewportFor, nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
@@ -700,6 +701,7 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.EXPORT_PDF,   () => { exportToPdf().then(() => inscribe('PDF exported')).catch(console.error) })
     resolver.register(Actions.EXPORT_IMAGE, () => { exportToImage().then(() => inscribe('Image exported')).catch(console.error) })
     resolver.register(Actions.EXPORT_ZIP,   () => { void exportToZip().catch(console.error) })
+    resolver.register(Actions.EXPORT_MARKDOWN, () => { void exportSelectionToMarkdown().catch(console.error) })
 
     // File
     resolver.register(Actions.SAVE, () => {
@@ -914,6 +916,7 @@ export default function App(): React.ReactElement {
       ipc.on('menu:exportPdf',    () => exportToPdf().catch(console.error)),
       ipc.on('menu:exportImage',  () => exportToImage().catch(console.error)),
       ipc.on('menu:exportZip',    () => exportToZip().catch(console.error)),
+      ipc.on('menu:exportMarkdown', () => exportSelectionToMarkdown().catch(console.error)),
     ]
     return () => unsubs.forEach((u) => u?.())
   }, [])
