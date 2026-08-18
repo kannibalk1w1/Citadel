@@ -11,3 +11,5 @@ playwright-report/
 test-results/
 reports/
 dist-packs/
+dist-ci/
+dist-release/

@@ -21,6 +21,7 @@ listing must and must not claim is settled under **Commercial clarity** in
 | Platforms | Windows, Linux |
 | Uploads | `Citadel-0.1.0-setup.exe`, `Citadel-0.1.0-portable.exe`, `Citadel-0.1.0.AppImage`, `citadel-0.1.0.tar.gz` |
 | Tags | reference, moodboard, art-tools, canvas, notes, research, worldbuilding, open-source, offline, electron |
+| Page | https://kannibalkiwi.itch.io/citadel |
 | Links | Source & issues — github.com/kannibalk1w1/Citadel |
 | License | MIT · © 2026 Kieran Beckenkrager |
 
@@ -96,6 +97,27 @@ do.
 genuinely fine, and the instructions are in the repository.
 
 ---
+
+## Uploading builds
+
+The itch handle is **`kannibalkiwi`**, which is not the GitHub one — butler
+targets are `kannibalkiwi/citadel:<channel>`, and a target naming
+`kannibalk1w1` will fail with a project-not-found error that reads like an
+authentication problem.
+
+Channel names decide what itch shows as the platform, so they matter:
+
+```bash
+butler push dist-release/Citadel-0.1.0-setup.exe    kannibalkiwi/citadel:windows-installer --userversion 0.1.0
+butler push dist-release/Citadel-0.1.0-portable.exe kannibalkiwi/citadel:windows-portable  --userversion 0.1.0
+butler push dist-release/Citadel-0.1.0.AppImage     kannibalkiwi/citadel:linux-appimage    --userversion 0.1.0
+butler push dist-release/citadel-0.1.0.tar.gz       kannibalkiwi/citadel:linux-tar         --userversion 0.1.0
+```
+
+Push the artifacts built by the release workflow, not any built locally on
+Linux: cross-building Windows through Wine produces a working but different
+binary — 111 MB against the runner's 101 MB — so what would ship is not what was
+tested.
 
 ## Still to do
 
