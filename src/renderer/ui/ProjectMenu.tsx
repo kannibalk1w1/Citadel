@@ -3,6 +3,7 @@ import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
 import { useUIStore } from '../store/uiStore'
 import { ToolIcon } from './icons/ToolIcon'
+import { isBrowserDemo } from '../platform/runtime'
 
 type ProjectDestination = 'boardNavigator' | 'assetLibrary'
 
@@ -57,9 +58,15 @@ export function ProjectMenu(): React.ReactElement {
             Items
           </button>
           <div className="citadel-project-menu-divider" role="separator" />
-          <button type="button" role="menuitem" onClick={() => { resolver.dispatch(Actions.OPEN); setIsOpen(false) }}>
-            Open project…
-          </button>
+          {isBrowserDemo ? (
+            <button type="button" role="menuitem" onClick={() => { resolver.dispatch(Actions.OPEN_SHOWCASE); setIsOpen(false) }}>
+              Reset demo
+            </button>
+          ) : (
+            <button type="button" role="menuitem" onClick={() => { resolver.dispatch(Actions.OPEN); setIsOpen(false) }}>
+              Open project…
+            </button>
+          )}
         </div>
       )}
     </div>

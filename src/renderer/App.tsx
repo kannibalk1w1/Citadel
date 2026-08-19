@@ -4,6 +4,10 @@ import type { CanvasItem } from '../types'
 // Module-level clipboard (persists across renders, not across restarts)
 let clipboard: CanvasItem[] = []
 let pasteOffset = 0
+// React Strict Mode runs mount effects twice in development and in this static
+// demo build. The showcase is an async load, so retain this guard outside the
+// component to keep the opening toast and state transition singular.
+let browserDemoShowcaseOpened = false
 import { CanvasStage } from './canvas/CanvasStage'
 import { VisionFilterDefs } from './canvas/VisionFilterDefs'
 import { useVisionLayers } from './canvas/useVisionLayers'
@@ -68,6 +72,8 @@ import { focusViewportFor, nextPresentationIndex, orderedPresentationItems } fro
 import { replayEvent, revertEvent } from './store/canvasEventApply'
 import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 import { ToolIcon } from './ui/icons/ToolIcon'
+import { isBrowserDemo } from './platform/runtime'
+import { DemoNotice } from './ui/DemoNotice'
 
 const ZOOM_STEP = 1.2
 const MIN_SCALE = 0.05
@@ -178,6 +184,14 @@ export default function App(): React.ReactElement {
   useEffect(() => {
     initBoard()
 
+    if (isBrowserDemo && !browserDemoShowcaseOpened) {
+      browserDemoShowcaseOpened = true
+      void openShowcase().catch((error) => {
+        browserDemoShowcaseOpened = false
+        console.error(error)
+      })
+    }
+
     // Check for crash recovery file on startup
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, ...a: unknown[]) => Promise<unknown> } }).ipc
     ipc.invoke('recovery:get').then((res) => {
@@ -248,7 +262,7 @@ export default function App(): React.ReactElement {
       if (Object.keys(nextState).length > 0) useUIStore.setState(nextState)
       // The welcome panel is deliberately non-modal. It only appears on a
       // first run, and never prevents an existing project from being opened.
-      if (values['ui.onboardingComplete'] !== true) useUIStore.getState().openPanel('onboarding')
+      if (!isBrowserDemo && values['ui.onboardingComplete'] !== true) useUIStore.getState().openPanel('onboarding')
       // Re-apply through main so the window actually adopts the stored mode.
       // Click-through is never restored: it is not persisted.
       const alwaysOnTop = values['ui.alwaysOnTop'] === true
@@ -1114,6 +1128,7 @@ export default function App(): React.ReactElement {
           <InscriptionPrompt />
           <HyperTypeOverlay />
           <SourceCaptureRegionPicker />
+          {isBrowserDemo && <DemoNotice />}
         </>
       )}
     />

@@ -13,3 +13,5 @@ reports/
 dist-packs/
 dist-ci/
 dist-release/
+dist-demo/
+Citadel-browser-demo.zip
