@@ -17,7 +17,6 @@ import { BoardTabs } from './ui/BoardTabs'
 import { ProjectMenu } from './ui/ProjectMenu'
 import { ShellFrame } from './ui/shell/ShellFrame'
 import { MenuBarHover } from './ui/shell/MenuBarHover'
-import { ClickThroughPanel } from './ui/shell/ClickThroughPanel'
 import { CommandPalette } from './ui/palette/CommandPalette'
 import { Onboarding } from './ui/onboarding/Onboarding'
 import { activeArchiveRailWidth, shellCanvasInset } from './ui/shell/shellModel'
@@ -305,6 +304,7 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.TOOL_LINK,    () => useUIStore.getState().setToolMode('link'))
     resolver.register(Actions.TOOL_TAG,     () => useUIStore.getState().setToolMode('tag'))
     resolver.register(Actions.TOOL_SWATCH,  () => useUIStore.getState().setToolMode('swatch'))
+    resolver.register(Actions.TOOL_COMPARISON, () => useUIStore.getState().setToolMode('comparison'))
     resolver.register(Actions.CODE_COPY, () => {
       const code = useCanvasStore.getState().selectedItems().find((item) => item.type === 'code')?.meta?.code
       if (typeof code !== 'string') return
@@ -1109,7 +1109,6 @@ export default function App(): React.ReactElement {
           <YouSavedBanner />
           <InscriptionToasts />
           <ArchiveRiteOverlay />
-          <ClickThroughPanel />
           <Onboarding />
           <CommandPalette />
           <InscriptionPrompt />

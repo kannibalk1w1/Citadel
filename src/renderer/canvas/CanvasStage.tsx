@@ -14,6 +14,8 @@ import { SelectionBox } from './overlays/SelectionBox'
 import { SelectedActionStrip } from './overlays/SelectedActionStrip'
 import { SearchHighlight } from './overlays/SearchHighlight'
 import { LassoOverlay } from './overlays/LassoOverlay'
+import { MarqueeOverlay } from './overlays/MarqueeOverlay'
+import { consumeMarqueeSweep } from './overlays/marqueeSelection'
 import { AnchorHandles } from './overlays/AnchorHandles'
 import { ConnectorQuickToolbar } from './overlays/ConnectorQuickToolbar'
 import { KonvaItemChrome } from './overlays/KonvaItemChrome'
@@ -76,6 +78,10 @@ export function CanvasStage(): React.ReactElement {
   const CURSOR = useMemo(() => cursorPackCss(cursorPack, STANDARD_CURSORS), [cursorPack])
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
+  // Held as state, not read off the ref: the marquee attaches Konva listeners
+  // to the Stage node, and a ref changing does not re-run the effect that does.
+  const [stageNode, setStageNode] = useState<Konva.Stage | null>(null)
+  useEffect(() => { setStageNode(stageRef.current) }, [])
 
   const { handleDragOver, handleDrop } = useFileDrop()
 
@@ -104,6 +110,13 @@ export function CanvasStage(): React.ReactElement {
   const handleStageClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target !== stageRef.current) return
     closeContextMenu()
+    // A rubber-band sweep releases on the Stage, so Konva reports it as a click
+    // on empty ground too. Letting it through would clear the selection the
+    // sweep had just made.
+    if (consumeMarqueeSweep()) return
+    // Empty ground means nothing is under inspection. A picked connection has
+    // no other way out: its panel used to be the only place to dismiss it.
+    useUIStore.getState().dismissConnectionInspection()
 
     const stage = stageRef.current
     if (!stage || !activeBoardId) return
@@ -124,6 +137,8 @@ export function CanvasStage(): React.ReactElement {
       useCanvasStore.getState().addItem(activeBoardId, item)
       useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, item)
       useCanvasStore.getState().setSelection([item.id])
+      useUIStore.getState().setEditingItemId(item.id)
+      useUIStore.getState().setToolMode('select')
       return
     }
 
@@ -335,6 +350,9 @@ export function CanvasStage(): React.ReactElement {
         </Layer>
         <Layer>
           <LassoOverlay />
+        </Layer>
+        <Layer listening={false}>
+          <MarqueeOverlay stage={stageNode} />
         </Layer>
       </Stage>
 

@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Infinite canvas creative reference tool",
   "main": "out/main/index.js",
   "author": "Kieran Beckenkrager (https://github.com/kannibalk1w1)",
@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "dev:demo": "vite --config vite.demo.config.ts",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
     "test": "vitest",
@@ -67,6 +69,18 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "!dist-release/**",
+      "!dist-ci/**",
+      "!dist-packs/**",
+      "!Citadel-browser-demo.zip",
+      "!dist-demo/**",
+      "!playwright-report/**",
+      "!test-results/**",
+      "!e2e/**",
+      "!docs/**",
+      "!scripts/**"
+    ],
     "win": {
       "target": [
         {

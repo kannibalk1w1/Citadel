@@ -167,6 +167,20 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
       onPointerCancel={handlePointerUp}
     >
       {children}
+      {toolMode === 'connect' && (
+        // While a thread is being drawn the whole card is one target for it.
+        // Without this the content underneath takes the press instead: a
+        // YouTube <webview> is a separate frame and swallows every click inside
+        // it outright, and video and audio would start playing on the way past.
+        // No handler of its own: the press lands here rather than on the
+        // content, then bubbles to this card's own onClick above. Giving it a
+        // second copy of that handler fired the whole thing twice, which turned
+        // landing a thread into landing it and immediately arming a new one.
+        <div
+          data-connect-target="true"
+          style={{ position: 'absolute', inset: 0, cursor: 'crosshair' }}
+        />
+      )}
       <div
         style={{
           position: 'absolute',

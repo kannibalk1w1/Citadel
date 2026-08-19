@@ -3,7 +3,7 @@ import { Rect } from 'react-konva'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
 import { DOMItem } from './DOMItem'
 import { MediaPlaceholder } from './MediaPlaceholder'
 
@@ -30,10 +30,8 @@ export function YouTubeItem({ item, domOnly = false }: Props): React.ReactElemen
         editableFrame
         onClick={(e) => {
           e.stopPropagation()
-          if (toolMode === 'connect') {
-            handleConnectRelicClick(activeBoardId, item.id)
-            return
-          }
+          if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+          adoptSelectTool(toolMode)
           setSelection([item.id])
         }}
       >

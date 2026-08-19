@@ -1,6 +1,17 @@
 import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 import type { CanvasItem, CanvasBoard, Connection, Viewport } from '../../types'
+import { useUIStore } from './uiStore'
+
+/**
+ * The item inspector and the connection inspector occupy the same slot on
+ * screen, so a live selection of either kind evicts the other. Selecting relics
+ * drops the active connection; the reverse lives with the connection layer,
+ * which is what knows a connection was clicked.
+ */
+function dropActiveConnection(): void {
+  useUIStore.getState().dismissConnectionInspection()
+}
 
 type CanvasState = {
   boards: CanvasBoard[]
@@ -275,6 +286,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       ...ids,
       ...allItems.filter((i) => i.groupId && groupIds.has(i.groupId)).map((i) => i.id),
     ]))
+    if (expanded.length > 0) dropActiveConnection()
     set({ selectedIds: expanded })
   },
   addToSelection: (id) => {
@@ -283,6 +295,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const toAdd = item?.groupId
       ? allItems.filter((i) => i.groupId === item.groupId).map((i) => i.id)
       : [id]
+    if (toAdd.length > 0) dropActiveConnection()
     set((s) => ({ selectedIds: Array.from(new Set([...s.selectedIds, ...toAdd])) }))
   },
   clearSelection: () => set({ selectedIds: [] }),

@@ -107,7 +107,10 @@ export function buildMenu(): void {
         { label: 'Click Through', accelerator: accelerator('window:clickThroughToggle'), click: () => send('menu:clickThroughToggle') },
         { type: 'separator' },
         { role: 'toggleDevTools' },
-        { role: 'reload' },
+        // Explicit, because the role's own default is CmdOrCtrl+R — the same
+        // accelerator 'record:toggle' claims a few lines up. Two menu items
+        // sharing one accelerator leaves whichever loses silently dead.
+        { role: 'reload', accelerator: 'CmdOrCtrl+Shift+R' },
       ],
     },
     {

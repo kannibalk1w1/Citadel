@@ -28,6 +28,7 @@ export const defaultKeybinds: Record<ActionName, string[]> = {
   [Actions.TOOL_LINK]:      ['k'],
   [Actions.TOOL_TAG]:       ['g'],
   [Actions.TOOL_SWATCH]:    ['w'],
+  [Actions.TOOL_COMPARISON]: ['p'],
 
   // Edit
   [Actions.UNDO]:           ['ctrl+z', 'meta+z'],

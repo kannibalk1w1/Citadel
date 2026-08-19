@@ -174,6 +174,13 @@ type UIState = {
 
   activeConnectionId: string | null
   setActiveConnectionId: (id: string | null) => void
+  /**
+   * Drops the connection and shuts its inspector together. The id alone also
+   * marks a connection the canvas is merely pointing at — a search hit reveals
+   * one without opening anything — so letting go of the inspection is its own
+   * action rather than a side effect of clearing the id.
+   */
+  dismissConnectionInspection: () => void
   bindingPulse: { connectionId: string; startedAt: number } | null
   triggerBindingPulse: (connectionId: string) => void
   clearBindingPulse: () => void
@@ -381,6 +388,11 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   activeConnectionId: null,
   setActiveConnectionId: (id) => set({ activeConnectionId: id }),
+  dismissConnectionInspection: () => set((s) => (
+    s.activeConnectionId === null && !s.panels.connectionProperties
+      ? {}
+      : { activeConnectionId: null, panels: { ...s.panels, connectionProperties: false } }
+  )),
   bindingPulse: null,
   triggerBindingPulse: (connectionId) => set({ bindingPulse: { connectionId, startedAt: Date.now() } }),
   clearBindingPulse: () => set({ bindingPulse: null }),

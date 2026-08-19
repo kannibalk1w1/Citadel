@@ -11,7 +11,7 @@ import { ensureThumbnail, generateModel3DPreviewThumbnail } from '../../assets/t
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { pathToUrl } from '../../utils/pathToUrl'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
 import { DOMItem } from './DOMItem'
 import { MediaPlaceholder } from './MediaPlaceholder'
 
@@ -39,26 +39,8 @@ export function Model3DItem({ item, domOnly = false }: Props): React.ReactElemen
     e.stopPropagation()
     if (!activeBoardId) return
 
-    if (toolMode === 'connect') {
-      handleConnectRelicClick(activeBoardId, item.id)
-      return
-    }
-
-    if (toolMode === 'link') {
-      if (item.link) {
-        const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-        ipc.invoke('shell:openURL', { url: item.link })
-      }
-      return
-    }
-
-    if (toolMode === 'tag') {
-      setSelection([item.id])
-      useUIStore.getState().openPanel('tagSearch')
-      return
-    }
-
-    if (toolMode !== 'select') return
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
     if (e.shiftKey) {
       useCanvasStore.getState().addToSelection(item.id)
     } else {

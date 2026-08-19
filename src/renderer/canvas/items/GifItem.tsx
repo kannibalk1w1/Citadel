@@ -14,7 +14,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { pathToUrl } from '../../utils/pathToUrl'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress, relicPressMoves } from './relicPointer'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -126,19 +126,15 @@ export function GifItem({ item }: Props): React.ReactElement | null {
         shadowColor="rgba(185,148,85,0.7)"
         shadowBlur={20}
         shadowOpacity={0.8}
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={(e: KonvaEventObject<MouseEvent>) => {
           e.cancelBubble = true
-          if (toolMode === 'connect') {
-            handleConnectRelicClick(activeBoardId, item.id)
-            return
-          }
-          if (toolMode === 'select') {
-            if (e.evt.shiftKey) {
-              useCanvasStore.getState().addToSelection(item.id)
-            } else {
-              setSelection([item.id])
-            }
+          if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+          adoptSelectTool(toolMode)
+          if (e.evt.shiftKey) {
+            useCanvasStore.getState().addToSelection(item.id)
+          } else {
+            setSelection([item.id])
           }
         }}
         onContextMenu={(e: KonvaEventObject<PointerEvent>) => {

@@ -2,6 +2,7 @@ import type { ActionName, CanvasBoard } from '../../../types'
 import { actionLabel } from '../../keybinds/actionLabels'
 import type { KeybindResolver } from '../../keybinds/keybindResolver'
 import { Actions } from '../../keybinds/actions'
+import { formatCombo } from '../../keybinds/shortcutHint'
 
 /**
  * The palette is a lens over the existing action system, not a catalogue of its
@@ -9,6 +10,8 @@ import { Actions } from '../../keybinds/actions'
  * `actionLabels`, so a command can only exist here if it already exists as an
  * `ActionName` with something bound to it — there is nothing to keep in sync.
  */
+
+export { formatCombo }
 
 export type PaletteCommand = {
   /** `ActionName` for an action row; `board:<id>` for a board jump. */
@@ -25,36 +28,6 @@ const HIDDEN_ACTIONS = new Set<string>([
   // Listing "open the palette" inside the palette is a dead row.
   Actions.PALETTE_TOGGLE,
 ])
-
-const MODIFIER_LABELS: Record<string, string> = {
-  ctrl: 'Ctrl',
-  meta: 'Cmd',
-  alt: 'Alt',
-  shift: 'Shift',
-}
-
-const KEY_LABELS: Record<string, string> = {
-  arrowup: '↑',
-  arrowdown: '↓',
-  arrowleft: '←',
-  arrowright: '→',
-  ' ': 'Space',
-  space: 'Space',
-  escape: 'Esc',
-  delete: 'Delete',
-  backspace: 'Backspace',
-  enter: 'Enter',
-  pageup: 'PageUp',
-  pagedown: 'PageDown',
-}
-
-/** `ctrl+shift+z` as a person would read it. */
-export function formatCombo(combo: string): string {
-  return combo
-    .split('+')
-    .map((part) => MODIFIER_LABELS[part] ?? KEY_LABELS[part] ?? (part.length === 1 ? part.toUpperCase() : part))
-    .join('+')
-}
 
 /**
  * Every dispatchable action, as palette rows. Order follows registration, which

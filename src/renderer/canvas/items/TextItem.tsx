@@ -6,7 +6,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { preferTextSilhouette } from '../../assets/textDetailPolicy'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress, relicPressMoves } from './relicPointer'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -48,11 +48,8 @@ export function TextItem({ item }: Props): React.ReactElement {
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
-    if (toolMode === 'connect') {
-      handleConnectRelicClick(activeBoardId, item.id)
-      return
-    }
-    if (toolMode !== 'select') return
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
     if (e.evt.shiftKey) {
       useCanvasStore.getState().addToSelection(item.id)
     } else {
@@ -131,7 +128,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         opacity={item.opacity * 0.6}
         fill="#675f54"
         cornerRadius={2}
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
@@ -171,7 +168,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         align={align}
         fill={content ? color : '#675f54'}
         wrap="word"
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
         onDblClick={(e) => {
           e.cancelBubble = true

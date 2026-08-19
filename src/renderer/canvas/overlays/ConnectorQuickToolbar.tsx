@@ -78,8 +78,7 @@ export function ConnectorQuickToolbar(): React.ReactElement | null {
   const remove = () => {
     removeConnection(activeBoardId, conn.id)
     useHistoryStore.getState().push('CONNECTION_DELETE', activeBoardId, conn, { id: conn.id })
-    useUIStore.getState().setActiveConnectionId(null)
-    useUIStore.getState().closePanel('connectionProperties')
+    useUIStore.getState().dismissConnectionInspection()
   }
 
   return (
