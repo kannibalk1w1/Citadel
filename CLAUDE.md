@@ -235,18 +235,11 @@ The canvas-effect subsystem stays gone. There is no `mascotStore`, no
 reintroduce them** — it was a queue threaded through twenty files feeding a store
 nothing drained.
 
-The mascot itself came back as a *choice* (2026-08-25, at the user's request):
-`ui/mascot/Mascot.tsx` offers the original pixel-art tower
-(`assets/CitadelTower.png`, restored from the first build), the drawn rook that
-replaced it, any image the person picks, or none. Each reads the two booleans
-`historyStore` already keeps, so no call site knows a mascot exists. Removing it
-outright was a decision made on everyone's behalf; the fix was to hand it back,
-not to argue.
-
-The tower is black line art on transparency, so `dark.css` inverts it for every
-theme but the light one. It is also the asset the release audit flagged as
-having no provenance on record — that question is still open, and it is a
-licensing one, not a technical one.
+The mascot itself is a choice (2026-08-25): `ui/mascot/Mascot.tsx` offers the
+repo-authored inline SVG citadel, the drawn rook, any image the person picks, or
+none. Each reads the two booleans `historyStore` already keeps, so no call site
+knows a mascot exists. The citadel is intentionally a broad silhouette that
+uses theme tokens and keeps save or recording feedback to its gate.
 
 Feedback is static and direct. A completed or refused action says so in words:
 

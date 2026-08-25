@@ -1,21 +1,14 @@
 // @vitest-environment jsdom
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import React from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CitadelMascot } from './CitadelMascot'
 import { Mascot } from './Mascot'
 import { useUIStore, mascotChoices, mascotLabels } from '../../store/uiStore'
 import { useHistoryStore } from '../../store/historyStore'
 
 const invoke = vi.fn()
 
-/**
- * The pixel-art tower shipped in the first build and was dropped with the rest
- * of `assets/` in the clean-interface pass. It is back as a choice, without the
- * effect queue that got the mascot removed. Which face the rail shows is now
- * the person's decision, including one of their own.
- */
 beforeEach(() => {
   invoke.mockReset().mockResolvedValue({ ok: true })
   Object.assign(window, { ipc: { invoke } })
@@ -65,6 +58,20 @@ describe('Mascot', () => {
     expect(document.querySelector('.citadel-mascot')?.getAttribute('data-state')).toBe('recording')
   })
 
+  it('lights the gate after saving dirty work', () => {
+    vi.useFakeTimers()
+    useHistoryStore.setState({ cursor: 1, savedCursor: 0 })
+    const { container } = render(<Mascot />)
+
+    act(() => { useHistoryStore.setState({ cursor: 1, savedCursor: 1 }) })
+    expect(container.querySelector('.citadel-mascot')?.getAttribute('data-state')).toBe('saved')
+    expect(container.querySelector('[data-part="gate"]')?.getAttribute('fill')).toBe('var(--accent)')
+
+    act(() => { vi.advanceTimersByTime(1600) })
+    expect(container.querySelector('.citadel-mascot')?.getAttribute('data-state')).toBe('rest')
+    vi.useRealTimers()
+  })
+
   it('remembers the choice, so it survives a restart', () => {
     useUIStore.getState().setMascot('rook')
 
@@ -81,15 +88,24 @@ describe('Mascot', () => {
     })
   })
 
-  it('is inverted for the dark themes, or it would be a hole in the panel', () => {
-    // The art is black lines on transparency. 87% of its opaque pixels are
-    // near-black, which on a near-black panel is nothing at all.
-    render(<Mascot />)
-    expect(document.querySelector('img')?.className).toBe('citadel-mascot-tower')
+  it('draws the citadel with theme tokens rather than a raster filter', () => {
+    const { container } = render(<CitadelMascot state="rest" />)
 
-    const css = readFileSync(join(process.cwd(), 'src', 'renderer', 'theme', 'dark.css'), 'utf-8')
-    expect(css).toMatch(/\.citadel-mascot-tower \{\s*filter: invert\(1\);/)
-    expect(css).toMatch(/\[data-theme="light"\] \.citadel-mascot-tower \{\s*filter: none;/)
+    expect(container.querySelector('svg')).toBeTruthy()
+    expect(container.querySelector('img')).toBeNull()
+    expect(container.querySelector('[data-part="tower"]')?.getAttribute('fill')).toBe('var(--text-secondary)')
+    expect(container.querySelector('[data-part="gate"]')?.getAttribute('fill')).toBe('var(--bg-panel)')
+  })
+
+  it('changes only the gate for saved and recording states', () => {
+    const { container, rerender } = render(<CitadelMascot state="saved" />)
+
+    expect(container.querySelector('[data-part="gate"]')?.getAttribute('fill')).toBe('var(--accent)')
+    expect(container.querySelector('[data-part="tower"]')?.getAttribute('fill')).toBe('var(--text-secondary)')
+
+    rerender(<CitadelMascot state="recording" />)
+    expect(container.querySelector('[data-part="gate"]')?.getAttribute('fill')).toBe('var(--accent-danger)')
+    expect(container.querySelector('[data-part="tower"]')?.getAttribute('fill')).toBe('var(--text-secondary)')
   })
 
   it('has a name for every choice it offers', () => {

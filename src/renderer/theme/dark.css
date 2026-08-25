@@ -243,27 +243,3 @@ button[disabled] {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* The mascot acknowledges a save by warming for a moment, then settles. Motion
-   is the only thing reduced-motion takes away — the colour still changes. */
-.citadel-mascot[data-state='saved'] {
-  animation: citadel-mascot-saved 1.6s ease-out both;
-}
-
-@keyframes citadel-mascot-saved {
-  0%   { transform: translateY(1px) scale(0.96); }
-  35%  { transform: translateY(0) scale(1.04); }
-  100% { transform: translateY(0) scale(1); }
-}
-
-/* The Citadel tower is black line art on transparency, drawn for a pale
-   background. Every theme but the light one is near-black, so it is inverted
-   there: the structure reads white and the highlights read as depth, which is
-   how the art was meant to be seen. */
-.citadel-mascot-tower {
-  filter: invert(1);
-}
-
-[data-theme="light"] .citadel-mascot-tower {
-  filter: none;
-}
