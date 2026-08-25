@@ -6,7 +6,8 @@ import {
 import type { FontRole, UserFontsResult, UserSnippetsResult } from '../../../types/appearance'
 import { refreshUserFonts, refreshUserSnippets } from '../../theme/userStyles'
 import { mascotChoices, mascotLabels, useUIStore } from '../../store/uiStore'
-import { Mascot } from '../mascot/Mascot'
+import { CitadelMascot } from '../mascot/CitadelMascot'
+import { MascotTower } from '../mascot/MascotTower'
 import { inscribe } from '../toasts/inscriptionToastStore'
 
 /**
@@ -111,16 +112,24 @@ export function AppearanceSettings(): React.ReactElement {
             onClick={() => (choice === 'custom' ? chooseMascotImage() : setMascot(choice))}
             style={{
               ...buttonStyle,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-3)',
               borderColor: mascot === choice ? 'var(--accent)' : 'var(--border)',
               color: mascot === choice ? 'var(--text-primary)' : 'var(--text-secondary)',
             }}
           >
+            {/* Each button carries its own artwork. Two of these are towers, and
+                a word is a poor way to tell them apart. Hidden from the
+                accessibility tree: MascotTower is a labelled image in its own
+                right, and its label would otherwise become the button's name. */}
+            <span aria-hidden="true" style={{ display: 'grid', placeItems: 'center' }}>
+              {choice === 'tower' ? <CitadelMascot size={14} /> : null}
+              {choice === 'rook' ? <MascotTower size={14} /> : null}
+            </span>
             {mascotLabels[choice]}
           </button>
         ))}
-        <span style={{ display: 'grid', placeItems: 'center', width: 28, height: 32 }}>
-          <Mascot size={22} />
-        </span>
       </div>
       <p style={{ ...noteStyle, marginBottom: 16 }}>
         Any image works for your own: it is read from where it sits, so keep it somewhere it will stay.

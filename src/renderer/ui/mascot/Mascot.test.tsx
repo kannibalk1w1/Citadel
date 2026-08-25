@@ -4,7 +4,7 @@ import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CitadelMascot } from './CitadelMascot'
 import { Mascot } from './Mascot'
-import { useUIStore, mascotChoices, mascotLabels } from '../../store/uiStore'
+import { useUIStore, mascotChoices, mascotLabels, normalizeMascotChoice } from '../../store/uiStore'
 import { useHistoryStore } from '../../store/historyStore'
 
 const invoke = vi.fn()
@@ -12,7 +12,7 @@ const invoke = vi.fn()
 beforeEach(() => {
   invoke.mockReset().mockResolvedValue({ ok: true })
   Object.assign(window, { ipc: { invoke } })
-  useUIStore.setState({ mascot: 'citadel', mascotImage: null })
+  useUIStore.setState({ mascot: 'tower', mascotImage: null })
   useHistoryStore.setState({ isRecording: false })
 })
 
@@ -26,7 +26,7 @@ describe('Mascot', () => {
   })
 
   it('shows each built-in face without any effect plumbing behind it', () => {
-    for (const choice of ['citadel', 'rook'] as const) {
+    for (const choice of ['tower', 'rook'] as const) {
       cleanup()
       useUIStore.setState({ mascot: choice })
       render(<Mascot />)
@@ -51,7 +51,7 @@ describe('Mascot', () => {
   })
 
   it('says a recording is running, which is the whole job it has', () => {
-    useUIStore.setState({ mascot: 'citadel' })
+    useUIStore.setState({ mascot: 'tower' })
     useHistoryStore.setState({ isRecording: true })
     render(<Mascot />)
 
@@ -106,6 +106,35 @@ describe('Mascot', () => {
     rerender(<CitadelMascot state="recording" />)
     expect(container.querySelector('[data-part="gate"]')?.getAttribute('fill')).toBe('var(--accent-danger)')
     expect(container.querySelector('[data-part="tower"]')?.getAttribute('fill')).toBe('var(--text-secondary)')
+  })
+
+  it('stores the same word the button shows, so a settings file cannot lie', () => {
+    // The tower was briefly stored as 'citadel' while its button said "Tower",
+    // and 'tower' meant the rook. A saved setting then selected the other
+    // artwork, which is how this was found.
+    for (const choice of mascotChoices) {
+      if (choice === 'custom' || choice === 'none') continue
+      expect(mascotLabels[choice].toLowerCase()).toBe(choice)
+    }
+  })
+
+  it('lands a legacy setting on artwork, never on a blank rail', () => {
+    // 'keep' is the one value left from an unreleased build.
+    expect(normalizeMascotChoice('keep')).toBe('tower')
+    expect(normalizeMascotChoice('tower')).toBe('tower')
+    expect(normalizeMascotChoice('rook')).toBe('rook')
+    // Anything unrecognised is not guessed at: the caller keeps the default.
+    expect(normalizeMascotChoice('citadel')).toBeNull()
+    expect(normalizeMascotChoice(42)).toBeNull()
+    expect(normalizeMascotChoice(undefined)).toBeNull()
+  })
+
+  it('shows the redrawn tower for the default choice, not the rook', () => {
+    useUIStore.setState({ mascot: 'tower' })
+    const { container } = render(<Mascot />)
+
+    // data-part is CitadelMascot's own; MascotTower has no such node.
+    expect(container.querySelector('[data-part="tower"]')).toBeTruthy()
   })
 
   it('has a name for every choice it offers', () => {

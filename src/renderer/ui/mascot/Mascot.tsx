@@ -61,7 +61,8 @@ export function Mascot({ size = 26 }: Props): React.ReactElement | null {
   if (mascot === 'rook') return <MascotTower size={size} />
 
   // The tower, and what 'custom' shows before an image is chosen: a fallback,
-  // not a gap where the badge should be.
+  // not a gap where the badge should be. It is the default, so an unrecognised
+  // saved value lands here rather than on a blank rail.
   return (
     <div
       className="citadel-mascot"

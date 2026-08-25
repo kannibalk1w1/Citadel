@@ -61,8 +61,8 @@ import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
 import {
-  isMascotChoice,
   isThemePreset,
+  normalizeMascotChoice,
   normalizeCanvasBackground,
   normalizeSavedThemePalettes,
   normalizeThemeOverrides,
@@ -240,9 +240,9 @@ export default function App(): React.ReactElement {
       nextState.cursorPack = normalizeCursorPack(values['ui.cursorPack'])
       if (typeof values['ui.boardLoadVisible'] === 'boolean') nextState.boardLoadVisible = values['ui.boardLoadVisible']
       // 'ui.mascotVisible' predates the choice of mascots. Someone who had
-      // switched the rook off meant "none", and should not have it return.
-      const savedMascot = values['ui.mascot'] === 'tower' ? 'rook' : values['ui.mascot'] === 'keep' ? 'citadel' : values['ui.mascot']
-      if (isMascotChoice(savedMascot)) nextState.mascot = savedMascot
+      // switched the mascot off meant "none", and should not have it return.
+      const savedMascot = normalizeMascotChoice(values['ui.mascot'])
+      if (savedMascot) nextState.mascot = savedMascot
       else if (values['ui.mascotVisible'] === false) nextState.mascot = 'none'
       if (typeof values['ui.mascotImage'] === 'string') nextState.mascotImage = values['ui.mascotImage']
       const theme = values['ui.theme']

@@ -32,7 +32,7 @@ beforeEach(() => {
     return { ok: true }
   })
   Object.assign(window, { ipc: { invoke } })
-  useUIStore.setState({ mascot: 'citadel', mascotImage: null })
+  useUIStore.setState({ mascot: 'tower', mascotImage: null })
 })
 
 afterEach(() => cleanup())
@@ -100,6 +100,15 @@ describe('the customisation panel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Rook' }))
 
     expect(useUIStore.getState().mascot).toBe('rook')
+  })
+
+  it('draws each mascot on its own button, because two of them are towers', async () => {
+    render(<AppearanceSettings />)
+
+    // A word is a poor way to tell a keep from a chess rook, and the label was
+    // the only thing distinguishing them when the stored values drifted.
+    expect(screen.getByRole('button', { name: 'Tower' }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Rook' }).querySelector('svg')).toBeTruthy()
   })
 
   it('asks for a file when the mascot is a person’s own image', async () => {

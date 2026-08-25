@@ -33,11 +33,11 @@ export const themePresetLabels: Record<ThemePreset, string> = {
  * third is any image a person points at. The keep came back as a choice because
  * removing it outright was a decision made on everyone's behalf.
  */
-export const mascotChoices = ['citadel', 'rook', 'custom', 'none'] as const
+export const mascotChoices = ['tower', 'rook', 'custom', 'none'] as const
 export type MascotChoice = typeof mascotChoices[number]
 
 export const mascotLabels: Record<MascotChoice, string> = {
-  citadel: 'Tower',
+  tower: 'Tower',
   rook: 'Rook',
   custom: 'Your own image',
   none: 'None',
@@ -46,6 +46,23 @@ export const mascotLabels: Record<MascotChoice, string> = {
 export const isMascotChoice = (value: unknown): value is MascotChoice => (
   typeof value === 'string' && (mascotChoices as readonly string[]).includes(value)
 )
+
+/**
+ * What a saved setting means now.
+ *
+ * The stored value and the label a person reads have to be the same word, or a
+ * settings file says one thing and the app draws another. They briefly did not:
+ * the tower was stored as `citadel` while the button said "Tower", and `tower`
+ * was the *rook*. Anyone reasoning from either end got the wrong artwork.
+ *
+ * `keep` is the one legacy value left, from a single unreleased build. It lands
+ * on the tower, which is the nearest thing to what it drew. Anything
+ * unrecognised is not guessed at: it falls through to the default.
+ */
+export function normalizeMascotChoice(value: unknown): MascotChoice | null {
+  if (value === 'keep') return 'tower'
+  return isMascotChoice(value) ? value : null
+}
 
 export const themeOverrideKeys = ['canvas', 'ui', 'panel', 'text', 'accent'] as const
 export type ThemeOverrideKey = typeof themeOverrideKeys[number]
@@ -538,7 +555,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   toggleMirrorView: () => set((s) => ({ mirrorView: !s.mirrorView })),
   clearVisionChecks: () => set({ visionMode: 'none', mirrorView: false }),
 
-  mascot: 'citadel',
+  mascot: 'tower',
   mascotImage: null,
   setMascot: (mascot) => {
     set({ mascot })
