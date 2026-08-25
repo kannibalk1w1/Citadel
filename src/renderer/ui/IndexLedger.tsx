@@ -27,9 +27,14 @@ export function IndexLedger(): React.ReactElement | null {
   const [sortKey, setSortKey] = useState<LedgerSortKey>('chamber')
   const [direction, setDirection] = useState<LedgerSortDirection>('asc')
 
+  // Building the rows walks every item and connection in every board, so it is
+  // keyed on the boards alone. Typing in the filter box and flipping a sort
+  // column re-run only the passes that those inputs actually change.
+  const allRows = useMemo(() => (isOpen ? buildLedgerRows(boards) : []), [isOpen, boards])
+  const filteredRows = useMemo(() => filterLedgerRows(allRows, filter), [allRows, filter])
   const rows = useMemo(
-    () => (isOpen ? sortLedgerRows(filterLedgerRows(buildLedgerRows(boards), filter), sortKey, direction) : []),
-    [isOpen, boards, filter, sortKey, direction],
+    () => sortLedgerRows(filteredRows, sortKey, direction),
+    [filteredRows, sortKey, direction],
   )
 
   if (!isOpen) return null
