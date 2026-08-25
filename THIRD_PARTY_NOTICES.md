@@ -139,6 +139,6 @@ repository:
   `scripts/buildShowcase.mjs`.
 
 The three assets previously listed here are gone: `arcane-stone-canvas-tile.png`
-(the canvas moved to a procedural dot grid), `CitadelTower.png` (the mascot is
-now drawn as inline SVG), and the placeholder `resources/icon.ico` replaced
+(the canvas moved to a procedural dot grid), `CitadelTower.png` (replaced by
+repo-authored inline SVG), and the placeholder `resources/icon.ico` replaced
 above.
