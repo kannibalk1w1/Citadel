@@ -3,15 +3,21 @@ import { nanoid } from 'nanoid'
 import { useUIStore } from '../store/uiStore'
 import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
-import type { CanvasItem, ToolMode } from '../../types'
+import type { ActionName, CanvasItem, ToolMode } from '../../types'
 import { Actions } from '../keybinds/actions'
 import { resolver } from '../keybinds/keybindResolver'
+import { shortcutHint } from '../keybinds/shortcutHint'
 import { ToolIcon, type ToolIconName } from './icons/ToolIcon'
 import { activeArchiveRailWidth } from './shell/shellModel'
 import { inscribe } from './toasts/inscriptionToastStore'
 import { startSourceCapture } from './sourceCapture'
 
-type ToolDef = { mode: ToolMode; label: string; key: string; icon: ToolIconName }
+type ToolDef = { mode: ToolMode; label: string; action: ActionName | null; icon: ToolIconName }
+
+/** `Select (V)` — the key half comes from the keybind map, never from here. */
+function toolTitle({ label, action }: ToolDef): string {
+  return action ? `${label}${shortcutHint(action)}` : label
+}
 
 function contextRailWidth(): number {
   const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
@@ -19,20 +25,20 @@ function contextRailWidth(): number {
 }
 
 const PRIMARY_TOOLS: ToolDef[] = [
-  { mode: 'select', label: 'Select', key: 'V', icon: 'select' },
-  { mode: 'pan', label: 'Pan', key: 'H', icon: 'pan' },
-  { mode: 'lasso', label: 'Lasso', key: 'L', icon: 'lasso' },
-  { mode: 'connect', label: 'Connect', key: 'C', icon: 'connect' },
-  { mode: 'text', label: 'Text', key: 'T', icon: 'text' },
-  { mode: 'code', label: 'Code snippet', key: 'D', icon: 'code' },
-  { mode: 'sticky', label: 'Note', key: 'N', icon: 'sticky' },
+  { mode: 'select', label: 'Select', action: Actions.TOOL_SELECT, icon: 'select' },
+  { mode: 'pan', label: 'Pan', action: Actions.TOOL_PAN, icon: 'pan' },
+  { mode: 'lasso', label: 'Lasso', action: Actions.TOOL_LASSO, icon: 'lasso' },
+  { mode: 'connect', label: 'Connect', action: Actions.TOOL_CONNECT, icon: 'connect' },
+  { mode: 'text', label: 'Text', action: Actions.TOOL_TEXT, icon: 'text' },
+  { mode: 'code', label: 'Code snippet', action: Actions.TOOL_CODE, icon: 'code' },
+  { mode: 'sticky', label: 'Note', action: Actions.TOOL_STICKY, icon: 'sticky' },
 ]
 
 const SPECIALIST_TOOLS: ToolDef[] = [
-  { mode: 'link', label: 'Link', key: 'K', icon: 'link' },
-  { mode: 'swatch', label: 'Swatch', key: 'W', icon: 'swatch' },
-  { mode: 'tag', label: 'Tag', key: 'G', icon: 'tag' },
-  { mode: 'comparison' as ToolMode, label: 'Comparison', key: 'P', icon: 'comparison' },
+  { mode: 'link', label: 'Link', action: Actions.TOOL_LINK, icon: 'link' },
+  { mode: 'swatch', label: 'Swatch', action: Actions.TOOL_SWATCH, icon: 'swatch' },
+  { mode: 'tag', label: 'Tag', action: Actions.TOOL_TAG, icon: 'tag' },
+  { mode: 'comparison' as ToolMode, label: 'Comparison', action: Actions.TOOL_COMPARISON, icon: 'comparison' },
 ]
 
 export function Toolbar(): React.ReactElement {
@@ -242,14 +248,16 @@ export function Toolbar(): React.ReactElement {
         boxShadow: 'var(--shadow-md)',
       }}
     >
-      {PRIMARY_TOOLS.map(({ mode, label, key, icon }) => {
+      {PRIMARY_TOOLS.map((tool) => {
+        const { mode, icon } = tool
         const isMergeMode = mode === 'comparison' && canMergeToCompare
+        const title = isMergeMode ? 'Merge to Compare item' : toolTitle(tool)
         return (
         <button
           key={mode}
           type="button"
-          title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
-          aria-label={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+          title={title}
+          aria-label={title}
           aria-pressed={toolMode === mode}
           onClick={() => {
             if (isMergeMode) mergeSelectedToCompare()
@@ -303,13 +311,15 @@ export function Toolbar(): React.ReactElement {
 
         {moreOpen && (
           <div className="citadel-toolbar-overflow-menu">
-            {SPECIALIST_TOOLS.map(({ mode, label, key, icon }) => {
+            {SPECIALIST_TOOLS.map((tool) => {
+              const { mode, icon } = tool
               const isMergeMode = mode === 'comparison' && canMergeToCompare
+              const title = isMergeMode ? 'Merge to Compare item' : toolTitle(tool)
               return (
                 <button
                   key={mode}
-                  title={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
-                  aria-label={isMergeMode ? 'Merge to Compare item' : `${label} (${key})`}
+                  title={title}
+                  aria-label={title}
                   aria-pressed={toolMode === mode}
                   onClick={() => {
                     if (isMergeMode) mergeSelectedToCompare()
@@ -414,8 +424,8 @@ export function Toolbar(): React.ReactElement {
       )}
 
       <button
-        title={`Snap to Grid (Ctrl+Shift+G) — ${snapToGrid ? 'On' : 'Off'}`}
-        aria-label={`Snap to Grid (Ctrl+Shift+G) — ${snapToGrid ? 'On' : 'Off'}`}
+        title={`Snap to Grid${shortcutHint(Actions.TOGGLE_SNAP)} — ${snapToGrid ? 'On' : 'Off'}`}
+        aria-label={`Snap to Grid${shortcutHint(Actions.TOGGLE_SNAP)} — ${snapToGrid ? 'On' : 'Off'}`}
         aria-pressed={snapToGrid}
         onClick={toggleSnapToGrid}
         style={{
@@ -436,8 +446,8 @@ export function Toolbar(): React.ReactElement {
       </button>
 
       <button
-        title="Auto-arrange selection (Ctrl+Shift+A)"
-        aria-label="Auto-arrange selection (Ctrl+Shift+A)"
+        title={`Auto-arrange selection${shortcutHint(Actions.AUTO_ARRANGE)}`}
+        aria-label={`Auto-arrange selection${shortcutHint(Actions.AUTO_ARRANGE)}`}
         onClick={() => resolver.dispatch(Actions.AUTO_ARRANGE)}
         disabled={!canAutoArrange}
         style={{
@@ -461,8 +471,8 @@ export function Toolbar(): React.ReactElement {
       <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
-        title={isRecording ? 'Stop Recording' : 'Start Recording (R)'}
-        aria-label={isRecording ? 'Stop Recording' : 'Start Recording (R)'}
+        title={isRecording ? 'Stop recording' : `Record the edits you make, to replay later${shortcutHint(Actions.RECORD_TOGGLE)}`}
+        aria-label={isRecording ? 'Stop recording' : `Record the edits you make, to replay later${shortcutHint(Actions.RECORD_TOGGLE)}`}
         aria-pressed={isRecording}
         onClick={handleRecord}
         style={{
@@ -514,8 +524,8 @@ export function Toolbar(): React.ReactElement {
       <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
-        title="Presentation Mode (F5)"
-        aria-label="Presentation Mode (F5)"
+        title={`Presentation Mode${shortcutHint(Actions.PRESENTATION_TOGGLE)}`}
+        aria-label={`Presentation Mode${shortcutHint(Actions.PRESENTATION_TOGGLE)}`}
         onClick={() => resolver.dispatch(Actions.PRESENTATION_TOGGLE)}
         style={{
           width: 36,

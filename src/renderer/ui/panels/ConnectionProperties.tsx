@@ -30,8 +30,7 @@ export function ConnectionProperties(): React.ReactElement | null {
           title="Close"
           aria-label="Close"
           onClick={() => {
-            useUIStore.getState().setActiveConnectionId(null)
-            useUIStore.getState().closePanel('connectionProperties')
+            useUIStore.getState().dismissConnectionInspection()
           }}
           style={{ ...iconButtonStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >

@@ -8,6 +8,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { useSourceCaptureRegionStore } from '../../ui/sourceCaptureRegionStore'
 import { ImageItem } from './ImageItem'
+import { SELECTION_ANCHOR_SIZE } from './selectionTransformerStyle'
 
 const imageState = vi.hoisted(() => ({
   image: { width: 320, height: 180, naturalWidth: 320, naturalHeight: 180 } as HTMLImageElement | null,
@@ -121,7 +122,7 @@ describe('ImageItem hit testing', () => {
 
     expect(() => rerender(<ImageItem item={imageItem} />)).not.toThrow()
     expect(screen.getByTestId('konva-image')).toBeTruthy()
-    expect(screen.getByTestId('image-transformer').getAttribute('data-anchor-size')).toBe('10')
+    expect(screen.getByTestId('image-transformer').getAttribute('data-anchor-size')).toBe(String(SELECTION_ANCHOR_SIZE))
   })
 
   it('returns a directly dragged region even while the source image is importing', async () => {

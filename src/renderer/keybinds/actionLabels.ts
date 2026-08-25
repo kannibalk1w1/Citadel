@@ -22,6 +22,7 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.TOOL_LINK]: 'Link tool',
   [Actions.TOOL_TAG]: 'Tag tool',
   [Actions.TOOL_SWATCH]: 'Swatch tool',
+  [Actions.TOOL_COMPARISON]: 'Comparison tool',
 
   [Actions.UNDO]: 'Undo',
   [Actions.REDO]: 'Redo',

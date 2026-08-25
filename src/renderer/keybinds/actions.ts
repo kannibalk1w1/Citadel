@@ -13,6 +13,7 @@ export const Actions = {
   TOOL_LINK: 'tool:link',
   TOOL_TAG: 'tool:tag',
   TOOL_SWATCH: 'tool:swatch',
+  TOOL_COMPARISON: 'tool:comparison',
 
   // ── Command palette ───────────────────────────────────────────────────────
   PALETTE_TOGGLE: 'palette:toggle',

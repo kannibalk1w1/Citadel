@@ -79,8 +79,6 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
   const activeConnectionId = useUIStore((s) => s.activeConnectionId)
   const bindingPulse = useUIStore((s) => s.bindingPulse)
   const setActiveConnectionId = useUIStore((s) => s.setActiveConnectionId)
-  const openPanel = useUIStore((s) => s.openPanel)
-  const closePanel = useUIStore((s) => s.closePanel)
   const clearBindingPulse = useUIStore((s) => s.clearBindingPulse)
   const [pulseNow, setPulseNow] = React.useState(() => Date.now())
   const reducedMotion = prefersReducedMotion()
@@ -104,10 +102,15 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
       })
     : null
   const activateConnection = (id: string, isActive: boolean) => {
-    const next = isActive ? null : id
-    setActiveConnectionId(next)
-    if (next) openPanel('connectionProperties')
-    else closePanel('connectionProperties')
+    if (isActive) {
+      useUIStore.getState().dismissConnectionInspection()
+      return
+    }
+    // Both inspectors sit in the same slot, so a picked connection evicts any
+    // selected relics rather than opening a second panel on top of theirs.
+    useCanvasStore.getState().clearSelection()
+    setActiveConnectionId(id)
+    useUIStore.getState().openPanel('connectionProperties')
   }
 
   const editLabel = (conn: Connection) => {

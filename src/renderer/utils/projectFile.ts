@@ -9,6 +9,7 @@ import { parseProjectFile } from './projectSchema'
 import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { captureBoardThumbnail } from '../export/exportCanvas'
+import { isBrowserDemo } from '../platform/runtime'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -319,7 +320,9 @@ export async function openShowcase(): Promise<boolean> {
     resetSaveActivity()
     resetRecoveryAutosaveCache()
     notifyProjectPathChanged()
-    inscribe('Example project opened — save a copy to keep your changes')
+    inscribe(isBrowserDemo
+      ? 'Example project opened — changes reset when you reload'
+      : 'Example project opened — save a copy to keep your changes')
     return true
   } catch (error) {
     surfaceOpenFailure(error)

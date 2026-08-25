@@ -67,6 +67,7 @@ src/
     transcription.ts      ← decoded samples → transcript, via whisper.cpp
     transcriptionModels.ts ← model download, digest check, and which one is in use
     previewCache.ts, settingsStore.ts, windowModes.ts, clickThroughRegion.ts
+    stopWindow.ts         ← the click-through Stop control, its own BrowserWindow
   preload/
     index.ts              ← the only bridge; exposes window.ipc
   renderer/
@@ -189,7 +190,7 @@ Actions are named strings defined in `keybinds/actions.ts`. Default bindings in 
 ### Tool modes gate all canvas interactions
 Active tool mode lives in `uiStore.toolMode`. Never let interactions bleed between modes.
 ```ts
-type ToolMode = 'select' | 'connect' | 'pan' | 'lasso' | 'text' | 'sticky' | 'link' | 'tag' | 'swatch' | 'record' | 'comparison' | 'code'
+type ToolMode = 'select' | 'connect' | 'pan' | 'lasso' | 'text' | 'sticky' | 'link' | 'tag' | 'swatch' | 'comparison' | 'code'
 ```
 
 ### Video, YouTube, 3D, and Audio are DOM layer — not Konva
@@ -371,7 +372,7 @@ and fails if a `var()` string reaches a paint attribute.
 | `cache:previewStats` | r→m | → `{ count, bytes }` across `preview-cache` + legacy `pdf-cache` |
 | `cache:clearUnusedPreviews` | r→m | `{ preservePaths, assetPaths }` — keeps referenced previews + live-asset thumbnails |
 | `zoom:set` | r→m | `{ factor: number }` — clamps to [0.75, 1.5], applies `setZoomFactor`, persists `ui.zoomFactor` |
-| `window:setMode` | r→m | `{ alwaysOnTop?, opacity?, clickThrough? }` → `{ ok, mode }` — click-through implies always-on-top; opacity floors at 0.3; only the first two persist |
+| `window:setMode` | r→m | `{ alwaysOnTop?, opacity?, clickThrough? }` → `{ ok, mode }` — click-through implies always-on-top; opacity floors at 0.3; only the first two persist. Click-through opens the Stop control as a separate always-on-top window (`stopWindow.ts`); the main window is simply fully click-through |
 
 ---
 

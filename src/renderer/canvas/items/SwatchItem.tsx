@@ -5,7 +5,7 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress, relicPressMoves } from './relicPointer'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -43,11 +43,8 @@ export function SwatchItem({ item }: Props): React.ReactElement {
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
-    if (toolMode === 'connect') {
-      handleConnectRelicClick(activeBoardId, item.id)
-      return
-    }
-    if (toolMode !== 'select') return
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
     if (e.evt.shiftKey) {
       useCanvasStore.getState().addToSelection(item.id)
     } else {
@@ -118,7 +115,7 @@ export function SwatchItem({ item }: Props): React.ReactElement {
         x={item.x} y={item.y}
         width={item.width} height={item.height}
         rotation={item.rotation}
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.evt.preventDefault()

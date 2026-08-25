@@ -11,7 +11,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { pathToUrl } from '../../utils/pathToUrl'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress, relicPressMoves } from './relicPointer'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -176,26 +176,8 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
       return
     }
 
-    if (toolMode === 'connect') {
-      handleConnectRelicClick(activeBoardId, item.id)
-      return
-    }
-
-    if (toolMode === 'link') {
-      if (item.link) {
-        const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-        ipc.invoke('shell:openURL', { url: item.link })
-      }
-      return
-    }
-
-    if (toolMode === 'tag') {
-      setSelection([item.id])
-      useUIStore.getState().openPanel('tagSearch')
-      return
-    }
-
-    if (toolMode !== 'select') return
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
     if (e.evt.shiftKey) {
       useCanvasStore.getState().addToSelection(item.id)
     } else {
@@ -346,7 +328,7 @@ export function ImageItem({ item }: Props): React.ReactElement | null {
         width={item.width}
         height={item.height}
         rotation={item.rotation}
-        draggable={toolMode === 'select' && !item.locked && !isRegionSelectionSource}
+        draggable={relicPressMoves(toolMode) && !item.locked && !isRegionSelectionSource}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.evt.preventDefault()

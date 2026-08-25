@@ -4,6 +4,8 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { inscribe } from '../../ui/toasts/inscriptionToastStore'
 import { DOMItem } from './DOMItem'
+import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
+import { useUIStore } from '../../store/uiStore'
 import { CODE_CARD_LAYOUT, CODE_LANGUAGES, codeLanguageLabel, gutterWidth, normalizeCodeLanguage, tokenizeSnippet, type TokenKind } from './codeSnippet'
 import { preferCodeSilhouette } from '../../assets/textDetailPolicy'
 
@@ -30,6 +32,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
 
   const scale = useCanvasStore((s) => s.viewport().scale)
   const isSelected = useCanvasStore((s) => s.selectedIds.includes(item.id))
+  const activeBoardId = useCanvasStore((s) => s.activeBoardId)
 
   const code = typeof item.meta?.code === 'string' ? item.meta.code : ''
   const language = normalizeCodeLanguage(item.meta?.language)
@@ -101,6 +104,18 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
     }
   }
 
+  // A card is a relic like any other: the connect tool owns a press on it, and
+  // every other tool selects it and hands the canvas back to Select. Code was
+  // the one item type that never checked, so a thread could neither start nor
+  // land on a snippet — the click just selected it and the connection was lost.
+  const handleCardClick = (event: React.MouseEvent): void => {
+    event.stopPropagation()
+    const { toolMode } = useUIStore.getState()
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
+    useCanvasStore.getState().setSelection([item.id])
+  }
+
   const gutter = gutterWidth(lines.length)
 
   // Far zoom: a constant handful of nodes instead of one span per token. It
@@ -112,7 +127,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
       <DOMItem
         item={item}
         editableFrame
-        onClick={() => useCanvasStore.getState().setSelection([item.id])}
+        onClick={handleCardClick}
         style={{ borderRadius: 'var(--radius-md)' }}
       >
         <section
@@ -147,7 +162,7 @@ export function CodeItem({ item, domOnly = false }: Props): React.ReactElement |
     <DOMItem
       item={item}
       editableFrame
-      onClick={() => useCanvasStore.getState().setSelection([item.id])}
+      onClick={handleCardClick}
       style={{ borderRadius: 'var(--radius-md)' }}
     >
       <section

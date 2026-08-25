@@ -123,6 +123,41 @@ describe('DOMItem dragging', () => {
     expect(draggedItem().width).toBe(332)
     expect(draggedItem().height).toBe(188)
   })
+
+  // Every DOM-layer relic hosts something that eats clicks: a YouTube <webview>
+  // is a separate frame and never bubbles at all, and video and audio would
+  // start playing on the way past. While a thread is being drawn the card has
+  // to be one target for it.
+  describe('while the connect tool is active', () => {
+    afterEach(() => { useUIStore.setState({ toolMode: 'select' }) })
+
+    const connectTarget = (): HTMLElement | null => document.querySelector('[data-connect-target="true"]')
+
+    it('takes the press for the card instead of the content underneath', () => {
+      useUIStore.setState({ toolMode: 'connect' })
+      const onClick = vi.fn()
+      const onPlay = vi.fn()
+      render(
+        <DOMItem item={dragged} onClick={onClick}>
+          <button type="button" onClick={onPlay}>Play</button>
+        </DOMItem>
+      )
+
+      const target = connectTarget()
+      expect(target).not.toBeNull()
+      fireEvent.click(target!)
+
+      expect(onClick).toHaveBeenCalledTimes(1)
+      expect(onPlay).not.toHaveBeenCalled()
+    })
+
+    it('is not in the way under any other tool', () => {
+      useUIStore.setState({ toolMode: 'select' })
+      render(<DOMItem item={dragged}><div /></DOMItem>)
+
+      expect(connectTarget()).toBeNull()
+    })
+  })
 })
 
 describe('DOMItem context menu', () => {

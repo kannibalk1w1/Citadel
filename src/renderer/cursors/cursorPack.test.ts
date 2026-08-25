@@ -134,8 +134,8 @@ describe('cursorPackCss', () => {
   })
 
   it('falls back to the default cursor for a slot with no standard of its own', () => {
-    const custom = normalizeCursorPack(pack({ cursors: { record: image() } }))!
+    const custom = normalizeCursorPack(pack({ cursors: { tag: image() } }))!
 
-    expect(cursorPackCss(custom, standard).record).toBe(`url("${image()}"), default`)
+    expect(cursorPackCss(custom, standard).tag).toBe(`url("${image()}"), default`)
   })
 })

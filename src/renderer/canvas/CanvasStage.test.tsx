@@ -9,8 +9,15 @@ import { useUIStore } from '../store/uiStore'
 import { CanvasStage } from './CanvasStage'
 
 vi.mock('react-konva', () => ({
-  Stage: React.forwardRef<HTMLDivElement, { children: React.ReactNode }>(function Stage({ children }, ref) {
-    return <div ref={ref} data-testid="konva-stage">{children}</div>
+  // The ref stands in for a Konva.Stage, not a DOM node: overlays attach
+  // namespaced Konva listeners to it, so a bare <div> ref would throw.
+  Stage: React.forwardRef<unknown, { children: React.ReactNode }>(function Stage({ children }, ref) {
+    React.useImperativeHandle(ref, () => ({
+      on: () => {},
+      off: () => {},
+      getPointerPosition: () => ({ x: 0, y: 0 }),
+    }))
+    return <div data-testid="konva-stage">{children}</div>
   }),
   Layer: ({ children }: { children: React.ReactNode }) => <div data-testid="konva-layer">{children}</div>,
 }))

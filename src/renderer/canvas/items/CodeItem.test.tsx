@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { useUIStore } from '../../store/uiStore'
 import { CodeItem } from './CodeItem'
 
 // Records the props the card hands its wrapper, so the far-zoom branch can be
@@ -227,5 +228,61 @@ describe('changing the language from the card', () => {
     fireEvent.change(screen.getByLabelText('Snippet language'), { target: { value: 'typescript' } })
 
     expect(useHistoryStore.getState().events.length).toBe(before)
+  })
+
+  // Code was the one item type whose click handler never checked the connect
+  // tool, so a thread could neither start nor land on a snippet — the press
+  // just selected the card and the connection was silently lost.
+  describe('the connect tool', () => {
+    afterEach(() => {
+      useUIStore.setState({ toolMode: 'select', connectFromId: null })
+    })
+
+    const clickCard = (): void => {
+      const onClick = domItemProps[0].onClick as (e: { stopPropagation: () => void }) => void
+      onClick({ stopPropagation: () => {} })
+    }
+
+    it('arms a card as the start of a thread', () => {
+      useUIStore.setState({ toolMode: 'connect', connectFromId: null })
+      renderCard()
+
+      clickCard()
+
+      expect(useUIStore.getState().connectFromId).toBe('code-1')
+      expect(useCanvasStore.getState().selectedIds).not.toContain('code-1')
+    })
+
+    it('lands a thread already in flight on the card', () => {
+      useUIStore.setState({ toolMode: 'connect', connectFromId: 'other-relic' })
+      renderCard()
+
+      clickCard()
+
+      const connection = useCanvasStore.getState().connections().at(-1)
+      expect(connection?.fromId).toBe('other-relic')
+      expect(connection?.toId).toBe('code-1')
+      expect(useHistoryStore.getState().events.at(-1)?.type).toBe('CONNECTION_ADD')
+    })
+
+    it('reaches the far-zoom card too, which is the same card', () => {
+      useUIStore.setState({ toolMode: 'connect', connectFromId: null })
+      setViewport(FAR_ZOOM)
+      render(<CodeItem item={item} domOnly />)
+
+      clickCard()
+
+      expect(useUIStore.getState().connectFromId).toBe('code-1')
+    })
+
+    it('still just selects the card under every other tool', () => {
+      useUIStore.setState({ toolMode: 'select', connectFromId: null })
+      renderCard()
+
+      clickCard()
+
+      expect(useUIStore.getState().connectFromId).toBeNull()
+      expect(useCanvasStore.getState().selectedIds).toContain('code-1')
+    })
   })
 })

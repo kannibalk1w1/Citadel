@@ -48,5 +48,16 @@ export default defineConfig(({ mode }) => ({
     css: {
       postcss: './postcss.config.js',
     },
+    build: {
+      rollupOptions: {
+        // Two documents: the app, and the standalone Stop control shown while
+        // click-through is on. The latter is its own window because a window
+        // that ignores the mouse cannot keep one patch of itself clickable.
+        input: {
+          index: resolve('src/renderer/index.html'),
+          stop: resolve('src/renderer/stop.html'),
+        },
+      },
+    },
   },
 }))

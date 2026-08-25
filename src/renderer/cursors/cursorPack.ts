@@ -19,7 +19,7 @@
  */
 export const CURSOR_SLOTS = [
   'default', 'select', 'pan', 'connect', 'lasso',
-  'text', 'code', 'sticky', 'swatch', 'comparison', 'link', 'tag', 'record',
+  'text', 'code', 'sticky', 'swatch', 'comparison', 'link', 'tag',
 ] as const
 
 export type CursorSlot = (typeof CURSOR_SLOTS)[number]

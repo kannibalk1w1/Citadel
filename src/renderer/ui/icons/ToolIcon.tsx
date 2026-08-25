@@ -123,14 +123,15 @@ function iconPaths(name: ToolIconName): React.ReactNode {
     case 'select':
       return <path d="M7 4 L17 12 L12.5 13.5 L10 20 L7 4 Z" />
     case 'pan':
+      // The open hand every canvas tool uses for pan, so it reads without a
+      // tooltip. The four-way arrow it replaced says "move this", not "move
+      // the view", and the pan cursor has always been a hand anyway.
       return (
         <>
-          <path d="M12 4 V20" />
-          <path d="M4 12 H20" />
-          <path d="M12 4 L9.5 6.5 M12 4 L14.5 6.5" />
-          <path d="M12 20 L9.5 17.5 M12 20 L14.5 17.5" />
-          <path d="M4 12 L6.5 9.5 M4 12 L6.5 14.5" />
-          <path d="M20 12 L17.5 9.5 M20 12 L17.5 14.5" />
+          <path d="M9 11.5 V6.2 A1.4 1.4 0 0 1 11.8 6.2 V11" />
+          <path d="M11.8 11 V5.1 A1.4 1.4 0 0 1 14.6 5.1 V11" />
+          <path d="M14.6 11 V6.6 A1.4 1.4 0 0 1 17.4 6.6 V13.6" />
+          <path d="M9 11.5 V9.6 A1.4 1.4 0 0 0 6.2 9.6 V14.4 C6.2 17.9 8.8 20.5 12.3 20.5 C15.4 20.5 17.4 18.3 17.4 15.2 V13.6" />
         </>
       )
     case 'lasso':

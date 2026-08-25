@@ -14,7 +14,7 @@ import { DOMItem } from './DOMItem'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { copyImageDataUrl } from '../../utils/clipboardImage'
 import { MediaPlaceholder } from './MediaPlaceholder'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
 
 type Props = { item: CanvasItem; domOnly?: boolean }
 
@@ -120,10 +120,8 @@ export function VideoItem({ item, domOnly = false }: Props): React.ReactElement 
         style={{ background: 'var(--bg-canvas)' }}
         onClick={(e) => {
           e.stopPropagation()
-          if (toolMode === 'connect') {
-            handleConnectRelicClick(activeBoardId, item.id)
-            return
-          }
+          if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+          adoptSelectTool(toolMode)
           setSelection([item.id])
         }}
       >

@@ -18,3 +18,5 @@ dist-release/
 # committed: it is platform specific and several megabytes. The README stays.
 resources/whisper/*
 !resources/whisper/README.md
+dist-demo/
+Citadel-browser-demo.zip

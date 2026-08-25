@@ -153,7 +153,6 @@ export type ToolMode =
   | 'link'
   | 'tag'
   | 'swatch'
-  | 'record'
   | 'comparison'
   | 'code'
 

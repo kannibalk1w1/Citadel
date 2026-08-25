@@ -1,6 +1,6 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
-  "include": ["src/renderer/**/*", "src/types/**/*"],
+  "include": ["src/renderer/**/*", "src/types/**/*", "src/web-demo/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "composite": true,

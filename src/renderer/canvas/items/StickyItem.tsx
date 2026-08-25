@@ -6,7 +6,7 @@ import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { useUIStore } from '../../store/uiStore'
 import { preferTextSilhouette } from '../../assets/textDetailPolicy'
-import { handleConnectRelicClick } from '../connections/connectInteraction'
+import { adoptSelectTool, handleRelicToolPress, relicPressMoves } from './relicPointer'
 import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
@@ -61,23 +61,8 @@ export function StickyItem({ item }: Props): React.ReactElement {
 
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
-    if (toolMode === 'connect') {
-      handleConnectRelicClick(activeBoardId, item.id)
-      return
-    }
-    if (toolMode === 'link') {
-      if (item.link) {
-        const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-        ipc.invoke('shell:openURL', { url: item.link })
-      }
-      return
-    }
-    if (toolMode === 'tag') {
-      setSelection([item.id])
-      useUIStore.getState().openPanel('tagSearch')
-      return
-    }
-    if (toolMode !== 'select') return
+    if (handleRelicToolPress(toolMode, activeBoardId, item)) return
+    adoptSelectTool(toolMode)
     if (e.evt.shiftKey) {
       useCanvasStore.getState().addToSelection(item.id)
     } else {
@@ -163,7 +148,7 @@ export function StickyItem({ item }: Props): React.ReactElement {
         x={item.x} y={item.y}
         width={item.width} height={item.height}
         rotation={item.rotation}
-        draggable={toolMode === 'select' && !item.locked}
+        draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
         onDblClick={(e) => {
           e.cancelBubble = true
