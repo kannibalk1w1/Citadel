@@ -86,9 +86,16 @@ export type TranscriptionModel = {
   englishOnly: boolean
 }
 
+/** Where Citadel serves weights from: its own release, so a download does not
+ * depend on a third party staying up, and so the files behind these digests
+ * cannot be replaced by anyone else. Versioned apart from the app: it changes
+ * only when a model is added or replaced. */
+export const MODEL_RELEASE_URL = 'https://github.com/kannibalk1w1/Citadel/releases/download/models-v1'
+
 /**
- * Quantised whisper.cpp weights. Three entries only: a fast one, a default, and
- * one for difficult audio. A longer list is a worse decision, not a better one.
+ * Quantised whisper.cpp weights, redistributed unmodified under MIT. Three
+ * entries only: a fast one, a default, and one for difficult audio. A longer
+ * list is a worse decision, not a better one.
  */
 export const TRANSCRIPTION_MODELS: readonly TranscriptionModel[] = [
   {
@@ -96,7 +103,7 @@ export const TRANSCRIPTION_MODELS: readonly TranscriptionModel[] = [
     label: 'Fast',
     note: 'Quickest, and the least accurate on accents or background noise.',
     filename: 'ggml-tiny.en-q5_1.bin',
-    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en-q5_1.bin',
+    url: `${MODEL_RELEASE_URL}/ggml-tiny.en-q5_1.bin`,
     bytes: 32_166_155,
     sha256: 'c77c5766f1cef09b6b7d47f21b546cbddd4157886b3b5d6d4f709e91e66c7c2b',
     englishOnly: true,
@@ -106,7 +113,7 @@ export const TRANSCRIPTION_MODELS: readonly TranscriptionModel[] = [
     label: 'Balanced',
     note: 'The sensible default for a spoken note. Faster than real time on most machines.',
     filename: 'ggml-base.en-q5_1.bin',
-    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en-q5_1.bin',
+    url: `${MODEL_RELEASE_URL}/ggml-base.en-q5_1.bin`,
     bytes: 59_721_011,
     sha256: '4baf70dd0d7c4247ba2b81fafd9c01005ac77c2f9ef064e00dcf195d0e2fdd2f',
     englishOnly: true,
@@ -116,7 +123,7 @@ export const TRANSCRIPTION_MODELS: readonly TranscriptionModel[] = [
     label: 'Careful',
     note: 'Best on noisy or accented speech, and handles languages other than English. Roughly real time.',
     filename: 'ggml-small-q5_1.bin',
-    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin',
+    url: `${MODEL_RELEASE_URL}/ggml-small-q5_1.bin`,
     bytes: 190_085_487,
     sha256: 'ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb',
     englishOnly: false,

@@ -56,6 +56,19 @@ variable at, and Settings downloads a model for the second. The wav must be
 samples in the whisper.cpp repo already are. Run it after any change to the
 engine arguments, and when moving to a new pinned release.
 
+## The model download test
+
+Every other download test injects a stream, which proves the verify-then-install
+path but not the URL, the release, or the redirect GitHub answers with. One test
+really downloads, and is skipped unless asked:
+
+```bash
+CITADEL_MODEL_DOWNLOAD=1 npx vitest run src/main/transcriptionDownload.integration.test.ts
+```
+
+It fetches the smallest model, about 32 MB. Run it after changing
+`MODEL_RELEASE_URL`, and after publishing a new models release.
+
 ## Known environment requirement
 
 Electron tests need a graphical desktop session. This is normally present in

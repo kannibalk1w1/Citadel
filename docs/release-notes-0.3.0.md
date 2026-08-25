@@ -29,9 +29,10 @@ and only when you press the button.
 **Three models, so you can trade speed against accuracy.** Fast is roughly
 30 MB and quick. Balanced is the sensible default and still faster than real
 time on most machines. Careful is the one for noisy rooms and accents, and it
-handles languages other than English. Each is checked against a published
-checksum on the way in, and anything that does not match is thrown away rather
-than installed.
+handles languages other than English. Models are hosted on Citadel's own
+release page rather than fetched from a third party, and each one is checked
+against a pinned checksum on the way in. Anything that does not match is thrown
+away rather than installed.
 
 **Already keep whisper models?** Point Citadel at the `.bin` you have and it
 downloads nothing at all.

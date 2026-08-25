@@ -34,7 +34,7 @@
 | Undo/Recording | Custom event log (shared system) |
 | PDF preview | pdf.js (`pdfjs-dist`) — first page only |
 | Word/Markdown/text import | Mammoth (`.docx`), plain read (`.md`, `.txt`) |
-| Speech to text | whisper.cpp as a child process; weights downloaded on request, never bundled |
+| Speech to text | whisper.cpp as a child process; weights downloaded on request from the project's own `models-v1` release, never bundled |
 | PDF export | jsPDF + html2canvas |
 | Zip | JSZip |
 | Styling | CSS Variables + Tailwind |
@@ -209,6 +209,15 @@ Recompute on every viewport change.
 
 ### Snapping uses a spatial index
 Don't test every item against every other item on drag. Use a grid-bucket spatial index (`snapEngine/spatialIndex.ts`). Snap threshold is 8px in screen space (divide by scale for canvas space).
+
+### Transcription weights are hosted, not bundled
+
+Models live on Citadel's own GitHub release (`models-v1`, versioned apart from
+the app) rather than upstream, so a download cannot break because a third party
+moved a file, and the bytes behind each pinned digest cannot be replaced by
+anyone else. `package.json` excludes `*.bin` from the packaged engine folder,
+and `transcriptionPackaging.test.ts` fails if a model could ever ship inside an
+installer.
 
 ### Exactly one code path may reach the network
 
