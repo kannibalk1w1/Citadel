@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import { describe, expect, it } from 'vitest'
 import {
+  isThemePreset,
   themeOverrideKeys,
   themePresetColors,
   themePresetLabels,
@@ -25,9 +26,9 @@ const themeDir = __dirname
 /** Where each preset's tokens actually live. The default theme is the bare :root. */
 const PRESET_SOURCES: Record<ThemePreset, { file: string; selector: string }> = {
   citadel: { file: 'dark.css', selector: ':root' },
-  graphite: { file: 'graphite.css', selector: '[data-theme="graphite"]' },
-  terminal: { file: 'terminal.css', selector: '[data-theme="terminal"]' },
-  light: { file: 'light.css', selector: '[data-theme="light"]' },
+  graphite: { file: 'graphite.css', selector: 'html[data-theme="graphite"]' },
+  terminal: { file: 'terminal.css', selector: 'html[data-theme="terminal"]' },
+  light: { file: 'light.css', selector: 'html[data-theme="light"]' },
 }
 
 const TOKEN_FOR: Record<ThemeOverrideKey, string> = {
@@ -78,6 +79,50 @@ describe('every theme preset is complete', () => {
     for (const preset of themePresets) {
       expect(main, `${PRESET_SOURCES[preset].file} is never imported`).toContain(PRESET_SOURCES[preset].file)
     }
+  })
+})
+
+describe('a saved theme survives a restart', () => {
+  /**
+   * The validator that guards `ui.theme` on load held its own hardcoded list of
+   * three names. Terminal was rejected by it, so the app started on the default
+   * however many times a person chose otherwise: the setting was written, read
+   * back, and thrown away. It reads the preset list now.
+   */
+  it.each(themePresets)('accepts %s, which is a preset the app actually offers', (preset) => {
+    expect(isThemePreset(preset)).toBe(true)
+  })
+
+  it('rejects anything that is not one', () => {
+    expect(isThemePreset('ref-flow')).toBe(false)
+    expect(isThemePreset('')).toBe(false)
+    expect(isThemePreset(undefined)).toBe(false)
+  })
+})
+
+describe('a theme out-specifies the default', () => {
+  /**
+   * `:root` and `[data-theme="x"]` have the same specificity, so which one wins
+   * is decided by which stylesheet the browser loads last. That is Vite's
+   * decision, and it changed the moment dark.css gained a second importer: the
+   * Stop window made it a shared chunk, the HTML linked it after the themes,
+   * and every theme silently stopped applying in packaged builds. Dev was fine,
+   * and no unit test noticed, because both need a production build to differ.
+   *
+   * `html[data-theme="x"]` carries one more element than `:root`, so it wins
+   * wherever it lands in the cascade.
+   */
+  it.each(themePresets.filter((preset) => preset !== 'citadel'))('%s is scoped to html, not to the bare attribute', (preset) => {
+    const { file } = PRESET_SOURCES[preset]
+    const css = readFileSync(join(themeDir, file), 'utf-8')
+
+    expect(css).not.toMatch(/(?<!html)\[data-theme=/)
+    expect(css).toContain(`html[data-theme="${preset}"] {`)
+  })
+
+  it('leaves the default on :root, which is what the themes have to beat', () => {
+    const css = readFileSync(join(themeDir, 'dark.css'), 'utf-8')
+    expect(css).toMatch(/^:root \{/m)
   })
 })
 

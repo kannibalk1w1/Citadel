@@ -106,8 +106,12 @@ export type ThemePaletteFile = {
   overrides: ThemeOverrides
 }
 
+// Derived from the preset list, never a second copy of it. This held a
+// hardcoded three-name set, so every theme added after the first three was
+// rejected on load: the app fell back to the default, and a person's choice
+// looked like it had simply not worked.
 export const isThemePreset = (value: unknown): value is ThemePreset => (
-  value === 'citadel' || value === 'graphite' || value === 'light'
+  typeof value === 'string' && (themePresets as readonly string[]).includes(value)
 )
 
 const normalizeThemeName = (value: unknown): string | null => {

@@ -1,5 +1,5 @@
 /* Parchment light preset. */
-[data-theme="light"] {
+html[data-theme="light"] {
   --bg-canvas: #f3eee5;
   --bg-ui: #e7dfd3;
   --bg-panel: #fbf8f2;

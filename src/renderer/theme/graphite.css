@@ -1,5 +1,5 @@
 /* A quiet neutral preset that lets the canvas content provide the colour. */
-[data-theme="graphite"] {
+html[data-theme="graphite"] {
   --bg-canvas: #111214;
   --bg-ui: #181a1e;
   --bg-panel: #202329;
@@ -20,11 +20,11 @@
   --shadow-lg: 0 18px 38px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="graphite"] .app-root {
+html[data-theme="graphite"] .app-root {
   background: var(--bg-canvas);
 }
 
-[data-theme="graphite"] .app-root::before {
+html[data-theme="graphite"] .app-root::before {
   opacity: 0.05;
   background-size: 72px 72px;
 }

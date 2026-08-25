@@ -1,5 +1,10 @@
 /* ── Citadel Design Tokens ─────────────────────────────────────────────────── */
-/* Dark theme is the default. Light theme overrides go in light.css on         */
+/* Dark theme is the default.
+   Its tokens sit on :root, which every theme file out-specifies with
+   `html[data-theme="…"]`. That is deliberate and load-order independent: this
+   file is imported by two entry points (main.tsx and the Stop window), so Vite
+   hoists it into a shared chunk that the HTML happens to link AFTER the themes.
+   With equal specificity the default would then win and no theme would apply. Light theme overrides go in light.css on         */
 /* [data-theme="light"]. ThemeProvider sets data-theme at runtime.             */
 
 :root {

@@ -9,7 +9,7 @@
 
    Palette only: no font, spacing or layout token is touched here, so the app
    keeps its shape and only changes colour. */
-[data-theme="terminal"] {
+html[data-theme="terminal"] {
   /* Backgrounds: void, hull, bulkhead, conduit — dark to less dark. */
   --bg-canvas:   #04070a;
   --bg-ui:       #0a1014;
@@ -63,12 +63,12 @@
   --shadow-inset: inset 0 1px 0 rgba(54, 224, 122, 0.05);
 }
 
-[data-theme="terminal"] .app-root {
+html[data-theme="terminal"] .app-root {
   background: var(--bg-canvas);
 }
 
 /* The background grid reads as a phosphor raster here rather than ruled paper. */
-[data-theme="terminal"] .app-root::before {
+html[data-theme="terminal"] .app-root::before {
   opacity: 0.07;
   background-image:
     linear-gradient(rgba(54, 224, 122, 0.05) 1px, transparent 1px),
