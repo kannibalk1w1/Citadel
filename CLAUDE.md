@@ -293,6 +293,14 @@ The code card keeps its own dark editor palette (`--code-*`) in both themes.
 The Terminal preset is the exception: it is a green-phosphor palette taken from
 the Alien Obsidian theme, and it aligns the code card with the interface.
 
+**A theme selector must be `html[data-theme="x"]`, never the bare attribute.**
+`:root` and `[data-theme="x"]` have equal specificity, so which one wins is
+decided by which stylesheet loads last, and that is Vite's decision: `dark.css`
+is imported by two entry points (`main.tsx` and the Stop window), so it is
+hoisted into a shared chunk the HTML links *after* the themes. With equal
+specificity the default then overrides every theme. This is invisible in dev and
+in vitest, because both need a production build to differ.
+
 Presets are declared in two places that have to agree — the `[data-theme]` block
 in a stylesheet and the swatch in `themePresetColors` — and
 `themePresets.test.ts` fails if they drift. A new preset must also be imported in
