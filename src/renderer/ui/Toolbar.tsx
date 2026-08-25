@@ -537,8 +537,8 @@ export function Toolbar(): React.ReactElement {
       <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '2px 4px' }} />
 
       <button
-        title="Appearance settings"
-        aria-label="Appearance settings"
+        title="Settings"
+        aria-label="Settings"
         onClick={() => useUIStore.getState().openPanel('keybindSettings')}
         style={{
           width: 36,

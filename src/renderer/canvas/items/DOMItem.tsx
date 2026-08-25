@@ -54,6 +54,8 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
   const connections = useCanvasStore((s) => s.connections())
   const toolMode = useUIStore((s) => s.toolMode)
   const connectFromId = useUIStore((s) => s.connectFromId)
+  const setSelection = useCanvasStore((s) => s.setSelection)
+  const openContextMenu = useUIStore((s) => s.openContextMenu)
   const ref = useRef<HTMLDivElement>(null)
   const pointerStart = useRef<PointerStart | null>(null)
   const isSelected = selectedIds.includes(item.id)
@@ -162,6 +164,15 @@ export function DOMItem({ item, children, style, onClick, editableFrame = false 
         ...style,
       }}
       onClick={onClick}
+      // DOM-layer items sit above the Konva stage, so a right-click on one
+      // never reaches the stage's own handler. Without this the context menu
+      // is simply unreachable for video, audio, YouTube, and 3D items.
+      onContextMenu={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (!isSelected) setSelection([item.id])
+        openContextMenu(event.clientX, event.clientY)
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}

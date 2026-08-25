@@ -38,6 +38,9 @@ import { InscriptionToasts } from './ui/toasts/InscriptionToasts'
 import { inscribe } from './ui/toasts/inscriptionToastStore'
 import { ArchiveRiteOverlay } from './ui/ArchiveRiteOverlay'
 import { registerArchiveProgressListener } from './ui/archiveProgressStore'
+import { TranscriptionStatus } from './ui/TranscriptionStatus'
+import { registerTranscriptionProgressListener } from './ui/transcriptionProgressStore'
+import { refreshUserAppearance } from './theme/userStyles'
 import { PresentationQuill } from './presentation/PresentationQuill'
 import { plantWaystoneEvent, resolveWaystones } from './canvas/chamberWaystones'
 import { IndexLedger } from './ui/IndexLedger'
@@ -54,7 +57,13 @@ import { getCaretScreenPos } from './arcade/caretPos'
 import { useCanvasStore } from './store/canvasStore'
 import { useHistoryStore } from './store/historyStore'
 import { useUIStore } from './store/uiStore'
-import { normalizeCanvasBackground, normalizeSavedThemePalettes, normalizeThemeOverrides } from './store/uiStore'
+import {
+  isMascotChoice,
+  isThemePreset,
+  normalizeCanvasBackground,
+  normalizeSavedThemePalettes,
+  normalizeThemeOverrides,
+} from './store/uiStore'
 import { normalizeKeybindOverrides, resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
@@ -192,6 +201,8 @@ export default function App(): React.ReactElement {
         'ui.hyperTypeEnabled',
         'ui.cursorPack',
         'ui.boardLoadVisible',
+        'ui.mascot',
+        'ui.mascotImage',
         'ui.mascotVisible',
         'ui.theme',
         'ui.themeOverrides',
@@ -215,9 +226,16 @@ export default function App(): React.ReactElement {
       // Re-validated on the way in: settings.json is a file a person can edit.
       nextState.cursorPack = normalizeCursorPack(values['ui.cursorPack'])
       if (typeof values['ui.boardLoadVisible'] === 'boolean') nextState.boardLoadVisible = values['ui.boardLoadVisible']
-      if (typeof values['ui.mascotVisible'] === 'boolean') nextState.mascotVisible = values['ui.mascotVisible']
+      // 'ui.mascotVisible' predates the choice of mascots. Someone who had
+      // switched the rook off meant "none", and should not have it return.
+      const savedMascot = values['ui.mascot'] === 'tower' ? 'rook' : values['ui.mascot'] === 'keep' ? 'citadel' : values['ui.mascot']
+      if (isMascotChoice(savedMascot)) nextState.mascot = savedMascot
+      else if (values['ui.mascotVisible'] === false) nextState.mascot = 'none'
+      if (typeof values['ui.mascotImage'] === 'string') nextState.mascotImage = values['ui.mascotImage']
       const theme = values['ui.theme']
-      if (theme === 'citadel' || theme === 'graphite' || theme === 'light') nextState.theme = theme
+      // Checked against the preset list rather than a copy of it: a hardcoded
+      // set here means every theme added later is silently forgotten on restart.
+      if (isThemePreset(theme)) nextState.theme = theme
       if (theme === 'ref-flow') nextState.theme = 'graphite'
       nextState.themeOverrides = normalizeThemeOverrides(values['ui.themeOverrides'])
       nextState.savedThemePalettes = normalizeSavedThemePalettes(values['ui.savedThemePalettes'])
@@ -288,6 +306,10 @@ export default function App(): React.ReactElement {
   }, [])
 
   useEffect(() => registerArchiveProgressListener(), [])
+  useEffect(() => registerTranscriptionProgressListener(), [])
+  // A person's own stylesheets and fonts, applied before they notice the app
+  // painting in the shipped ones.
+  useEffect(() => { void refreshUserAppearance() }, [])
 
   // ── Wire keybind actions once ───────────────────────────────────────────────
   useEffect(() => {
@@ -855,7 +877,12 @@ export default function App(): React.ReactElement {
         const pos = getCaretScreenPos(target)
         if (pos) { spawnX = pos.x; spawnY = pos.y }
       }
-      engine.keyStroke(e.key, spawnX, spawnY)
+      // Auto-repeat is one held key, not a burst of them. Without this, holding
+      // space (the pan gesture) restarted the shake every ~30ms, which reads as
+      // the canvas flashing and machine-guns the sound with it. The resolver
+      // below still sees repeats, because holding a key to repeat an action is
+      // a real thing to want.
+      if (!e.repeat) engine.keyStroke(e.key, spawnX, spawnY)
       if (useUIStore.getState().presentationMode && e.key === 'Escape') {
         e.preventDefault()
         // Escape rests a raised quill before it exits the presentation.
@@ -896,6 +923,7 @@ export default function App(): React.ReactElement {
       ipc.on('menu:newProject', () => resolver.dispatch(Actions.NEW_PROJECT)),
       ipc.on('menu:delete',     () => resolver.dispatch(Actions.DELETE)),
       ipc.on('menu:selectAll',  () => resolver.dispatch(Actions.SELECT_ALL)),
+      ipc.on('menu:settings',   () => resolver.dispatch(Actions.PANEL_KEYBINDS)),
       ipc.on('menu:zoomIn',     () => resolver.dispatch(Actions.ZOOM_IN)),
       ipc.on('menu:zoomOut',    () => resolver.dispatch(Actions.ZOOM_OUT)),
       ipc.on('menu:zoomFit',    () => resolver.dispatch(Actions.ZOOM_FIT)),
@@ -1109,6 +1137,7 @@ export default function App(): React.ReactElement {
           <YouSavedBanner />
           <InscriptionToasts />
           <ArchiveRiteOverlay />
+          <TranscriptionStatus />
           <ClickThroughPanel />
           <Onboarding />
           <CommandPalette />

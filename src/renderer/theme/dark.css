@@ -136,6 +136,12 @@ html[data-window-opacity-fallback='true'] body {
 
 html[data-window-opacity-fallback='true'] #root {
   opacity: var(--window-overlay-opacity, 1);
+  /* The host window and body are transparent here, so #root is the only thing
+     painting the app at all: anything that moves a child, like the HyperType
+     shake translating the canvas by a few pixels, would otherwise open a strip
+     of bare desktop at the window edge. The alpha above still applies to this
+     fill, so window opacity keeps working and 1.0 is genuinely opaque. */
+  background: var(--bg-canvas);
 }
 
 a {
@@ -248,4 +254,16 @@ button[disabled] {
   0%   { transform: translateY(1px) scale(0.96); }
   35%  { transform: translateY(0) scale(1.04); }
   100% { transform: translateY(0) scale(1); }
+}
+
+/* The Citadel tower is black line art on transparency, drawn for a pale
+   background. Every theme but the light one is near-black, so it is inverted
+   there: the structure reads white and the highlights read as depth, which is
+   how the art was meant to be seen. */
+.citadel-mascot-tower {
+  filter: invert(1);
+}
+
+[data-theme="light"] .citadel-mascot-tower {
+  filter: none;
 }

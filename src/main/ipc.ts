@@ -16,6 +16,24 @@ import {
   writeCitadelProject,
 } from './projectPersistence'
 import { extractDocumentText } from './documentText'
+import { resolveEngine, transcribeAudio } from './transcription'
+import { fontsDirFor, listFonts, listSnippets, readFont, snippetsDirFor } from './userStyles'
+import {
+  APPEARANCE_SETTINGS_KEYS,
+  normalizeEnabledSnippets,
+  normalizeFontChoices,
+} from '../types/appearance'
+import {
+  abortModelDownload,
+  downloadModel,
+  listInstalledModels,
+  modelsDirFor,
+  readModelChoice,
+  removeModel,
+  resolveModelFile,
+} from './transcriptionModels'
+import { TRANSCRIPTION_SETTINGS_KEYS } from '../types/transcription'
+import type { TranscriptionProgress, TranscriptionRequest, TranscriptionResult } from '../types/transcription'
 import { clearUnusedPreviews, getPreviewCacheStats, statSource, thumbnailFilename, writePreviewPng } from './previewCache'
 import { getManySettings, readSettingsFile, setManySettings, writeSettingsFile } from './settingsStore'
 import {
@@ -78,6 +96,19 @@ const pdfCacheDir = (): string => join(app.getPath('userData'), 'pdf-cache')
 const previewCacheDir = (): string => join(app.getPath('userData'), 'preview-cache')
 // New previews are written to preview-cache; legacy pdf-cache is read and cleaned only.
 const previewCacheDirs = (): string[] => [previewCacheDir(), pdfCacheDir()]
+// Transcription weights are downloaded, never bundled, so they live in userData
+// beside the caches rather than in the read-only install directory.
+const transcriptionModelsDir = (): string => modelsDirFor(app.getPath('userData'))
+// The recogniser itself does ship, from resources/ in a packaged app and from
+// the repo's own resources/ in dev.
+const bundledResourcesDir = (): string => (app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'))
+// One transcription per window. Starting a second cancels the first rather than
+// letting two recognisers fight over the same cores.
+const activeTranscriptions = new Map<number, AbortController>()
+// A person's own stylesheets and fonts live beside their settings, never in a
+// project: a .citadel file that could carry CSS could restyle someone else's app.
+const userSnippetsDir = (): string => snippetsDirFor(app.getPath('userData'))
+const userFontsDir = (): string => fontsDirFor(app.getPath('userData'))
 function readSettings(): Record<string, unknown> {
   return readSettingsFile(settingsPath)
 }
@@ -446,6 +477,188 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('document:extractText', async (_e, { path }: { path?: unknown } = {}) => (
     extractDocumentText(path)
   ))
+
+  // ── audio:transcribe ───────────────────────────────────────────────────────
+  // Samples in, words out. The renderer decodes with Web Audio because it has
+  // codecs and this side does not, which is why no ffmpeg ships. Nothing here
+  // reaches the network: the audio never leaves the machine.
+  ipcMain.handle('audio:transcribe', async (e, request: TranscriptionRequest): Promise<TranscriptionResult> => {
+    const settings = readSettings()
+
+    const model = await resolveModelFile(transcriptionModelsDir(), readModelChoice(settings))
+    if (!model.ok) return model
+
+    const enginePath = settings[TRANSCRIPTION_SETTINGS_KEYS.enginePath]
+    const engine = await resolveEngine(typeof enginePath === 'string' ? enginePath : null, bundledResourcesDir())
+    if (!engine.path) {
+      return {
+        ok: false,
+        code: 'engine-missing',
+        reason: 'The transcription engine is missing from this install. Settings can point Citadel at a whisper.cpp binary.',
+      }
+    }
+
+    activeTranscriptions.get(e.sender.id)?.abort()
+    const controller = new AbortController()
+    activeTranscriptions.set(e.sender.id, controller)
+
+    // Percent is throttled, but a change of phase is not: it is what tells a
+    // person that a long silent wait is loading weights rather than hanging.
+    let phase: TranscriptionProgress['phase'] = 'loading-model'
+    const sendPercent = createProgressThrottle((percent) => {
+      e.sender.send('transcribe:progress', { phase, percent })
+    })
+
+    try {
+      return await transcribeAudio(request, {
+        enginePath: engine.path,
+        modelPath: model.path,
+        modelId: model.modelId,
+        tempDir: app.getPath('temp'),
+        signal: controller.signal,
+        onProgress: (progress) => {
+          if (progress.phase !== phase) {
+            phase = progress.phase
+            e.sender.send('transcribe:progress', progress)
+            return
+          }
+          sendPercent(progress.percent)
+        },
+      })
+    } finally {
+      if (activeTranscriptions.get(e.sender.id) === controller) activeTranscriptions.delete(e.sender.id)
+    }
+  })
+
+  ipcMain.handle('audio:cancelTranscribe', async (e) => {
+    activeTranscriptions.get(e.sender.id)?.abort()
+    return { ok: true }
+  })
+
+  // ── transcription models ───────────────────────────────────────────────────
+  // Weights are fetched on request, from a pinned URL, and installed only if
+  // they hash to the pinned digest. Anyone who already has a model file can
+  // point at it instead and nothing is downloaded at all.
+  ipcMain.handle('transcription:models', async () => {
+    const settings = readSettings()
+    const state = await listInstalledModels(transcriptionModelsDir(), settings)
+    const enginePath = settings[TRANSCRIPTION_SETTINGS_KEYS.enginePath]
+    const engine = await resolveEngine(typeof enginePath === 'string' ? enginePath : null, bundledResourcesDir())
+    return { ...state, engine }
+  })
+
+  ipcMain.handle('transcription:downloadModel', async (e, { id }: { id: string }) => (
+    downloadModel(transcriptionModelsDir(), id, {
+      onProgress: (progress) => { e.sender.send('transcribe:downloadProgress', progress) },
+    })
+  ))
+
+  ipcMain.handle('transcription:cancelDownload', async (_e, { id }: { id: string }) => {
+    abortModelDownload(id)
+    return { ok: true }
+  })
+
+  ipcMain.handle('transcription:removeModel', async (_e, { id }: { id: string }) => (
+    removeModel(transcriptionModelsDir(), id)
+  ))
+
+  ipcMain.handle('transcription:useModel', async (_e, { id }: { id?: unknown } = {}) => {
+    const settings = readSettings()
+    settings[TRANSCRIPTION_SETTINGS_KEYS.managedId] = typeof id === 'string' ? id : null
+    // Choosing a managed model clears a custom one: two answers to the same
+    // question is how a person ends up transcribing with weights they replaced.
+    settings[TRANSCRIPTION_SETTINGS_KEYS.customPath] = null
+    writeSettings(settings)
+    return { ok: true }
+  })
+
+  // The renderer never sees a path it did not get from here, so the file picker
+  // for a person's own model or binary lives on this side.
+  ipcMain.handle('transcription:chooseModelFile', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Choose a whisper model file',
+      properties: ['openFile'],
+      filters: [{ name: 'Whisper model', extensions: ['bin'] }],
+    })
+    if (canceled || filePaths.length === 0) return { ok: false }
+    const settings = readSettings()
+    settings[TRANSCRIPTION_SETTINGS_KEYS.customPath] = filePaths[0]
+    writeSettings(settings)
+    return { ok: true, path: filePaths[0] }
+  })
+
+  ipcMain.handle('transcription:clearCustomModel', async () => {
+    const settings = readSettings()
+    settings[TRANSCRIPTION_SETTINGS_KEYS.customPath] = null
+    writeSettings(settings)
+    return { ok: true }
+  })
+
+  ipcMain.handle('transcription:chooseEngine', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Choose a whisper.cpp binary',
+      properties: ['openFile'],
+    })
+    if (canceled || filePaths.length === 0) return { ok: false }
+    const settings = readSettings()
+    settings[TRANSCRIPTION_SETTINGS_KEYS.enginePath] = filePaths[0]
+    writeSettings(settings)
+    return { ok: true, path: filePaths[0] }
+  })
+
+  // ── styles and fonts ───────────────────────────────────────────────────────
+  // Citadel's look is CSS variables, so its customisation is a folder of
+  // stylesheets loaded after the theme, and a folder of fonts the three type
+  // roles can be pointed at. Both are read from userData and nowhere else.
+  ipcMain.handle('styles:list', async () => (
+    listSnippets(userSnippetsDir(), normalizeEnabledSnippets(readSettings()[APPEARANCE_SETTINGS_KEYS.enabledSnippets]))
+  ))
+
+  ipcMain.handle('styles:setEnabled', async (_e, { name, enabled }: { name?: unknown; enabled?: unknown } = {}) => {
+    if (typeof name !== 'string' || name.trim() === '') return { ok: false }
+    const settings = readSettings()
+    const current = normalizeEnabledSnippets(settings[APPEARANCE_SETTINGS_KEYS.enabledSnippets])
+    // Appended rather than sorted: the order snippets are listed in is the order
+    // they are applied in, so a later one can undo an earlier one on purpose.
+    const next = enabled
+      ? (current.includes(name) ? current : [...current, name])
+      : current.filter((entry) => entry !== name)
+    settings[APPEARANCE_SETTINGS_KEYS.enabledSnippets] = next
+    writeSettings(settings)
+    return { ok: true, enabledSnippets: next }
+  })
+
+  ipcMain.handle('styles:openFolder', async () => {
+    const dir = userSnippetsDir()
+    await fsp.mkdir(dir, { recursive: true }).catch(() => {})
+    await shell.openPath(dir)
+    return { ok: true, folder: dir }
+  })
+
+  ipcMain.handle('fonts:list', async () => (
+    listFonts(userFontsDir(), normalizeFontChoices(readSettings()[APPEARANCE_SETTINGS_KEYS.fontChoices]))
+  ))
+
+  // Bytes rather than a path: the renderer's policy allows no font host, and
+  // handing over the file keeps it that way instead of opening it to reach one.
+  ipcMain.handle('fonts:read', async (_e, { file }: { file?: unknown } = {}) => readFont(userFontsDir(), file))
+
+  ipcMain.handle('fonts:setChoice', async (_e, { role, family }: { role?: unknown; family?: unknown } = {}) => {
+    if (typeof role !== 'string') return { ok: false }
+    const settings = readSettings()
+    const choices = normalizeFontChoices(settings[APPEARANCE_SETTINGS_KEYS.fontChoices])
+    const next = { ...choices, [role]: typeof family === 'string' ? family : '' }
+    settings[APPEARANCE_SETTINGS_KEYS.fontChoices] = normalizeFontChoices(next)
+    writeSettings(settings)
+    return { ok: true, choices: settings[APPEARANCE_SETTINGS_KEYS.fontChoices] }
+  })
+
+  ipcMain.handle('fonts:openFolder', async () => {
+    const dir = userFontsDir()
+    await fsp.mkdir(dir, { recursive: true }).catch(() => {})
+    await shell.openPath(dir)
+    return { ok: true, folder: dir }
+  })
 
   // ── shell:openURL ──────────────────────────────────────────────────────────
   // A relic's `link` rides along inside .citadel/.citadelz files, which are made

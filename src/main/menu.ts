@@ -83,6 +83,10 @@ export function buildMenu(): void {
         { label: 'Duplicate', accelerator: accelerator('edit:duplicate'), click: () => send('menu:duplicate') },
         { label: 'Select All', accelerator: accelerator('edit:selectAll'), click: () => send('menu:selectAll') },
         { label: 'Delete', accelerator: accelerator('edit:delete'), click: () => send('menu:delete') },
+        { type: 'separator' },
+        // No fallback accelerator: the action ships unbound, so this shows a
+        // shortcut only once a person has chosen one for it.
+        { label: 'Settings', accelerator: accelerator('panel:keybinds'), click: () => send('menu:settings') },
       ],
     },
     {

@@ -7,6 +7,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { renderPdfFirstPage } from '../utils/pdfPreview'
+import { pdfDropFailureMessage } from './pdfImport'
 import { fingerprintFromProbe, withSourceFingerprint } from '../assets/sourceProvenance'
 import {
   buildDocumentItem,
@@ -186,6 +187,7 @@ export function useFileDrop() {
           offsetIndex++
         } catch (error) {
           console.error('PDF drop failed:', error)
+          inscribe(pdfDropFailureMessage(file.name, error), { tone: 'danger' })
         }
         continue
       }

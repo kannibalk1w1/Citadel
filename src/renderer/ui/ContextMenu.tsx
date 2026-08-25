@@ -13,6 +13,8 @@ import { Actions } from '../keybinds/actions'
 import { extractImagePalette, paletteSourceConnection, paletteSwatchForImage } from '../assets/paletteExtraction'
 import { canvasColor } from '../theme/canvasColors'
 import { startSourceCapture } from './sourceCapture'
+import { transcribeAudioItem } from '../canvas/transcribeAudioItem'
+import { isLocalSourcePath, isTranscribableFilename } from '../canvas/audioTranscription'
 
 type MenuItem = { label: string; action: () => void; danger?: boolean; divider?: boolean }
 
@@ -31,6 +33,13 @@ export function ContextMenu(): React.ReactElement | null {
   const canUnlock = selectedLockedItems.length > 0
   const copyableImage = selectedItems.length === 1 && ['image', 'gif'].includes(selectedItems[0].type) && selectedItems[0].src
   const paletteImage = selectedItems.length === 1 && selectedItems[0].type === 'image' && selectedItems[0].src
+    ? selectedItems[0]
+    : null
+  const transcribableAudio = selectedItems.length === 1
+    && selectedItems[0].type === 'audio'
+    && selectedItems[0].src
+    && isLocalSourcePath(selectedItems[0].src)
+    && isTranscribableFilename(selectedItems[0].src)
     ? selectedItems[0]
     : null
   const ref = useRef<HTMLDivElement>(null)
@@ -134,6 +143,16 @@ export function ContextMenu(): React.ReactElement | null {
             console.error('Could not pull palette:', error)
             inscribe('Could not pull palette. Check that the image file is available.', { tone: 'danger' })
           })
+        },
+      }] : []),
+      ...(transcribableAudio ? [{
+        // Naming the repeat is what keeps a second run a choice rather than an
+        // accident: it costs a minute and leaves a second transcript behind.
+        label: transcribableAudio.meta?.transcriptItemId ? 'Transcribe again' : 'Transcribe',
+        action: () => {
+          const audio = transcribableAudio
+          closeContextMenu()
+          void transcribeAudioItem(audio)
         },
       }] : []),
       ...(selectedItems.length === 1 && selectedItems[0].src ? [{

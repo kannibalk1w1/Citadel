@@ -13,3 +13,8 @@ reports/
 dist-packs/
 dist-ci/
 dist-release/
+
+# The transcription engine is fetched by scripts/fetchWhisperEngine.mjs, not
+# committed: it is platform specific and several megabytes. The README stays.
+resources/whisper/*
+!resources/whisper/README.md

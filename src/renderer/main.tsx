@@ -7,6 +7,7 @@ import './theme/dark.css'
 import './theme/light.css'
 import './theme/cleanArchive.css'
 import './theme/graphite.css'
+import './theme/terminal.css'
 
 class RootErrorBoundary extends React.Component<
   { children: React.ReactNode },

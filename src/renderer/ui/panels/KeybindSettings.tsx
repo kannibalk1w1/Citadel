@@ -16,6 +16,8 @@ import {
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
 import { ToolIcon } from '../icons/ToolIcon'
+import { AppearanceSettings } from './AppearanceSettings'
+import { TranscriptionSettings } from './TranscriptionSettings'
 import { defaultKeybinds } from '../../keybinds/defaultKeybinds'
 import { actionLabel } from '../../keybinds/actionLabels'
 import { hasNonModifierKey, resolver, serializeEvent } from '../../keybinds/keybindResolver'
@@ -427,7 +429,7 @@ export function KeybindSettings(): React.ReactElement | null {
     <div className="citadel-floating-panel citadel-motion-surface" style={{ position: 'fixed', inset: '60px 20px 20px', background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 16, zIndex: 'var(--z-modal)', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <h2 style={{ margin: 0, fontSize: 'var(--text-lg)', fontFamily: 'var(--font-display)', color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-          Keybindings
+          Settings
         </h2>
         <button
           onClick={() => togglePanel('keybindSettings')}
@@ -848,6 +850,8 @@ export function KeybindSettings(): React.ReactElement | null {
           </span>
         </label>
       </div>
+      <AppearanceSettings />
+      <TranscriptionSettings />
       <div style={{
         marginBottom: 16,
         paddingBottom: 12,
@@ -939,6 +943,9 @@ export function KeybindSettings(): React.ReactElement | null {
           </button>
         </div>
       </div>
+      <h3 style={{ margin: '0 0 8px', fontSize: 'var(--text-md)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        Keyboard shortcuts
+      </h3>
       <input
         placeholder="Filter actions…"
         value={filter}

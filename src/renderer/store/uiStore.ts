@@ -18,22 +18,46 @@ type PanelState = {
   onboarding: boolean
 }
 
-export const themePresets = ['citadel', 'graphite', 'light'] as const
+export const themePresets = ['citadel', 'graphite', 'terminal', 'light'] as const
 export type ThemePreset = typeof themePresets[number]
 
 export const themePresetLabels: Record<ThemePreset, string> = {
   citadel: 'Citadel',
   graphite: 'Graphite',
+  terminal: 'Terminal',
   light: 'Parchment light',
 }
+
+/**
+ * Which mascot the project rail shows. Two are drawn and ship with the app; the
+ * third is any image a person points at. The keep came back as a choice because
+ * removing it outright was a decision made on everyone's behalf.
+ */
+export const mascotChoices = ['citadel', 'rook', 'custom', 'none'] as const
+export type MascotChoice = typeof mascotChoices[number]
+
+export const mascotLabels: Record<MascotChoice, string> = {
+  citadel: 'Tower',
+  rook: 'Rook',
+  custom: 'Your own image',
+  none: 'None',
+}
+
+export const isMascotChoice = (value: unknown): value is MascotChoice => (
+  typeof value === 'string' && (mascotChoices as readonly string[]).includes(value)
+)
 
 export const themeOverrideKeys = ['canvas', 'ui', 'panel', 'text', 'accent'] as const
 export type ThemeOverrideKey = typeof themeOverrideKeys[number]
 export type ThemeOverrides = Partial<Record<ThemeOverrideKey, string>>
 
 export const themePresetColors: Record<ThemePreset, Record<ThemeOverrideKey, string>> = {
-  citadel: { canvas: '#0f0d0b', ui: '#17130f', panel: '#1d1813', text: '#e8ddd0', accent: '#c8a96e' },
+  // Kept in step with dark.css, which is the authority: this swatch still held
+  // the aged gold the palette moved off, so choosing the preset named after the
+  // default theme repainted the app in a colour it no longer uses.
+  citadel: { canvas: '#0f0d0b', ui: '#17130f', panel: '#1d1813', text: '#e8ddd0', accent: '#73a8db' },
   graphite: { canvas: '#111214', ui: '#181a1e', panel: '#202329', text: '#f1f2f4', accent: '#d8dce2' },
+  terminal: { canvas: '#04070a', ui: '#0a1014', panel: '#111a1f', text: '#ccd6d2', accent: '#36e07a' },
   light: { canvas: '#f3eee5', ui: '#e7dfd3', panel: '#fbf8f2', text: '#2b2620', accent: '#8a6432' },
 }
 
@@ -65,7 +89,7 @@ export type ThemePaletteFile = {
   overrides: ThemeOverrides
 }
 
-const isThemePreset = (value: unknown): value is ThemePreset => (
+export const isThemePreset = (value: unknown): value is ThemePreset => (
   value === 'citadel' || value === 'graphite' || value === 'light'
 )
 
@@ -247,9 +271,11 @@ type UIState = {
   toggleMirrorView: () => void
   clearVisionChecks: () => void
 
-  // The rook on the project rail
-  mascotVisible: boolean
-  toggleMascot: () => void
+  // Which mascot the project rail shows, and the image behind 'custom'
+  mascot: MascotChoice
+  mascotImage: string | null
+  setMascot: (mascot: MascotChoice) => void
+  setMascotImage: (path: string | null) => void
 
   // The Board Load readout in the corner of the canvas
   boardLoadVisible: boolean
@@ -500,12 +526,20 @@ export const useUIStore = create<UIState>((set, get) => ({
   toggleMirrorView: () => set((s) => ({ mirrorView: !s.mirrorView })),
   clearVisionChecks: () => set({ visionMode: 'none', mirrorView: false }),
 
-  mascotVisible: true,
-  toggleMascot: () => {
-    const mascotVisible = !get().mascotVisible
-    set({ mascotVisible })
+  mascot: 'citadel',
+  mascotImage: null,
+  setMascot: (mascot) => {
+    set({ mascot })
     const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
-    ipc.invoke('settings:set', { key: 'ui.mascotVisible', value: mascotVisible }).catch(console.error)
+    ipc.invoke('settings:set', { key: 'ui.mascot', value: mascot }).catch(console.error)
+  },
+  setMascotImage: (mascotImage) => {
+    // Choosing an image is choosing to show it, or the picker would look broken.
+    set({ mascotImage, mascot: mascotImage ? 'custom' : get().mascot })
+    const ipc = (window as unknown as { ipc: { invoke: (ch: string, args: unknown) => Promise<unknown> } }).ipc
+    ipc.invoke('settings:setMany', {
+      values: { 'ui.mascotImage': mascotImage, 'ui.mascot': mascotImage ? 'custom' : get().mascot },
+    }).catch(console.error)
   },
 
   boardLoadVisible: true,

@@ -35,6 +35,27 @@ report, so it can be opened in any browser without changing source control.
 Use it before deciding where to code-split or optimise; do not add production
 dependencies based only on bundle size.
 
+## The transcription engine test
+
+Transcription is covered by ordinary unit tests that drive a stub child process,
+which proves the contract around the recogniser but not the recogniser's own
+flags, JSON shape, or progress format. Those belong to whisper.cpp and can
+change under us, so one test runs the real binary and is skipped unless it is
+pointed at one:
+
+```bash
+CITADEL_WHISPER_BIN=/path/to/whisper-cli \
+CITADEL_WHISPER_MODEL=/path/to/ggml-tiny.en-q5_1.bin \
+CITADEL_WHISPER_WAV=/path/to/whisper.cpp/samples/jfk.wav \
+npx vitest run src/main/transcriptionEngine.integration.test.ts
+```
+
+`npm run engine` puts a binary in `resources/whisper/` to point the first
+variable at, and Settings downloads a model for the second. The wav must be
+16 kHz mono 16-bit, which is what the renderer's decoder produces and what the
+samples in the whisper.cpp repo already are. Run it after any change to the
+engine arguments, and when moving to a new pinned release.
+
 ## Known environment requirement
 
 Electron tests need a graphical desktop session. This is normally present in

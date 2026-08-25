@@ -86,7 +86,9 @@ export const actionLabels: Record<ActionName, string> = {
   [Actions.BOARD_DELETE]: 'Delete board',
 
   [Actions.PANEL_PROPERTIES]: 'Focus the properties panel',
-  [Actions.PANEL_KEYBINDS]: 'Open keyboard shortcuts',
+  // The identifier stays `panel:keybinds`: it is what saved overrides are
+  // keyed by, and the panel it opens grew into the whole settings surface.
+  [Actions.PANEL_KEYBINDS]: 'Open settings',
   [Actions.PANEL_SEARCH]: 'Open search',
   [Actions.PANEL_ARCHIVE_RAIL_TOGGLE]: 'Show or hide the project rail',
 

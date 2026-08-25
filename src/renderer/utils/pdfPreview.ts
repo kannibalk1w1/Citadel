@@ -1,9 +1,13 @@
 import * as pdfjs from 'pdfjs-dist'
-import { pathToUrl } from './pathToUrl'
+import { isLocalSourcePath, pathToUrl } from './pathToUrl'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
 
 export async function renderPdfFirstPage(pdfPath: string): Promise<{ imageData: string; width: number; height: number }> {
+  // Refused before the fetch, not after: pathToUrl passes an address straight
+  // through, so a PDF item carrying one would otherwise be fetched from the
+  // network to draw its preview. Citadel previews local files only.
+  if (!isLocalSourcePath(pdfPath)) throw new Error('Citadel previews local PDF files only')
   const response = await fetch(pathToUrl(pdfPath))
   if (!response.ok) throw new Error(`Failed to read PDF: ${response.status}`)
   const data = new Uint8Array(await response.arrayBuffer())

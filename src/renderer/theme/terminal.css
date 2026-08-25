@@ -1,0 +1,76 @@
+/* Terminal: a green-phosphor preset, taken from the Alien theme this project's
+   author reads in Obsidian, so a board sits beside the vault it came from
+   without changing register.
+
+   The grammar is a CRT in a dark room. Near-black grounds with a faint blue
+   cast, bone-grey text rather than white, and one phosphor green carrying every
+   accent, focus ring and link. Amber, cyan and acid appear only where a second
+   colour has a job to do, which in Citadel is the code card.
+
+   Palette only: no font, spacing or layout token is touched here, so the app
+   keeps its shape and only changes colour. */
+[data-theme="terminal"] {
+  /* Backgrounds: void, hull, bulkhead, conduit — dark to less dark. */
+  --bg-canvas:   #04070a;
+  --bg-ui:       #0a1014;
+  --bg-panel:    #111a1f;
+  --bg-hover:    #1d2a30;
+  --bg-elevated: #182229;
+  --bg-sunken:   #020405;
+
+  /* The board ground stays near-neutral on purpose, as in the default theme: a
+     strong cast here would shift how every reference image on the canvas reads.
+     This is the blue-black of an unlit screen, not a colour of its own. */
+  --canvas-flat: #0a1014;
+  --canvas-dot:  #22333a;
+
+  /* Text: bone for reading, vapor for the quiet parts, phosphor for anything
+     that is a link or a live value. */
+  --text-primary:   #ccd6d2;
+  --text-secondary: #9fada9;
+  --text-muted:     #7c8c89;
+  --text-accent:    #36e07a;
+
+  --accent:        #36e07a;
+  --accent-soft:   rgba(54, 224, 122, 0.16);
+  --accent-danger: #e8473a;
+
+  --border:        #1d2a30;
+  --border-muted:  #142026;
+  --border-bright: rgba(204, 214, 210, 0.10);
+
+  /* The code card carries its own scheme in every theme, the way an editor
+     does. Here that scheme and the interface finally agree, so the card stops
+     being the one blue surface in a green room. */
+  --code-bg:            #060b0e;
+  --code-bg-header:     #0d151a;
+  --code-bg-button:     #16232a;
+  --code-bg-confirm:    #123524;
+  --code-border:        #1d2a30;
+  --code-border-button: #2b3a40;
+  --code-text:          #ccd6d2;
+  --code-text-dim:      #9fada9;
+  --code-gutter:        #56635f;
+  --code-keyword:       #45cfe0;
+  --code-string:        #b6d957;
+  --code-number:        #ff9d2f;
+  --code-comment:       #56635f;
+  --code-alert:         #e8473a;
+
+  /* Black shadows rather than warm ones: nothing in this palette is warm. */
+  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.60);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.72);
+  --shadow-inset: inset 0 1px 0 rgba(54, 224, 122, 0.05);
+}
+
+[data-theme="terminal"] .app-root {
+  background: var(--bg-canvas);
+}
+
+/* The background grid reads as a phosphor raster here rather than ruled paper. */
+[data-theme="terminal"] .app-root::before {
+  opacity: 0.07;
+  background-image:
+    linear-gradient(rgba(54, 224, 122, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(54, 224, 122, 0.035) 1px, transparent 1px);
+}

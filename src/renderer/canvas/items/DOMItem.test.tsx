@@ -124,3 +124,24 @@ describe('DOMItem dragging', () => {
     expect(draggedItem().height).toBe(188)
   })
 })
+
+describe('DOMItem context menu', () => {
+  it('opens the menu on right-click, which the Konva stage below can never see', () => {
+    render(<DOMItem item={dragged} editableFrame><div /></DOMItem>)
+
+    fireEvent.contextMenu(document.querySelector('.citadel-dom-item')!, { clientX: 120, clientY: 80 })
+
+    expect(useUIStore.getState().contextMenu).toMatchObject({ x: 120, y: 80 })
+  })
+
+  it('selects the item it was opened on, so the menu acts on what was clicked', () => {
+    useCanvasStore.setState({ selectedIds: ['target-1'] })
+    render(<DOMItem item={dragged} editableFrame><div /></DOMItem>)
+
+    // Not selected, so there is no title bar to aim at: the item itself is
+    // what a person right-clicks.
+    fireEvent.contextMenu(document.querySelector('.citadel-dom-item')!, { clientX: 10, clientY: 10 })
+
+    expect(useCanvasStore.getState().selectedIds).toEqual(['dom-1'])
+  })
+})

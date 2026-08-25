@@ -10,7 +10,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-vite build && electron-builder",
+    "engine": "node scripts/fetchWhisperEngine.mjs",
+    "package": "npm run engine && electron-vite build && electron-builder",
     "test": "vitest",
     "mutation": "node scripts/mutationSweep.mjs",
     "e2e": "npm run build && playwright test",
@@ -113,9 +114,18 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "resources/whisper",
+        "to": "whisper",
+        "filter": [
+          "**/*",
+          "!README.md",
+          "!.engine-version"
+        ]
       }
     ],
-    "copyright": "Copyright \u00a9 2026 Kieran Beckenkrager",
+    "copyright": "Copyright © 2026 Kieran Beckenkrager",
     "linux": {
       "target": [
         {
@@ -139,5 +149,9 @@
         "MimeType": "application/x-citadel;application/x-citadelz;"
       }
     }
+  },
+  "allowScripts": {
+    "electron@29.4.6": true,
+    "esbuild@0.21.5": true
   }
 }

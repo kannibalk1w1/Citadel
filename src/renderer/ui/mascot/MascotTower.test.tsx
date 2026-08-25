@@ -17,7 +17,7 @@ describe('the mascot', () => {
 
   beforeEach(() => {
     invoke.mockClear()
-    useUIStore.setState({ mascotVisible: true })
+    useUIStore.setState({ mascot: 'rook' })
     useHistoryStore.getState().resetHistory()
   })
 
@@ -63,15 +63,6 @@ describe('the mascot', () => {
     render(<MascotTower />)
 
     expect(screen.getByRole('img').getAttribute('aria-label')).toContain('recording')
-  })
-
-  it('can be turned off, and remembers it', () => {
-    useUIStore.setState({ mascotVisible: false })
-    const { container } = render(<MascotTower />)
-    expect(container.firstChild).toBeNull()
-
-    act(() => { useUIStore.getState().toggleMascot() })
-    expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'ui.mascotVisible', value: true })
   })
 
   it('scales from one number, so the rail can ask for a smaller one', () => {

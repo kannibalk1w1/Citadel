@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useHistoryStore } from '../../store/historyStore'
-import { useUIStore } from '../../store/uiStore'
 
 /**
  * The rook that gives the rail a bit of character.
@@ -21,8 +20,9 @@ type Props = { size?: number }
 /** How long the acknowledgement after a save stays lit. */
 const SAVED_GLOW_MS = 1600
 
-export function MascotTower({ size = 26 }: Props): React.ReactElement | null {
-  const visible = useUIStore((s) => s.mascotVisible)
+// Whether a mascot is shown at all is `Mascot`'s decision, not this one's: the
+// rail asks for a particular face, and this draws it.
+export function MascotTower({ size = 26 }: Props): React.ReactElement {
   const isDirty = useHistoryStore((s) => s.cursor !== s.savedCursor)
   const isRecording = useHistoryStore((s) => s.isRecording)
 
@@ -40,8 +40,6 @@ export function MascotTower({ size = 26 }: Props): React.ReactElement | null {
     wasDirty.current = isDirty
     return undefined
   }, [isDirty])
-
-  if (!visible) return null
 
   const state = isRecording ? 'recording' : justSaved ? 'saved' : isDirty ? 'unsaved' : 'rest'
   const label = {
