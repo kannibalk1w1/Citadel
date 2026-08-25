@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Infinite canvas creative reference tool",
   "main": "out/main/index.js",
   "author": "Kieran Beckenkrager (https://github.com/kannibalk1w1)",

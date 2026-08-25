@@ -41,6 +41,9 @@ export const MENU_DEFAULT_ACCELERATORS: Record<string, string> = {
   'window:clickThroughToggle': 'ctrl+alt+c',
 }
 
+/** What Citadel says it is, in the one place a person goes to ask. */
+export const CITADEL_TAGLINE = 'Infinite canvas for references, notes, code and ideas'
+
 export function buildMenu(): void {
   const overrides = readSettingsFile(join(app.getPath('userData'), 'keybinds.json'))
   const accelerator = (action: string): string | undefined => {
@@ -121,6 +124,10 @@ export function buildMenu(): void {
       label: 'Help',
       submenu: [
         { label: `Citadel v${app.getVersion()}`, enabled: false },
+        // Read from package.json rather than written twice: the menu was the
+        // one place a person checks which version they are running, and a
+        // hardcoded number there is a number that goes stale on a release.
+        { label: CITADEL_TAGLINE, enabled: false },
       ],
     },
   ]

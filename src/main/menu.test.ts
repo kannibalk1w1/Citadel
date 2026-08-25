@@ -11,7 +11,7 @@ import { BrowserWindow } from 'electron'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { Menu } from 'electron'
-import { buildMenu, toElectronAccelerator } from './menu'
+import { CITADEL_TAGLINE, buildMenu, toElectronAccelerator } from './menu'
 
 type MenuItem = { label?: string; type?: string; submenu?: MenuItem[]; click?: () => void }
 
@@ -26,6 +26,25 @@ function templateFor(): MenuItem[] {
  * long way to reach for the panel that holds the theme, exports, transcription
  * and every shortcut. The menu bar carries a second way in.
  */
+describe('the Help menu', () => {
+  it('shows the running version, read from the manifest rather than written twice', () => {
+    const help = templateFor().find((item) => item.label === 'Help')
+    // The mock returns 0.1.0; what matters is that the label is built from
+    // app.getVersion(), so a release bump reaches the menu on its own.
+    expect(help?.submenu?.[0].label).toBe('Citadel v0.1.0')
+  })
+
+  it('says what Citadel is, under the number', () => {
+    const help = templateFor().find((item) => item.label === 'Help')
+    expect(help?.submenu?.[1].label).toBe(CITADEL_TAGLINE)
+  })
+
+  it('carries no version number of its own to go stale', () => {
+    // A hardcoded version in the tagline is a version that survives a release.
+    expect(CITADEL_TAGLINE).not.toMatch(/\d+\.\d+/)
+  })
+})
+
 describe('the Settings entry in the menu bar', () => {
   it('is in the Edit menu', () => {
     const edit = templateFor().find((item) => item.label === 'Edit')
