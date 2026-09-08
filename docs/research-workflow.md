@@ -10,11 +10,10 @@ Create a board named **References**. Drop in three photographs, a PDF report,
 and a text or Word document. Start with material you already have permission
 to use. Put a short note at the top containing the question you want to answer.
 
-In the development build after 0.3.0, select a PDF to browse pages or search its
-embedded text in the item panel. Word and Markdown imports preserve basic
-headings, emphasis, lists and links. Choose **Edit document** to edit Markdown;
-the original file stays intact. Published 0.3.0 builds still use first-page PDF
-previews and plain-text document imports.
+From 0.4.0, select a PDF to browse pages or search its embedded text in the item
+panel. Word and Markdown imports preserve basic headings, emphasis, lists and
+links. Choose **Edit document** to edit Markdown; the original file stays intact.
+0.3.0 shows a first-page PDF preview and imports documents as plain text.
 
 ## 2. Put your observations beside their sources
 
@@ -48,7 +47,7 @@ If you have an audio interview or voice memo, right-click the audio item and
 choose **Transcribe**. Choose or download a model in Settings first. The
 transcript becomes editable, searchable text beside its recording. Recognition
 is local, and downloading the model is an explicit separate action.
-In the development build, select the transcript and click a timestamp under
+From 0.4.0, select the transcript and click a timestamp under
 **Original recording transcript** to jump to the corresponding audio. Press Play
 on the audio item to listen. Edited transcript text does not change the original
 timed segments. See [the feature guide](research-features.md) for limits.

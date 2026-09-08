@@ -1,7 +1,7 @@
-# Research features in the development build
+# Research features in 0.4.0
 
-These additions follow the published 0.3.0 release; they have not been uploaded
-to itch.io or published as installers.
+These additions arrived in 0.4.0. Builds are attached to the `v0.4.0` release;
+the itch.io uploads are made by hand.
 
 ## Formatted documents
 
