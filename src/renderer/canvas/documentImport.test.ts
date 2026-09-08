@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parseDocumentMarkdown, richDocumentText } from '../../types/documents'
 import type { DocumentExtraction } from '../../types/documents'
 import { buildSearchResult, getSearchResults } from '../ui/itemSearchModel'
 import { parseProjectFile } from '../utils/projectSchema'
@@ -128,12 +129,14 @@ describe('Markdown and plain text', () => {
     text: '# Outline\n\n- first  \n- second',
   }
 
-  it('keeps Markdown as source text in an ordinary text item', () => {
+  it('keeps editable Markdown source and readable content in an ordinary text item', () => {
     const item = buildDocumentItem(markdown, placement)
 
     expect(item.type).toBe('text')
-    // Unrendered: the markers are the content, not instructions to a renderer.
-    expect(item.meta?.content).toBe('# Outline\n\n- first  \n- second')
+    // Source is retained separately from the readable search/export projection.
+    expect(item.meta?.documentMarkdown).toBe('# Outline\n\n- first  \n- second')
+    expect(item.meta?.content).toContain('Outline\n\n• first')
+    expect(item.meta?.richDocument).toBeDefined()
     expect(item.meta?.documentFormat).toBe('markdown')
     expect(item.meta?.documentName).toBe('outline.md')
     expect(item.src).toBe('/home/scribe/notes/outline.md')
@@ -160,10 +163,11 @@ describe('import messages', () => {
       .toBe('brief.docx imported as text, shortened to fit. The original file is unchanged.')
   })
 
-  it('says plainly that Markdown is not rendered', () => {
+  it('names basic formatting and Markdown editing', () => {
     const message = documentImportedMessage({ ...extraction, format: 'markdown', sourceName: 'outline.md' })
     expect(message).toContain('outline.md')
-    expect(message).toContain('does not render Markdown')
+    expect(message).toContain('basic formatting')
+    expect(message).toContain('edit Markdown')
   })
 
   it('does not blame Word for a text file that would not read', () => {
@@ -192,5 +196,20 @@ describe('import messages', () => {
     expect(documentImportFailureMessage('brief.docx', 'too-large')).toContain('25 MB')
     // A protected document is not reported as damage, and not as a false success.
     expect(documentImportFailureMessage('locked.docx', 'ole-container')).toContain('password-protected')
+  })
+})
+
+
+describe('formatted document persistence', () => {
+  it('saves and reopens formatting, source and a searchable plain projection together', () => {
+    const markdown = '# Archive\n\n**Important** [reference](https://example.com)'
+    const richDocument = parseDocumentMarkdown(markdown)
+    const item = buildDocumentItem({ ...extraction, markdown, richDocument, text: richDocumentText(richDocument) }, placement)
+    const project = { version: '1.0.0', createdAt: 1, updatedAt: 2, activeBoardId: 'board', boards: [{ id: 'board', name: 'Board', items: [item], connections: [], viewport: { x: 0, y: 0, scale: 1 } }] }
+    const reopened = parseProjectFile(JSON.stringify(project)).boards[0].items[0]
+    expect(reopened).toEqual(item)
+    expect(reopened.meta?.content).toBe('Archive\n\nImportant reference')
+    expect(reopened.meta?.documentMarkdown).toBe(markdown)
+    expect(getSearchResults([reopened], 'important reference')).toHaveLength(1)
   })
 })

@@ -26,6 +26,10 @@ notes, and any project where connections are easier to see than to describe.
 
 ## What it can do
 
+The features below describe the current source branch. Basic document formatting,
+multi-page PDF browsing/search, and transcript seeking are development additions
+after the published 0.3.0 release.
+
 ### Canvas and organisation
 
 - Infinite pan-and-zoom canvas with multi-select, lasso, smart snapping,
@@ -46,22 +50,20 @@ notes, and any project where connections are easier to see than to describe.
 | Text blocks | Create and edit plain text directly on the canvas; resize, rotate, style, tag, search, and connect it. |
 | Notes | Create editable sticky notes or attach a comment note to an item. Notes are searchable across every board. |
 | Code cards | Create copyable, syntax-coloured snippets; double-click to edit; choose TypeScript, JavaScript, Python, JSON, HTML, CSS, Bash, SQL, YAML, or plain text. Code content and language are searchable and export correctly. |
-| PDFs | Drop a PDF to add a cached preview of its first page. It is a visual reference, not a full PDF reader or text extractor. |
-| Word documents (`.docx`) | Drop a `.docx` to import its text as a normal canvas text block: editable, searchable, taggable, connectable, and included in exports. The path to the original document is kept on the item, and the file itself is never modified. |
-| Markdown (`.md`, `.markdown`) | Imported the same way, as its **source text**. Citadel does not render Markdown: headings, lists, and links arrive as the characters the file holds, and the item says so when it lands. |
+| PDFs | Drop a PDF, then use its item panel to browse pages and search embedded text. Only the displayed page is rasterized. Search results jump to their page. |
+| Word documents (`.docx`) | Import editable, searchable text with basic headings, emphasis, lists, and link labels. The original file is never modified. |
+| Markdown (`.md`, `.markdown`) | Display basic formatting on the canvas, with source Markdown preserved for editing and export. Double-click or choose Edit document to edit. |
 | Plain text (`.txt`) | Imported the same way. UTF-8 and UTF-16 files are both read, so a file saved from Notepad as "Unicode" arrives as text rather than as gibberish. |
 | Legacy Word (`.doc`) | Not supported. Dropping one shows a message asking you to save it as `.docx` in Word and drop it again; nothing is imported and nothing is silently dropped. |
 | RTF, ODT | Not imported. Paste their content into a text block, note, or code card instead. |
 
-Citadel currently stores plain text and code inside the project; it does not
-interpret Markdown, offer rich-text editing, or round-trip office documents.
-
-**What document import does and does not do.** Import produces plain text only.
-From a `.docx`, headings, bold, italics, tables, images, footnotes, comments,
-and tracked changes are not carried across; table cells and list items arrive
-as ordinary paragraphs. From a `.md` or `.txt`, the file arrives as written —
-only line endings are normalised, so Markdown's own hard line breaks and blank
-lines survive. Citadel never writes back to any of them.
+Document formatting is a bounded subset, not full Word page-layout fidelity or
+full CommonMark. Word tables flatten into paragraphs; images, comments and exact
+layout are not reproduced. HTML is never executed, and links do not fetch content.
+The editor offers Heading, Bold, Italic, List and Link controls; editing remains
+undoable. Plain `.txt` files retain literal text behavior. See the
+[formatting contract](docs/citadel-document-formatting.md) for exact support and
+[research feature guide](docs/research-features.md) for PDF and transcript controls.
 
 Documents are read locally by the app's main process — nothing is uploaded and
 no network request is made. Two bounds apply to every format: files over 25 MB
@@ -76,6 +78,8 @@ the app with the reason rather than skipped in silence.
 
 - Drag in images, GIFs, video, audio, 3D models, and PDFs.
 - Add YouTube URLs as embedded references.
+- Select a transcript and click a timestamp in **Original recording transcript**
+  to focus its audio and seek to that moment. Playback stays paused until Play.
 - Image, GIF, video, and 3D previews use a local thumbnail pipeline so large
   boards stay responsive.
 - Pull a colour palette straight out of a reference image. The swatch appears
@@ -93,7 +97,7 @@ Supported drag-and-drop extensions include:
 - Video: `mp4`, `webm`, `mov`, `mkv`, `avi`
 - Audio: `mp3`, `wav`, `ogg`, `flac`, `aac`, `m4a`
 - 3D: `glb`, `gltf`, `obj`, `fbx`
-- Documents: `pdf` (first-page preview), `docx`, `md`, `markdown`, `txt`
+- Documents: `pdf` (page preview and embedded-text search), `docx`, `md`, `markdown`, `txt`
   (text imported as a text block)
 
 ### Find and move quickly

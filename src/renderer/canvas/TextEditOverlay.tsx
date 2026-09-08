@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
+import { documentEditorSource, documentTextMetaPatch, itemRichDocument } from './richDocument'
+import { DocumentFormattingTools } from './DocumentFormattingTools'
 import { useHistoryStore } from '../store/historyStore'
 
 const STICKY_COLORS = ['#1e1b18', '#171d22', '#1a211a', '#241919', '#211e16', '#172220'] as const
@@ -31,8 +33,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const ref = useRef<HTMLTextAreaElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const committed = useRef(false)
-  // Shallow copy is safe: all current meta fields (content, color, fontSize, align, fontStyle) are primitives.
-  // Revisit with a deep clone if nested-object meta fields are ever added.
+  // Rich blocks are immutable: edits always replace the complete rich payload.
   const beforeMeta = useRef<Record<string, unknown>>({ ...(item.meta ?? {}) })
   const [pendingMeta, setPendingMeta] = useState<Record<string, unknown>>({ ...(item.meta ?? {}) })
 
@@ -49,6 +50,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
   const sw = item.width * viewport.scale
   const sh = item.height * viewport.scale
   const isSticky = item.type === 'sticky'
+  const isRich = item.type === 'text' && !!itemRichDocument(beforeMeta.current)
   const displayFontSize = ((pendingMeta.fontSize as number) ?? (isSticky ? 14 : 18)) * viewport.scale
   const fitsAbove = sy >= TOOLBAR_H + 8
   const fitsBelow = sy + sh + 4 + TOOLBAR_H <= window.innerHeight
@@ -69,7 +71,7 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
     if (committed.current) return
     committed.current = true
     const val = ref.current?.value ?? ''
-    const afterMeta = { ...pendingMeta, content: val }
+    const afterMeta = { ...pendingMeta, ...documentTextMetaPatch(beforeMeta.current, val) }
     updateItem(activeBoardId, item.id, { meta: afterMeta })
     useHistoryStore.getState().push(
       'ITEM_STYLE',
@@ -89,6 +91,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
 
   return (
     <>
+      {isRich && <div ref={toolbarRef} style={{ position: 'fixed', left: Math.max(8, Math.min(sx, window.innerWidth - 440)), top: Math.max(8, toolbarTop), zIndex: 201, background: 'var(--bg-panel)', border: '1px solid var(--border)', padding: 6 }}>
+        <DocumentFormattingTools textareaRef={ref} onChange={(source) => applyMeta(documentTextMetaPatch(beforeMeta.current, source))} />
+      </div>}
       {isSticky && (
         <div
           ref={toolbarRef}
@@ -216,14 +221,16 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
       )}
       <textarea
         ref={ref}
-        defaultValue={(item.meta?.content as string) ?? ''}
+        defaultValue={documentEditorSource(item.meta)}
+        aria-label={isRich ? 'Document Markdown' : 'Item text'}
+        onChange={isRich ? (e) => applyMeta(documentTextMetaPatch(beforeMeta.current, e.target.value)) : undefined}
         onBlur={(e) => {
           if (toolbarRef.current?.contains(e.relatedTarget as Node)) return
           commit()
         }}
         onKeyDown={(e) => {
           if (e.key === 'Escape') { revert(); return }
-          if (e.key === 'Enter' && !isSticky) { e.preventDefault(); commit() }
+          if (e.key === 'Enter' && !isSticky && !isRich) { e.preventDefault(); commit() }
         }}
         style={{
           position: 'fixed',
@@ -250,7 +257,9 @@ export function TextEditOverlay({ item }: Props): React.ReactElement {
           padding: isSticky ? 8 : '2px 4px',
           resize: 'none',
           outline: 'none',
-          overflow: 'hidden',
+          overflow: isRich ? 'auto' : 'hidden',
+          transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
+          transformOrigin: 'top left',
           zIndex: 200,
           lineHeight: 1.4,
           boxSizing: 'border-box',

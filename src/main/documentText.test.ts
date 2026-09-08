@@ -2,7 +2,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import JSZip from 'jszip'
-import { afterAll, describe, expect, it } from 'vitest'
+import mammoth from 'mammoth'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import {
   TRUNCATION_NOTICE,
   capDocumentText,
@@ -26,7 +27,7 @@ afterAll(() => {
 })
 
 /** The smallest package Word's own reader would accept: content types, a root relationship, one body. */
-async function writeDocx(name: string, paragraphs: string[]): Promise<string> {
+async function writeDocx(name: string, paragraphs: string[], extras: Record<string, string> = {}, rawBody?: string): Promise<string> {
   const zip = new JSZip()
   zip.file(
     '[Content_Types].xml',
@@ -43,7 +44,7 @@ async function writeDocx(name: string, paragraphs: string[]): Promise<string> {
     + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
     + '</Relationships>',
   )
-  const body = paragraphs
+  const body = rawBody ?? paragraphs
     .map((text) => `<w:p><w:r><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`)
     .join('')
   zip.file(
@@ -53,6 +54,7 @@ async function writeDocx(name: string, paragraphs: string[]): Promise<string> {
     + `<w:body>${body}</w:body></w:document>`,
   )
 
+  for (const [entry, value] of Object.entries(extras)) zip.file(entry, value)
   const path = join(workDir, name)
   writeFileSync(path, await zip.generateAsync({ type: 'nodebuffer' }))
   return path
@@ -227,7 +229,7 @@ describe('extractDocumentText', () => {
     expect(await extractDocumentText(42)).toMatchObject({ ok: false, code: 'unsupported-format' })
   })
 
-  it('imports a Markdown file as its own source text, unrendered', async () => {
+  it('imports Markdown formatting alongside its unchanged source', async () => {
     const source = '# Heading\n\n- one\n- two\n\nA line with a hard break  \nand its continuation.\n'
     const path = join(workDir, 'notes.md')
     writeFileSync(path, source)
@@ -238,7 +240,9 @@ describe('extractDocumentText', () => {
     expect(result.format).toBe('markdown')
     // Every marker survives, including the two trailing spaces Markdown reads
     // as a hard line break. Only the closing newline is trimmed.
-    expect(result.text).toBe(source.replace(/\n$/, ''))
+    expect(result.markdown).toBe(source.replace(/\n$/, ''))
+    expect(result.text).toContain('Heading\n\n• one')
+    expect(result.richDocument?.blocks[0]).toMatchObject({ type: 'heading', level: 1 })
     expect(result.sourceName).toBe('notes.md')
     expect(result.truncated).toBe(false)
   })
@@ -300,5 +304,41 @@ describe('extractDocumentText', () => {
     writeFileSync(path, Buffer.alloc(DOCUMENT_LIMITS.maxBytes + 1))
     const result = await extractDocumentText(path)
     expect(result).toMatchObject({ ok: false, code: 'too-large' })
+  })
+})
+
+
+describe('formatted DOCX integration', () => {
+  it('reads real Word styles, runs, numbering and links without fetching linked images', async () => {
+    const path = await writeDocx('formatted.docx', [], {
+      'word/styles.xml': '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="Heading 1"/></w:style></w:styles>',
+      'word/numbering.xml': '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="decimal"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>',
+      'word/_rels/document.xml.rels': '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="safe" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.com" TargetMode="External"/><Relationship Id="bad" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="javascript:evil" TargetMode="External"/><Relationship Id="image" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="file:///definitely-not-readable-citadel-image.png" TargetMode="External"/></Relationships>',
+    }, '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Title</w:t></w:r></w:p>'
+      + '<w:p><w:r><w:rPr><w:b/><w:i/></w:rPr><w:t>Emphasis</w:t></w:r><w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="safe"><w:r><w:t>Reference</w:t></w:r></w:hyperlink><w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="bad"><w:r><w:t>Unsafe</w:t></w:r></w:hyperlink></w:p>'
+      + '<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>First</w:t></w:r></w:p>'
+      + '<w:p><w:r><w:pict xmlns:v="urn:schemas-microsoft-com:vml" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><v:imagedata r:id="image"/></w:pict></w:r></w:p>')
+    const conversion = vi.spyOn(mammoth, 'convertToHtml')
+    const result = await extractDocumentText(path)
+    expect(conversion).toHaveBeenCalledWith({ path }, expect.objectContaining({ externalFileAccess: false, includeEmbeddedStyleMap: false }))
+    expect(await conversion.mock.results[0].value).toMatchObject({ value: '' })
+    conversion.mockRestore()
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.richDocument?.blocks[0]).toMatchObject({ type: 'heading', level: 1 })
+    expect(result.richDocument?.blocks[1].runs).toEqual([
+      { text: 'Emphasis', bold: true, italic: true }, { text: 'Reference', href: 'https://example.com' }, { text: 'Unsafe' },
+    ])
+    expect(result.richDocument?.blocks[2]).toMatchObject({ type: 'list', ordered: true, start: 1 })
+    expect(result.markdown).toContain('***Emphasis***')
+    expect(result.markdown).not.toContain('javascript:')
+    expect(JSON.stringify(result.richDocument)).not.toContain('file:')
+    expect(result.text).toContain('1. First')
+  })
+
+  it('returns a binary refusal for odd-length UTF-16 instead of throwing', async () => {
+    const path = join(workDir, 'odd-utf16.md')
+    writeFileSync(path, Buffer.from([0xfe, 0xff, 0x00]))
+    expect(await extractDocumentText(path)).toMatchObject({ ok: false, code: 'binary' })
   })
 })

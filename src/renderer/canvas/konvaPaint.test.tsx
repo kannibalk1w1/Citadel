@@ -61,7 +61,7 @@ function paintValues(): unknown[] {
 
 /** The colour actually handed to the shape that draws the words. */
 function textFill(): unknown {
-  return captured.map((props) => props.fill).find((fill) => fill !== undefined)
+  return captured.find((props) => typeof props.text === 'string')?.fill
 }
 
 describe('Konva paint props', () => {

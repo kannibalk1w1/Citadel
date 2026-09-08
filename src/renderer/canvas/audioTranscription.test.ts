@@ -110,6 +110,7 @@ describe('buildTranscriptItem', () => {
     const item = buildTranscriptItem(audioItem, transcription)
     expect(item.src).toBe('/notes/voice.m4a')
     expect(item.meta?.transcriptOf).toBe('/notes/voice.m4a')
+    expect(item.meta?.transcriptSourceItemId).toBe(audioItem.id)
   })
 
   it('stores no colour, so a transcript follows a theme change', () => {

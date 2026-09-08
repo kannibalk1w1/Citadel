@@ -11,6 +11,9 @@ import { canvasColor, resolveCanvasColor } from '../../theme/canvasColors'
 import { CODE_LANGUAGES, codeLanguageLabel, normalizeCodeLanguage } from '../../canvas/items/codeSnippet'
 import { ToolIcon, type ToolIconName } from '../icons/ToolIcon'
 import { inscribe } from '../toasts/inscriptionToastStore'
+import { TranscriptPanel } from './TranscriptPanel'
+import { PdfDocumentPanel } from './PdfDocumentPanel'
+import { itemRichDocument } from '../../canvas/richDocument'
 import {
   imageRegionPercent,
   sourceCaptureConnection,
@@ -814,6 +817,15 @@ export function ItemProperties(): React.ReactElement | null {
       style={panelChrome}
     >
       <PanelTitle title="Item" subtitle={`${item.type} / ${item.id.slice(0, 6)}`} />
+
+      <PdfDocumentPanel key={`pdf-${activeBoardId}-${item.id}`} item={item} boardId={activeBoardId} />
+      <TranscriptPanel key={`transcript-${activeBoardId}-${item.id}`} item={item} boardId={activeBoardId} />
+      {item.type === 'text' && itemRichDocument(item.meta) && (
+        <button type="button" disabled={item.locked} style={smallButtonStyle}
+          onClick={() => useUIStore.getState().setEditingItemId(item.id)}>
+          Edit document
+        </button>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
         <Field label="X"><NumInput value={item.x} onChange={(v) => update({ x: v })} /></Field>

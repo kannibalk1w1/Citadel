@@ -12,9 +12,9 @@ import {
   readCitadelProject,
   toJsonPath,
   uniqueAssetPath,
-  walkProjectItems,
   writeCitadelProject,
 } from './projectPersistence'
+import { projectAssetPaths, visitProjectAssetPaths } from '../types/projectAssetPaths'
 import { extractDocumentText } from './documentText'
 import { resolveEngine, transcribeAudio } from './transcription'
 import { fontsDirFor, listFonts, listSnippets, readFont, snippetsDirFor } from './userStyles'
@@ -113,18 +113,21 @@ function prepareZipProject(projectJson: string, assetPaths: string[]): { project
   const knownAssets = new Set(assetPaths)
   const used = new Set<string>()
   const assets: ZipAsset[] = []
+  const copiedPaths = new Map<string, string>()
 
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src)) return
+  visitProjectAssetPaths(project, (src, replace) => {
+    if (isUrlLikeSrc(src)) return
     const sourcePath = isAbsolute(src) ? src : resolve(src)
     if (!knownAssets.has(src) && !knownAssets.has(sourcePath)) return
     if (!existsSync(sourcePath)) return
+    const copied = copiedPaths.get(sourcePath)
+    if (copied) { replace(copied); return }
 
     const asset = uniqueAssetPath('', used, sourcePath)
     const zipPath = toJsonPath(join('assets', asset.filename))
     assets.push({ sourcePath, zipPath })
-    item.src = zipPath
+    copiedPaths.set(sourcePath, zipPath)
+    replace(zipPath)
   })
 
   return { projectJson: JSON.stringify(project, null, 2), assets }
@@ -153,21 +156,15 @@ async function writeZipProject(
 
 function collectProjectAssetPaths(projectJson: string): string[] {
   const project = JSON.parse(projectJson) as PortableProject
-  const paths: string[] = []
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (src && !isUrlLikeSrc(src)) paths.push(src)
-  })
-  return paths
+  return projectAssetPaths(project).filter((src) => !isUrlLikeSrc(src))
 }
 
 function resolveImportedZipProject(projectJson: string, assetDir: string): string {
   const project = JSON.parse(projectJson) as PortableProject
 
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src) || isAbsolute(src)) return
-    item.src = resolve(assetDir, src.replace(/^assets[\\/]/i, ''))
+  visitProjectAssetPaths(project, (src, replace) => {
+    if (isUrlLikeSrc(src) || isAbsolute(src)) return
+    replace(resolve(assetDir, src.replace(/^assets[\\/]/i, '')))
   })
 
   return JSON.stringify(project, null, 2)

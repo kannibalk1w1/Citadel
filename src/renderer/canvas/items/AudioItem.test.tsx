@@ -6,6 +6,8 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { AudioItem } from './AudioItem'
+import { beginProjectSession } from '../../utils/projectSession'
+import { cancelAudioSeek, seekTranscriptSegment } from '../audioSeek'
 
 vi.mock('react-konva', () => ({
   Rect: () => <div data-testid="audio-konva-rect" />,
@@ -97,6 +99,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  cancelAudioSeek()
   cleanup()
   getContext.mockRestore()
   pause.mockRestore()
@@ -160,5 +163,40 @@ describe('AudioItem lifecycle', () => {
 
     expect(contexts).toHaveLength(0)
     expect(frameCallbacks).toHaveLength(0)
+  })
+})
+
+
+describe('AudioItem transcript seeking', () => {
+  it('registers a mounted player and waits for metadata without creating a media graph', () => {
+    const transcript: CanvasItem = { ...audioItem, id: 'transcript', type: 'text', meta: {
+      transcriptSourceItemId: audioItem.id,
+      transcriptSegments: [{ start: 12.5, end: 20, text: 'Original words' }],
+    } }
+    useCanvasStore.getState().addItem('board-1', transcript)
+    seekTranscriptSegment('board-1', transcript.id, 12.5)
+    const { container } = render(<AudioItem item={audioItem} />)
+    const audio = container.querySelector('audio')!
+    expect(audio.currentTime).toBe(0)
+    expect(audio.preload).toBe('metadata')
+    Object.defineProperty(audio, 'readyState', { configurable: true, value: 2 })
+    Object.defineProperty(audio, 'duration', { configurable: true, value: 90 })
+    fireEvent.loadedMetadata(audio)
+    expect(audio.currentTime).toBe(12.5)
+    expect(contexts).toHaveLength(0)
+    expect(frameCallbacks).toHaveLength(0)
+  })
+
+  it('replaces the player and closes its graph on a new project with identical IDs and paths', () => {
+    const { container, rerender } = render(<AudioItem item={audioItem} />)
+    const oldAudio = container.querySelector('audio')!
+    fireEvent.play(oldAudio)
+    beginProjectSession()
+    rerender(<AudioItem item={{ ...audioItem }} />)
+    expect(container.querySelector('audio')).not.toBe(oldAudio)
+    expect(contexts[0].close).toHaveBeenCalledTimes(1)
+    expect(contexts[0].createMediaElementSource.mock.results[0].value.disconnect).toHaveBeenCalledTimes(1)
+    fireEvent.play(oldAudio)
+    expect(contexts).toHaveLength(1)
   })
 })

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { nanoid } from 'nanoid'
+import { remapTranscriptReferences } from '../canvas/transcriptReferences'
 import type { CanvasItem, CanvasBoard, Connection, Viewport } from '../../types'
 import { useUIStore } from './uiStore'
 
@@ -103,7 +104,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     if (!source) return null
     const boardId = nanoid()
     const itemIdMap = new Map(source.items.map((item) => [item.id, nanoid()]))
-    const items = source.items.map((item) => ({ ...item, id: itemIdMap.get(item.id)! }))
+    const items = source.items.map((item) => remapTranscriptReferences({ ...item, id: itemIdMap.get(item.id)! }, itemIdMap))
     const connections = source.connections
       .filter((connection) => itemIdMap.has(connection.fromId) && itemIdMap.has(connection.toId))
       .map((connection) => ({

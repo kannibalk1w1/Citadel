@@ -1,5 +1,5 @@
 import type { CanvasItem } from '../../types'
-import { DOCUMENT_LIMITS, documentFormatForFilename } from '../../types/documents'
+import { DOCUMENT_LIMITS, documentFormatForFilename, parseDocumentMarkdown, richDocumentText, richDocumentMarkdown } from '../../types/documents'
 import type { DocumentExtraction, DocumentFailureCode, PathFormat } from '../../types/documents'
 
 /**
@@ -12,7 +12,7 @@ import type { DocumentExtraction, DocumentFailureCode, PathFormat } from '../../
  * document-specific code anywhere else. The document's path stays on `src` so
  * the origin survives the import and the original file is bundled by
  * `.citadelz` export, and a few `document*` meta fields record what was
- * imported. Markdown arrives as its own source text; nothing renders it.
+ * imported. Optional safe blocks/runs preserve basic document formatting.
  */
 
 export const DOCUMENT_ITEM_LAYOUT = {
@@ -60,8 +60,10 @@ export type DocumentItemPlacement = {
 }
 
 export function buildDocumentItem(extraction: DocumentExtraction, placement: DocumentItemPlacement): CanvasItem {
+  const richDocument = extraction.richDocument ?? (extraction.format === 'markdown' ? parseDocumentMarkdown(extraction.markdown ?? extraction.text) : undefined)
+  const content = richDocument ? richDocumentText(richDocument) : extraction.text
   const width = DOCUMENT_ITEM_LAYOUT.width
-  const height = documentItemHeight(extraction.text)
+  const height = documentItemHeight(content)
   const shift = placement.offsetIndex * placement.stackOffset
 
   return {
@@ -80,7 +82,8 @@ export function buildDocumentItem(extraction: DocumentExtraction, placement: Doc
     // The document itself, still where its owner keeps it.
     src: extraction.sourcePath,
     meta: {
-      content: extraction.text,
+      content,
+      ...(richDocument ? { richDocument, documentMarkdown: extraction.markdown ?? (extraction.format === 'markdown' ? extraction.text : richDocumentMarkdown(richDocument)) } : {}),
       // No colour is stored: the renderer resolves the theme's text colour, so
       // an imported document follows a theme change like any other text item.
       fontSize: DOCUMENT_ITEM_LAYOUT.fontSize,
@@ -98,10 +101,8 @@ export function documentImportedMessage(extraction: DocumentExtraction): string 
   if (extraction.truncated) {
     return `${extraction.sourceName} imported as text, shortened to fit. The original file is unchanged.`
   }
-  // Said once, at the moment it could mislead: a dropped .md is its own source,
-  // not a rendered page, and the item shows exactly what the file holds.
-  if (extraction.format === 'markdown') {
-    return `${extraction.sourceName} imported as Markdown source text — Citadel does not render Markdown.`
+  if (extraction.richDocument || extraction.format === 'markdown') {
+    return `${extraction.sourceName} imported with basic formatting. Double-click to edit Markdown.`
   }
   return `${extraction.sourceName} imported as text`
 }

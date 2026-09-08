@@ -7,6 +7,7 @@ import { useHistoryStore } from '../store/historyStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { pathToUrl } from '../utils/pathToUrl'
 import { renderPdfFirstPage } from '../utils/pdfPreview'
+import { projectSessionRevision } from '../utils/projectSession'
 import { pdfDropFailureMessage } from './pdfImport'
 import { fingerprintFromProbe, withSourceFingerprint } from '../assets/sourceProvenance'
 import {
@@ -108,6 +109,7 @@ export function useFileDrop() {
     e.preventDefault()
     if (!activeBoardId) return
 
+    const dropProjectRevision = projectSessionRevision()
     const files = Array.from(e.dataTransfer.files) as ElectronFile[]
     if (files.length === 0) return
 
@@ -153,14 +155,21 @@ export function useFileDrop() {
     for (const file of files) {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       if (ext === 'pdf') {
+        const controller = new AbortController()
+        const current = () => projectSessionRevision() === dropProjectRevision
+          && useCanvasStore.getState().boards.some((board) => board.id === activeBoardId)
+        const unsubscribe = useCanvasStore.subscribe(() => { if (!current()) controller.abort() })
         try {
+          if (!current()) return
           const fingerprint = await sourceFingerprint(file.path)
-          const preview = await renderPdfFirstPage(file.path)
+          const preview = await renderPdfFirstPage(file.path, controller.signal)
+          if (!current() || controller.signal.aborted) return
           const result = await ((window as unknown as { ipc: IpcApi }).ipc.invoke('pdf:cachePageImage', {
             pdfPath: file.path,
             page: 1,
             imageData: preview.imageData,
           }) as Promise<{ path?: unknown }>)
+          if (!current() || controller.signal.aborted) return
           if (typeof result.path !== 'string') throw new Error('PDF cache did not return a path')
           const clamped = clampDimensions(preview.width, preview.height)
           const STACK_OFFSET = 20
@@ -178,7 +187,7 @@ export function useFileDrop() {
             opacity: 1,
             tags: [],
             src: result.path,
-            meta: withSourceFingerprint({ sourcePdf: file.path, sourcePdfPage: 1 }, fingerprint),
+            meta: withSourceFingerprint({ sourcePdf: file.path, sourcePdfPage: 1, sourcePdfPages: preview.numPages }, fingerprint),
           }
 
           addItem(activeBoardId, item)
@@ -186,9 +195,10 @@ export function useFileDrop() {
           added.push(item)
           offsetIndex++
         } catch (error) {
+          if (!current() || controller.signal.aborted) return
           console.error('PDF drop failed:', error)
           inscribe(pdfDropFailureMessage(file.name, error), { tone: 'danger' })
-        }
+        } finally { unsubscribe() }
         continue
       }
 

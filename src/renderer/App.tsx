@@ -70,6 +70,7 @@ import {
 import { normalizeKeybindOverrides, resolver } from './keybinds/keybindResolver'
 import { Actions } from './keybinds/actions'
 import { nanoid } from 'nanoid'
+import { remapTranscriptReferences } from './canvas/transcriptReferences'
 import { saveCurrentOrAs, saveProjectAs, openProject, newProject, autoSave, clearRecoveryIfClean, loadProjectData, parseRecoveryData, type ParsedRecovery, openShowcase } from './utils/projectFile'
 import { exportToPdf } from './export/pdfExport'
 import { exportToImage } from './export/imageExport'
@@ -385,7 +386,8 @@ export default function App(): React.ReactElement {
       if (!activeBoardId || selectedIds.length === 0) return
       const originals = canvas.selectedUnlockedItems()
       if (originals.length === 0) return
-      const copies = originals.map((i) => ({ ...i, id: nanoid(), x: i.x + 20, y: i.y + 20 }))
+      const ids = new Map(originals.map((item) => [item.id, nanoid()]))
+      const copies = originals.map((i) => remapTranscriptReferences({ ...i, id: ids.get(i.id)!, x: i.x + 20, y: i.y + 20 }, ids))
       copies.forEach((c) => {
         canvas.addItem(activeBoardId, c)
         useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, c)
@@ -775,7 +777,8 @@ export default function App(): React.ReactElement {
       const { activeBoardId } = canvas
       if (!activeBoardId) return
       pasteOffset += 20
-      const copies = clipboard.map((i) => ({ ...i, id: nanoid(), x: i.x + pasteOffset, y: i.y + pasteOffset }))
+      const ids = new Map(clipboard.map((item) => [item.id, nanoid()]))
+      const copies = clipboard.map((i) => remapTranscriptReferences({ ...i, id: ids.get(i.id)!, x: i.x + pasteOffset, y: i.y + pasteOffset }, ids))
       copies.forEach((c) => {
         canvas.addItem(activeBoardId, c)
         useHistoryStore.getState().push('ITEM_ADD', activeBoardId, null, c)

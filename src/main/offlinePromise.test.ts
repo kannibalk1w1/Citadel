@@ -87,7 +87,7 @@ describe('the renderer cannot reach past the machine', () => {
   // presence of a guard.
   it.each([
     ['canvas/audioTranscription.ts', 'isLocalSourcePath(src)'],
-    ['utils/pdfPreview.ts', 'isLocalSourcePath(pdfPath)'],
+    ['utils/pdfPreview.ts', 'isLocalSourcePath(path)'],
   ])('refuses a remote source in %s before fetching rather than after', (file, guardCall) => {
     const source = readFileSync(join(root, 'src', 'renderer', ...file.split('/')), 'utf-8')
     const guard = source.indexOf(guardCall)

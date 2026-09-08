@@ -2,6 +2,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
+import { projectAssetPaths } from '../../types/projectAssetPaths'
 
 export async function exportToZip(filename = 'citadel-archive.citadelz'): Promise<void> {
   const canvas = useCanvasStore.getState()
@@ -16,11 +17,8 @@ export async function exportToZip(filename = 'citadel-archive.citadelz'): Promis
     recordings: history.recordings,
   }, null, 2)
 
-  // Collect all asset paths (src fields from items)
-  const assetPaths: string[] = canvas.boards
-    .flatMap((b) => b.items)
-    .map((i) => i.src)
-    .filter((s): s is string => !!s && !s.startsWith('http'))
+  // PDF originals and transcript sources must travel with their visible items.
+  const assetPaths = projectAssetPaths({ boards: canvas.boards, recordings: history.recordings })
 
   useArchiveProgressStore.getState().beginRite('export')
   try {

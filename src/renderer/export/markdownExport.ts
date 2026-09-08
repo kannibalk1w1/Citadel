@@ -1,5 +1,6 @@
 import type { CanvasItem, Connection } from '../../types'
 import { normalizeCodeLanguage } from '../canvas/items/codeSnippet'
+import { documentEditorSource } from '../canvas/richDocument'
 import { imageRegionPercent, sourceCaptureContent, sourceCaptureReference } from '../canvas/sourceCapture'
 import { useCanvasStore } from '../store/canvasStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
@@ -136,7 +137,7 @@ function itemBody(item: CanvasItem, options: MarkdownExportOptions): string[] {
   switch (item.type) {
     case 'text':
     case 'sticky': {
-      const content = readContent(item).trim()
+      const content = documentEditorSource(item.meta).trim()
       if (content) lines.push(content)
       if (item.meta?.documentTruncated === true) {
         lines.push('', '*Shortened on import; the original document is unchanged.*')
@@ -152,6 +153,11 @@ function itemBody(item: CanvasItem, options: MarkdownExportOptions): string[] {
     case 'image':
     case 'gif': {
       if (item.src) lines.push(`![${basename(item.src)}](${linkTarget(relativeAssetPath(options.destinationDir, item.src))})`)
+      if (typeof item.meta?.sourcePdf === 'string') {
+        const source = item.meta.sourcePdf
+        const page = typeof item.meta.sourcePdfPage === 'number' ? item.meta.sourcePdfPage : 1
+        lines.push('', `PDF source: [${basename(source)}](${linkTarget(relativeAssetPath(options.destinationDir, source))}) · Page ${page}`)
+      }
       break
     }
     case 'youtube': {

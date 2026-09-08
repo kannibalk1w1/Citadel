@@ -167,6 +167,7 @@ export function buildTranscriptItem(
       fontSize: DOCUMENT_ITEM_LAYOUT.fontSize,
       align: 'left',
       transcriptOf: transcription.sourcePath,
+      transcriptSourceItemId: audio.id,
       transcriptName: transcription.sourceName,
       transcriptModel: transcription.modelId,
       transcriptLanguage: transcription.language,

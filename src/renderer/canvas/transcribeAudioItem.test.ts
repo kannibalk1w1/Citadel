@@ -110,6 +110,7 @@ describe('transcribeAudioItem', () => {
     await transcribeAudioItem(audioItem)
 
     expect(eventTypes()).toEqual(['ITEM_ADD', 'CONNECTION_ADD', 'ITEM_STYLE'])
+    expect(useHistoryStore.getState().events[0].after).toMatchObject({ meta: { transcriptSourceItemId: audioItem.id } })
   })
 
   it('says what it produced', async () => {

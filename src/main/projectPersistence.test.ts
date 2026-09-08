@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, resolve } from 'path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -108,6 +108,53 @@ describe('writeCitadelProject / readCitadelProject', () => {
     writeCitadelProject(path, JSON.stringify(remote))
 
     expect(JSON.parse(readCitadelProject(path))).toEqual(remote)
+  })
+
+  it('keeps PDF originals and transcript source references portable and deduplicated', () => {
+    const root = tempRoot()
+    const outside = tempRoot()
+    const preview = join(outside, 'preview.png')
+    const pdf = join(outside, 'paper.pdf')
+    const audio = join(outside, 'voice.wav')
+    for (const path of [preview, pdf, audio]) writeFileSync(path, path)
+    const original = {
+      boards: [{ items: [
+        { id: 'pdf', src: preview, meta: { sourcePdf: pdf, sourcePdfPage: 2 } },
+        { id: 'audio', src: audio },
+        { id: 'transcript', src: audio, meta: { transcriptOf: audio, content: 'Keep this text' } },
+      ] }],
+      recordings: [{ events: [{ before: null, after: { id: 'audio', src: audio } }] }],
+    }
+    const path = join(root, 'archive.citadel')
+    writeCitadelProject(path, JSON.stringify(original))
+    const portable = JSON.parse(readFileSync(path, 'utf8'))
+    expect(portable.boards[0].items[0].meta.sourcePdf).toBe('assets/paper.pdf')
+    expect(portable.boards[0].items[1].src).toBe(portable.boards[0].items[2].src)
+    expect(portable.boards[0].items[2].meta.transcriptOf).toBe(portable.boards[0].items[1].src)
+    expect(portable.recordings[0].events[0].after.src).toBe(portable.boards[0].items[1].src)
+    const moved = tempRoot()
+    const loaded = JSON.parse(resolveCitadelProjectAssets(JSON.stringify(portable), join(moved, 'archive.citadel')))
+    expect(loaded.boards[0].items[0].meta.sourcePdf).toBe(join(moved, 'assets', 'paper.pdf'))
+    expect(loaded.boards[0].items[2].meta.transcriptOf).toBe(join(moved, 'assets', 'voice.wav'))
+  })
+
+  it('does not overwrite an existing project asset with an unrelated same-named source', () => {
+    const root = tempRoot()
+    const outside = tempRoot()
+    mkdirSync(join(root, 'assets'))
+    writeFileSync(join(root, 'assets', 'voice.wav'), 'existing recording')
+    writeFileSync(join(outside, 'voice.wav'), 'different recording')
+    writeCitadelProject(join(root, 'archive.citadel'), JSON.stringify(project([
+      { id: 'new', type: 'audio', src: join(outside, 'voice.wav') },
+    ])))
+    expect(readFileSync(join(root, 'assets', 'voice.wav'), 'utf8')).toBe('existing recording')
+    expect(readFileSync(join(root, 'assets', 'voice-2.wav'), 'utf8')).toBe('different recording')
+    // Re-saving unchanged external references must not keep copying a large PDF
+    // or recording into another numbered file on every save.
+    writeCitadelProject(join(root, 'archive.citadel'), JSON.stringify(project([
+      { id: 'new', type: 'audio', src: join(outside, 'voice.wav') },
+    ])))
+    expect(readdirSync(join(root, 'assets')).sort()).toEqual(['voice-2.wav', 'voice.wav'])
   })
 
   it('keeps a missing relic path as written rather than silently dropping it', () => {

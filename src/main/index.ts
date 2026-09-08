@@ -12,6 +12,7 @@ import { isExternallyOpenable } from './externalLinks'
 import { isPermissionAllowed } from './permissions'
 import { buildMenu } from './menu'
 import { initCrashRecovery } from './crashRecovery'
+import { serveLocalAsset } from './localAssets'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -125,10 +126,7 @@ app.whenReady().then(() => {
 
   // Serve local asset files via local:// so the renderer can load them
   // regardless of whether it's running from localhost (dev) or file (prod).
-  protocol.handle('local', (request) => {
-    const path = request.url.slice('local:///'.length)
-    return net.fetch(`file:///${decodeURIComponent(path)}`)
-  })
+  protocol.handle('local', (request) => serveLocalAsset(request, net.fetch))
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

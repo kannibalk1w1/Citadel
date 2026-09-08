@@ -27,6 +27,15 @@ The target interaction budget is:
 
 These are the active implementation decisions that future sessions should preserve.
 
+Research features (2026-09-08, development additions after 0.3.0):
+
+- DOCX/Markdown imports carry a bounded `meta.richDocument` block/run model and editable `meta.documentMarkdown`, with `meta.content` as a searchable plain projection. Konva renders clipped, memoized runs; stale rich metadata falls back to plain text. The Markdown editor commits through the shared `ITEM_STYLE` log. See `citadel-document-formatting.md` for the supported subset.
+- PDFs remain image items with `meta.sourcePdf`, `sourcePdfPage`, and `sourcePdfPages`. The item panel browses pages and searches embedded text locally without rasterizing search results. Page changes are undoable; async reads are cancellable and reject stale project/source revisions. Limits: 64 MB, 500 pages, 2 million searched characters, 100 results, 30 seconds. No OCR; annotations remain item-level, not page-specific.
+- Transcript metadata links to a durable audio item ID; copied boards, pasted/duplicated items and templates remap paired IDs. Timestamp seeking wakes virtualized audio, waits for metadata, validates duration, and seeks paused. Original timed segments are explicitly separate from editable transcript text. No new history system or media graph is created for seeking.
+- The `local:` asset protocol forwards byte ranges and supplies `Accept-Ranges`, `Content-Length`, `Content-Range`, and partial-response status. Electron's file fetch alone can slice the body while omitting these headers, causing Chromium to clamp media seeks to zero. Keep the actual WAV seek/range desktop regression; seek completion is confirmed before showing success.
+- Project/archive portability includes allowlisted `sourcePdf` and `transcriptOf` metadata and recording snapshots, not arbitrary metadata strings. Shared references reuse copied assets; saving never overwrites an unrelated same-name asset. Cache cleanup preserves previews referenced by undo/recordings; relinking metadata sources is undoable and project-session guarded.
+- These features are not a published release. Electron/build-toolchain upgrades and packaged Windows validation remain separate next work. See `research-features.md` for usage and limitations.
+
 Review follow-up (2026-09-08, implemented after the 0.3.0 release):
 
 - Dirty state cannot become clean merely by reaching the same history cursor on a different undo branch. Non-event mutations invalidate the saved checkpoint; project replacement clears history and loads only that project's validated recordings.

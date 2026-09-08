@@ -163,11 +163,12 @@ describe('useFileDrop with Word documents', () => {
     const items = useCanvasStore.getState().items()
     expect(items).toHaveLength(1)
     expect(items[0].type).toBe('text')
-    expect(items[0].meta?.content).toBe('# Outline\n\n- first')
+    expect(items[0].meta?.content).toBe('Outline\n\n• first')
+    expect(items[0].meta?.documentMarkdown).toBe('# Outline\n\n- first')
     expect(items[0].meta?.documentFormat).toBe('markdown')
     expect(useCanvasStore.getState().selectedIds).toEqual([items[0].id])
     expect(useHistoryStore.getState().events).toHaveLength(1)
-    expect(toastTexts()[0]).toContain('does not render Markdown')
+    expect(toastTexts()[0]).toContain('basic formatting')
   })
 
   it('imports a dropped .txt the same way', async () => {

@@ -49,6 +49,36 @@ afterAll(() => {
 })
 
 describe('import:zip asset isolation', () => {
+  it('bundles PDF originals and shared transcript audio once, then resolves every source on import', async () => {
+    const { dialog } = await import('electron')
+    const archivePath = join(workDir, 'portable-sources.citadelz')
+    vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: false, filePath: archivePath })
+    const preview = join(workDir, 'page.png')
+    const pdf = join(workDir, 'original.pdf')
+    const audio = join(workDir, 'audio.wav')
+    writeFileSync(preview, 'preview bytes')
+    writeFileSync(pdf, 'original PDF bytes')
+    writeFileSync(audio, 'original audio bytes')
+    const projectJson = JSON.stringify({ boards: [{ items: [
+      { id: 'pdf', type: 'image', src: preview, meta: { sourcePdf: pdf, sourcePdfPage: 2 } },
+      { id: 'audio', type: 'audio', src: audio },
+      { id: 'transcript', type: 'text', src: audio, meta: { transcriptOf: audio } },
+    ] }] })
+    const exported = await handlers.get('export:zip')!({ sender: { send: vi.fn() } }, {
+      filename: archivePath, projectJson, assetPaths: [preview, pdf, audio],
+    }) as { ok: boolean }
+    expect(exported.ok).toBe(true)
+    const zip = await JSZip.loadAsync(readFileSync(archivePath))
+    expect(Object.values(zip.files).filter((entry) => !entry.dir && entry.name.startsWith('assets/'))).toHaveLength(3)
+    const loaded = await importArchive(archivePath)
+    expect(loaded.ok).toBe(true)
+    const items = JSON.parse(loaded.projectJson!).boards[0].items
+    expect(readFileSync(items[0].meta.sourcePdf, 'utf8')).toBe('original PDF bytes')
+    expect(items[2].src).toBe(items[1].src)
+    expect(items[2].meta.transcriptOf).toBe(items[1].src)
+    expect(readFileSync(items[2].meta.transcriptOf, 'utf8')).toBe('original audio bytes')
+  })
+
   it('keeps same-named assets from same-directory imports independent', async () => {
     const first = await importArchive(await writeArchive('first.citadelz', 'first archive'))
     const second = await importArchive(await writeArchive('second.citadelz', 'second archive'))

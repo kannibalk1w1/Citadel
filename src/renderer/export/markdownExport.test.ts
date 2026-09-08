@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Connection } from '../../types'
+import { parseDocumentMarkdown, richDocumentText } from '../../types/documents'
 import { createSourceCapture } from '../canvas/sourceCapture'
 import { itemsToMarkdown, markdownExportFilename, markdownItemOrder, relativeAssetPath } from './markdownExport'
 
@@ -44,6 +45,26 @@ describe('markdown export', () => {
 
     expect(markdown).toContain('```typescript\nconst a = 1\n```')
     expect(markdown).toContain('```\nnotes\n```')
+  })
+
+  it('preserves editable rich-document formatting, but never exports stale rich content', () => {
+    const source = '# Research\n\n**Evidence** and *questions*\n\n- First point'
+    const richDocument = parseDocumentMarkdown(source)
+    const note = item({ id: 'rich', type: 'text', meta: {
+      content: richDocumentText(richDocument), documentMarkdown: source, richDocument,
+    } })
+    expect(itemsToMarkdown([note], [], options)).toContain(source)
+    const changed = { ...note, meta: { ...note.meta, content: 'Replaced externally' } }
+    const exported = itemsToMarkdown([changed], [], options)
+    expect(exported).toContain('Replaced externally')
+    expect(exported).not.toContain('**Evidence**')
+  })
+
+  it('includes a PDF source and selected page beside its preview', () => {
+    const pdf = item({ id: 'pdf', type: 'image', src: '/vault/assets/page.png', meta: {
+      sourcePdf: '/vault/assets/research.pdf', sourcePdfPage: 3,
+    } })
+    expect(itemsToMarkdown([pdf], [], options)).toContain('PDF source: [research.pdf](../assets/research.pdf) · Page 3')
   })
 
   it('links assets relative to where the note is written', () => {

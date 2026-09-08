@@ -92,7 +92,7 @@ describe('document:extractText channel', () => {
     })
   })
 
-  it('answers a Markdown path with its unrendered source', async () => {
+  it('answers a Markdown path with formatted text and preserved source', async () => {
     const path = join(workDir, 'channel.md')
     writeFileSync(path, '# Title\n\n- a list item\n')
     const result = await callDocumentChannel({ path })
@@ -101,7 +101,9 @@ describe('document:extractText channel', () => {
       ok: true,
       format: 'markdown',
       sourceName: 'channel.md',
-      text: '# Title\n\n- a list item',
+      text: 'Title\n\n• a list item',
+      markdown: '# Title\n\n- a list item',
+      richDocument: { version: 1 },
     })
   })
 

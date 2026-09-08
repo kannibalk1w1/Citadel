@@ -5,8 +5,9 @@
  * in tests against a real temporary directory. `ipc.ts` is the only caller in
  * the app; the renderer reaches this code exclusively through the IPC bridge.
  */
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, readSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'path'
+import { visitProjectAssetPaths } from '../types/projectAssetPaths'
 
 export type PortableItem = { src?: string; [key: string]: unknown }
 export type PortableBoard = { items?: PortableItem[]; [key: string]: unknown }
@@ -51,6 +52,28 @@ export function walkProjectItems(project: PortableProject, visit: (item: Portabl
   project.boards?.forEach((board) => board.items?.forEach(visit))
 }
 
+/** Compare existing copies without allocating two entire video/audio files. */
+function sameFileBytes(source: string, destination: string, size: number): boolean {
+  const sourceFd = openSync(source, 'r')
+  let destinationFd: number | undefined
+  try {
+    destinationFd = openSync(destination, 'r')
+    const a = Buffer.allocUnsafe(64 * 1024)
+    const b = Buffer.allocUnsafe(a.length)
+    for (let position = 0; position < size;) {
+      const length = Math.min(a.length, size - position)
+      const readA = readSync(sourceFd, a, 0, length, position)
+      const readB = readSync(destinationFd, b, 0, length, position)
+      if (readA !== length || readB !== length || !a.subarray(0, length).equals(b.subarray(0, length))) return false
+      position += length
+    }
+    return true
+  } finally {
+    if (destinationFd !== undefined) closeSync(destinationFd)
+    closeSync(sourceFd)
+  }
+}
+
 /**
  * Rewrites relic sources to paths relative to the project file, copying in any
  * relic that lives outside the project folder. Never inlines base64.
@@ -60,23 +83,37 @@ export function makeCitadelProjectPortable(data: string, projectPath: string): s
   const projectDir = dirname(projectPath)
   const assetsDir = join(projectDir, 'assets')
   const used = new Set<string>()
+  const copiedPaths = new Map<string, string>()
 
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src)) return
+  visitProjectAssetPaths(project, (src, replace) => {
+    if (isUrlLikeSrc(src)) return
 
     const sourcePath = isAbsolute(src) ? src : resolve(projectDir, src)
     if (!existsSync(sourcePath)) return
+    const copied = copiedPaths.get(sourcePath)
+    if (copied) { replace(copied); return }
 
     if (isInside(projectDir, sourcePath)) {
-      item.src = toJsonPath(relative(projectDir, sourcePath))
+      replace(toJsonPath(relative(projectDir, sourcePath)))
       return
     }
 
     if (!existsSync(assetsDir)) mkdirSync(assetsDir, { recursive: true })
-    const asset = uniqueAssetPath(assetsDir, used, sourcePath, false)
-    copyFileSync(sourcePath, asset.path)
-    item.src = toJsonPath(relative(projectDir, asset.path))
+    // Reuse an unchanged copy on subsequent saves, but never replace another
+    // project's same-named asset. Only compare bytes when a candidate exists.
+    let asset = uniqueAssetPath(assetsDir, used, sourcePath, false)
+    const sourceSize = statSync(sourcePath).size
+    while (existsSync(asset.path)) {
+      const existing = statSync(asset.path)
+      if (existing.isFile() && existing.size === sourceSize) {
+        if (sameFileBytes(sourcePath, asset.path, sourceSize)) break
+      }
+      asset = uniqueAssetPath(assetsDir, used, sourcePath, false)
+    }
+    if (!existsSync(asset.path)) copyFileSync(sourcePath, asset.path)
+    const portablePath = toJsonPath(relative(projectDir, asset.path))
+    copiedPaths.set(sourcePath, portablePath)
+    replace(portablePath)
   })
 
   return JSON.stringify(project, null, 2)
@@ -87,10 +124,9 @@ export function resolveCitadelProjectAssets(data: string, projectPath: string): 
   const project = JSON.parse(data) as PortableProject
   const projectDir = dirname(projectPath)
 
-  walkProjectItems(project, (item) => {
-    const src = item.src
-    if (!src || isUrlLikeSrc(src) || isAbsolute(src)) return
-    item.src = resolve(projectDir, src)
+  visitProjectAssetPaths(project, (src, replace) => {
+    if (isUrlLikeSrc(src) || isAbsolute(src)) return
+    replace(resolve(projectDir, src))
   })
 
   return JSON.stringify(project, null, 2)

@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import React from 'react'
+import { parseDocumentMarkdown, richDocumentText } from '../../types/documents'
 import { TextEditOverlay } from './TextEditOverlay'
 
 const mockUpdateItem = vi.fn()
@@ -88,5 +89,45 @@ describe('TextEditOverlay — escape', () => {
     fireEvent.blur(ta)
     expect(mockUpdateItem).toHaveBeenCalledOnce()
     expect(mockPush).not.toHaveBeenCalled()
+  })
+})
+
+
+describe('TextEditOverlay — formatted documents', () => {
+  const source = '# Original\n\n**bold**'
+  const richDocument = parseDocumentMarkdown(source)
+  const richItem = { ...item, type: 'text' as const, meta: { content: richDocumentText(richDocument), richDocument, documentMarkdown: source } }
+
+  it('edits Markdown with normal newlines and commits formatting and plain content in one undo event', () => {
+    const { getByRole } = render(<TextEditOverlay item={richItem} />)
+    const textarea = getByRole('textbox', { name: 'Document Markdown' }) as HTMLTextAreaElement
+    expect(textarea.value).toBe(source)
+    fireEvent.change(textarea, { target: { value: '## Changed\n\n*italic*' } })
+    fireEvent.keyDown(textarea, { key: 'Enter' })
+    expect(mockPush).not.toHaveBeenCalled()
+    fireEvent.blur(textarea)
+    expect(mockPush).toHaveBeenCalledOnce()
+    expect(mockPush).toHaveBeenCalledWith('ITEM_STYLE', 'board-1', { id: item.id, meta: richItem.meta }, expect.objectContaining({ meta: expect.objectContaining({ content: 'Changed\n\nitalic', documentMarkdown: '## Changed\n\n*italic*', richDocument: expect.objectContaining({ version: 1 }) }) }))
+  })
+
+  it('restores the exact original rich payload on Escape after live edits', () => {
+    const { getByRole } = render(<TextEditOverlay item={richItem} />)
+    const textarea = getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: 'new **words**' } })
+    fireEvent.keyDown(textarea, { key: 'Escape' })
+    fireEvent.blur(textarea)
+    expect(mockUpdateItem).toHaveBeenLastCalledWith('board-1', item.id, { meta: richItem.meta })
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it('applies formatting tools to the selected source without an intermediate undo event', () => {
+    const { getByRole } = render(<TextEditOverlay item={richItem} />)
+    const textarea = getByRole('textbox') as HTMLTextAreaElement
+    textarea.setSelectionRange(2, 10)
+    fireEvent.click(getByRole('button', { name: 'Bold' }))
+    expect(textarea.value).toContain('# **Original**')
+    expect(mockPush).not.toHaveBeenCalled()
+    fireEvent.blur(textarea)
+    expect(mockPush).toHaveBeenCalledOnce()
   })
 })

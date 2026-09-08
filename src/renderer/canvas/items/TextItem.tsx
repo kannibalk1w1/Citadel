@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { Text, Rect, Transformer } from 'react-konva'
+import React, { useEffect, useMemo, useRef } from 'react'
+import { Text, Rect, Transformer, Group } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
@@ -11,6 +11,8 @@ import { snapItem } from '../snapping/snapEngine'
 import { spatialIndex } from '../snapping/spatialIndex'
 import { snapLines } from '../overlays/SnapGuides'
 import { canvasColor, canvasFont, resolveCanvasColor, resolveCanvasFontSize } from '../../theme/canvasColors'
+import { RichDocumentText } from './RichDocumentText'
+import { itemRichDocument } from '../richDocument'
 import { selectionTransformerStyle } from './selectionTransformerStyle'
 
 type Props = { item: CanvasItem }
@@ -26,7 +28,7 @@ export function TextItem({ item }: Props): React.ReactElement {
   const scale = useCanvasStore((s) => s.viewport().scale)
   const isEditing = useUIStore((s) => s.editingItemId === item.id)
 
-  const textRef = useRef<import('konva/lib/shapes/Text').Text>(null)
+  const textRef = useRef<import('konva/lib/Group').Group>(null)
   const trRef = useRef<import('konva/lib/shapes/Transformer').Transformer>(null)
   const dragStart = useRef<{ x: number; y: number } | null>(null)
   const transformStart = useRef<{ x: number; y: number; width: number; height: number; rotation: number } | null>(null)
@@ -38,6 +40,7 @@ export function TextItem({ item }: Props): React.ReactElement {
     }
   }, [isSelected])
 
+  const richDocument = useMemo(() => itemRichDocument(item.meta), [item.meta])
   const content = (item.meta?.content as string) ?? ''
   // Konva paints to a 2D context, which cannot read CSS variables — see
   // theme/canvasColors.ts. Everything below is resolved before it gets there.
@@ -126,7 +129,7 @@ export function TextItem({ item }: Props): React.ReactElement {
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity * 0.6}
-        fill="#675f54"
+        fill={canvasColor("textMuted")}
         cornerRadius={2}
         draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
@@ -153,7 +156,7 @@ export function TextItem({ item }: Props): React.ReactElement {
           listening={false}
         />
       )}
-      <Text
+      <Group
         ref={textRef}
         x={item.x}
         y={item.y}
@@ -161,18 +164,11 @@ export function TextItem({ item }: Props): React.ReactElement {
         height={item.height}
         rotation={item.rotation}
         opacity={item.opacity}
-        text={content || 'Double-click to edit…'}
-        fontSize={fontSize}
-        fontFamily={canvasFont('body')}
-        fontStyle={content ? fontStyle : 'normal'}
-        align={align}
-        fill={content ? color : '#675f54'}
-        wrap="word"
         draggable={relicPressMoves(toolMode) && !item.locked}
         onClick={handleClick}
         onDblClick={(e) => {
           e.cancelBubble = true
-          if (item.locked) return
+          if (item.locked || !['select', 'text'].includes(toolMode)) return
           setSelection([item.id])
           setEditingItemId(item.id)
         }}
@@ -187,7 +183,15 @@ export function TextItem({ item }: Props): React.ReactElement {
         onDragEnd={handleDragEnd}
         onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
-      />
+      >
+        <Rect width={item.width} height={item.height} fill="transparent" />
+        {richDocument ? <RichDocumentText document={richDocument} width={item.width} height={item.height}
+          fontSize={fontSize} color={color} align={align} fontStyle={fontStyle} /> : <Text
+          width={item.width} height={item.height} text={content || 'Double-click to edit…'}
+          fontSize={fontSize} fontFamily={canvasFont('body')} fontStyle={content ? fontStyle : 'normal'}
+          align={align} fill={content ? color : canvasColor('textMuted')} wrap="word" listening={false}
+        />}
+      </Group>
       {isSelected && !item.locked && (
         <Transformer
           ref={trRef}

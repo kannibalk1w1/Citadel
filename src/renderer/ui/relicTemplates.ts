@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { CanvasItem, Connection } from '../../types'
+import { remapTranscriptReferences } from '../canvas/transcriptReferences'
 
 // Reusable relic-set templates: any selection can be sealed as a template and
 // stamped into any chamber. Stored in user settings (`templates.relics`), so
@@ -7,7 +8,7 @@ import type { CanvasItem, Connection } from '../../types'
 
 export const RELIC_TEMPLATE_MAX = 24
 
-export type TemplateItem = Omit<CanvasItem, 'id' | 'groupId'>
+export type TemplateItem = Omit<CanvasItem, 'id' | 'groupId'> & { originalItemId?: string }
 
 export type TemplateConnection = Omit<Connection, 'id' | 'fromId' | 'toId'> & {
   fromIndex: number
@@ -34,6 +35,7 @@ export function createRelicTemplate(
     const { id: _id, groupId: _groupId, ...rest } = item
     return {
       ...structuredClone(rest),
+      originalItemId: item.id,
       x: item.x - minX,
       y: item.y - minY,
     }
@@ -58,12 +60,14 @@ export function stampRelicTemplate(
   origin: { x: number; y: number },
   idFactory: () => string = nanoid,
 ): { items: CanvasItem[]; connections: Connection[] } {
-  const items: CanvasItem[] = template.items.map((item) => ({
-    ...structuredClone(item),
-    id: idFactory(),
-    x: origin.x + item.x,
-    y: origin.y + item.y,
-  }))
+  const newIds = template.items.map(() => idFactory())
+  const idMap = new Map(template.items.flatMap((item, index) => item.originalItemId ? [[item.originalItemId, newIds[index]] as const] : []))
+  const items: CanvasItem[] = template.items.map((item, index) => {
+    const { originalItemId: _originalItemId, ...copy } = structuredClone(item)
+    return remapTranscriptReferences({
+      ...copy, id: newIds[index], x: origin.x + item.x, y: origin.y + item.y,
+    }, idMap, false)
+  })
 
   const connections: Connection[] = template.connections.map((c) => {
     const { fromIndex, toIndex, ...rest } = structuredClone(c)

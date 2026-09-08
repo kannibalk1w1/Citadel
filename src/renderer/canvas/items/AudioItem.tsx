@@ -5,6 +5,8 @@ import type { CanvasItem } from '../../../types'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useUIStore } from '../../store/uiStore'
 import { DOMItem } from './DOMItem'
+import { registerAudioSeekPlayer } from '../audioSeek'
+import { projectSessionRevision } from '../../utils/projectSession'
 import { pathToUrl } from '../../utils/pathToUrl'
 import { MediaPlaceholder } from './MediaPlaceholder'
 import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
@@ -12,6 +14,7 @@ import { adoptSelectTool, handleRelicToolPress } from './relicPointer'
 type Props = { item: CanvasItem; domOnly?: boolean }
 
 export function AudioItem({ item, domOnly = false }: Props): React.ReactElement {
+  const projectRevision = projectSessionRevision()
   const setSelection = useCanvasStore((s) => s.setSelection)
   const activeBoardId = useCanvasStore((s) => s.activeBoardId)
   const toolMode = useUIStore((s) => s.toolMode)
@@ -126,7 +129,13 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
         void audioContext.close().catch(() => {})
       }
     }
-  }, [item.src])
+  }, [item.id, item.src, projectRevision])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !item.src || !activeBoardId) return
+    return registerAudioSeekPlayer(activeBoardId, item.id, item.src, audio)
+  }, [activeBoardId, item.id, item.src, projectRevision])
 
   const handlePlay = (event: React.SyntheticEvent<HTMLAudioElement>) => {
     // A play event queued during unmount/source replacement must not recreate
@@ -174,10 +183,12 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
               style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
             />
             <audio
-              key={item.src}
+              key={`${projectRevision}:${item.id}:${item.src}`}
               ref={audioRef}
               src={pathToUrl(item.src)}
               controls
+              preload="metadata"
+              aria-label="Source audio playback"
               onPlay={handlePlay}
               onPause={handlePause}
               onEnded={handlePause}

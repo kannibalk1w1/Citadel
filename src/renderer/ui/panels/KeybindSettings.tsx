@@ -15,6 +15,8 @@ import {
 } from '../../store/uiStore'
 import { useCanvasStore } from '../../store/canvasStore'
 import { useHistoryStore } from '../../store/historyStore'
+import { projectAssetPaths, visitProjectAssetPaths } from '../../../types/projectAssetPaths'
+import { projectSessionRevision } from '../../utils/projectSession'
 import { ToolIcon } from '../icons/ToolIcon'
 import { AppearanceSettings } from './AppearanceSettings'
 import { TranscriptionSettings } from './TranscriptionSettings'
@@ -127,7 +129,8 @@ export function KeybindSettings(): React.ReactElement | null {
   const boards = useCanvasStore((s) => s.boards)
   const selectedIds = useCanvasStore((s) => s.selectedIds)
   const updateItem = useCanvasStore((s) => s.updateItem)
-  const markDirty = useHistoryStore((s) => s.markDirty)
+  const historyEvents = useHistoryStore((s) => s.events)
+  const recordings = useHistoryStore((s) => s.recordings)
   const [cacheStats, setCacheStats] = useState<PreviewCacheStats | null>(null)
   const [assetHealth, setAssetHealth] = useState<AssetHealth | null>(null)
   const [cacheBusy, setCacheBusy] = useState(false)
@@ -145,11 +148,11 @@ export function KeybindSettings(): React.ReactElement | null {
   const [keybindMessage, setKeybindMessage] = useState('')
 
   const preservePaths = useMemo(() => (
-    boards.flatMap((board) => board.items.map((item) => item.src).filter((src): src is string => Boolean(src)))
-  ), [boards])
+    projectAssetPaths({ boards, recordings: [...recordings, { events: historyEvents }] })
+  ), [boards, recordings, historyEvents])
   const localAssetPaths = useMemo(() => (
-    preservePaths.filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
-  ), [preservePaths])
+    projectAssetPaths({ boards }).filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
+  ), [boards])
   const provenancePaths = useMemo(() => (
     Array.from(new Set(boards.flatMap((board) => board.items.map(sourcePathFor).filter((src): src is string => Boolean(src)))))
       .filter((src) => !/^(https?|data:|blob:|local:|file:)/i.test(src))
@@ -191,10 +194,12 @@ export function KeybindSettings(): React.ReactElement | null {
 
   const relinkMissingAssets = async (): Promise<void> => {
     if (!assetHealth?.missingPaths.length) return
+    const revision = projectSessionRevision()
     setRelinkBusy(true)
     setRelinkMessage('')
     try {
       const result = await getIpc().invoke('assets:relinkMissing', { missingPaths: assetHealth.missingPaths })
+      if (revision !== projectSessionRevision()) return
       const payload = result as { replacements?: Record<string, string>; scanned?: number }
       const replacements = payload.replacements ?? {}
       const entries = Object.entries(replacements)
@@ -204,14 +209,20 @@ export function KeybindSettings(): React.ReactElement | null {
       }
 
       const replacementMap = new Map(entries)
-      for (const board of boards) {
+      for (const board of useCanvasStore.getState().boards) {
         for (const item of board.items) {
-          if (item.src && replacementMap.has(item.src)) {
-            updateItem(board.id, item.id, { src: replacementMap.get(item.src) })
+          const copy = { ...item, meta: item.meta ? { ...item.meta } : undefined }
+          let changed = false
+          visitProjectAssetPaths({ boards: [{ items: [copy] }] }, (source, replace) => {
+            const replacement = replacementMap.get(source)
+            if (replacement && replacement !== source) { replace(replacement); changed = true }
+          })
+          if (changed) {
+            useHistoryStore.getState().push('ITEM_STYLE', board.id, item, copy)
+            updateItem(board.id, item.id, { src: copy.src, meta: copy.meta })
           }
         }
       }
-      markDirty()
       setRelinkMessage(`relinked ${entries.length}`)
       await loadCacheStats(localAssetPaths.map((path) => replacements[path] ?? path))
     } catch (error) {

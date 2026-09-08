@@ -1,6 +1,9 @@
 import { promises as fsp } from 'fs'
 import { basename, isAbsolute } from 'path'
 import mammoth from 'mammoth'
+import { capRichDocument, richDocumentFromWord } from './richDocument'
+import { parseDocumentMarkdown, richDocumentMarkdown, richDocumentText, sliceDocumentText } from '../types/documents'
+import type { RichDocument } from '../types/documents'
 import { DOCUMENT_LIMITS, documentFormatForFilename } from '../types/documents'
 import type {
   DocumentExtractionFailure,
@@ -12,11 +15,9 @@ import type {
 /**
  * Document text extraction, main process only.
  *
- * Scope is deliberately narrow: `.docx`, `.md`, and `.txt` in, plain text out.
- * Mammoth is asked for raw text rather than HTML, Markdown is kept as its own
- * source rather than rendered, and nothing is ever fetched — the only thing
- * read is the one local file path the renderer dropped. Legacy `.doc` is
- * detected and refused by name rather than half-parsed into nonsense.
+ * Reads local documents into plain text plus a safe, versioned formatting subset.
+ * Mammoth's tree is consumed before HTML conversion; its output tree is emptied,
+ * external access is disabled, and no images or document HTML reach the renderer.
  */
 
 function groupDigits(value: number): string {
@@ -85,10 +86,12 @@ export function normalizePlainText(raw: string): string {
  */
 export function decodeTextBuffer(buffer: Buffer): string {
   if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    if ((buffer.length - 2) % 2 !== 0) return '\u0000'
     return buffer.subarray(2).toString('utf16le')
   }
   if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
     // Node decodes little-endian only, so byte-swap a copy first.
+    if ((buffer.length - 2) % 2 !== 0) return '\u0000'
     return Buffer.from(buffer.subarray(2)).swap16().toString('utf16le')
   }
   if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
@@ -111,7 +114,7 @@ export function looksBinary(text: string): boolean {
 
 export function capDocumentText(text: string, maxCharacters: number): { text: string; truncated: boolean } {
   if (text.length <= maxCharacters) return { text, truncated: false }
-  return { text: `${text.slice(0, maxCharacters).trimEnd()}\n\n${truncationNotice(maxCharacters)}`, truncated: true }
+  return { text: `${sliceDocumentText(text, maxCharacters).trimEnd()}\n\n${truncationNotice(maxCharacters)}`, truncated: true }
 }
 
 export function countWords(text: string): number {
@@ -136,17 +139,21 @@ function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
 }
 
 /** The one place a successful result is shaped, so every format reports alike. */
-function succeed(path: string, format: DocumentFormat, normalized: string): DocumentExtractionResult {
+function succeed(path: string, format: DocumentFormat, normalized: string, rich?: RichDocument): DocumentExtractionResult {
   const capped = capDocumentText(normalized, DOCUMENT_LIMITS.maxCharacters)
+  const richCapped = rich || format === 'markdown' ? capRichDocument(rich ?? parseDocumentMarkdown(capped.text), TRUNCATION_NOTICE) : undefined
+  const markdown = format === 'markdown' && !richCapped?.truncated ? capped.text : richCapped ? richDocumentMarkdown(richCapped.document) : undefined
+  const document = richCapped?.document
   return {
     ok: true,
     format,
     sourcePath: path,
     sourceName: basename(path),
-    text: capped.text,
+    text: document ? richDocumentText(document) : capped.text,
+    ...(document ? { richDocument: document, markdown } : {}),
     characters: normalized.length,
     words: countWords(normalized),
-    truncated: capped.truncated,
+    truncated: capped.truncated || !!richCapped?.truncated,
   }
 }
 
@@ -169,10 +176,18 @@ async function readWordDocument(path: string): Promise<DocumentExtractionResult>
     return fail('unreadable', 'The document could not be opened.')
   }
 
-  let raw: string
+  let rich: RichDocument = { version: 1, blocks: [] }
   try {
-    const result = await withTimeout(mammoth.extractRawText({ path }), DOCUMENT_LIMITS.timeoutMs)
-    raw = typeof result?.value === 'string' ? result.value : ''
+    await withTimeout(mammoth.convertToHtml({ path }, {
+      externalFileAccess: false,
+      includeEmbeddedStyleMap: false,
+      includeDefaultStyleMap: false,
+      transformDocument: (document) => {
+        rich = richDocumentFromWord(document)
+        // The converter sees no runs, hyperlinks, images or embedded HTML.
+        return { ...document, children: [], comments: [] }
+      },
+    }), DOCUMENT_LIMITS.timeoutMs)
   } catch (error) {
     if (error instanceof Error && error.message === 'timeout') {
       return fail('timeout', 'The document took too long to read.')
@@ -180,9 +195,9 @@ async function readWordDocument(path: string): Promise<DocumentExtractionResult>
     return fail('unreadable', 'The document could not be read as a .docx file. It may be damaged.')
   }
 
-  const normalized = normalizeDocumentText(raw)
+  const normalized = normalizeDocumentText(richDocumentText(rich))
   if (!normalized) return fail('empty', 'The document has no text to import.')
-  return succeed(path, 'docx', normalized)
+  return succeed(path, 'docx', normalized, rich)
 }
 
 /**
