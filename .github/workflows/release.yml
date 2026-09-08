@@ -2,8 +2,8 @@ name: Release
 
 # Builds the Windows and Linux x64 artifacts for a tagged release and attaches
 # them to a draft GitHub Release. Nothing is published automatically: the draft
-# is the owner's last chance to check the installers before a buyer can download
-# them.
+# stays a draft: binaries are distributed on itch.io, and this is where verified
+# artifacts wait for `npm run release:itch` to prepare those uploads.
 #
 # The two jobs run on their own runners because neither platform's packager is
 # reliable cross-built: NSIS from Linux needs Wine, and AppImage from Windows is
@@ -128,7 +128,7 @@ jobs:
           }
           $files = Get-ChildItem dist -Filter *.exe | ForEach-Object { $_.FullName }
           gh release upload $tag $files --clobber
-          "`n:package: Artifacts attached to the **draft** release ``$tag``. Review and publish it by hand." >> $env:GITHUB_STEP_SUMMARY
+          "`n:package: Artifacts attached to the **draft** release ``$tag``. Review it, then upload to itch by hand. The draft is not published." >> $env:GITHUB_STEP_SUMMARY
 
   linux:
     name: Linux x64

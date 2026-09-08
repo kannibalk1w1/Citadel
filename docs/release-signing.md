@@ -123,4 +123,5 @@ git push origin master --tags
 
 Then watch the Actions run, download the draft release's artifacts, walk the
 manual smoke checklist in the release-candidate checklist on a clean Windows
-machine, and only then publish the draft.
+machine, and only then prepare the itch uploads. The draft is not published on
+GitHub.

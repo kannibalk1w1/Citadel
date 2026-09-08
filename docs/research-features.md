@@ -1,7 +1,7 @@
 # Research features in 0.4.0
 
-These additions arrived in 0.4.0. Builds are attached to the `v0.4.0` release;
-the itch.io uploads are made by hand.
+These additions arrived in 0.4.0. Builds are on itch.io; the repository is the
+source, so you can also build 0.4.0 yourself.
 
 ## Formatted documents
 

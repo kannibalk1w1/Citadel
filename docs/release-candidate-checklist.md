@@ -157,8 +157,9 @@ Windows is not supported at all. Either job creates the draft if the other has
 not yet. Signing (item 2)
 plugs into the same workflow through repository secrets.
 
-The draft is deliberate — publishing stays a human act, after the manual smoke
-pass below. Full detail in [Release Signing](./release-signing.md).
+The draft is deliberate, and it stays a draft. Binaries reach people through
+itch.io; the GitHub release is a staging area for the artifacts that get uploaded
+there, after the manual smoke pass below. Full detail in [Release Signing](./release-signing.md).
 
 First run on GitHub's runners: 2026-08-18, by manual dispatch rather than a tag.
 Linux passed. Windows failed, and the failure was in the part this checklist had

@@ -402,7 +402,15 @@ and a locally built copy is compiled for the CPU that built it. See
 `resources/whisper/README.md`. Models are never bundled either; Settings
 downloads one on request against a pinned digest.
 
-Release: push a semver tag (`v1.x.x`) → GitHub Actions builds NSIS installer + portable `.exe` and publishes to GitHub Releases.
+Release: push a semver tag (`v1.x.x`) → GitHub Actions builds the NSIS
+installer, portable `.exe`, AppImage and tar.gz, and attaches them to a **draft**
+GitHub Release.
+
+**The draft is never published.** Binaries are distributed on itch.io only, and
+the draft exists so `npm run release:itch` has verified artifacts to prepare
+uploads from. The GitHub repository is the source, not a download page: anyone
+who wants a build without paying can clone the repo and build it. Do not run
+`gh release edit --draft=false`, and do not add a publish step to the workflow.
 
 ---
 
