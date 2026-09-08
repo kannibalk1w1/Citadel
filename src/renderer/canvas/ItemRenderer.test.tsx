@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { DOMLayerItemRenderer, ItemRenderer } from './ItemRenderer'
+import { useExportCaptureStore } from '../export/exportCaptureStore'
 
 vi.mock('react-konva', () => ({
   Group: ({ children }: { children: React.ReactNode }) => <div data-testid="konva-group">{children}</div>,
@@ -17,8 +18,9 @@ vi.mock('./items/Model3DItem', () => ({
     <div data-testid="model3d-item" data-dom-only={domOnly ? 'true' : 'false'}>{item.id}</div>
   ),
 }))
+vi.mock('./items/TextItem', () => ({ TextItem: ({ item }: { item: CanvasItem }) => <div>{item.id}</div> }))
 
-afterEach(() => cleanup())
+afterEach(() => { cleanup(); useExportCaptureStore.setState({ itemIds: null }) })
 
 function modelItem(overrides: Partial<CanvasItem> = {}): CanvasItem {
   return {
@@ -40,6 +42,14 @@ function modelItem(overrides: Partial<CanvasItem> = {}): CanvasItem {
 }
 
 describe('ItemRenderer DOM-layer items', () => {
+  it('keeps unselected Konva items out of a selection capture without changing project data', () => {
+    useExportCaptureStore.setState({ itemIds: new Set(['selected']) })
+    const items = [modelItem({ id: 'selected', type: 'text' }), modelItem({ id: 'other', type: 'text' })]
+    render(<>{items.map((item) => <ItemRenderer key={item.id} item={item} />)}</>)
+    expect(screen.queryByText('selected')).not.toBeNull()
+    expect(screen.queryByText('other')).toBeNull()
+    expect(items.every((item) => item.visible)).toBe(true)
+  })
   it('keeps 3D models out of the Konva stage tree', () => {
     useCanvasStore.setState({
       boards: [{

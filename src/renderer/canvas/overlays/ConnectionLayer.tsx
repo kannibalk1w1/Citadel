@@ -7,62 +7,13 @@ import { useUIStore } from '../../store/uiStore'
 import { bindingEndpointMarks, connectionBindingPulse, connectionLabelPlaque, connectorStrokeWidth } from './connectionViewModel'
 import { visibleConnectionIds } from './overlayVisibility'
 import { canvasColor } from '../../theme/canvasColors'
+import { connectionGeometry } from './connectionGeometry'
 
 type Props = {
   viewport: Viewport
   items: CanvasItem[]
   visibleItemIds?: ReadonlySet<string>
   rubberBand?: { x1: number; y1: number; x2: number; y2: number } | null
-}
-
-function closestSide(from: CanvasItem, to: CanvasItem): { fromSide: Connection['fromAnchor']; toSide: Connection['toAnchor'] } {
-  const fc = { x: from.x + from.width / 2, y: from.y + from.height / 2 }
-  const tc = { x: to.x + to.width / 2, y: to.y + to.height / 2 }
-  const dx = tc.x - fc.x
-  const dy = tc.y - fc.y
-
-  let fromSide: Connection['fromAnchor']
-  let toSide: Connection['toAnchor']
-
-  if (Math.abs(dx) > Math.abs(dy)) {
-    fromSide = dx > 0 ? 'right' : 'left'
-    toSide = dx > 0 ? 'left' : 'right'
-  } else {
-    fromSide = dy > 0 ? 'bottom' : 'top'
-    toSide = dy > 0 ? 'top' : 'bottom'
-  }
-
-  return { fromSide, toSide }
-}
-
-function getAnchorPoint(item: CanvasItem, side: Connection['fromAnchor'], fromItem?: CanvasItem): { x: number; y: number } {
-  const cx = item.x + item.width / 2
-  const cy = item.y + item.height / 2
-  if (side === 'auto' && fromItem) {
-    const { fromSide, toSide } = closestSide(fromItem, item)
-    side = fromItem === item ? fromSide : toSide
-  }
-  switch (side) {
-    case 'top':    return { x: cx, y: item.y }
-    case 'bottom': return { x: cx, y: item.y + item.height }
-    case 'left':   return { x: item.x, y: cy }
-    case 'right':  return { x: item.x + item.width, y: cy }
-    default:       return { x: cx, y: cy }
-  }
-}
-
-function toScreen(pt: { x: number; y: number }, vp: Viewport): { x: number; y: number } {
-  return { x: pt.x * vp.scale + vp.x, y: pt.y * vp.scale + vp.y }
-}
-
-function bezierPath(from: { x: number; y: number }, to: { x: number; y: number }): string {
-  const dx = Math.abs(to.x - from.x) * 0.5
-  return `M ${from.x} ${from.y} C ${from.x + dx} ${from.y}, ${to.x - dx} ${to.y}, ${to.x} ${to.y}`
-}
-
-function elbowPath(from: { x: number; y: number }, to: { x: number; y: number }): string {
-  const mx = (from.x + to.x) / 2
-  return `M ${from.x} ${from.y} L ${mx} ${from.y} L ${mx} ${to.y} L ${to.x} ${to.y}`
 }
 
 // Cache the MediaQueryList — this component re-renders every pan/zoom frame.
@@ -164,20 +115,7 @@ export function ConnectionLayer({ viewport, items, visibleItemIds, rubberBand }:
         const toItem = itemMap.get(conn.toId)
         if (!fromItem || !toItem) return null
 
-        const fromAnchor = conn.fromAnchor === 'auto'
-          ? closestSide(fromItem, toItem).fromSide
-          : conn.fromAnchor
-        const toAnchor = conn.toAnchor === 'auto'
-          ? closestSide(fromItem, toItem).toSide
-          : conn.toAnchor
-
-        const from = toScreen(getAnchorPoint(fromItem, fromAnchor), viewport)
-        const to = toScreen(getAnchorPoint(toItem, toAnchor), viewport)
-
-        let d: string
-        if (conn.style === 'bezier') d = bezierPath(from, to)
-        else if (conn.style === 'elbow') d = elbowPath(from, to)
-        else d = `M ${from.x} ${from.y} L ${to.x} ${to.y}`
+        const { from, to, d } = connectionGeometry(conn, fromItem, toItem, viewport)
 
         const markerEnd = conn.arrowHead !== 'none' ? `url(#${conn.arrowHead})` : undefined
         const isActive = conn.id === activeConnectionId

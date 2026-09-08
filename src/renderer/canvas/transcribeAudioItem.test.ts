@@ -6,6 +6,7 @@ import { useCanvasStore } from '../store/canvasStore'
 import { useHistoryStore } from '../store/historyStore'
 import { useInscriptionToastStore } from '../ui/toasts/inscriptionToastStore'
 import { useTranscriptionProgressStore } from '../ui/transcriptionProgressStore'
+import { beginProjectSession } from '../utils/projectSession'
 import { transcribeAudioItem } from './transcribeAudioItem'
 import { decodeAudioToPcm16 } from './audioTranscription'
 
@@ -164,5 +165,55 @@ describe('transcribeAudioItem', () => {
 
     const transcript = useCanvasStore.getState().boards[0].items.find((item) => item.type === 'text')
     expect(transcript?.x).toBeGreaterThan(900)
+  })
+
+  it('writes back to the originating board when the active board changes', async () => {
+    const origin = useCanvasStore.getState().boards[0]
+    useCanvasStore.setState({
+      boards: [origin, {
+        id: 'board-2',
+        name: 'Other board',
+        items: [],
+        connections: [],
+        viewport: { x: 0, y: 0, scale: 1 },
+      }],
+    })
+    invoke.mockImplementation(async () => {
+      useCanvasStore.getState().setActiveBoard('board-2')
+      return spoken
+    })
+
+    await transcribeAudioItem(audioItem)
+
+    expect(useCanvasStore.getState().boards[0].items.some((item) => item.type === 'text')).toBe(true)
+    expect(useCanvasStore.getState().boards[1].items).toHaveLength(0)
+    expect(useCanvasStore.getState().selectedIds).toEqual([])
+  })
+
+  it('does not create a dangling transcript when the source is deleted mid-run', async () => {
+    invoke.mockImplementation(async () => {
+      useCanvasStore.getState().removeItems('board-1', ['audio-1'])
+      return spoken
+    })
+
+    await transcribeAudioItem(audioItem)
+
+    expect(useCanvasStore.getState().boards[0].items).toHaveLength(0)
+    expect(useCanvasStore.getState().boards[0].connections).toHaveLength(0)
+    expect(eventTypes()).toEqual([])
+  })
+
+  it('drops a result when the project is replaced during recognition', async () => {
+    invoke.mockImplementation(async () => {
+      // Keep the same board and item IDs to prove this is a project identity
+      // guard rather than only an existence check.
+      beginProjectSession()
+      return spoken
+    })
+
+    await transcribeAudioItem(audioItem)
+
+    expect(useCanvasStore.getState().boards[0].items).toHaveLength(1)
+    expect(eventTypes()).toEqual([])
   })
 })

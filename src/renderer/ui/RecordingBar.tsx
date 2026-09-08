@@ -5,6 +5,7 @@ import type { RecordingSession, CanvasItem } from '../../types'
 import { ToolIcon } from './icons/ToolIcon'
 
 type MovePatch = { id: string; x: number; y: number }
+type ItemStylePatch = { id: string; groupId?: CanvasItem['groupId'] | null } & Omit<Partial<CanvasItem>, 'groupId'>
 
 export function RecordingBar(): React.ReactElement | null {
   const isRecording = useHistoryStore((s) => s.isRecording)
@@ -52,8 +53,14 @@ export function RecordingBar(): React.ReactElement | null {
           const moves = event.after as MovePatch | MovePatch[]
           canvas.moveItems(event.boardId, Array.isArray(moves) ? moves : [moves])
         } else if (event.type === 'ITEM_STYLE') {
-          const patch = event.after as Partial<CanvasItem> & { id: string }
-          canvas.updateItem(event.boardId, patch.id, patch)
+          const patches = Array.isArray(event.after) ? event.after as ItemStylePatch[] : [event.after as ItemStylePatch]
+          patches.forEach((patch) => {
+            const { groupId, ...rest } = patch
+            const normalized: Partial<CanvasItem> = groupId === null
+              ? { ...rest, groupId: undefined }
+              : groupId === undefined ? rest : { ...rest, groupId }
+            canvas.updateItem(event.boardId, patch.id, normalized)
+          })
         } else if (event.type === 'ITEM_DELETE') {
           const ids = (event.after as { id: string }[]).map((i) => i.id)
           canvas.removeItems(event.boardId, ids)

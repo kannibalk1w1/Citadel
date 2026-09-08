@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../types'
 import { createLargeBoardFixture } from '../performance/largeBoardFixture'
@@ -11,13 +11,13 @@ import { CanvasStage } from './CanvasStage'
 vi.mock('react-konva', () => ({
   // The ref stands in for a Konva.Stage, not a DOM node: overlays attach
   // namespaced Konva listeners to it, so a bare <div> ref would throw.
-  Stage: React.forwardRef<unknown, { children: React.ReactNode }>(function Stage({ children }, ref) {
+  Stage: React.forwardRef<unknown, { children: React.ReactNode; width?: number; height?: number }>(function Stage({ children, width, height }, ref) {
     React.useImperativeHandle(ref, () => ({
       on: () => {},
       off: () => {},
       getPointerPosition: () => ({ x: 0, y: 0 }),
     }))
-    return <div data-testid="konva-stage">{children}</div>
+    return <div data-testid="konva-stage" data-width={width} data-height={height}>{children}</div>
   }),
   Layer: ({ children }: { children: React.ReactNode }) => <div data-testid="konva-layer">{children}</div>,
 }))
@@ -156,6 +156,20 @@ describe('CanvasStage viewport rendering', () => {
     expect(stats.mountedRelics).toBe(String(renderedIds.length))
     expect(stats.awakeDomMedia).toBe('2')
     expect(stats.sleepingAnimatedRelics).toBe('1')
+  })
+
+  it('updates the stage dimensions when the host window is resized', () => {
+    render(<CanvasStage />)
+
+    const stage = screen.getByTestId('konva-stage')
+    const initialWidth = stage.dataset.width
+    const initialHeight = stage.dataset.height
+
+    Object.assign(window, { innerWidth: 900, innerHeight: 420 })
+    act(() => { window.dispatchEvent(new Event('resize')) })
+
+    expect(stage.dataset.width).not.toBe(initialWidth)
+    expect(stage.dataset.height).not.toBe(initialHeight)
   })
 })
 

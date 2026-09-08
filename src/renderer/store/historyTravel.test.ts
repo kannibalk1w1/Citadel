@@ -150,6 +150,19 @@ describe('markers', () => {
   })
 })
 
+describe('recording library persistence state', () => {
+  it('marks recording additions and deletions dirty', () => {
+    const history = useHistoryStore.getState()
+    history.markSaved()
+    history.saveRecording({ id: 'recording-1', name: 'Pass', startedAt: 0, events: [] })
+    expect(history.isDirty()).toBe(true)
+
+    history.markSaved()
+    history.deleteRecording('recording-1')
+    expect(history.isDirty()).toBe(true)
+  })
+})
+
 describe('a change made after scrubbing back', () => {
   it('drops the future, exactly as undo then editing does', () => {
     travelHistoryTo(0)
@@ -169,6 +182,44 @@ describe('a change made after scrubbing back', () => {
     expect(useCanvasStore.getState().items()).toEqual([])
     travelHistoryTo(1)
     expect(useCanvasStore.getState().items().map((i) => i.id)).toEqual(['a', 'c'])
+  })
+
+  it('stays dirty when a new edit replaces the saved redo branch', () => {
+    const history = useHistoryStore.getState()
+    history.markSaved()
+
+    const undone = history.undo()
+    if (undone) revertEvent(undone)
+    const fresh = item('d', 1200)
+    useCanvasStore.getState().addItem(BOARD, fresh)
+    history.push('ITEM_ADD', BOARD, null, fresh)
+
+    expect(useHistoryStore.getState().isDirty()).toBe(true)
+  })
+
+  it('stays dirty after undoing the new edit on a replaced branch', () => {
+    const history = useHistoryStore.getState()
+    history.markSaved()
+
+    const undone = history.undo()
+    if (undone) revertEvent(undone)
+    const fresh = item('e', 1400)
+    useCanvasStore.getState().addItem(BOARD, fresh)
+    history.push('ITEM_ADD', BOARD, null, fresh)
+
+    const added = history.undo()
+    if (added) revertEvent(added)
+    expect(history.isDirty()).toBe(true)
+  })
+
+  it('keeps non-event changes dirty when an undo returns to the old cursor', () => {
+    const history = useHistoryStore.getState()
+    history.markSaved()
+    history.markDirty()
+
+    const undone = history.undo()
+    if (undone) revertEvent(undone)
+    expect(history.isDirty()).toBe(true)
   })
 })
 

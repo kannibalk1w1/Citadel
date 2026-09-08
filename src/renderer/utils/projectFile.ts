@@ -10,6 +10,7 @@ import { useArchiveProgressStore } from '../ui/archiveProgressStore'
 import { inscribe } from '../ui/toasts/inscriptionToastStore'
 import { captureBoardThumbnail } from '../export/exportCanvas'
 import { isBrowserDemo } from '../platform/runtime'
+import { beginProjectSession } from './projectSession'
 
 const VERSION = '1.0.0'
 const RECENT_PROJECTS_KEY = 'recent.projects'
@@ -113,6 +114,7 @@ function deserialize(json: string): ProjectFile {
 }
 
 function applyProject(file: ProjectFile): void {
+  beginProjectSession()
   useCanvasStore.setState({
     boards: file.boards,
     activeBoardId: file.activeBoardId,
@@ -120,6 +122,10 @@ function applyProject(file: ProjectFile): void {
   })
   resetRecoveryAutosaveCache()
   useHistoryStore.getState().resetHistory()
+  // Recording sessions belong to the project, while the undo log is only the
+  // current in-memory session. Restore the persisted library after resetting
+  // that transient log so opening a project also switches its recordings.
+  useHistoryStore.setState({ recordings: file.recordings ?? [] })
 }
 
 function projectStats(file: ProjectFile): { boardCount: number; itemCount: number } {
@@ -333,6 +339,7 @@ export async function openShowcase(): Promise<boolean> {
 export function newProject(): boolean {
   if (!confirmDiscardUnsaved()) return false
   currentFilePath = null
+  beginProjectSession()
   resetSaveActivity()
   resetRecoveryAutosaveCache()
   useCanvasStore.setState({ boards: [], activeBoardId: null, selectedIds: [] })

@@ -79,6 +79,7 @@ import { autoArrangeGrid } from './canvas/arrange/autoArrange'
 import { createCommentPinItem } from './canvas/annotations/commentPin'
 import { focusViewportFor, nextPresentationIndex, orderedPresentationItems } from './presentation/presentationNavigation'
 import { replayEvent, revertEvent } from './store/canvasEventApply'
+import { groupItemsWithHistory, reorderItemsWithHistory, ungroupItemsWithHistory } from './store/itemEditHistory'
 import { installMediaPreviewProfileHarness } from './performance/mediaPreviewProfileHarness'
 import { ToolIcon } from './ui/icons/ToolIcon'
 import { isBrowserDemo } from './platform/runtime'
@@ -605,45 +606,45 @@ export default function App(): React.ReactElement {
     resolver.register(Actions.BRING_FRONT, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas
-      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'front'))
+      if (activeBoardId) reorderItemsWithHistory(activeBoardId, canvas.selectedUnlockedItems().map((i) => i.id), 'front')
     })
     resolver.register(Actions.SEND_BACK, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas
-      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'back'))
+      if (activeBoardId) reorderItemsWithHistory(activeBoardId, canvas.selectedUnlockedItems().map((i) => i.id), 'back')
     })
     resolver.register(Actions.BRING_FORWARD, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas
-      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'forward'))
+      if (activeBoardId) reorderItemsWithHistory(activeBoardId, canvas.selectedUnlockedItems().map((i) => i.id), 'forward')
     })
     resolver.register(Actions.SEND_BACKWARD, () => {
       const canvas = useCanvasStore.getState()
       const { activeBoardId } = canvas
-      if (activeBoardId) canvas.selectedUnlockedItems().forEach((i) => canvas.reorderItem(activeBoardId, i.id, 'backward'))
+      if (activeBoardId) reorderItemsWithHistory(activeBoardId, canvas.selectedUnlockedItems().map((i) => i.id), 'backward')
     })
 
     // Snap toggle
     resolver.register(Actions.TOGGLE_SNAP, () => useUIStore.getState().toggleSnapToGrid())
 
     resolver.register(Actions.GROUP, () => {
-      const { selectedIds, activeBoardId, selectedUnlockedItems, groupItems } = useCanvasStore.getState()
+      const { selectedIds, activeBoardId, selectedUnlockedItems } = useCanvasStore.getState()
       if (!activeBoardId || selectedIds.length < 2) return
       const selectedItems = selectedUnlockedItems()
       if (selectedItems.length < 2) return
       if (selectedItems.every((i) => i.groupId)) return
-      groupItems(activeBoardId, selectedItems.map((i) => i.id))
+      groupItemsWithHistory(activeBoardId, selectedItems.map((i) => i.id))
     })
 
     resolver.register(Actions.UNGROUP, () => {
-      const { activeBoardId, selectedUnlockedItems, ungroupItems } = useCanvasStore.getState()
+      const { activeBoardId, selectedUnlockedItems } = useCanvasStore.getState()
       if (!activeBoardId) return
       const groupIds = new Set(
         selectedUnlockedItems()
           .filter((i) => i.groupId)
           .map((i) => i.groupId!)
       )
-      groupIds.forEach((gid) => ungroupItems(activeBoardId, gid))
+      ungroupItemsWithHistory(activeBoardId, [...groupIds])
     })
 
     // Boards

@@ -50,6 +50,40 @@ describe('projectSchema', () => {
     expect(migrated.keybindOverrides).toEqual({ SAVE: ['ctrl+s'], REDO: ['ctrl+y'] })
   })
 
+  it('keeps valid recordings and filters malformed recording events', () => {
+    const recordedItem = {
+      id: 'item-1', type: 'sticky', x: 10, y: 20, width: 160, height: 120,
+      rotation: 0, zIndex: 0, locked: false, visible: true, opacity: 1, tags: [],
+    }
+    const migrated = migrateProjectFile({
+      ...validProject,
+      recordings: [{
+        id: 'recording-1', name: 'First pass', startedAt: 10,
+        events: [
+          { id: 'event-1', timestamp: 10, boardId: 'board-1', type: 'ITEM_STYLE', before: { id: 'item-1', groupId: null }, after: { id: 'item-1', groupId: 'group-1' } },
+          { id: 'bad-payload-1', timestamp: 10, boardId: 'board-1', type: 'ITEM_ADD', before: null, after: null },
+          { id: 'bad-payload-2', timestamp: 10, boardId: 'board-1', type: 'ITEM_MOVE', before: [], after: null },
+          { id: 'bad-payload-3', timestamp: 10, boardId: 'board-1', type: 'ITEM_STYLE', before: { id: 'item-1' }, after: null },
+          { id: 'bad-tags', timestamp: 10, boardId: 'board-1', type: 'ITEM_ADD', before: null, after: { ...recordedItem, tags: [null] } },
+          { id: 'bad-style-tags', timestamp: 10, boardId: 'board-1', type: 'ITEM_STYLE', before: { id: 'item-1' }, after: { id: 'item-1', tags: [4] } },
+          { id: 'valid-add', timestamp: 10, boardId: 'board-1', type: 'ITEM_ADD', before: null, after: recordedItem },
+          { id: 'bad-event', timestamp: 11, boardId: 'board-1', type: 'not-an-event' },
+          { id: 'bad-board', timestamp: 12, type: 'ITEM_ADD' },
+        ],
+      }, { name: 7, events: 'bad' }],
+    })
+
+    expect(migrated.recordings).toEqual([{
+      id: 'recording-1', name: 'First pass', startedAt: 10,
+      events: [
+        { id: 'event-1', timestamp: 10, boardId: 'board-1', type: 'ITEM_STYLE', before: { id: 'item-1', groupId: null }, after: { id: 'item-1', groupId: 'group-1' } },
+        { id: 'valid-add', timestamp: 10, boardId: 'board-1', type: 'ITEM_ADD', before: null, after: recordedItem },
+      ],
+    }, {
+      id: 'recording-2', name: 'Recording 2', startedAt: 0, events: [],
+    }])
+  })
+
   it('rejects malformed project files with readable errors', () => {
     const result = validateProjectFile({ ...validProject, boards: [{ id: 'bad' }] })
 

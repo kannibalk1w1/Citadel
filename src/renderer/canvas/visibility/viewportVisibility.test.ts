@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasItem, Viewport } from '../../../types'
 import { createLargeBoardFixture } from '../../performance/largeBoardFixture'
-import { canvasViewportBounds, visibleItemIds } from './viewportVisibility'
+import { canvasViewportBounds, itemCanvasBounds, visibleItemIds } from './viewportVisibility'
 
 const viewport: Viewport = { x: -200, y: -100, scale: 2 }
 
@@ -43,6 +43,11 @@ describe('viewportVisibility', () => {
     expect(visibleItemIds(items, viewport, { width: 800, height: 600 }, { overscanPx: 40 })).toEqual(['inside', 'edge'])
   })
 
+  it('keeps distant items visible at very small fitted-export scales', () => {
+    expect(visibleItemIds([item('distant', 50_000_000, 0)],
+      { x: 0, y: 0, scale: 0.00001 }, { width: 800, height: 600 })).toEqual(['distant'])
+  })
+
   it('keeps explicit visible IDs mounted even outside the viewport', () => {
     const items = [
       item('inside', 120, 80),
@@ -54,6 +59,13 @@ describe('viewportVisibility', () => {
       overscanPx: 0,
       alwaysIncludeIds: ['selected-outside', 'hidden-selected'],
     })).toEqual(['inside', 'selected-outside'])
+  })
+
+  it('includes the rotated canvas bounds when culling', () => {
+    const rotated = { ...item('rotated', 101, 0), rotation: 45 }
+
+    expect(itemCanvasBounds(rotated).x).toBeCloseTo(44.431, 2)
+    expect(visibleItemIds([rotated], { x: 0, y: 0, scale: 1 }, { width: 100, height: 100 })).toEqual(['rotated'])
   })
 
   it('filters the large-board fixture down to viewport-near IDs', () => {

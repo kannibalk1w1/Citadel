@@ -1,7 +1,7 @@
 # itch.io listing — draft copy
 
-Written 2026-08-18. A rendered version with the form fields laid out is
-published as an artifact; this is the text to paste into itch's editor.
+Updated 2026-09-08 for the public 0.3.0 release. This is the copy to paste into
+itch's editor; repository fixes after that release are not claimed as shipped.
 
 Pricing rationale is in [citadel-pricing.md](./citadel-pricing.md). What the
 listing must and must not claim is settled under **Commercial clarity** in
@@ -16,12 +16,12 @@ listing must and must not claim is settled under **Commercial clarity** in
 | Title | Citadel |
 | Short description | An infinite canvas for references, notes, code, and the connections between them. |
 | Classification | Tool |
-| Kind of project | Downloadable |
+| Kind of project | HTML demo with downloadable desktop builds |
 | Pricing | `$0 or donate` — suggested **$5** |
-| Platforms | Windows, Linux |
-| Uploads | `Citadel-0.1.0-setup.exe`, `Citadel-0.1.0-portable.exe`, `Citadel-0.1.0.AppImage`, `citadel-0.1.0.tar.gz` |
+| Platforms | HTML5, Windows, Linux |
+| Uploads | `Citadel-0.3.0-setup.exe`, `Citadel-0.3.0-portable.exe`, `Citadel-0.3.0.AppImage`, `citadel-0.3.0.tar.gz`; keep the existing HTML demo |
 | Tags | reference, moodboard, art-tools, canvas, notes, research, worldbuilding, open-source, offline, electron |
-| Page | https://kannibalkiwi.itch.io/citadel |
+| Page | https://kannibalkwi.itch.io/citadel |
 | Links | Source & issues — github.com/kannibalk1w1/Citadel |
 | License | MIT · © 2026 Kieran Beckenkrager |
 
@@ -42,6 +42,15 @@ a Word document, Markdown or a text file and it arrives as editable text.
 
 There are code cards with syntax colouring in ten languages, colour swatches,
 and A/B comparison items that wipe between two images.
+
+Audio can become editable text through local transcription. Choose a model in
+Settings, then right-click an audio item and choose Transcribe. Your recordings
+stay on your machine.
+
+For a concrete starting point, follow the
+[ten-minute research workflow](https://github.com/kannibalk1w1/Citadel/blob/master/docs/research-workflow.md):
+collect a few references, put observations beside their sources, connect
+contradictions, and turn the result into notes you can find again.
 
 ### What it does that a folder doesn't
 
@@ -78,7 +87,7 @@ attached to the exact region of the image they came from.
 
 ### Being straight with you
 
-**This is early access.** Version 0.1.0, made by one person. It is stable enough
+**This is early access.** Version 0.3.0, made by one person. It is stable enough
 that I use it, and there is a guided example project built in that walks you
 through every part of it.
 
@@ -86,8 +95,10 @@ through every part of it.
 is what an unsigned build looks like, not a sign of anything wrong — but you
 should know before you download rather than after.
 
-**Updates are manual.** Citadel makes no outbound request at all, including no
-update check. Come back here for new versions, or let the itch app handle it.
+**Updates are manual.** Citadel makes no network request on launch and has no
+automatic update check. Remote references, YouTube, and transcription model
+downloads use the network when you choose them. Audio transcription stays local.
+Come back here for new versions, or let the itch app handle it.
 
 **What I am committing to:** fixing bugs on a reasonable cadence, and reading
 every feature request. Not a support contract — just what I actually intend to
@@ -100,18 +111,32 @@ genuinely fine, and the instructions are in the repository.
 
 ## Uploading builds
 
-The itch handle is **`kannibalkiwi`**, which is not the GitHub one — butler
-targets are `kannibalkiwi/citadel:<channel>`, and a target naming
+Choose one download for your system:
+
+- **Windows installer:** normal installation, with shortcuts and file associations.
+- **Windows portable:** run without installing.
+- **Linux AppImage:** a standalone executable; you may need to mark it executable.
+- **Linux tar.gz:** unpack the folder and run `citadel` inside it.
+
+Upload the four files separately and set each platform explicitly. Keep the
+HTML demo upload. Retire the combined Windows/Linux ZIP only after the separate
+uploads are available. The generated `SHA256SUMS.txt` belongs beside the downloads.
+
+Prepare the files with `npm run release:itch -- --source <artifact-directory>`;
+see [release-downloads.md](./release-downloads.md) for the exact workflow.
+
+The itch handle is **`kannibalkwi`**, which is not the GitHub one — butler
+targets are `kannibalkwi/citadel:<channel>`, and a target naming
 `kannibalk1w1` will fail with a project-not-found error that reads like an
 authentication problem.
 
 Channel names decide what itch shows as the platform, so they matter:
 
 ```bash
-butler push dist-release/Citadel-0.1.0-setup.exe    kannibalkiwi/citadel:windows-installer --userversion 0.1.0
-butler push dist-release/Citadel-0.1.0-portable.exe kannibalkiwi/citadel:windows-portable  --userversion 0.1.0
-butler push dist-release/Citadel-0.1.0.AppImage     kannibalkiwi/citadel:linux-appimage    --userversion 0.1.0
-butler push dist-release/citadel-0.1.0.tar.gz       kannibalkiwi/citadel:linux-tar         --userversion 0.1.0
+butler push dist/itch-0.3.0/Citadel-0.3.0-setup.exe    kannibalkwi/citadel:windows-installer --userversion 0.3.0
+butler push dist/itch-0.3.0/Citadel-0.3.0-portable.exe kannibalkwi/citadel:windows-portable  --userversion 0.3.0
+butler push dist/itch-0.3.0/Citadel-0.3.0.AppImage     kannibalkwi/citadel:linux-appimage    --userversion 0.3.0
+butler push dist/itch-0.3.0/citadel-0.3.0.tar.gz       kannibalkwi/citadel:linux-tar         --userversion 0.3.0
 ```
 
 Push the artifacts built by the release workflow, not any built locally on

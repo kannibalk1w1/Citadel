@@ -78,6 +78,24 @@ export function CanvasStage(): React.ReactElement {
   const CURSOR = useMemo(() => cursorPackCss(cursorPack, STANDARD_CURSORS), [cursorPack])
 
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
+  // The stage dimensions feed both Konva's backing canvas and viewport
+  // virtualization. Keep them subscribed to the host window so a resize does
+  // not leave the old slice mounted (or the new edge empty) until another
+  // unrelated store update happens.
+  const [windowSize, setWindowSize] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }))
+  useEffect(() => {
+    const onResize = () => {
+      const next = { width: window.innerWidth, height: window.innerHeight }
+      setWindowSize((previous) => (
+        previous.width === next.width && previous.height === next.height ? previous : next
+      ))
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
   // Held as state, not read off the ref: the marquee attaches Konva listeners
   // to the Stage node, and a ref changing does not re-run the effect that does.
   const [stageNode, setStageNode] = useState<Konva.Stage | null>(null)
@@ -266,8 +284,8 @@ export function CanvasStage(): React.ReactElement {
     const expandedRailWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-right-w') || '228')
     return activeArchiveRailWidth(archiveRailCollapsed, expandedRailWidth)
   }, [archiveRailCollapsed])
-  const width = presentationMode ? window.innerWidth : window.innerWidth - SIDEBAR_W
-  const height = window.innerHeight
+  const width = presentationMode ? windowSize.width : windowSize.width - SIDEBAR_W
+  const height = windowSize.height
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.zIndex - b.zIndex), [items])
   const visibleIds = useMemo(() => new Set(visibleItemIds(sortedItems, viewport, { width, height }, {
     overscanPx: VIEWPORT_OVERSCAN_PX,

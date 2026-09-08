@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "build:demo": "vite build --config vite.demo.config.ts",
     "dev:demo": "vite --config vite.demo.config.ts",
+    "release:itch": "node scripts/prepareItchRelease.mjs",
     "preview": "electron-vite preview",
     "engine": "node scripts/fetchWhisperEngine.mjs",
     "package": "npm run engine && electron-vite build && electron-builder",
@@ -22,15 +23,15 @@
     "typecheck": "tsc --build"
   },
   "dependencies": {
-    "electron-updater": "^6.1.7",
+    "electron-updater": "^6.8.9",
     "gifler": "^0.1.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "konva": "^9.3.3",
-    "mammoth": "1.12.1",
-    "nanoid": "^5.0.7",
-    "pdfjs-dist": "^5.7.284",
+    "mammoth": "1.12.2",
+    "nanoid": "^5.1.16",
+    "pdfjs-dist": "^6.3.289",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-konva": "^18.2.10",
@@ -53,7 +54,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
     "axe-core": "~4.13.0",
-    "electron": "^29.1.4",
+    "electron": "^29.4.6",
     "electron-builder": "^24.13.2",
     "electron-vite": "^2.0.0",
     "jsdom": "^29.1.1",
@@ -168,5 +169,16 @@
   "allowScripts": {
     "electron@29.4.6": true,
     "esbuild@0.21.5": true
+  },
+  "overrides": {
+    "mammoth": {
+      "@xmldom/xmldom": "0.8.15"
+    },
+    "jspdf": {
+      "fflate": "0.8.3"
+    },
+    "electron-updater": {
+      "js-yaml": "4.3.2"
+    }
   }
 }

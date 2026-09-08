@@ -15,10 +15,22 @@ import { useCanvasStore } from './canvasStore'
  */
 
 type MovePatch = { id: string; x: number; y: number }
+type ItemStylePatch = { id: string; groupId?: CanvasItem['groupId'] | null } & Omit<Partial<CanvasItem>, 'groupId'>
 
 function applyMovePatch(boardId: string, patch: MovePatch | MovePatch[]): void {
   const moves = Array.isArray(patch) ? patch : [patch]
   useCanvasStore.getState().moveItems(boardId, moves)
+}
+
+function applyItemStylePatch(boardId: string, patch: ItemStylePatch | ItemStylePatch[]): void {
+  const patches = Array.isArray(patch) ? patch : [patch]
+  patches.forEach((itemPatch) => {
+    const { groupId, ...rest } = itemPatch
+    const normalized: Partial<CanvasItem> = groupId === null
+      ? { ...rest, groupId: undefined }
+      : groupId === undefined ? rest : { ...rest, groupId }
+    useCanvasStore.getState().updateItem(boardId, itemPatch.id, normalized)
+  })
 }
 
 /** Undo direction: put the board back the way this event found it. */
@@ -34,8 +46,7 @@ export function revertEvent(event: CanvasEvent): void {
   } else if (event.type === 'ITEM_MOVE') {
     applyMovePatch(event.boardId, event.before as MovePatch | MovePatch[])
   } else if (event.type === 'ITEM_STYLE') {
-    const patch = event.before as Partial<CanvasItem> & { id: string }
-    canvas.updateItem(event.boardId, patch.id, patch)
+    applyItemStylePatch(event.boardId, event.before as ItemStylePatch | ItemStylePatch[])
   } else if (event.type === 'COMPARE_MERGE') {
     const { items: originals } = event.before as { items: CanvasItem[] }
     const merged = event.after as CanvasItem
@@ -61,8 +72,7 @@ export function replayEvent(event: CanvasEvent): void {
   } else if (event.type === 'ITEM_MOVE') {
     applyMovePatch(event.boardId, event.after as MovePatch | MovePatch[])
   } else if (event.type === 'ITEM_STYLE') {
-    const patch = event.after as Partial<CanvasItem> & { id: string }
-    canvas.updateItem(event.boardId, patch.id, patch)
+    applyItemStylePatch(event.boardId, event.after as ItemStylePatch | ItemStylePatch[])
   } else if (event.type === 'COMPARE_MERGE') {
     const { items: originals } = event.before as { items: CanvasItem[] }
     const merged = event.after as CanvasItem

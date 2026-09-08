@@ -3,6 +3,10 @@ import { useUIStore } from '../store/uiStore'
 import type { ExportArea } from '../store/uiStore'
 import type { CanvasItem, Viewport } from '../../types'
 import { hasDOMLayerItems, paintDOMLayerForExport } from './domLayerExport'
+import { paintConnectionsForExport } from './connectionExport'
+import { useExportCaptureStore } from './exportCaptureStore'
+import { itemCanvasBounds, visibleItemIds } from '../canvas/visibility/viewportVisibility'
+import { projectSessionRevision } from '../utils/projectSession'
 
 type ExportCanvas = {
   canvas: HTMLCanvasElement
@@ -11,7 +15,6 @@ type ExportCanvas = {
 }
 
 const BOARD_PADDING = 48
-const MIN_SCALE = 0.05
 const MAX_SCALE = 20
 
 function isCommentItem(item: CanvasItem): boolean {
@@ -41,7 +44,7 @@ function waitForPaint(): Promise<void> {
 }
 
 function scaledCanvas(source: HTMLCanvasElement, scale: number): HTMLCanvasElement {
-  if (scale <= 1) return source
+  // Freeze the bitmap before any asynchronous poster decoding or view restore.
   const out = document.createElement('canvas')
   out.width = Math.max(1, Math.round(source.width * scale))
   out.height = Math.max(1, Math.round(source.height * scale))
@@ -65,20 +68,19 @@ export function stagePixelRatio(canvas: Pick<HTMLCanvasElement, 'width' | 'clien
   return Number.isFinite(ratio) && ratio > 0 ? ratio : 1
 }
 
-/**
- * DOM-layer items — code cards, video, YouTube, audio, 3D — live in an overlay
- * element the stage capture never sees, so they are repainted onto a copy of
- * the captured bitmap. `scaledCanvas` hands back the live stage canvas at scale
- * 1, and drawing on that would smear the items across the board the user is
- * still looking at — so copy first, always.
- *
- * Boards with none of these keep the exact capture they always had, and skip
- * both the copy and the poster decode.
- */
-async function withDOMLayer(captured: HTMLCanvasElement, source: HTMLCanvasElement, exportScale: number): Promise<HTMLCanvasElement> {
+/** Compose SVG relationships and visible DOM media onto the frozen capture. */
+async function withDOMLayer(captured: HTMLCanvasElement, source: HTMLCanvasElement, exportScale: number, exportItems?: CanvasItem[]): Promise<HTMLCanvasElement> {
   const canvasStore = useCanvasStore.getState()
-  const items = canvasStore.items()
-  if (!hasDOMLayerItems(items)) return captured
+  const items = exportItems ?? canvasStore.items()
+  const viewport = canvasStore.viewport()
+  const connections = canvasStore.connections()
+  const ratio = stagePixelRatio(source) * Math.max(1, exportScale)
+  const onScreen = new Set(visibleItemIds(items, viewport, {
+    width: captured.width / ratio,
+    height: captured.height / ratio,
+  }))
+  const mediaItems = items.filter((item) => onScreen.has(item.id))
+  if (!hasDOMLayerItems(mediaItems) && connections.length === 0) return captured
 
   const out = captured === source ? document.createElement('canvas') : captured
   if (out !== captured) {
@@ -91,23 +93,25 @@ async function withDOMLayer(captured: HTMLCanvasElement, source: HTMLCanvasEleme
 
   const ctx = out.getContext('2d')
   if (!ctx) return captured
-  const ratio = stagePixelRatio(source) * Math.max(1, exportScale)
-  await paintDOMLayerForExport(ctx, items, canvasStore.viewport(), ratio)
+  // The SVG connections sit above Konva and below DOM media in the live board.
+  if (connections.length) paintConnectionsForExport(ctx, connections, items, viewport, ratio)
+  await paintDOMLayerForExport(ctx, mediaItems, viewport, ratio)
   return out
 }
 
 function itemBounds(items: CanvasItem[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
   const visibleItems = items.filter((item) => item.visible !== false)
   if (visibleItems.length === 0) return null
-  return {
-    minX: Math.min(...visibleItems.map((item) => item.x)),
-    minY: Math.min(...visibleItems.map((item) => item.y)),
-    maxX: Math.max(...visibleItems.map((item) => item.x + item.width)),
-    maxY: Math.max(...visibleItems.map((item) => item.y + item.height)),
-  }
+  return visibleItems.reduce((bounds, item) => {
+    const rect = itemCanvasBounds(item)
+    return {
+      minX: Math.min(bounds.minX, rect.x), minY: Math.min(bounds.minY, rect.y),
+      maxX: Math.max(bounds.maxX, rect.x + rect.width), maxY: Math.max(bounds.maxY, rect.y + rect.height),
+    }
+  }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
 }
 
-function fitViewportToItems(items: CanvasItem[], width: number, height: number): Viewport | null {
+export function fitViewportToItems(items: CanvasItem[], width: number, height: number): Viewport | null {
   const bounds = itemBounds(items)
   if (!bounds) return null
 
@@ -115,7 +119,7 @@ function fitViewportToItems(items: CanvasItem[], width: number, height: number):
   const boardHeight = Math.max(1, bounds.maxY - bounds.minY)
   const usableWidth = Math.max(1, width - BOARD_PADDING * 2)
   const usableHeight = Math.max(1, height - BOARD_PADDING * 2)
-  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.min(usableWidth / boardWidth, usableHeight / boardHeight)))
+  const scale = Math.min(MAX_SCALE, usableWidth / boardWidth, usableHeight / boardHeight)
 
   return {
     scale,
@@ -124,34 +128,41 @@ function fitViewportToItems(items: CanvasItem[], width: number, height: number):
   }
 }
 
-async function captureViewportCanvas(scale: number): Promise<ExportCanvas> {
+async function captureViewportCanvas(scale: number, items?: CanvasItem[]): Promise<ExportCanvas> {
   const canvasEl = getStageCanvas()
   const captured = scaledCanvas(canvasEl, scale)
   return {
-    canvas: await withDOMLayer(captured, canvasEl, scale),
+    canvas: await withDOMLayer(captured, canvasEl, scale, items),
     width: canvasEl.width,
     height: canvasEl.height,
   }
 }
 
 async function captureFittedCanvas(area: Extract<ExportArea, 'board' | 'selection'>, scale: number): Promise<ExportCanvas> {
+  const projectSession = projectSessionRevision()
   const canvasStore = useCanvasStore.getState()
   const boardId = canvasStore.activeBoardId
   const canvasEl = getStageCanvas()
   const includeComments = useUIStore.getState().includeCommentsInExport
   const itemsForBounds = itemsForFittedExport(canvasStore.items(), area, canvasStore.selectedIds, includeComments)
-  const fittedViewport = fitViewportToItems(itemsForBounds, canvasEl.width, canvasEl.height)
+  const ratio = stagePixelRatio(canvasEl)
+  const fittedViewport = fitViewportToItems(itemsForBounds, canvasEl.width / ratio, canvasEl.height / ratio)
   if (!boardId || !fittedViewport) return captureViewportCanvas(scale)
 
   const originalViewport = canvasStore.viewport()
+  useExportCaptureStore.setState({ itemIds: new Set(itemsForBounds.map((item) => item.id)) })
   canvasStore.setViewport(boardId, fittedViewport)
 
   try {
     await waitForPaint()
     await waitForPaint()
-    return captureViewportCanvas(scale)
+    if (projectSessionRevision() !== projectSession || useCanvasStore.getState().activeBoardId !== boardId) {
+      throw new Error('The board changed during export. Please try again.')
+    }
+    return captureViewportCanvas(scale, itemsForBounds)
   } finally {
-    useCanvasStore.getState().setViewport(boardId, originalViewport)
+    useExportCaptureStore.setState({ itemIds: null })
+    if (projectSessionRevision() === projectSession) useCanvasStore.getState().setViewport(boardId, originalViewport)
   }
 }
 
@@ -190,7 +201,7 @@ export function captureBoardThumbnail(maxWidth = 320): { dataUrl: string; width:
   return { dataUrl: out.toDataURL('image/jpeg', 0.7), width: out.width, height: out.height }
 }
 
-export async function prepareExportCanvas(): Promise<ExportCanvas> {
+async function prepareExportCanvasInner(): Promise<ExportCanvas> {
   const ui = useUIStore.getState()
   const { exportScale, exportArea, includeCommentsInExport, commentPinsVisible } = ui
   const changedCommentVisibility = commentPinsVisible !== includeCommentsInExport
@@ -208,5 +219,17 @@ export async function prepareExportCanvas(): Promise<ExportCanvas> {
       useUIStore.getState().setCommentPinsVisible(commentPinsVisible)
       await waitForPaint()
     }
+  }
+}
+
+let exportInProgress = false
+
+export async function prepareExportCanvas(): Promise<ExportCanvas> {
+  if (exportInProgress) throw new Error('An export is already running.')
+  exportInProgress = true
+  try {
+    return await prepareExportCanvasInner()
+  } finally {
+    exportInProgress = false
   }
 }

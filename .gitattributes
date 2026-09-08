@@ -1,0 +1,2 @@
+# PDF cross-reference offsets require byte-exact fixtures on Windows too.
+e2e/fixtures/*.pdf binary

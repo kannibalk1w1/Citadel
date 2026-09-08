@@ -13,6 +13,7 @@ import { Actions } from '../keybinds/actions'
 import { extractImagePalette, paletteSourceConnection, paletteSwatchForImage } from '../assets/paletteExtraction'
 import { canvasColor } from '../theme/canvasColors'
 import { startSourceCapture } from './sourceCapture'
+import { groupItemsWithHistory, reorderItemsWithHistory, ungroupItemsWithHistory } from '../store/itemEditHistory'
 import { transcribeAudioItem } from '../canvas/transcribeAudioItem'
 import { isLocalSourcePath, isTranscribableFilename } from '../canvas/audioTranscription'
 
@@ -167,32 +168,28 @@ export function ContextMenu(): React.ReactElement | null {
       {
         label: 'Bring to Front',
         action: () => {
-          const canvas = useCanvasStore.getState()
-          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'front'))
+          reorderItemsWithHistory(activeBoardId!, selectedUnlockedItems.map((item) => item.id), 'front')
           closeContextMenu()
         },
       },
       {
         label: 'Bring Forward',
         action: () => {
-          const canvas = useCanvasStore.getState()
-          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'forward'))
+          reorderItemsWithHistory(activeBoardId!, selectedUnlockedItems.map((item) => item.id), 'forward')
           closeContextMenu()
         },
       },
       {
         label: 'Send Backward',
         action: () => {
-          const canvas = useCanvasStore.getState()
-          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'backward'))
+          reorderItemsWithHistory(activeBoardId!, selectedUnlockedItems.map((item) => item.id), 'backward')
           closeContextMenu()
         },
       },
       {
         label: 'Send to Back',
         action: () => {
-          const canvas = useCanvasStore.getState()
-          selectedUnlockedItems.forEach((item) => canvas.reorderItem(activeBoardId!, item.id, 'back'))
+          reorderItemsWithHistory(activeBoardId!, selectedUnlockedItems.map((item) => item.id), 'back')
           closeContextMenu()
         },
       },
@@ -202,7 +199,7 @@ export function ContextMenu(): React.ReactElement | null {
       ...(canGroup ? [{
         label: 'Group  (Ctrl+G)',
         action: () => {
-          useCanvasStore.getState().groupItems(activeBoardId!, selectedUnlockedItems.map((i) => i.id))
+          groupItemsWithHistory(activeBoardId!, selectedUnlockedItems.map((i) => i.id))
           closeContextMenu()
         },
       }] : []),
@@ -212,7 +209,7 @@ export function ContextMenu(): React.ReactElement | null {
           const groupIds = new Set(
             selectedUnlockedItems.filter((i) => i.groupId).map((i) => i.groupId!)
           )
-          groupIds.forEach((gid) => useCanvasStore.getState().ungroupItems(activeBoardId!, gid))
+          ungroupItemsWithHistory(activeBoardId!, [...groupIds])
           closeContextMenu()
         },
       }] : []),

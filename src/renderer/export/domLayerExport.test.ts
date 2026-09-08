@@ -52,6 +52,23 @@ describe('hasDOMLayerItems', () => {
 })
 
 describe('loadPosters', () => {
+  it('bounds concurrent decodes and tolerates rejected or repeated paths', async () => {
+    let active = 0
+    let peak = 0
+    const load = vi.fn(async (path: string) => {
+      active++
+      peak = Math.max(peak, active)
+      await new Promise((resolve) => setTimeout(resolve, 1))
+      active--
+      if (path === 'broken') throw new Error('decode failed')
+      return poster
+    })
+    const paths = Array.from({ length: 12 }, (_, i) => `${i}.png`)
+    const result = await loadPosters([...paths, paths[0], 'broken'], load)
+    expect(peak).toBeLessThanOrEqual(4)
+    expect(load).toHaveBeenCalledTimes(13)
+    expect(result.size).toBe(12)
+  })
   it('keeps the images that decoded and drops the ones that did not', async () => {
     const posters = await loadPosters(['ok.png', 'broken.png'], async (path) => (path === 'ok.png' ? poster : null))
 

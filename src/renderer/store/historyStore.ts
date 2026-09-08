@@ -64,13 +64,17 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       // Truncate redo stack
       const events = [...s.events.slice(0, s.cursor + 1), event]
       const cursor = events.length - 1
+      // If the saved point was in the discarded redo branch, the new event
+      // occupies an index that used to describe a different state. -2 is
+      // outside the valid cursor range, so the project stays dirty.
+      const savedCursor = s.savedCursor > s.cursor ? -2 : s.savedCursor
 
       // Append to active recording
       const recordingSession = s.recordingSession
         ? { ...s.recordingSession, events: [...s.recordingSession.events, event] }
         : null
 
-      return { events, cursor, recordingSession }
+      return { events, cursor, savedCursor, recordingSession }
     })
     return event
   },
@@ -95,8 +99,10 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   canRedo: () => get().cursor < get().events.length - 1,
   isDirty: () => get().cursor !== get().savedCursor,
   markSaved: () => set((s) => ({ savedCursor: s.cursor })),
-  markDirty: () => set((s) => ({ savedCursor: s.cursor === s.savedCursor ? s.cursor - 1 : s.savedCursor })),
-  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false, markers: [], snapshots: [] }),
+  // -2 is outside the valid cursor range (-1 and up), so a non-event change
+  // cannot become clean merely because a later undo lands on its old index.
+  markDirty: () => set({ savedCursor: -2 }),
+  resetHistory: () => set({ events: [], cursor: -1, savedCursor: -1, recordingSession: null, isRecording: false, markers: [], snapshots: [], recordings: [] }),
 
   startRecording: (name) => {
     set({
@@ -114,10 +120,13 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
   saveRecording: (session) => {
     set((s) => ({ recordings: [...s.recordings, session] }))
+    get().markDirty()
   },
 
   deleteRecording: (id) => {
+    if (!get().recordings.some((recording) => recording.id === id)) return
     set((s) => ({ recordings: s.recordings.filter((r) => r.id !== id) }))
+    get().markDirty()
   },
 
   markers: [],

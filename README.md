@@ -6,9 +6,10 @@ Citadel helps you place the things you are working with next to the thoughts
 they create. Arrange items freely, connect related material, search across
 boards, and save the result as a portable project.
 
-> Status: active early release (`0.1.0`), heading for itch.io at name-your-price.
-> Windows and Linux are both packaged release targets. The app is usable today;
-> a manual packaged-app pass on each platform is the remaining step.
+> Status: early access (`0.3.0`), available for Windows and Linux at
+> [name-your-price on itch.io](https://kannibalkwi.itch.io/citadel).
+> Try the browser demo on the same page, or follow the
+> [research workflow walkthrough](docs/research-workflow.md).
 
 ## Why Citadel
 
@@ -165,8 +166,9 @@ refused, including for the YouTube embed, which is somebody else's page running
 in your window. A Content Security Policy refuses anything loaded over the
 network.
 
-Network access happens only when you explicitly use a remote source or add a
-YouTube reference. Citadel makes no outbound request on launch: there is no
+Network access happens when you explicitly use a remote source, add a YouTube
+reference, or download a transcription model in Settings. Audio transcription
+runs locally; recordings are never uploaded. Citadel makes no outbound request on launch: there is no
 update check, no telemetry, and interface fonts are bundled, so a launch with
 the network disconnected behaves identically to one without. Updates are manual
 downloads for now.

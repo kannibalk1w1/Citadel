@@ -166,6 +166,28 @@ describe('citadel project round trip', () => {
     ])
   })
 
+  it('restores the recordings library when a project is reopened', async () => {
+    buildArchive(join(root, 'relic.png'))
+    const recordedItem = useCanvasStore.getState().boards[0].items.find((item) => item.id === 'relic-1')!
+    const recording = {
+      id: 'recording-1',
+      name: 'First pass',
+      startedAt: 100,
+      events: [{
+        id: 'event-1', timestamp: 100, boardId: useCanvasStore.getState().activeBoardId!,
+        type: 'ITEM_ADD' as const, before: null, after: recordedItem,
+      }],
+    }
+    useHistoryStore.getState().saveRecording(recording)
+
+    await saveProjectAs()
+    newProject()
+    expect(useHistoryStore.getState().recordings).toEqual([])
+    await openProject()
+
+    expect(useHistoryStore.getState().recordings).toEqual([recording])
+  })
+
   it('brings code cards and the threads bound to them back from disk', async () => {
     // `code` reached `ItemType` without reaching the schema's accepted set, so
     // every snippet — and every thread touching one — was dropped on open with

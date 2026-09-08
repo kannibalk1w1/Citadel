@@ -16,6 +16,7 @@ import { ComparisonItem } from './items/ComparisonItem'
 import { CodeItem } from './items/CodeItem'
 import { canvasColor } from '../theme/canvasColors'
 import { LOCK_PATH_D } from '../ui/icons/ToolIcon'
+import { useExportCaptureStore } from '../export/exportCaptureStore'
 
 const DOM_TYPES = new Set(['video', 'youtube', 'audio', 'model3d', 'code'])
 
@@ -47,6 +48,8 @@ export const ItemRenderer = React.memo(function ItemRenderer({ item }: Props): R
   // Scale only sizes the lock marker; unlocked items don't need viewport at all,
   // so pan/zoom frames skip re-rendering them (Stage transform handles position).
   const scale = useCanvasStore((s) => (item.locked ? s.viewport().scale : 1))
+  const includedInExport = useExportCaptureStore((s) => !s.itemIds || s.itemIds.has(item.id))
+  if (!includedInExport) return null
   if (!item.visible) return null
   if (isDOMLayerItem(item)) return null
   // Tint overlay for Konva items — DOM items handle tint inside DOMItem

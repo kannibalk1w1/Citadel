@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CanvasItem } from '../../types'
 import { useCanvasStore } from '../store/canvasStore'
 import { useUIStore } from '../store/uiStore'
-import { itemsForFittedExport, prepareExportCanvas, stagePixelRatio } from './exportCanvas'
+import { fitViewportToItems, itemsForFittedExport, prepareExportCanvas, stagePixelRatio } from './exportCanvas'
+import { useExportCaptureStore } from './exportCaptureStore'
+import { beginProjectSession } from '../utils/projectSession'
 
 const baseItem: CanvasItem = {
   id: 'item-1',
@@ -50,7 +52,7 @@ describe('exportCanvas', () => {
 /**
  * Code cards render into the DOM overlay, which the stage capture cannot see.
  * These prove the export path repaints them rather than silently dropping them,
- * and that boards without code cards take the untouched path they always did.
+ * without modifying the live stage bitmap.
  */
 describe('code cards in a captured export', () => {
   const contexts: { canvas: HTMLCanvasElement; calls: { op: string; args: unknown[] }[] }[] = []
@@ -97,6 +99,7 @@ describe('code cards in a captured export', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
     document.body.innerHTML = ''
   })
 
@@ -134,13 +137,14 @@ describe('code cards in a captured export', () => {
     expect(contexts.filter((c) => c.canvas === stage && c.calls.some((call) => call.op === 'fillText'))).toEqual([])
   })
 
-  it('leaves a board with no DOM-layer items on the untouched capture path', async () => {
+  it('freezes the bitmap even without DOM items so a later redraw cannot alter it', async () => {
     setBoard([imageCard])
     const stage = document.querySelector('canvas') as HTMLCanvasElement
 
     const result = await prepareExportCanvas()
 
-    expect(result.canvas).toBe(stage)
+    expect(result.canvas).not.toBe(stage)
+    expect(contexts.some((c) => c.calls.some((call) => call.op === 'drawImage' && call.args[0] === stage))).toBe(true)
     expect(drawnText()).toEqual([])
   })
 
@@ -167,6 +171,7 @@ describe('code cards in a captured export', () => {
   })
 
   it('labels every DOM media type rather than leaving a blank gap', async () => {
+    document.querySelector('canvas')!.height = 1000
     setBoard([
       media('video', 'refs/run-cycle.mp4', 0),
       media('audio', 'notes/take-3.wav', 220),
@@ -211,5 +216,67 @@ describe('code cards in a captured export', () => {
     await prepareExportCanvas()
 
     expect(drawnText()).toEqual([])
+  })
+
+  it('excludes offscreen media from viewport painting', async () => {
+    setBoard([media('audio', 'offscreen.wav', 900)])
+    await prepareExportCanvas()
+    expect(drawnText()).toEqual([])
+  })
+
+  it('exports only selected cards, fits in CSS pixels, and restores rendering state', async () => {
+    const stage = document.querySelector('canvas')!
+    stage.width = 1600
+    stage.height = 1200
+    const selected = { ...codeCard, x: 0, y: 0, width: 100, height: 100 }
+    setBoard([selected, { ...selected, id: 'other', meta: { language: 'sql', code: 'SELECT hidden' } }])
+    useCanvasStore.setState({ selectedIds: [selected.id] })
+    useUIStore.setState({ exportArea: 'selection' })
+    const paintedViews: { x: number; y: number; scale: number }[] = []
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      paintedViews.push(useCanvasStore.getState().viewport())
+      expect(useExportCaptureStore.getState().itemIds?.has('other')).toBe(false)
+      queueMicrotask(() => cb(0))
+      return 1
+    })
+    await prepareExportCanvas()
+    expect(drawnText()).toContain('PYTHON')
+    expect(drawnText()).not.toContain('SQL')
+    const fitted = paintedViews[0]
+    expect(fitted.x + 100 * fitted.scale).toBeLessThanOrEqual(800)
+    expect(fitted.y + 100 * fitted.scale).toBeLessThanOrEqual(600)
+    expect(useCanvasStore.getState().viewport()).toEqual({ x: 0, y: 0, scale: 1 })
+    expect(useExportCaptureStore.getState().itemIds).toBeNull()
+    expect(useCanvasStore.getState().items()).toHaveLength(2)
+  })
+
+  it('does not capture or restore into a replacement project with the same board ID', async () => {
+    setBoard([codeCard])
+    useUIStore.setState({ exportArea: 'board' })
+    const replacementViewport = { x: 123, y: 456, scale: 2 }
+    let replaced = false
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      if (!replaced) {
+        replaced = true
+        beginProjectSession()
+        useCanvasStore.getState().setViewport('board-1', replacementViewport)
+      }
+      queueMicrotask(() => cb(0))
+      return 1
+    })
+    await expect(prepareExportCanvas()).rejects.toThrow('board changed')
+    expect(useCanvasStore.getState().viewport()).toEqual(replacementViewport)
+    expect(useExportCaptureStore.getState().itemIds).toBeNull()
+  })
+
+  it('fits rotated and very widely spaced items completely', () => {
+    const viewport = fitViewportToItems([
+      { ...baseItem, rotation: 90, width: 1000, height: 100 },
+      { ...baseItem, x: 100000 },
+    ], 800, 600)!
+    expect(viewport.scale).toBeLessThan(0.05)
+    expect(viewport.x - 100 * viewport.scale).toBeGreaterThanOrEqual(0)
+    expect(viewport.x + 100100 * viewport.scale).toBeLessThanOrEqual(800)
+    expect(viewport.y + 1000 * viewport.scale).toBeLessThanOrEqual(600)
   })
 })

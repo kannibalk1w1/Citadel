@@ -38,10 +38,15 @@ export const loadPosterImage: PosterLoader = (path) => new Promise((resolve) => 
 
 export async function loadPosters(paths: string[], load: PosterLoader): Promise<Map<string, PosterImage>> {
   const posters = new Map<string, PosterImage>()
-  const loaded = await Promise.all(paths.map(async (path) => [path, await load(path)] as const))
-  for (const [path, image] of loaded) {
-    if (image) posters.set(path, image)
-  }
+  const uniquePaths = [...new Set(paths)]
+  let next = 0
+  await Promise.all(Array.from({ length: Math.min(4, uniquePaths.length) }, async () => {
+    while (next < uniquePaths.length) {
+      const path = uniquePaths[next++]
+      const image = await load(path).catch(() => null)
+      if (image) posters.set(path, image)
+    }
+  }))
   return posters
 }
 

@@ -17,28 +17,45 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
   const toolMode = useUIStore((s) => s.toolMode)
   const audioRef = useRef<HTMLAudioElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null)
+  const waveformDataRef = useRef<Uint8Array | null>(null)
   const animRef = useRef<number>(0)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const ctxRef = useRef<AudioContext | null>(null)
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
 
+  const prepareCanvas = (): { ctx: CanvasRenderingContext2D; width: number; height: number } | null => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    const width = Math.max(1, Math.round(canvas.clientWidth || canvas.width || 200))
+    const height = Math.max(1, Math.round(canvas.clientHeight || canvas.height || 60))
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width
+      canvas.height = height
+      // Assigning width/height resets the 2D context state. Fetch it again so
+      // callers always draw through the context belonging to this bitmap.
+      canvasContextRef.current = null
+    }
+    const ctx = canvasContextRef.current ?? canvas.getContext('2d')
+    if (!ctx) return null
+    canvasContextRef.current = ctx
+    return { ctx, width, height }
+  }
+
   // Draw the waveform onto the canvas element
   const drawWaveform = () => {
     const analyser = analyserRef.current
-    const cv = canvasRef.current
-    if (!analyser || !cv) return
-
-    const ctx = cv.getContext('2d')
-    if (!ctx) return
+    if (!analyser) return
+    const prepared = prepareCanvas()
+    if (!prepared) return
+    const { ctx, width: w, height: h } = prepared
 
     const bufLen = analyser.frequencyBinCount
-    const data = new Uint8Array(bufLen)
-    analyser.getByteTimeDomainData(data)
-
-    const w = cv.clientWidth || cv.width
-    const h = cv.clientHeight || cv.height
-    cv.width = w
-    cv.height = h
+    const data = waveformDataRef.current?.length === bufLen
+      ? waveformDataRef.current
+      : new Uint8Array(bufLen)
+    waveformDataRef.current = data
+    analyser.getByteTimeDomainData(data as Uint8Array<ArrayBuffer>)
 
     ctx.clearRect(0, 0, w, h)
     ctx.fillStyle = '#10100f'
@@ -64,14 +81,9 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
 
   // Draw a static flat line when paused
   const drawIdle = () => {
-    const cv = canvasRef.current
-    if (!cv) return
-    const ctx = cv.getContext('2d')
-    if (!ctx) return
-    const w = cv.clientWidth || 200
-    const h = cv.clientHeight || 60
-    cv.width = w
-    cv.height = h
+    const prepared = prepareCanvas()
+    if (!prepared) return
+    const { ctx, width: w, height: h } = prepared
     ctx.fillStyle = '#10100f'
     ctx.fillRect(0, 0, w, h)
     ctx.strokeStyle = '#2a2722'
@@ -97,17 +109,36 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
   }
 
   useEffect(() => {
+    const audio = audioRef.current
     drawIdle()
-    return () => cancelAnimationFrame(animRef.current)
+    return () => {
+      cancelAnimationFrame(animRef.current)
+      audio?.pause()
+      sourceRef.current?.disconnect()
+      analyserRef.current?.disconnect()
+      sourceRef.current = null
+      analyserRef.current = null
+      const audioContext = ctxRef.current
+      ctxRef.current = null
+      waveformDataRef.current = null
+      canvasContextRef.current = null
+      if (audioContext && audioContext.state !== 'closed') {
+        void audioContext.close().catch(() => {})
+      }
+    }
   }, [item.src])
 
-  const handlePlay = () => {
+  const handlePlay = (event: React.SyntheticEvent<HTMLAudioElement>) => {
+    // A play event queued during unmount/source replacement must not recreate
+    // the graph or restart the RAF loop after the old element is gone.
+    if (event.currentTarget !== audioRef.current) return
     setupAudioContext()
     cancelAnimationFrame(animRef.current)
     drawWaveform()
   }
 
-  const handlePause = () => {
+  const handlePause = (event: React.SyntheticEvent<HTMLAudioElement>) => {
+    if (event.currentTarget !== audioRef.current) return
     cancelAnimationFrame(animRef.current)
     drawIdle()
   }
@@ -143,6 +174,7 @@ export function AudioItem({ item, domOnly = false }: Props): React.ReactElement 
               style={{ width: '100%', height: 'calc(100% - 40px)', display: 'block' }}
             />
             <audio
+              key={item.src}
               ref={audioRef}
               src={pathToUrl(item.src)}
               controls

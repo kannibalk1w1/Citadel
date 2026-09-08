@@ -416,6 +416,7 @@ export function registerIpcHandlers(): void {
 
   // ── import:zip ─────────────────────────────────────────────────────────────
   ipcMain.handle('import:zip', async (e, { zipPath }: { zipPath: string }) => {
+    let assetDir: string | null = null
     try {
       const buf = await fsp.readFile(zipPath)
       const zip = await JSZip.loadAsync(buf)
@@ -423,7 +424,9 @@ export function registerIpcHandlers(): void {
       const rawProjectJson = await manifest.project.async('string')
       if (Buffer.byteLength(rawProjectJson) > 512 * 1024 * 1024) throw new Error('Archive project entry too large')
 
-      const assetDir = join(dirname(zipPath), '_citadel_assets')
+      // Each import gets its own directory. Reusing one folder lets a later
+      // archive overwrite assets still referenced by an earlier open project.
+      assetDir = await fsp.mkdtemp(join(dirname(zipPath), '_citadel_assets-'))
       const sendProgress = createProgressThrottle((percent) => {
         e.sender.send('archive:progress', { op: 'import', percent })
       })
@@ -434,6 +437,7 @@ export function registerIpcHandlers(): void {
 
       return { ok: true, projectJson: resolveImportedZipProject(rawProjectJson, assetDir), assetDir }
     } catch (error) {
+      if (assetDir) await fsp.rm(assetDir, { recursive: true, force: true }).catch(() => {})
       return { ok: false, reason: error instanceof Error ? error.message : String(error) }
     }
   })
